@@ -27,6 +27,10 @@ export default async function ProductPage({ params }: { params: { slug: string }
   const product = content.products[params.slug as ProductKey];
   if (!product || !product.enabled) notFound();
 
+  const visibleProducts = PRODUCT_ORDER
+    .map(key => ({ slug: key, ...content.products[key] }))
+    .filter(p => p.enabled);
+
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   let role: "admin" | "customer" | null = null;
@@ -38,7 +42,14 @@ export default async function ProductPage({ params }: { params: { slug: string }
   return (
     <div>
       <header className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-walnut/10 bg-cream">
-        <Link href="/" className="font-display text-lg text-walnut font-semibold">Sunrise Wood Creations</Link>
+        <Link href="/" className="font-display text-lg md:text-xl text-walnut font-semibold">Sunrise Wood Creations</Link>
+        <nav className="hidden md:flex gap-7 text-sm font-medium">
+          {visibleProducts.map(p => (
+            <Link key={p.slug} href={`/products/${p.slug}`} className="text-walnut/80 hover:text-walnut">
+              {p.name}
+            </Link>
+          ))}
+        </nav>
         {role ? (
           <AccountMenu role={role} />
         ) : (
