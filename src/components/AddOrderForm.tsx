@@ -18,20 +18,35 @@ export default function AddOrderForm({ customerId }: { customerId: string }) {
   const [price, setPrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const res = await fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ customerId, productType, title, sizeDetails, priceCents: price })
-    });
-    setLoading(false);
-    if (res.ok) {
+    setError("");
+
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId, productType, title, sizeDetails, priceCents: price })
+      });
+
+      const body = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setError(body.error || `Something went wrong (status ${res.status}).`);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(false);
       setTitle(""); setSizeDetails(""); setPrice("");
       setOpen(false);
       router.refresh();
+    } catch (err) {
+      setLoading(false);
+      setError("Couldn't reach the server. Check your connection and try again.");
     }
   }
 
@@ -65,11 +80,12 @@ export default function AddOrderForm({ customerId }: { customerId: string }) {
           <input value={price} onChange={e => setPrice(e.target.value)} placeholder="225" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
         </div>
       </div>
+      {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
       <div className="flex gap-2">
         <button type="submit" disabled={loading} className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60">
           {loading ? "Creating..." : "Create order"}
         </button>
-        <button type="button" onClick={() => setOpen(false)} className="border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold">
+        <button type="button" onClick={() => { setOpen(false); setError(""); }} className="border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold">
           Cancel
         </button>
       </div>
