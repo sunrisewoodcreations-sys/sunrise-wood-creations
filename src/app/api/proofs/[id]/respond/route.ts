@@ -1,3 +1,4 @@
+import { sendOrderStatusEmail, sendProofDeclinedNotice, sendProofApprovedNotice } from "@/lib/email";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendOrderStatusEmail, sendProofDeclinedNotice } from "@/lib/email";
@@ -40,7 +41,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       orderTitle: order.title,
       orderId: order.id,
       newStatus: "design_approved"
+    await sendProofApprovedNotice({
+      orderTitle: order.title,
+      orderId: order.id,
+      customerName: profile?.full_name || user.email!
     });
+    
   } else {
     await sendProofDeclinedNotice({
       orderTitle: order.title,
