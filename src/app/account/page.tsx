@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AccountHeader from "@/components/AccountHeader";
 import { productLabel, statusLabel, ProductType } from "@/lib/statusSteps";
@@ -7,10 +8,12 @@ export default async function AccountPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  if (!user) redirect("/login");
+
   const { data: orders } = await supabase
     .from("orders")
     .select("*")
-    .eq("customer_id", user!.id)
+    .eq("customer_id", user.id)
     .order("created_at", { ascending: false });
 
   return (
@@ -19,7 +22,7 @@ export default async function AccountPage() {
       <div className="max-w-2xl mx-auto px-4 py-10">
         <div className="bg-white border border-walnut/10 rounded-xl p-7">
           <h1 className="font-display text-2xl text-walnut mb-1">Your orders</h1>
-          <p className="text-sm text-walnut/60 mb-5">Signed in as {user!.email}</p>
+          <p className="text-sm text-walnut/60 mb-5">Signed in as {user.email}</p>
 
           {(!orders || orders.length === 0) && (
             <p className="text-sm text-walnut/60">
