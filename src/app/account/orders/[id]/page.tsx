@@ -41,7 +41,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           </h1>
           <p className="text-sm text-walnut/60 mb-4">{order.size_details}</p>
 
-          
+          <a
             href={`/api/invoices/${order.id}`}
             target="_blank"
             className="inline-block border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold"
