@@ -24,14 +24,24 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
-  await supabase.from("proofs").insert({ order_id: order.id, image_url: imageUrl.trim() });
+  const { data: newProof, error: insertError } = await supabase
+    .from("proofs")
+    .insert({ order_id: order.id, image_url: imageUrl.trim() })
+    .select()
+    .single();
+
+  if (insertError || !newProof) {
+    return NextResponse.json({ error: insertError?.message || "Couldn't create the proof" }, { status: 400 });
+  }
 
   const customer = (order as any).profiles;
   await sendProofReadyEmail({
     toEmail: customer.email,
     customerName: customer.full_name,
     orderTitle: order.title,
-    orderId: order.id
+    orderId: order.id,
+    imageUrl: imageUrl.trim(),
+    respondToken: newProof.respond_token
   });
 
   return NextResponse.json({ ok: true });
