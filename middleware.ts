@@ -1,12 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// This runs on every page request. Its main job is to refresh the login
-// session cookie so people stay logged in (Supabase sessions default to a
-// long-lived refresh token — this is the piece that quietly renews it in
-// the background, which is why nobody gets logged out "randomly").
-// It also keeps customers out of /admin and keeps logged-out people out of
-// /account and /admin entirely.
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -34,6 +28,13 @@ export async function middleware(request: NextRequest) {
 
   const isAccountRoute = path.startsWith("/account");
   const isAdminRoute = path.startsWith("/admin");
+  const isLoginRoute = path === "/login";
+
+  if (isLoginRoute && user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/post-login";
+    return NextResponse.redirect(url);
+  }
 
   if ((isAccountRoute || isAdminRoute) && !user) {
     const url = request.nextUrl.clone();
@@ -62,6 +63,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/account/:path*",
-    "/admin/:path*"
+    "/admin/:path*",
+    "/login"
   ]
 };
