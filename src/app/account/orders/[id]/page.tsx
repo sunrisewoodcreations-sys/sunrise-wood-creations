@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import AccountHeader from "@/components/AccountHeader";
@@ -10,11 +10,13 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  if (!user) redirect("/login");
+
   const { data: order } = await supabase
     .from("orders")
     .select("*")
     .eq("id", params.id)
-    .eq("customer_id", user!.id)
+    .eq("customer_id", user.id)
     .single();
 
   if (!order) notFound();
@@ -39,7 +41,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           </h1>
           <p className="text-sm text-walnut/60 mb-4">{order.size_details}</p>
 
-          <a
+          
             href={`/api/invoices/${order.id}`}
             target="_blank"
             className="inline-block border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold"
