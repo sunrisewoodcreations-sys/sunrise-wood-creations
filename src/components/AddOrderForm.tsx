@@ -1,0 +1,78 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+const PRODUCT_TYPES = [
+  { value: "cornhole", label: "Cornhole boards" },
+  { value: "sign", label: "Wooden sign" },
+  { value: "planter", label: "Planter box" },
+  { value: "cutting_board", label: "Cutting board" }
+];
+
+export default function AddOrderForm({ customerId }: { customerId: string }) {
+  const router = useRouter();
+  const [productType, setProductType] = useState("cornhole");
+  const [title, setTitle] = useState("");
+  const [sizeDetails, setSizeDetails] = useState("");
+  const [price, setPrice] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customerId, productType, title, sizeDetails, priceCents: price })
+    });
+    setLoading(false);
+    if (res.ok) {
+      setTitle(""); setSizeDetails(""); setPrice("");
+      setOpen(false);
+      router.refresh();
+    }
+  }
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold mb-5">
+        + Add order
+      </button>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-white border border-walnut/10 rounded-xl p-5 mb-6 space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-walnut mb-1">Product type</label>
+          <select value={productType} onChange={e => setProductType(e.target.value)} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm">
+            {PRODUCT_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-walnut mb-1">Order title / description</label>
+          <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Michigan flag design" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-walnut mb-1">Size / details</label>
+          <input value={sizeDetails} onChange={e => setSizeDetails(e.target.value)} placeholder="24in x 48in, 2 boards" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-walnut mb-1">Price ($)</label>
+          <input value={price} onChange={e => setPrice(e.target.value)} placeholder="225" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button type="submit" disabled={loading} className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60">
+          {loading ? "Creating..." : "Create order"}
+        </button>
+        <button type="button" onClick={() => setOpen(false)} className="border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold">
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
