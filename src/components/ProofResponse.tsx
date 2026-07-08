@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function ProofPublicResponse({ token, imageUrl }: { token: string; imageUrl: string }) {
+export default function ProofResponse({ proofId, imageUrl }: { proofId: string; imageUrl: string }) {
+  const router = useRouter();
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<"approved" | "changes_requested" | null>(null);
-  const [error, setError] = useState("");
 
   async function respond(decision: "approved" | "changes_requested") {
     if (decision === "changes_requested" && !showFeedback) {
@@ -15,8 +16,7 @@ export default function ProofPublicResponse({ token, imageUrl }: { token: string
       return;
     }
     setLoading(true);
-    setError("");
-    const res = await fetch(`/api/proofs/token/${token}/respond`, {
+    const res = await fetch(`/api/proofs/${proofId}/respond`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ decision, feedback })
@@ -24,15 +24,13 @@ export default function ProofPublicResponse({ token, imageUrl }: { token: string
     setLoading(false);
     if (res.ok) {
       setDone(decision);
-    } else {
-      const body = await res.json().catch(() => ({}));
-      setError(body.error || "Something went wrong. Please try again.");
+      router.refresh();
     }
   }
 
   if (done) {
     return (
-      <div className="text-sm bg-sage/10 text-sage font-semibold p-4 rounded-md">
+      <div className="text-sm bg-sage/10 text-sage font-semibold p-3 rounded-md mt-3">
         {done === "approved"
           ? "Thanks! Your design is approved and moving into production."
           : "Thanks for the feedback — we'll send an updated proof soon."}
@@ -41,14 +39,15 @@ export default function ProofPublicResponse({ token, imageUrl }: { token: string
   }
 
   return (
-    <div>
-      <img src={imageUrl} alt="Your design proof" className="rounded-md border border-walnut/10 mb-4 max-w-full" />
+    <div className="border border-dashed border-ember bg-ember/5 rounded-lg p-4 mt-4">
+      <h3 className="font-semibold text-walnut text-sm mb-2">Design proof — awaiting your review</h3>
+      <img src={imageUrl} alt="Your design proof" className="rounded-md border border-walnut/10 mb-3 max-w-full" />
       {!showFeedback ? (
         <div className="flex gap-2">
           <button
             onClick={() => respond("approved")}
             disabled={loading}
-            className="bg-sage text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60"
+            className="bg-sage text-white px-4 py-2 rounded-md text-sm font-semibold"
           >
             Approve proof
           </button>
@@ -78,7 +77,6 @@ export default function ProofPublicResponse({ token, imageUrl }: { token: string
           </button>
         </div>
       )}
-      {error && <p className="text-sm text-red-700 mt-2">{error}</p>}
     </div>
   );
 }
