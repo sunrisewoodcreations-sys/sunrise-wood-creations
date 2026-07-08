@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Custom cornhole boards, wooden signs, planters & cutting boards",
@@ -15,16 +14,7 @@ const PRODUCTS = [
   { slug: "cutting-boards", name: "Cutting boards", desc: "End-grain and edge-grain boards, engraved names and dates." }
 ];
 
-export default async function HomePage() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  let accountHref = "/login";
-  if (user) {
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-    accountHref = profile?.role === "admin" ? "/admin/customers" : "/account";
-  }
-
+export default function HomePage() {
   return (
     <div>
       <header className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-walnut/10 bg-cream">
@@ -38,22 +28,9 @@ export default async function HomePage() {
             </Link>
           ))}
         </nav>
-        {user ? (
-          <Link
-            href={accountHref}
-            aria-label="Your account"
-            className="w-10 h-10 rounded-full bg-walnut text-cream flex items-center justify-center hover:opacity-90"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          </Link>
-        ) : (
-          <Link href="/login" className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold">
-            Login
-          </Link>
-        )}
+        <Link href="/login" className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold">
+          Login
+        </Link>
       </header>
 
       <section className="text-center px-6 py-16 md:py-24 bg-gradient-to-b from-amber/10 to-cream">
