@@ -96,27 +96,41 @@ export async function sendProofReadyEmail(opts: {
   customerName: string;
   orderTitle: string;
   orderId: string;
+  imageUrl: string;
+  respondToken: string;
 }) {
+  const reviewUrl = `${SITE_URL}/proof/${opts.respondToken}`;
+
+  let attachments: { filename: string; content: string }[] = [];
+  try {
+    const imgRes = await fetch(opts.imageUrl);
+    if (imgRes.ok) {
+      const buffer = Buffer.from(await imgRes.arrayBuffer());
+      const ext = opts.imageUrl.split(".").pop()?.split("?")[0] || "jpg";
+      attachments = [{ filename: `design-proof.${ext}`, content: buffer.toString("base64") }];
+    }
+  } catch {
+    // Attachment is a nice-to-have, not essential — continue without it.
+  }
+
   const html = shell({
     preheader: "Your cornhole design proof is ready to review",
     bodyHtml: `
       <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
       <p style="margin: 0 0 16px;">
-        We've got a design proof ready for your cornhole boards — <strong>${opts.orderTitle}</strong>.
-      </p>
-      <p style="margin: 0;">
-        Take a look and let us know if it's good to go, or if you'd like any changes.
+        We've attached the design proof for your cornhole boards — <strong>${opts.orderTitle}</strong>. Take a look, then approve it or let us know what to change — right from this email, no login needed.
       </p>
     `,
-    buttonText: "Review your proof",
-    buttonUrl: `${SITE_URL}/account/orders/${opts.orderId}`
+    buttonText: "Approve or request changes",
+    buttonUrl: reviewUrl
   });
 
   return resend.emails.send({
     from: FROM,
     to: opts.toEmail,
     subject: "Your cornhole design proof is ready to review",
-    html
+    html,
+    attachments
   });
 }
 
