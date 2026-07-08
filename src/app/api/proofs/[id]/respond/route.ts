@@ -1,7 +1,6 @@
-import { sendOrderStatusEmail, sendProofDeclinedNotice, sendProofApprovedNotice } from "@/lib/email";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { sendOrderStatusEmail, sendProofDeclinedNotice } from "@/lib/email";
+import { sendOrderStatusEmail, sendProofDeclinedNotice, sendProofApprovedNotice } from "@/lib/email";
 import { ProductType } from "@/lib/statusSteps";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -14,14 +13,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "Invalid decision" }, { status: 400 });
   }
 
-  // RLS (proofs_customer_respond policy) ensures this only succeeds if the
-  // proof belongs to an order owned by the logged-in customer.
   const { data: proof, error: proofError } = await supabase
     .from("proofs")
     .update({ status: decision, feedback: feedback || null, responded_at: new Date().toISOString() })
     .eq("id", params.id)
     .eq("status", "pending")
-    .select("*, orders(*), profiles:orders(customer_id)")
+    .select("*, orders(*)")
     .single();
 
   if (proofError || !proof) {
@@ -41,12 +38,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       orderTitle: order.title,
       orderId: order.id,
       newStatus: "design_approved"
+    });
+
     await sendProofApprovedNotice({
       orderTitle: order.title,
       orderId: order.id,
       customerName: profile?.full_name || user.email!
     });
-    
   } else {
     await sendProofDeclinedNotice({
       orderTitle: order.title,
