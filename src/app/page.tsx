@@ -1,5 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_SITE_CONTENT, SiteContent, PRODUCT_ORDER } from "@/lib/siteContent";
+import AccountMenu from "@/components/AccountMenu";
 
 export const metadata: Metadata = {
   title: "Custom cornhole boards, wooden signs, planters & cutting boards",
@@ -7,14 +10,23 @@ export const metadata: Metadata = {
     "Sunrise Wood Creations builds handcrafted, made-to-order cornhole boards, wooden signs, planter boxes, and cutting boards in Michigan. Request a custom order today."
 };
 
-const PRODUCTS = [
-  { slug: "cornhole-boards", name: "Cornhole boards", desc: "Regulation-size sets, custom painted tops, your logo or design." },
-  { slug: "wooden-signs", name: "Wooden signs", desc: "Personalized family names, farmhouse decor, business signage." },
-  { slug: "planter-boxes", name: "Planter boxes", desc: "Cedar and pine planters built for porches, gardens, and patios." },
-  { slug: "cutting-boards", name: "Cutting boards", desc: "End-grain and edge-grain boards, engraved names and dates." }
-];
+export default async function HomePage() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-export default function HomePage() {
+  let role: "admin" | "customer" | null = null;
+  if (user) {
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    role = (profile?.role as "admin" | "customer") || "customer";
+  }
+
+  const { data: settingsRow } = await supabase.from("site_settings").select("data").eq("id", 1).single();
+  const content: SiteContent = (settingsRow?.data as SiteContent) || DEFAULT_SITE_CONTENT;
+
+  const visibleProducts = PRODUCT_ORDER
+    .map(key => ({ slug: key, ...content.products[key] }))
+    .filter(p => p.enabled);
+
   return (
     <div>
       <header className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-walnut/10 bg-cream">
@@ -22,26 +34,30 @@ export default function HomePage() {
           Sunrise Wood Creations
         </Link>
         <nav className="hidden md:flex gap-7 text-sm font-medium">
-          {PRODUCTS.map(p => (
+          {visibleProducts.map(p => (
             <Link key={p.slug} href={`/products/${p.slug}`} className="text-walnut/80 hover:text-walnut">
               {p.name}
             </Link>
           ))}
         </nav>
-        <Link href="/login" className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold">
-          Login
-        </Link>
+        {role ? (
+          <AccountMenu role={role} />
+        ) : (
+          <Link href="/login" className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold">
+            Login
+          </Link>
+        )}
       </header>
 
       <section className="text-center px-6 py-16 md:py-24 bg-gradient-to-b from-amber/10 to-cream">
-        <h1 className="font-display text-4xl md:text-5xl text-walnut font-semibold mb-4">
-          Built by hand.<br />Made to last.
+        <h1 className="font-display text-4xl md:text-5xl text-walnut font-semibold mb-4 whitespace-pre-line">
+          {content.hero.heading}
         </h1>
         <p className="text-walnut/70 max-w-lg mx-auto mb-7">
-          Custom cornhole boards, wooden signs, planter boxes, and cutting boards — crafted to order, one piece at a time.
+          {content.hero.subheading}
         </p>
-        <a href="tel:2697621460" className="inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold">
-          Request a custom order
+        <a href={`tel:${content.contact.phone.replace(/\D/g, "")}`} className="inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold">
+          {content.hero.ctaText}
         </a>
       </section>
 
@@ -49,14 +65,14 @@ export default function HomePage() {
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">What we build</h2>
         <p className="text-center text-walnut/60 mb-10">Every piece is made to order.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {PRODUCTS.map(p => (
+          {visibleProducts.map(p => (
             <Link
               key={p.slug}
               href={`/products/${p.slug}`}
               className="bg-sawdust border border-walnut/10 rounded-xl p-6 hover:-translate-y-1 transition-transform"
             >
               <h3 className="font-display text-lg text-walnut mb-2">{p.name}</h3>
-              <p className="text-sm text-walnut/60 mb-3">{p.desc}</p>
+              <p className="text-sm text-walnut/60 mb-3">{p.shortDesc}</p>
               <span className="text-ember text-sm font-semibold">View options →</span>
             </Link>
           ))}
@@ -65,7 +81,7 @@ export default function HomePage() {
 
       <footer className="bg-walnut text-cream text-center py-9 px-6 text-sm">
         <div>Sunrise Wood Creations</div>
-        <div className="opacity-80 mt-1">(269) 762-1460 · sunrisewoodcreations@gmail.com</div>
+        <div className="opacity-80 mt-1">{content.contact.phone} · {content.contact.email}</div>
       </footer>
     </div>
   );
