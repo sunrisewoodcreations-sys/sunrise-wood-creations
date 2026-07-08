@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,10 +22,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
     setLoading(false);
 
@@ -33,8 +31,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Send everyone to a landing route that checks their role and forwards
-    // them on — customers to /account, the shop owner to /admin.
     router.push("/post-login");
     router.refresh();
   }
@@ -73,14 +69,23 @@ export default function LoginPage() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-walnut mb-1">Password</label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-walnut/15 rounded-md text-sm"
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full px-3 py-2 pr-16 border border-walnut/15 rounded-md text-sm"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(s => !s)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-walnut/60 hover:text-walnut"
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center justify-between text-sm">
@@ -88,11 +93,7 @@ export default function LoginPage() {
                   <input type="checkbox" defaultChecked className="w-auto" />
                   Keep me logged in
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setMode("forgot")}
-                  className="text-ember font-semibold"
-                >
+                <button type="button" onClick={() => setMode("forgot")} className="text-ember font-semibold">
                   Forgot password?
                 </button>
               </div>
@@ -110,11 +111,7 @@ export default function LoginPage() {
 
             <p className="text-sm mt-4 text-walnut/70">
               Don&apos;t have an account?{" "}
-              <button
-                type="button"
-                onClick={() => setShowContactModal(true)}
-                className="text-ember font-semibold"
-              >
+              <button type="button" onClick={() => setShowContactModal(true)} className="text-ember font-semibold">
                 Create one
               </button>
             </p>
