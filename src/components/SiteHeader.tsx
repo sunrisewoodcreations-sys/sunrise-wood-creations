@@ -11,9 +11,11 @@ export default async function SiteHeader() {
   const { data: { user } } = await supabase.auth.getUser();
 
   let role: "admin" | "customer" | null = null;
+  let fullName: string | undefined;
   if (user) {
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single();
     role = (profile?.role as "admin" | "customer") || "customer";
+    fullName = profile?.full_name;
   }
 
   const { data: settingsRow } = await supabase.from("site_settings").select("data").eq("id", 1).single();
@@ -35,7 +37,7 @@ export default async function SiteHeader() {
         ))}
       </nav>
       {role ? (
-        <AccountMenu role={role} />
+        <AccountMenu role={role} name={fullName} />
       ) : (
         <Link href="/login" className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold">
           Login
