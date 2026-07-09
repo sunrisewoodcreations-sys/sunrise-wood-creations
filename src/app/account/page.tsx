@@ -70,7 +70,7 @@ export default async function AccountPage() {
                       rel="noopener noreferrer"
                       className="text-xs font-semibold text-ember hover:underline whitespace-nowrap"
                     >
-                      Invoice #{invoice.invoice_number}
+                      Download invoice
                     </a>
                   )}
                   <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-amber/20 text-walnut whitespace-nowrap">
