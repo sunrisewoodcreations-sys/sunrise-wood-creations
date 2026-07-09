@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { productLabel, statusLabel, ProductType } from "@/lib/statusSteps";
+import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
 
 const SALES_TAX_RATE = 0.06; // Michigan
 
@@ -33,6 +34,12 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   }
 
   const { data: orders } = await ordersQuery;
+
+  const { data: allCustomers } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .eq("role", "customer")
+    .order("full_name");
 
   const orderIds = (orders || []).map((o: any) => o.id);
 
@@ -116,6 +123,8 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
           <a href="/api/invoices/bulk?period=last_year" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last year</a>
         </div>
       </div>
+
+      <AddOrderWithCustomerPicker customers={allCustomers || []} />
 
       <form method="GET" className="mb-4">
         <input
