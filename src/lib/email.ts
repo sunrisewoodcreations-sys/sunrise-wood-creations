@@ -190,3 +190,33 @@ export async function sendProofApprovedNotice(opts: {
     html
   });
 }
+
+export async function sendInvoiceEmail(opts: {
+  toEmail: string;
+  customerName: string;
+  orderTitle: string;
+  invoiceNumber: number;
+  pdfBuffer: Buffer;
+}) {
+  const html = shell({
+    preheader: `Invoice #${opts.invoiceNumber} for ${opts.orderTitle}`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
+      <p style="margin: 0 0 16px;">
+        Thanks for your order! Attached is your invoice (#${opts.invoiceNumber}) for
+        <strong>${opts.orderTitle}</strong>.
+      </p>
+      <p style="margin: 0;">We appreciate your business.</p>
+    `
+  });
+
+  return resend.emails.send({
+    from: FROM,
+    to: opts.toEmail,
+    subject: `Invoice #${opts.invoiceNumber} — Sunrise Wood Creations`,
+    html,
+    attachments: [
+      { filename: `invoice-${opts.invoiceNumber}.pdf`, content: opts.pdfBuffer.toString("base64") }
+    ]
+  });
+}
