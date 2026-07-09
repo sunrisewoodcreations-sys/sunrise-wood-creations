@@ -54,7 +54,8 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                 <div key={p.id} className="border-t border-walnut/10 pt-3 mt-3 first:border-0 first:pt-0 first:mt-0">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-mono text-walnut/50">
-                      Sent {new Date(p.sent_at).toLocaleDateString()}
+                      Sent {new Date(p.sent_at).toLocaleDateString()} at{" "}
+                      {new Date(p.sent_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
                     </span>
                     <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
                       p.status === "approved" ? "bg-sage/20 text-sage" :
@@ -63,6 +64,13 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                       {p.status === "pending" ? "Awaiting response" : p.status === "approved" ? "Approved" : "Changes requested"}
                     </span>
                   </div>
+                  {p.responded_at && (
+                    <div className="text-xs font-mono text-walnut/50 mb-1">
+                      {p.status === "approved" ? "Approved" : "Responded"}{" "}
+                      {new Date(p.responded_at).toLocaleDateString()} at{" "}
+                      {new Date(p.responded_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                    </div>
+                  )}
                   {p.feedback && (
                     <p className="text-sm bg-cream p-3 rounded-md text-walnut/80">"{p.feedback}"</p>
                   )}
