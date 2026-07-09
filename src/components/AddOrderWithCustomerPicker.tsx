@@ -11,8 +11,9 @@ const PRODUCT_TYPES = [
 ];
 
 type Customer = { id: string; full_name: string; email: string };
+type SavedProduct = { id: string; product_type: string; name: string; size_details: string | null; price_cents: number };
 
-export default function AddOrderWithCustomerPicker({ customers }: { customers: Customer[] }) {
+export default function AddOrderWithCustomerPicker({ customers, products }: { customers: Customer[]; products: SavedProduct[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -91,6 +92,16 @@ export default function AddOrderWithCustomerPicker({ customers }: { customers: C
     setNewName("");
     setNewEmail("");
     router.refresh();
+  }
+
+  function applyProduct(productId: string) {
+    if (!productId) return;
+    const p = products.find(pr => pr.id === productId);
+    if (!p) return;
+    setProductType(p.product_type);
+    setTitle(p.name);
+    setSizeDetails(p.size_details || "");
+    setPrice((p.price_cents / 100).toString());
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -197,6 +208,23 @@ export default function AddOrderWithCustomerPicker({ customers }: { customers: C
       {/* Order fields — only shown once a customer is picked */}
       {selectedCustomer && (
         <form onSubmit={handleSubmit} className="space-y-3">
+          {products.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-walnut mb-1">Fill in from a saved product (optional)</label>
+              <select
+                onChange={e => applyProduct(e.target.value)}
+                defaultValue=""
+                className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm"
+              >
+                <option value="">— Choose a saved product —</option>
+                {products.map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} — ${(p.price_cents / 100).toFixed(2)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-walnut mb-1">Product type</label>
