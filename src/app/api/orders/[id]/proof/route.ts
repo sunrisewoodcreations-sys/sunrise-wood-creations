@@ -115,6 +115,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: insertError?.message || "Couldn't create the proof" }, { status: 400 });
   }
 
+  // Move the order to "Design proof sent" automatically — no need to
+  // also flip the status dropdown by hand.
+  if (order.product_type === "cornhole") {
+    await supabase.from("orders").update({ status: "design_proof_sent" }).eq("id", order.id);
+  }
+
   const customer = (order as any).profiles;
   await sendProofReadyEmail({
     toEmail: customer.email,
