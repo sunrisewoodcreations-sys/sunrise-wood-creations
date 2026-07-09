@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sendOrderStatusEmail } from "@/lib/email";
 import { issueInvoiceForOrder } from "@/lib/invoice";
 import { ProductType } from "@/lib/statusSteps";
@@ -14,7 +15,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const { status } = await req.json();
-  const { data: order, error } = await supabase
+  const admin = createAdminClient();
+
+  const { data: order, error } = await admin
     .from("orders")
     .update({ status })
     .eq("id", params.id)
@@ -27,18 +30,28 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const customer = (order as any).profiles;
 
+  // Marking an order picked up means it was paid for in person —
+  // clear the balance automatically so the final invoice shows $0 due.
+  if (status === "picked_up" && (order.amount_paid_cents || 0) < (order.price_cents || 0)) {
+    await admin.from("orders").update({ amount_paid_cents: order.price_cents }).eq("id", order.id);
+    order.amount_paid_cents = order.price_cents;
+  }
+
+  const balanceDueCents = status === "ready_for_pickup"
+    ? (order.price_cents || 0) - (order.amount_paid_cents || 0)
+    : undefined;
+
   await sendOrderStatusEmail({
     toEmail: customer.email,
     customerName: customer.full_name,
     productType: order.product_type as ProductType,
     orderTitle: order.title,
     orderId: order.id,
-    newStatus: status
+    newStatus: status,
+    balanceDueCents
   });
 
-  // Once an order is picked up, generate and email the invoice.
-  // issueInvoiceForOrder is safe to call repeatedly — it skips itself
-  // if this order already has an invoice on file.
+  // Once an order is picked up, generate and email the final invoice.
   if (status === "picked_up") {
     try {
       await issueInvoiceForOrder(order, customer);
