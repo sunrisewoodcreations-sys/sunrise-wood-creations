@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import AccountHeader from "@/components/AccountHeader";
-import CurrentStageStatus from "@/components/CurrentStageStatus";
+import CompactProgressTracker from "@/components/CompactProgressTracker";
 import ProofResponse from "@/components/ProofResponse";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
@@ -36,13 +36,18 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     .order("created_at", { ascending: false })
     .limit(1);
 
-  const { data: latestHistory } = await supabase
+  const { data: history } = await supabase
     .from("order_status_history")
-    .select("created_at")
+    .select("status, created_at")
     .eq("order_id", order.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("created_at", { ascending: true });
+
+  const statusTimestamps: Record<string, string> = {};
+  (history || []).forEach((h: any) => {
+    if (!statusTimestamps[h.status]) statusTimestamps[h.status] = h.created_at;
+  });
+
+  const isPickedUp = order.status === "picked_up";
 
   return (
     <div className="min-h-screen bg-cream">
@@ -50,16 +55,25 @@ export default async function OrderDetailPage({ params }: { params: { id: string
       <div className="max-w-2xl mx-auto px-4 py-10">
         <Link href="/account" className="text-sm text-walnut/60 mb-4 inline-block">← Back to your orders</Link>
         <div className="bg-white border border-walnut/10 rounded-xl p-7">
-          <div className="flex items-start justify-between gap-4 mb-1">
+          <div className="mb-1">
             <h1 className="font-display text-2xl text-walnut">
               {productLabel(order.product_type as ProductType)} — {order.title}
             </h1>
-            <CurrentStageStatus
+          </div>
+          {isPickedUp ? (
+            <span className="inline-block text-xs font-semibold px-3 py-1.5 rounded-full bg-sage/20 text-sage mb-2">
+              Picked up
+              {statusTimestamps["picked_up"] && (
+                <> · {new Date(statusTimestamps["picked_up"]).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })}, {new Date(statusTimestamps["picked_up"]).toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" })} ET</>
+              )}
+            </span>
+          ) : (
+            <CompactProgressTracker
               productType={order.product_type as ProductType}
               currentStatus={order.status}
-              movedAt={latestHistory?.created_at}
+              statusTimestamps={statusTimestamps}
             />
-          </div>
+          )}
           <p className="text-sm text-walnut/60 mb-4">{order.size_details}</p>
 
           {invoices && invoices.length > 0 ? (
