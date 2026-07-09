@@ -7,6 +7,8 @@ import SendProofForm from "@/components/SendProofForm";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import AmountPaidForm from "@/components/AmountPaidForm";
 import EditOrderDateForm from "@/components/EditOrderDateForm";
+import SendStatusEmailButton from "@/components/SendStatusEmailButton";
+import SendInvoiceButton from "@/components/SendInvoiceButton";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 export default async function AdminOrderDetailPage({ params }: { params: { id: string } }) {
@@ -72,6 +74,11 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           priceCents={order.price_cents}
           initialAmountPaidCents={order.amount_paid_cents || 0}
         />
+
+        <div className="flex gap-2 mb-4">
+          <SendStatusEmailButton orderId={order.id} />
+          <SendInvoiceButton orderId={order.id} />
+        </div>
 
         <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
         <ProgressTracker productType={order.product_type as ProductType} currentStatus={order.status} statusTimestamps={statusTimestamps} />
