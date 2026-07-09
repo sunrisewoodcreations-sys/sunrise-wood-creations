@@ -96,6 +96,17 @@ export default async function AdminOrdersPage() {
         </div>
       </div>
 
+      <div className="bg-white border border-walnut/10 rounded-xl p-5 mb-6">
+        <div className="text-xs text-walnut/50 uppercase tracking-wide mb-3">Download invoices in bulk (paid orders only)</div>
+        <div className="flex flex-wrap gap-2">
+          <a href="/api/invoices/bulk?period=this_month" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This month</a>
+          <a href="/api/invoices/bulk?period=this_quarter" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This quarter</a>
+          <a href="/api/invoices/bulk?period=last_quarter" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last quarter</a>
+          <a href="/api/invoices/bulk?period=this_year" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This year</a>
+          <a href="/api/invoices/bulk?period=last_year" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last year</a>
+        </div>
+      </div>
+
       <table className="w-full bg-white border border-walnut/10 rounded-xl overflow-hidden text-sm">
         <thead>
           <tr className="bg-sawdust text-walnut text-xs uppercase tracking-wide">
