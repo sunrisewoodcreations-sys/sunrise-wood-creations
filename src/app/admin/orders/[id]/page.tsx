@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import ProgressTracker from "@/components/ProgressTracker";
 import StatusUpdater from "@/components/StatusUpdater";
 import SendProofForm from "@/components/SendProofForm";
+import DeleteOrderButton from "@/components/DeleteOrderButton";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 export default async function AdminOrderDetailPage({ params }: { params: { id: string } }) {
@@ -26,9 +27,12 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
 
   return (
     <div>
-      <Link href={`/admin/customers/${customer.id}`} className="text-sm text-walnut/60 mb-4 inline-block">
-        ← Back to {customer.full_name}
-      </Link>
+      <div className="flex items-center justify-between mb-4">
+        <Link href={`/admin/customers/${customer.id}`} className="text-sm text-walnut/60 inline-block">
+          ← Back to {customer.full_name}
+        </Link>
+        <DeleteOrderButton orderId={order.id} orderTitle={order.title} />
+      </div>
 
       <div className="bg-white border border-walnut/10 rounded-xl p-7 mb-6">
         <h1 className="font-display text-2xl text-walnut mb-1">
