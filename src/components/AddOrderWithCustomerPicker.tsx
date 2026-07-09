@@ -94,6 +94,26 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
     router.refresh();
   }
 
+  // Saved-product search/select state
+  const [productSearch, setProductSearch] = useState("");
+  const [productDropdownOpen, setProductDropdownOpen] = useState(false);
+  const productSearchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutsideProduct(e: MouseEvent) {
+      if (productSearchRef.current && !productSearchRef.current.contains(e.target as Node)) {
+        setProductDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutsideProduct);
+    return () => document.removeEventListener("mousedown", handleClickOutsideProduct);
+  }, []);
+
+  const matchingProducts = products.filter(p => p.product_type === productType);
+  const filteredProducts = productSearch.trim()
+    ? matchingProducts.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
+    : matchingProducts;
+
   function applyProduct(productId: string) {
     if (!productId) return;
     const p = products.find(pr => pr.id === productId);
@@ -102,6 +122,8 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
     setTitle(p.name);
     setSizeDetails(p.size_details || "");
     setPrice((p.price_cents / 100).toString());
+    setProductSearch(p.name);
+    setProductDropdownOpen(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -208,21 +230,35 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
       {/* Order fields — only shown once a customer is picked */}
       {selectedCustomer && (
         <form onSubmit={handleSubmit} className="space-y-3">
-          {productType !== "cornhole" && products.filter(p => p.product_type === productType).length > 0 && (
-            <div>
+          {productType !== "cornhole" && matchingProducts.length > 0 && (
+            <div className="relative" ref={productSearchRef}>
               <label className="block text-xs font-semibold text-walnut mb-1">Fill in from a saved product (optional)</label>
-              <select
-                onChange={e => applyProduct(e.target.value)}
-                defaultValue=""
+              <input
+                value={productSearch}
+                onChange={e => { setProductSearch(e.target.value); setProductDropdownOpen(true); }}
+                onFocus={() => setProductDropdownOpen(true)}
+                placeholder="Search saved products..."
                 className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm"
-              >
-                <option value="">— Choose a saved product —</option>
-                {products.filter(p => p.product_type === productType).map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} — ${(p.price_cents / 100).toFixed(2)}
-                  </option>
-                ))}
-              </select>
+              />
+              {productDropdownOpen && (
+                <div className="absolute z-20 mt-1 w-full bg-white border border-walnut/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
+                  {filteredProducts.length > 0 ? (
+                    filteredProducts.map(p => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => applyProduct(p.id)}
+                        className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-walnut/5 last:border-0"
+                      >
+                        <div className="font-medium text-walnut">{p.name}</div>
+                        <div className="text-xs text-walnut/50">${(p.price_cents / 100).toFixed(2)}{p.size_details ? ` · ${p.size_details}` : ""}</div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-3 py-3 text-sm text-walnut/50">No matching products.</div>
+                  )}
+                </div>
+              )}
             </div>
           )}
           <div className="grid grid-cols-2 gap-3">
