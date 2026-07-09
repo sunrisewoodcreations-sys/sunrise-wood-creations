@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import AccountHeader from "@/components/AccountHeader";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 import CompactProgressTracker from "@/components/CompactProgressTracker";
 import ProofResponse from "@/components/ProofResponse";
 import { productLabel, ProductType } from "@/lib/statusSteps";
@@ -50,9 +51,9 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   const isPickedUp = order.status === "picked_up";
 
   return (
-    <div className="min-h-screen bg-cream">
-      <AccountHeader />
-      <div className="max-w-2xl mx-auto px-4 py-10">
+    <div className="min-h-screen bg-cream flex flex-col">
+      <SiteHeader />
+      <div className="max-w-2xl mx-auto px-4 py-10 flex-1 w-full">
         <Link href="/account" className="text-sm text-walnut/60 mb-4 inline-block">← Back to your orders</Link>
         <div className="bg-white border border-walnut/10 rounded-xl p-7">
           <div className="mb-1">
@@ -99,6 +100,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           )}
         </div>
       </div>
+      <SiteFooter />
     </div>
   );
 }
