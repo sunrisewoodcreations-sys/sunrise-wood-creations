@@ -54,8 +54,8 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                 <div key={p.id} className="border-t border-walnut/10 pt-3 mt-3 first:border-0 first:pt-0 first:mt-0">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-mono text-walnut/50">
-                      Sent {new Date(p.sent_at).toLocaleDateString()} at{" "}
-                      {new Date(p.sent_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                      Sent {new Date(p.sent_at).toLocaleDateString("en-US", { timeZone: "America/New_York" })} at{" "}
+                      {new Date(p.sent_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET
                     </span>
                     <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
                       p.status === "approved" ? "bg-sage/20 text-sage" :
@@ -67,8 +67,8 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                   {p.responded_at && (
                     <div className="text-xs font-mono text-walnut/50 mb-1">
                       {p.status === "approved" ? "Approved" : "Responded"}{" "}
-                      {new Date(p.responded_at).toLocaleDateString()} at{" "}
-                      {new Date(p.responded_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                      {new Date(p.responded_at).toLocaleDateString("en-US", { timeZone: "America/New_York" })} at{" "}
+                      {new Date(p.responded_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET
                     </div>
                   )}
                   {p.feedback && (
