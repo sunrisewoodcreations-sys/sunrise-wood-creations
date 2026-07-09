@@ -1,11 +1,20 @@
 import { stepsFor, ProductType } from "@/lib/statusSteps";
 
+function formatStamp(iso: string) {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" });
+  const time = d.toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" });
+  return `${date}, ${time} ET`;
+}
+
 export default function ProgressTracker({
   productType,
-  currentStatus
+  currentStatus,
+  statusTimestamps
 }: {
   productType: ProductType;
   currentStatus: string;
+  statusTimestamps?: Record<string, string>;
 }) {
   const steps = stepsFor(productType);
   const currentIndex = steps.findIndex(s => s.key === currentStatus);
@@ -15,8 +24,9 @@ export default function ProgressTracker({
       {steps.map((step, i) => {
         const isDone = i < currentIndex;
         const isCurrent = i === currentIndex;
+        const stamp = statusTimestamps?.[step.key];
         return (
-          <div key={step.key} className="flex flex-col items-center min-w-[92px] relative">
+          <div key={step.key} className="flex flex-col items-center min-w-[110px] relative">
             {i > 0 && (
               <div
                 className={`absolute top-4 -left-1/2 w-full h-[3px] ${
@@ -33,9 +43,14 @@ export default function ProgressTracker({
               {isDone && "✓"}
               {isCurrent && <span className="w-3 h-3 rounded-full bg-ember" />}
             </div>
-            <div className={`text-[11px] text-center mt-2 leading-tight max-w-[90px] ${isCurrent ? "text-ember font-semibold" : "text-walnut/60"}`}>
+            <div className={`text-[11px] text-center mt-2 leading-tight max-w-[100px] ${isCurrent ? "text-ember font-semibold" : "text-walnut/60"}`}>
               {step.label}
             </div>
+            {(isDone || isCurrent) && stamp && (
+              <div className="text-[10px] text-center mt-1 leading-tight max-w-[100px] text-walnut/40 font-mono">
+                {formatStamp(stamp)}
+              </div>
+            )}
           </div>
         );
       })}
