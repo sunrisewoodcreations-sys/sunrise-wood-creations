@@ -16,13 +16,23 @@ function easternParts(dateInput: string | Date) {
   return { year, month };
 }
 
-export default async function AdminOrdersPage() {
+export default async function AdminOrdersPage({ searchParams }: { searchParams: { q?: string } }) {
   const supabase = createClient();
+  const query = searchParams.q?.trim() || "";
 
-  const { data: orders } = await supabase
+  let ordersQuery = supabase
     .from("orders")
-    .select("*, profiles:customer_id(full_name, email)")
+    .select("*, profiles:customer_id!inner(full_name, email)")
     .order("created_at", { ascending: false });
+
+  if (query) {
+    ordersQuery = ordersQuery.or(
+      `full_name.ilike.%${query}%,email.ilike.%${query}%`,
+      { foreignTable: "profiles" }
+    );
+  }
+
+  const { data: orders } = await ordersQuery;
 
   const orderIds = (orders || []).map((o: any) => o.id);
 
@@ -106,6 +116,15 @@ export default async function AdminOrdersPage() {
           <a href="/api/invoices/bulk?period=last_year" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last year</a>
         </div>
       </div>
+
+      <form method="GET" className="mb-4">
+        <input
+          name="q"
+          defaultValue={query}
+          placeholder="Search orders by customer name or email..."
+          className="w-full max-w-md px-3 py-2.5 border border-walnut/15 rounded-md text-sm"
+        />
+      </form>
 
       <table className="w-full bg-white border border-walnut/10 rounded-xl overflow-hidden text-sm">
         <thead>
