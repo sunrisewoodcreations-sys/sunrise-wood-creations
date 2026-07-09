@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { productLabel, ProductType } from "@/lib/statusSteps";
-import CurrentStageStatus from "@/components/CurrentStageStatus";
+import CompactProgressTracker from "@/components/CompactProgressTracker";
 
 export default async function AccountPage() {
   const supabase = createClient();
@@ -37,17 +37,18 @@ export default async function AccountPage() {
   const { data: history } = orderIds.length > 0
     ? await supabase
         .from("order_status_history")
-        .select("order_id, created_at")
+        .select("order_id, status, created_at")
         .in("order_id", orderIds)
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: true })
     : { data: [] as any[] };
 
-  // The most recent history row per order is when it moved to its
-  // current stage.
-  const latestStageChangeByOrder: Record<string, string> = {};
+  // For each order, keep the earliest timestamp each status was reached —
+  // this feeds the full step-by-step bar for in-progress orders.
+  const statusTimestampsByOrder: Record<string, Record<string, string>> = {};
   (history || []).forEach((h: any) => {
-    if (!latestStageChangeByOrder[h.order_id]) {
-      latestStageChangeByOrder[h.order_id] = h.created_at;
+    if (!statusTimestampsByOrder[h.order_id]) statusTimestampsByOrder[h.order_id] = {};
+    if (!statusTimestampsByOrder[h.order_id][h.status]) {
+      statusTimestampsByOrder[h.order_id][h.status] = h.created_at;
     }
   });
 
@@ -67,36 +68,57 @@ export default async function AccountPage() {
 
           {orders?.map(order => {
             const invoice = latestInvoiceByOrder[order.id];
+            const orderStatusTimestamps = statusTimestampsByOrder[order.id] || {};
+            const isPickedUp = order.status === "picked_up";
+
             return (
               <div
                 key={order.id}
-                className="flex items-center justify-between py-4 border-b border-walnut/10 last:border-b-0 -mx-2 px-2 rounded-md"
+                className="py-4 border-b border-walnut/10 last:border-b-0"
               >
-                <Link href={`/account/orders/${order.id}`} className="flex-1 hover:bg-cream/50 -m-2 p-2 rounded-md">
-                  <div className="font-semibold text-walnut text-sm">
-                    {productLabel(order.product_type as ProductType)} — {order.title}
+                <div className="flex items-start justify-between gap-3">
+                  <Link href={`/account/orders/${order.id}`} className="flex-1 hover:opacity-80">
+                    <div className="font-semibold text-walnut text-sm">
+                      {productLabel(order.product_type as ProductType)} — {order.title}
+                    </div>
+                    <div className="text-xs text-walnut/50 font-mono">
+                      Placed {new Date(order.created_at).toLocaleDateString()}
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-3">
+                    {invoice?.pdf_url && (
+                      <a
+                        href={invoice.pdf_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-ember hover:underline whitespace-nowrap"
+                      >
+                        Download invoice
+                      </a>
+                    )}
+                    {isPickedUp && (
+                      <div className="flex flex-col items-end">
+                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-sage/20 text-sage whitespace-nowrap">
+                          Picked up
+                        </span>
+                        {orderStatusTimestamps["picked_up"] && (
+                          <span className="text-[10px] text-walnut/40 font-mono mt-1 whitespace-nowrap">
+                            {new Date(orderStatusTimestamps["picked_up"]).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })},{" "}
+                            {new Date(orderStatusTimestamps["picked_up"]).toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" })} ET
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-xs text-walnut/50 font-mono">
-                    Placed {new Date(order.created_at).toLocaleDateString()}
-                  </div>
-                </Link>
-                <div className="flex items-center gap-3">
-                  {invoice?.pdf_url && (
-                    <a
-                      href={invoice.pdf_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-semibold text-ember hover:underline whitespace-nowrap"
-                    >
-                      Download invoice
-                    </a>
-                  )}
-                  <CurrentStageStatus
+                </div>
+
+                {!isPickedUp && (
+                  <CompactProgressTracker
                     productType={order.product_type as ProductType}
                     currentStatus={order.status}
-                    movedAt={latestStageChangeByOrder[order.id]}
+                    statusTimestamps={orderStatusTimestamps}
                   />
-                </div>
+                )}
               </div>
             );
           })}
