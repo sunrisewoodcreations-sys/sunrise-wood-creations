@@ -124,16 +124,18 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
         </div>
       </div>
 
-      <AddOrderWithCustomerPicker customers={allCustomers || []} />
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <AddOrderWithCustomerPicker customers={allCustomers || []} />
 
-      <form method="GET" className="mb-4">
-        <input
-          name="q"
-          defaultValue={query}
-          placeholder="Search orders by customer name or email..."
-          className="w-full max-w-md px-3 py-2.5 border border-walnut/15 rounded-md text-sm"
-        />
-      </form>
+        <form method="GET" className="flex-1 min-w-[240px]">
+          <input
+            name="q"
+            defaultValue={query}
+            placeholder="Search orders by customer name or email..."
+            className="w-full px-3 py-2.5 border border-walnut/15 rounded-md text-sm"
+          />
+        </form>
+      </div>
 
       <table className="w-full bg-white border border-walnut/10 rounded-xl overflow-hidden text-sm">
         <thead>
