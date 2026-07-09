@@ -196,24 +196,27 @@ export async function sendInvoiceEmail(opts: {
   customerName: string;
   orderTitle: string;
   invoiceNumber: number;
+  paidInFull: boolean;
   pdfBuffer: Buffer;
 }) {
+  const message = opts.paidInFull
+    ? `Attached is your final invoice (#${opts.invoiceNumber}) for <strong>${opts.orderTitle}</strong> — paid in full. Thanks so much for your business!`
+    : `Attached is your updated invoice (#${opts.invoiceNumber}) for <strong>${opts.orderTitle}</strong>, showing your payment and the remaining balance.`;
+
   const html = shell({
-    preheader: `Invoice #${opts.invoiceNumber} for ${opts.orderTitle}`,
+    preheader: opts.paidInFull ? `Paid in full — Invoice #${opts.invoiceNumber}` : `Invoice #${opts.invoiceNumber} update`,
     bodyHtml: `
       <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
-      <p style="margin: 0 0 16px;">
-        Thanks for your order! Attached is your invoice (#${opts.invoiceNumber}) for
-        <strong>${opts.orderTitle}</strong>.
-      </p>
-      <p style="margin: 0;">We appreciate your business.</p>
+      <p style="margin: 0 0 16px;">${message}</p>
     `
   });
 
   return resend.emails.send({
     from: FROM,
     to: opts.toEmail,
-    subject: `Invoice #${opts.invoiceNumber} — Sunrise Wood Creations`,
+    subject: opts.paidInFull
+      ? `Paid in full — Invoice #${opts.invoiceNumber} — Sunrise Wood Creations`
+      : `Invoice #${opts.invoiceNumber} — Sunrise Wood Creations`,
     html,
     attachments: [
       { filename: `invoice-${opts.invoiceNumber}.pdf`, content: opts.pdfBuffer.toString("base64") }
