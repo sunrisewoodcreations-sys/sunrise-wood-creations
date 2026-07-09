@@ -86,7 +86,7 @@ export default function ProductRow({ product }: { product: Product }) {
 
   return (
     <tr className="border-t border-walnut/10">
-      <td className="px-4 py-3 font-semibold text-walnut">{product.name}</td>
+      <td className="px-4 py-3 text-walnut/70">{product.name}</td>
       <td className="px-4 py-3 text-walnut/70">{productLabel(product.product_type as ProductType)}</td>
       <td className="px-4 py-3 text-walnut/70">{product.size_details || "—"}</td>
       <td className="px-4 py-3 text-right text-walnut/70">${(product.price_cents / 100).toFixed(2)}</td>
