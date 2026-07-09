@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { productLabel, statusLabel, ProductType } from "@/lib/statusSteps";
 import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
+import DeleteOrderButton from "@/components/DeleteOrderButton";
 
 const SALES_TAX_RATE = 0.06; // Michigan
 
@@ -154,6 +155,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
             <th className="text-right px-4 py-3">Paid</th>
             <th className="text-right px-4 py-3">Owed</th>
             <th className="text-left px-4 py-3">Invoice</th>
+            <th className="text-right px-4 py-3">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -198,10 +200,13 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                   <span className="text-xs text-walnut/40">—</span>
                 )}
               </td>
+              <td className="px-4 py-3 text-right">
+                <DeleteOrderButton orderId={order.id} orderTitle={order.title} />
+              </td>
             </tr>
           );})}
           {orders?.length === 0 && (
-            <tr><td colSpan={8} className="px-4 py-6 text-center text-walnut/50">No orders yet.</td></tr>
+            <tr><td colSpan={9} className="px-4 py-6 text-center text-walnut/50">No orders yet.</td></tr>
           )}
         </tbody>
       </table>
