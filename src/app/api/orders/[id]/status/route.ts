@@ -33,6 +33,18 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   // This is the only status change that sends an email automatically;
   // every other status change is silent — use the "Send email" button
   // on the order page to notify the customer manually.
+  // Three status changes trigger an automatic invoice email:
+  // deposit_received (shows what's left after the deposit), and
+  // picked_up (shows the final, zeroed-out balance). Every other status
+  // change stays silent — use the buttons on the order page instead.
+  if (status === "deposit_received") {
+    try {
+      await issueInvoiceForOrder(order, customer);
+    } catch (err) {
+      console.error("Invoice generation failed:", err);
+    }
+  }
+
   if (status === "picked_up") {
     if ((order.amount_paid_cents || 0) < (order.price_cents || 0)) {
       await admin.from("orders").update({ amount_paid_cents: order.price_cents }).eq("id", order.id);
