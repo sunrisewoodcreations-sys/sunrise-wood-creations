@@ -78,6 +78,9 @@ export default async function AdminOrdersPage() {
             <th className="text-left px-4 py-3">Customer</th>
             <th className="text-left px-4 py-3">Date</th>
             <th className="text-left px-4 py-3">Status</th>
+            <th className="text-right px-4 py-3">Sales</th>
+            <th className="text-right px-4 py-3">Paid</th>
+            <th className="text-right px-4 py-3">Owed</th>
           </tr>
         </thead>
         <tbody>
@@ -95,10 +98,21 @@ export default async function AdminOrdersPage() {
               <td className="px-4 py-3 text-walnut/70">
                 {statusLabel(order.product_type as ProductType, order.status)}
               </td>
+              <td className="px-4 py-3 text-right text-walnut/70">
+                ${((order.price_cents || 0) / 100).toFixed(2)}
+              </td>
+              <td className="px-4 py-3 text-right text-walnut/70">
+                ${((order.amount_paid_cents || 0) / 100).toFixed(2)}
+              </td>
+              <td className={`px-4 py-3 text-right font-semibold ${
+                (order.price_cents || 0) - (order.amount_paid_cents || 0) > 0 ? "text-ember" : "text-sage"
+              }`}>
+                ${(((order.price_cents || 0) - (order.amount_paid_cents || 0)) / 100).toFixed(2)}
+              </td>
             </tr>
           ))}
           {orders?.length === 0 && (
-            <tr><td colSpan={4} className="px-4 py-6 text-center text-walnut/50">No orders yet.</td></tr>
+            <tr><td colSpan={7} className="px-4 py-6 text-center text-walnut/50">No orders yet.</td></tr>
           )}
         </tbody>
       </table>
