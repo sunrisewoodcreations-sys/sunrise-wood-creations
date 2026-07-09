@@ -112,7 +112,7 @@ export async function issueInvoiceForOrder(order: any, customer: { email: string
 
   const pdfBuffer = await buildInvoicePdf({
     invoiceNumber,
-    invoiceDate: new Date(),
+    invoiceDate: new Date(order.created_at),
     customerName: customer.full_name,
     itemDescription,
     totalCents: order.price_cents || 0,
