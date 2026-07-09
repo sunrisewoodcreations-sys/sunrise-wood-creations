@@ -134,7 +134,7 @@ export default function AddOrderWithCustomerPicker({ customers }: { customers: C
     return (
       <button
         onClick={() => setOpen(true)}
-        className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold mb-5"
+        className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap"
       >
         + Add order
       </button>
