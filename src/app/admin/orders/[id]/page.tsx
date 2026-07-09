@@ -5,6 +5,7 @@ import ProgressTracker from "@/components/ProgressTracker";
 import StatusUpdater from "@/components/StatusUpdater";
 import SendProofForm from "@/components/SendProofForm";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
+import AmountPaidForm from "@/components/AmountPaidForm";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 export default async function AdminOrderDetailPage({ params }: { params: { id: string } }) {
@@ -57,6 +58,12 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         <p className="text-sm text-walnut/60 mb-4">
           {order.size_details} · ${(order.price_cents / 100).toFixed(2)} · Placed {new Date(order.created_at).toLocaleDateString()}
         </p>
+
+        <AmountPaidForm
+          orderId={order.id}
+          priceCents={order.price_cents}
+          initialAmountPaidCents={order.amount_paid_cents || 0}
+        />
 
         <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
         <ProgressTracker productType={order.product_type as ProductType} currentStatus={order.status} statusTimestamps={statusTimestamps} />
