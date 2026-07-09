@@ -16,6 +16,25 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
     .eq("customer_id", params.id)
     .order("created_at", { ascending: false });
 
+  const orderIds = (orders || []).map((o: any) => o.id);
+
+  const { data: invoices } = orderIds.length > 0
+    ? await supabase
+        .from("invoices")
+        .select("*")
+        .in("order_id", orderIds)
+        .order("created_at", { ascending: false })
+    : { data: [] as any[] };
+
+  // Keep only the most recent invoice per order, since that's the one
+  // worth linking to from this list view.
+  const latestInvoiceByOrder: Record<string, any> = {};
+  (invoices || []).forEach((inv: any) => {
+    if (!latestInvoiceByOrder[inv.order_id]) {
+      latestInvoiceByOrder[inv.order_id] = inv;
+    }
+  });
+
   return (
     <div>
       <Link href="/admin/customers" className="text-sm text-walnut/60 mb-4 inline-block">← All customers</Link>
@@ -31,27 +50,45 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
             <th className="text-left px-4 py-3">Date</th>
             <th className="text-left px-4 py-3">Size / details</th>
             <th className="text-left px-4 py-3">Status</th>
+            <th className="text-left px-4 py-3">Invoice</th>
           </tr>
         </thead>
         <tbody>
-          {orders?.map(order => (
-            <tr key={order.id} className="border-t border-walnut/10 hover:bg-cream/60">
-              <td className="px-4 py-3">
-                <Link href={`/admin/orders/${order.id}`} className="font-semibold text-walnut">
-                  {productLabel(order.product_type as ProductType)} — {order.title}
-                </Link>
-              </td>
-              <td className="px-4 py-3 font-mono text-walnut/70">
-                {new Date(order.created_at).toLocaleDateString()}
-              </td>
-              <td className="px-4 py-3 text-walnut/70">{order.size_details}</td>
-              <td className="px-4 py-3 text-walnut/70">
-                {statusLabel(order.product_type as ProductType, order.status)}
-              </td>
-            </tr>
-          ))}
+          {orders?.map((order: any) => {
+            const invoice = latestInvoiceByOrder[order.id];
+            return (
+              <tr key={order.id} className="border-t border-walnut/10 hover:bg-cream/60">
+                <td className="px-4 py-3">
+                  <Link href={`/admin/orders/${order.id}`} className="font-semibold text-walnut">
+                    {productLabel(order.product_type as ProductType)} — {order.title}
+                  </Link>
+                </td>
+                <td className="px-4 py-3 font-mono text-walnut/70">
+                  {new Date(order.created_at).toLocaleDateString()}
+                </td>
+                <td className="px-4 py-3 text-walnut/70">{order.size_details}</td>
+                <td className="px-4 py-3 text-walnut/70">
+                  {statusLabel(order.product_type as ProductType, order.status)}
+                </td>
+                <td className="px-4 py-3">
+                  {invoice?.pdf_url ? (
+                    <a
+                      href={invoice.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-ember hover:underline"
+                    >
+                      Download #{invoice.invoice_number}
+                    </a>
+                  ) : (
+                    <span className="text-xs text-walnut/40">—</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
           {orders?.length === 0 && (
-            <tr><td colSpan={4} className="px-4 py-6 text-center text-walnut/50">No orders yet.</td></tr>
+            <tr><td colSpan={5} className="px-4 py-6 text-center text-walnut/50">No orders yet.</td></tr>
           )}
         </tbody>
       </table>
