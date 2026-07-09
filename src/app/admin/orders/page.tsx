@@ -41,6 +41,11 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
     .eq("role", "customer")
     .order("full_name");
 
+  const { data: savedProducts } = await supabase
+    .from("products")
+    .select("id, product_type, name, size_details, price_cents")
+    .order("name");
+
   const orderIds = (orders || []).map((o: any) => o.id);
 
   const { data: invoices } = orderIds.length > 0
@@ -126,7 +131,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
 
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <AddOrderWithCustomerPicker customers={allCustomers || []} />
+        <AddOrderWithCustomerPicker customers={allCustomers || []} products={savedProducts || []} />
 
         <form method="GET" className="flex-1 min-w-[240px]">
           <input
