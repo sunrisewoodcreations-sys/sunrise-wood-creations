@@ -101,7 +101,7 @@ export default function ProductRow({ product }: { product: Product }) {
         ) : (
           <>
             <button onClick={() => setEditing(true)} className="text-xs text-walnut hover:underline mr-3">Edit</button>
-            <button onClick={() => setConfirmingDelete(true)} className="text-xs text-ember/70 hover:text-ember underline">Delete</button>
+            <button onClick={() => setConfirmingDelete(true)} className="text-xs text-walnut hover:underline">Delete</button>
           </>
         )}
       </td>
