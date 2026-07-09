@@ -45,7 +45,7 @@ export default function AddProductForm() {
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold mb-5">
+      <button onClick={() => setOpen(true)} className="bg-[#1E3A5F] text-white px-4 py-2 rounded-md text-sm font-semibold mb-5">
         + Add product
       </button>
     );
