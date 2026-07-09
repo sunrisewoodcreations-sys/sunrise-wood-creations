@@ -33,7 +33,8 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     .from("invoices")
     .select("*")
     .eq("order_id", order.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(1);
 
   return (
     <div className="min-h-screen bg-cream">
