@@ -54,6 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   let watermarkedUrl = imageUrl.trim();
   try {
     const imgRes = await fetch(imageUrl.trim());
+    console.log("Image fetch status:", imgRes.status, imgRes.ok);
     if (imgRes.ok) {
       const original = Buffer.from(await imgRes.arrayBuffer());
       const watermarked = await watermarkImage(original, "Sunrise Wood Creations");
@@ -64,13 +65,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         .from("proofs")
         .upload(filename, watermarked, { contentType: "image/jpeg", upsert: true });
 
-      if (!uploadError) {
+      if (uploadError) {
+        console.error("Storage upload failed:", uploadError.message);
+      } else {
         const { data: publicUrlData } = admin.storage.from("proofs").getPublicUrl(filename);
         watermarkedUrl = publicUrlData.publicUrl;
+        console.log("Watermarked URL:", watermarkedUrl);
       }
     }
-  } catch {
-    // If watermarking fails for any reason, fall back to the original image.
+  } catch (err) {
+    console.error("Watermarking failed:", err);
   }
 
   const { data: newProof, error: insertError } = await supabase
