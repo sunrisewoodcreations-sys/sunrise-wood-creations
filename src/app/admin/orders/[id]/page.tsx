@@ -25,6 +25,21 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
     .eq("order_id", order.id)
     .order("sent_at", { ascending: false });
 
+  const { data: history } = await supabase
+    .from("order_status_history")
+    .select("status, created_at")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: true });
+
+  // Keep the earliest time each status was reached, in case a status
+  // ever gets logged more than once.
+  const statusTimestamps: Record<string, string> = {};
+  (history || []).forEach((h: any) => {
+    if (!statusTimestamps[h.status]) {
+      statusTimestamps[h.status] = h.created_at;
+    }
+  });
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -44,7 +59,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         </p>
 
         <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
-        <ProgressTracker productType={order.product_type as ProductType} currentStatus={order.status} />
+        <ProgressTracker productType={order.product_type as ProductType} currentStatus={order.status} statusTimestamps={statusTimestamps} />
       </div>
 
       {order.product_type === "cornhole" && (
