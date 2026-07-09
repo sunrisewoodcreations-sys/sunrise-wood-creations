@@ -208,7 +208,7 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
       {/* Order fields — only shown once a customer is picked */}
       {selectedCustomer && (
         <form onSubmit={handleSubmit} className="space-y-3">
-          {products.length > 0 && (
+          {productType !== "cornhole" && products.filter(p => p.product_type === productType).length > 0 && (
             <div>
               <label className="block text-xs font-semibold text-walnut mb-1">Fill in from a saved product (optional)</label>
               <select
@@ -217,7 +217,7 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
                 className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm"
               >
                 <option value="">— Choose a saved product —</option>
-                {products.map(p => (
+                {products.filter(p => p.product_type === productType).map(p => (
                   <option key={p.id} value={p.id}>
                     {p.name} — ${(p.price_cents / 100).toFixed(2)}
                   </option>
@@ -234,7 +234,13 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
             </div>
             <div>
               <label className="block text-xs font-semibold text-walnut mb-1">Order title / description</label>
-              <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Michigan flag design" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+              <input
+                required
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder={productType === "cornhole" ? "Design name (e.g. Michigan flag)" : "Order title / description"}
+                className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm"
+              />
             </div>
             <div>
               <label className="block text-xs font-semibold text-walnut mb-1">Size / details</label>
