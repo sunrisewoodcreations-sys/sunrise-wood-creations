@@ -50,6 +50,9 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
             <th className="text-left px-4 py-3">Date</th>
             <th className="text-left px-4 py-3">Size / details</th>
             <th className="text-left px-4 py-3">Status</th>
+            <th className="text-right px-4 py-3">Sales</th>
+            <th className="text-right px-4 py-3">Paid</th>
+            <th className="text-right px-4 py-3">Owed</th>
             <th className="text-left px-4 py-3">Invoice</th>
           </tr>
         </thead>
@@ -70,6 +73,17 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
                 <td className="px-4 py-3 text-walnut/70">
                   {statusLabel(order.product_type as ProductType, order.status)}
                 </td>
+                <td className="px-4 py-3 text-right text-walnut/70">
+                  ${((order.price_cents || 0) / 100).toFixed(2)}
+                </td>
+                <td className="px-4 py-3 text-right text-walnut/70">
+                  ${((order.amount_paid_cents || 0) / 100).toFixed(2)}
+                </td>
+                <td className={`px-4 py-3 text-right font-semibold ${
+                  (order.price_cents || 0) - (order.amount_paid_cents || 0) > 0 ? "text-ember" : "text-sage"
+                }`}>
+                  ${(((order.price_cents || 0) - (order.amount_paid_cents || 0)) / 100).toFixed(2)}
+                </td>
                 <td className="px-4 py-3">
                   {invoice?.pdf_url ? (
                     <a
@@ -88,7 +102,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
             );
           })}
           {orders?.length === 0 && (
-            <tr><td colSpan={5} className="px-4 py-6 text-center text-walnut/50">No orders yet.</td></tr>
+            <tr><td colSpan={8} className="px-4 py-6 text-center text-walnut/50">No orders yet.</td></tr>
           )}
         </tbody>
       </table>
