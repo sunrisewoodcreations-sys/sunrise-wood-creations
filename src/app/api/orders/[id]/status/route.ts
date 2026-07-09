@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendOrderStatusEmail } from "@/lib/email";
 import { issueInvoiceForOrder } from "@/lib/invoice";
-import { ProductType } from "@/lib/statusSteps";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -32,27 +30,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   // Marking an order picked up means it was paid for in person —
   // clear the balance automatically so the final invoice shows $0 due.
-  if (status === "picked_up" && (order.amount_paid_cents || 0) < (order.price_cents || 0)) {
-    await admin.from("orders").update({ amount_paid_cents: order.price_cents }).eq("id", order.id);
-    order.amount_paid_cents = order.price_cents;
-  }
-
-  const balanceDueCents = status === "ready_for_pickup"
-    ? (order.price_cents || 0) - (order.amount_paid_cents || 0)
-    : undefined;
-
-  await sendOrderStatusEmail({
-    toEmail: customer.email,
-    customerName: customer.full_name,
-    productType: order.product_type as ProductType,
-    orderTitle: order.title,
-    orderId: order.id,
-    newStatus: status,
-    balanceDueCents
-  });
-
-  // Once an order is picked up, generate and email the final invoice.
+  // This is the only status change that sends an email automatically;
+  // every other status change is silent — use the "Send email" button
+  // on the order page to notify the customer manually.
   if (status === "picked_up") {
+    if ((order.amount_paid_cents || 0) < (order.price_cents || 0)) {
+      await admin.from("orders").update({ amount_paid_cents: order.price_cents }).eq("id", order.id);
+      order.amount_paid_cents = order.price_cents;
+    }
     try {
       await issueInvoiceForOrder(order, customer);
     } catch (err) {
