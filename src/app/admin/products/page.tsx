@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { productLabel, ProductType } from "@/lib/statusSteps";
 import AddProductForm from "@/components/AddProductForm";
-import DeleteProductButton from "@/components/DeleteProductButton";
+import ProductRow from "@/components/ProductRow";
 
 export default async function ProductsPage() {
   const supabase = createClient();
@@ -32,15 +31,7 @@ export default async function ProductsPage() {
         </thead>
         <tbody>
           {products?.map((p: any) => (
-            <tr key={p.id} className="border-t border-walnut/10">
-              <td className="px-4 py-3 font-semibold text-walnut">{p.name}</td>
-              <td className="px-4 py-3 text-walnut/70">{productLabel(p.product_type as ProductType)}</td>
-              <td className="px-4 py-3 text-walnut/70">{p.size_details || "—"}</td>
-              <td className="px-4 py-3 text-right text-walnut/70">${(p.price_cents / 100).toFixed(2)}</td>
-              <td className="px-4 py-3 text-right">
-                <DeleteProductButton productId={p.id} />
-              </td>
-            </tr>
+            <ProductRow key={p.id} product={p} />
           ))}
           {products?.length === 0 && (
             <tr><td colSpan={5} className="px-4 py-6 text-center text-walnut/50">No products saved yet.</td></tr>
