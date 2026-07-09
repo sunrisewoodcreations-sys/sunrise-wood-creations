@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import { productLabel, statusLabel, ProductType } from "@/lib/statusSteps";
+import { productLabel, ProductType } from "@/lib/statusSteps";
+import CurrentStageStatus from "@/components/CurrentStageStatus";
 
 export default async function AccountPage() {
   const supabase = createClient();
@@ -30,6 +31,23 @@ export default async function AccountPage() {
   (invoices || []).forEach((inv: any) => {
     if (!latestInvoiceByOrder[inv.order_id]) {
       latestInvoiceByOrder[inv.order_id] = inv;
+    }
+  });
+
+  const { data: history } = orderIds.length > 0
+    ? await supabase
+        .from("order_status_history")
+        .select("order_id, created_at")
+        .in("order_id", orderIds)
+        .order("created_at", { ascending: false })
+    : { data: [] as any[] };
+
+  // The most recent history row per order is when it moved to its
+  // current stage.
+  const latestStageChangeByOrder: Record<string, string> = {};
+  (history || []).forEach((h: any) => {
+    if (!latestStageChangeByOrder[h.order_id]) {
+      latestStageChangeByOrder[h.order_id] = h.created_at;
     }
   });
 
@@ -73,9 +91,11 @@ export default async function AccountPage() {
                       Download invoice
                     </a>
                   )}
-                  <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-amber/20 text-walnut whitespace-nowrap">
-                    {statusLabel(order.product_type as ProductType, order.status)}
-                  </span>
+                  <CurrentStageStatus
+                    productType={order.product_type as ProductType}
+                    currentStatus={order.status}
+                    movedAt={latestStageChangeByOrder[order.id]}
+                  />
                 </div>
               </div>
             );
