@@ -43,9 +43,15 @@ export default async function AdminOrdersPage() {
     }
   });
 
-  const quarterSales = quarterSalesCents / 100;
-  const yearSales = yearSalesCents / 100;
-  const quarterTaxOwed = quarterSales * SALES_TAX_RATE;
+  const quarterGross = quarterSalesCents / 100;
+  const yearGross = yearSalesCents / 100;
+
+  // Prices already include the 6% tax rather than adding it on top,
+  // so back it out: gross ÷ 1.06 = the actual sale amount, and the
+  // difference between gross and that is what's owed to the state.
+  const quarterSales = quarterGross / (1 + SALES_TAX_RATE);
+  const yearSales = yearGross / (1 + SALES_TAX_RATE);
+  const quarterTaxOwed = quarterGross - quarterSales;
 
   return (
     <div>
@@ -54,7 +60,9 @@ export default async function AdminOrdersPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-white border border-walnut/10 rounded-xl p-5">
-          <div className="text-xs text-walnut/50 uppercase tracking-wide mb-1">{quarterLabel} sales</div>
+          <div className="text-xs text-walnut/50 uppercase tracking-wide mb-1">
+            {quarterLabel} sales (after tax removed)
+          </div>
           <div className="text-2xl font-display text-walnut">${quarterSales.toFixed(2)}</div>
         </div>
         <div className="bg-ember/5 border border-ember/20 rounded-xl p-5">
@@ -65,7 +73,7 @@ export default async function AdminOrdersPage() {
         </div>
         <div className="bg-white border border-walnut/10 rounded-xl p-5">
           <div className="text-xs text-walnut/50 uppercase tracking-wide mb-1">
-            Sales year-to-date ({currentYear})
+            Sales year-to-date ({currentYear}, after tax removed)
           </div>
           <div className="text-2xl font-display text-walnut">${yearSales.toFixed(2)}</div>
         </div>
