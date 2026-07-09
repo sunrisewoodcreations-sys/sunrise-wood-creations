@@ -6,6 +6,7 @@ import StatusUpdater from "@/components/StatusUpdater";
 import SendProofForm from "@/components/SendProofForm";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import AmountPaidForm from "@/components/AmountPaidForm";
+import EditOrderDateForm from "@/components/EditOrderDateForm";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 export default async function AdminOrderDetailPage({ params }: { params: { id: string } }) {
@@ -61,6 +62,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           {productLabel(order.product_type as ProductType)} — {order.title}
         </h1>
         <p className="text-sm text-walnut/60 mb-1">Customer: {customer.full_name} ({customer.email})</p>
+        <EditOrderDateForm orderId={order.id} initialDate={order.created_at} />
         <p className="text-sm text-walnut/60 mb-4">
           {order.size_details} · ${(order.price_cents / 100).toFixed(2)} · Placed {new Date(order.created_at).toLocaleDateString()}
         </p>
