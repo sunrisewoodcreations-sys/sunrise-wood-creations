@@ -23,6 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <nav className="flex flex-col gap-1 text-sm">
           <Link href="/admin/customers" className="px-3 py-2 rounded-md hover:bg-white/10">Customers</Link>
           <Link href="/admin/orders" className="px-3 py-2 rounded-md hover:bg-white/10">Orders</Link>
+          <Link href="/admin/products" className="px-3 py-2 rounded-md hover:bg-white/10">Products</Link>
         </nav>
         <form action={signOut} className="mt-10">
           <button className="text-xs text-cream/50 hover:text-cream">Log out</button>
