@@ -13,11 +13,11 @@ export const STANDARD_STEPS = [
 ] as const;
 
 export const CORNHOLE_STEPS = [
-  { key: "deposit_received", label: "Deposit received" },
   { key: "order_placed", label: "Order placed" },
+  { key: "deposit_received", label: "Deposit received" },
+  { key: "design_proof_sent", label: "Design proof sent" },
   { key: "design_approved", label: "Design approved" },
-  { key: "top_being_printed", label: "Top being printed" },
-  { key: "being_assembled", label: "Being assembled" },
+  { key: "being_assembled", label: "Being made" },
   { key: "ready_for_pickup", label: "Ready for pickup" },
   { key: "picked_up", label: "Picked up" }
 ] as const;
