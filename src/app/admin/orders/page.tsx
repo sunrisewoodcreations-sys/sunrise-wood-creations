@@ -146,7 +146,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
 
       <table className="w-full bg-white border border-walnut/10 rounded-xl overflow-hidden text-sm">
         <thead>
-          <tr className="bg-sawdust text-walnut text-xs uppercase tracking-wide">
+          <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
             <th className="text-left px-4 py-3">Order</th>
             <th className="text-left px-4 py-3">Customer</th>
             <th className="text-left px-4 py-3">Date</th>
