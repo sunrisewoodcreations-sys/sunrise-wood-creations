@@ -132,19 +132,22 @@ export async function issueInvoiceForOrder(order: any, customer: { email: string
     console.error("Invoice storage upload failed:", uploadError.message);
   }
 
+  const dueCents = (order.price_cents || 0) - (order.amount_paid_cents || 0);
+  const paidInFull = dueCents <= 0;
+
   await admin.from("invoices").insert({
     order_id: order.id,
     invoice_number: invoiceNumber,
-    pdf_url: pdfUrl
+    pdf_url: pdfUrl,
+    paid_in_full: paidInFull
   });
 
   try {
-    const dueCents = (order.price_cents || 0) - (order.amount_paid_cents || 0);
     await sendInvoiceEmail({
       toEmail: customer.email,
       customerName: customer.full_name,
       orderTitle: order.title,
-      paidInFull: dueCents <= 0,
+      paidInFull,
       invoiceNumber,
       pdfBuffer
     });
