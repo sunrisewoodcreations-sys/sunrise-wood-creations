@@ -66,8 +66,28 @@ export async function sendOrderStatusEmail(opts: {
   orderTitle: string;
   orderId: string;
   newStatus: string;
+  balanceDueCents?: number;
 }) {
   const label = statusLabel(opts.productType, opts.newStatus);
+  const balanceHtml = typeof opts.balanceDueCents === "number"
+    ? opts.balanceDueCents > 0
+      ? `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 16px 0;">
+          <tr>
+            <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px;">
+              <span style="color: #6b4d1a;">Balance to bring at pickup:</span>
+              <strong style="font-size: 18px; color: #D9603A; display: block; margin-top: 4px;">
+                $${(opts.balanceDueCents / 100).toFixed(2)}
+              </strong>
+            </td>
+          </tr>
+        </table>`
+      : `
+        <p style="margin: 16px 0 0; color: #3f7a5a; font-weight: bold;">
+          Your balance is fully paid — nothing to bring but yourself!
+        </p>`
+    : "";
+
   const html = shell({
     preheader: `Your order has moved to: ${label}`,
     bodyHtml: `
@@ -78,6 +98,7 @@ export async function sendOrderStatusEmail(opts: {
       <p style="margin: 0; font-size: 20px; font-weight: bold; color: #D9603A; font-family: Georgia, serif;">
         ${label}
       </p>
+      ${balanceHtml}
     `,
     buttonText: "View your order",
     buttonUrl: `${SITE_URL}/account/orders/${opts.orderId}`
