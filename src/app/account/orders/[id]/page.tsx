@@ -9,7 +9,6 @@ import { productLabel, ProductType } from "@/lib/statusSteps";
 export default async function OrderDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-
   if (!user) redirect("/login");
 
   const { data: order } = await supabase
@@ -30,6 +29,12 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     .limit(1)
     .maybeSingle();
 
+  const { data: invoices } = await supabase
+    .from("invoices")
+    .select("*")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: false });
+
   return (
     <div className="min-h-screen bg-cream">
       <AccountHeader />
@@ -41,16 +46,25 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           </h1>
           <p className="text-sm text-walnut/60 mb-4">{order.size_details}</p>
 
-          <a
-            href={`/api/invoices/${order.id}`}
-            target="_blank"
-            className="inline-block border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold"
-          >
-            Download invoice (PDF)
-          </a>
+          {invoices && invoices.length > 0 ? (
+            <div className="mb-4 space-y-2">
+              {invoices.map((inv: any) => (
+                <a
+                  key={inv.id}
+                  href={inv.pdf_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold text-center hover:bg-cream"
+                >
+                  Download invoice #{inv.invoice_number} (PDF)
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-walnut/50 mb-4">No invoice yet — one will appear here once a payment is recorded.</p>
+          )}
 
           <ProgressTracker productType={order.product_type as ProductType} currentStatus={order.status} />
-
           {pendingProof && (
             <ProofResponse proofId={pendingProof.id} imageUrl={pendingProof.image_url} />
           )}
