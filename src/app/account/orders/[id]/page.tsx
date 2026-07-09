@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import AccountHeader from "@/components/AccountHeader";
-import ProgressTracker from "@/components/ProgressTracker";
+import CurrentStageStatus from "@/components/CurrentStageStatus";
 import ProofResponse from "@/components/ProofResponse";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
@@ -36,15 +36,30 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     .order("created_at", { ascending: false })
     .limit(1);
 
+  const { data: latestHistory } = await supabase
+    .from("order_status_history")
+    .select("created_at")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return (
     <div className="min-h-screen bg-cream">
       <AccountHeader />
       <div className="max-w-2xl mx-auto px-4 py-10">
         <Link href="/account" className="text-sm text-walnut/60 mb-4 inline-block">← Back to your orders</Link>
         <div className="bg-white border border-walnut/10 rounded-xl p-7">
-          <h1 className="font-display text-2xl text-walnut mb-1">
-            {productLabel(order.product_type as ProductType)} — {order.title}
-          </h1>
+          <div className="flex items-start justify-between gap-4 mb-1">
+            <h1 className="font-display text-2xl text-walnut">
+              {productLabel(order.product_type as ProductType)} — {order.title}
+            </h1>
+            <CurrentStageStatus
+              productType={order.product_type as ProductType}
+              currentStatus={order.status}
+              movedAt={latestHistory?.created_at}
+            />
+          </div>
           <p className="text-sm text-walnut/60 mb-4">{order.size_details}</p>
 
           {invoices && invoices.length > 0 ? (
@@ -57,7 +72,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                   rel="noopener noreferrer"
                   className="block border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold text-center hover:bg-cream"
                 >
-                  Download invoice #{inv.invoice_number} (PDF)
+                  Download invoice
                 </a>
               ))}
             </div>
@@ -65,7 +80,6 @@ export default async function OrderDetailPage({ params }: { params: { id: string
             <p className="text-sm text-walnut/50 mb-4">No invoice yet — one will appear here once a payment is recorded.</p>
           )}
 
-          <ProgressTracker productType={order.product_type as ProductType} currentStatus={order.status} />
           {pendingProof && (
             <ProofResponse proofId={pendingProof.id} imageUrl={pendingProof.image_url} />
           )}
