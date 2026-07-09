@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { sendOrderStatusEmail } from "@/lib/email";
+import { ProductType } from "@/lib/statusSteps";
 
 export async function POST(req: NextRequest) {
   const supabase = createClient();
@@ -11,12 +13,11 @@ export async function POST(req: NextRequest) {
   }
 
   const { customerId, productType, title, sizeDetails, priceCents } = await req.json();
-
   if (!customerId || !productType || !title?.trim()) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const initialStatus = productType === "cornhole" ? "deposit_received" : "order_placed";
+  const initialStatus = "order_placed";
 
   const { data: order, error } = await supabase
     .from("orders")
@@ -33,6 +34,27 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  const { data: customer } = await supabase
+    .from("profiles")
+    .select("email, full_name")
+    .eq("id", customerId)
+    .single();
+
+  if (customer?.email) {
+    try {
+      await sendOrderStatusEmail({
+        toEmail: customer.email,
+        customerName: customer.full_name || "there",
+        productType: productType as ProductType,
+        orderTitle: order.title,
+        orderId: order.id,
+        newStatus: initialStatus
+      });
+    } catch (err) {
+      console.error("Order-placed email failed to send:", err);
+    }
   }
 
   return NextResponse.json({ ok: true, order });
