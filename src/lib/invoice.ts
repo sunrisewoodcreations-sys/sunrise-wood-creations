@@ -95,19 +95,11 @@ async function buildInvoicePdf(opts: {
   return Buffer.from(bytes);
 }
 
-// Call this when an order is marked "picked_up". It's safe to call more
-// than once — if this order already has an invoice, it does nothing,
-// so toggling the status back and forth won't create duplicate invoices.
+// Call this whenever an order's payment changes, or when it's marked
+// "picked_up" — each call generates and emails a fresh invoice reflecting
+// the current total, amount paid, and balance due at that moment.
 export async function issueInvoiceForOrder(order: any, customer: { email: string; full_name: string }) {
   const admin = createAdminClient();
-
-  const { data: existing } = await admin
-    .from("invoices")
-    .select("id")
-    .eq("order_id", order.id)
-    .maybeSingle();
-
-  if (existing) return;
 
   const { data: numberData, error: numberError } = await admin.rpc("next_invoice_number");
   if (numberError || !numberData) {
@@ -147,14 +139,16 @@ export async function issueInvoiceForOrder(order: any, customer: { email: string
   });
 
   try {
+    const dueCents = (order.price_cents || 0) - (order.amount_paid_cents || 0);
     await sendInvoiceEmail({
       toEmail: customer.email,
       customerName: customer.full_name,
       orderTitle: order.title,
+      paidInFull: dueCents <= 0,
       invoiceNumber,
       pdfBuffer
     });
-    await admin.from("invoices").update({ sent_at: new Date().toISOString() }).eq("order_id", order.id);
+    await admin.from("invoices").update({ sent_at: new Date().toISOString() }).eq("invoice_number", invoiceNumber);
   } catch (err) {
     console.error("Invoice email failed to send:", err);
   }
