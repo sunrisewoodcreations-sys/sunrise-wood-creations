@@ -32,6 +32,12 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
     .eq("order_id", order.id)
     .order("created_at", { ascending: true });
 
+  const { data: invoices } = await supabase
+    .from("invoices")
+    .select("*")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: false });
+
   // Keep the earliest time each status was reached, in case a status
   // ever gets logged more than once.
   const statusTimestamps: Record<string, string> = {};
@@ -104,6 +110,36 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {invoices && invoices.length > 0 && (
+        <div className="bg-white border border-walnut/10 rounded-xl p-7 mt-6">
+          <h3 className="font-semibold text-walnut text-sm mb-3">Invoices sent to customer</h3>
+          {invoices.map((inv: any) => (
+            <div key={inv.id} className="flex items-center justify-between border-t border-walnut/10 pt-3 mt-3 first:border-0 first:pt-0 first:mt-0">
+              <div>
+                <div className="text-sm font-semibold text-walnut">Invoice #{inv.invoice_number}</div>
+                <div className="text-xs font-mono text-walnut/50">
+                  {inv.sent_at
+                    ? `Emailed ${new Date(inv.sent_at).toLocaleDateString("en-US", { timeZone: "America/New_York" })} at ${new Date(inv.sent_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET`
+                    : "Not yet emailed"}
+                </div>
+              </div>
+              {inv.pdf_url ? (
+                <a
+                  href={inv.pdf_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-semibold text-ember hover:underline"
+                >
+                  Download PDF
+                </a>
+              ) : (
+                <span className="text-xs text-walnut/40">Unavailable</span>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
