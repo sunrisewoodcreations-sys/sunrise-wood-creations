@@ -1,6 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sendProofReadyEmail } from "@/lib/email";
+
+async function watermarkImage(original: Buffer, text: string): Promise<Buffer> {
+  const image = sharp(original);
+  const metadata = await image.metadata();
+  const width = metadata.width || 1000;
+  const height = metadata.height || 1000;
+
+  const fontSize = Math.max(20, Math.round(width / 18));
+  const stepX = fontSize * (text.length * 0.65);
+  const stepY = fontSize * 3.5;
+
+  let tiles = "";
+  for (let y = 0; y < height + stepY; y += stepY) {
+    for (let x = -stepX; x < width + stepX; x += stepX) {
+      tiles += `<text x="${x}" y="${y}" font-size="${fontSize}" fill="white" fill-opacity="0.35" font-family="sans-serif" transform="rotate(-30 ${x} ${y})">${text}</text>`;
+    }
+  }
+
+  const svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${tiles}</svg>`;
+
+  return image
+    .composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
+    .jpeg({ quality: 88 })
+    .toBuffer();
+}
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -24,9 +51,31 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
+  let watermarkedUrl = imageUrl.trim();
+  try {
+    const imgRes = await fetch(imageUrl.trim());
+    if (imgRes.ok) {
+      const original = Buffer.from(await imgRes.arrayBuffer());
+      const watermarked = await watermarkImage(original, "Sunrise Wood Creations");
+
+      const admin = createAdminClient();
+      const filename = `proof-${order.id}-${Date.now()}.jpg`;
+      const { error: uploadError } = await admin.storage
+        .from("proofs")
+        .upload(filename, watermarked, { contentType: "image/jpeg", upsert: true });
+
+      if (!uploadError) {
+        const { data: publicUrlData } = admin.storage.from("proofs").getPublicUrl(filename);
+        watermarkedUrl = publicUrlData.publicUrl;
+      }
+    }
+  } catch {
+    // If watermarking fails for any reason, fall back to the original image.
+  }
+
   const { data: newProof, error: insertError } = await supabase
     .from("proofs")
-    .insert({ order_id: order.id, image_url: imageUrl.trim() })
+    .insert({ order_id: order.id, image_url: watermarkedUrl })
     .select()
     .single();
 
@@ -40,7 +89,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     customerName: customer.full_name,
     orderTitle: order.title,
     orderId: order.id,
-    imageUrl: imageUrl.trim(),
+    imageUrl: watermarkedUrl,
     respondToken: newProof.respond_token
   });
 
