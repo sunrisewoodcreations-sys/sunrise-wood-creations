@@ -92,6 +92,17 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
       <h1 className="font-display text-2xl text-walnut mb-1">Orders</h1>
       <p className="text-sm text-walnut/60 mb-6">All orders, across every customer.</p>
 
+      <div className="bg-white border border-walnut/10 rounded-xl p-5 mb-6">
+        <div className="text-xs text-walnut/50 uppercase tracking-wide mb-3">Download invoices in bulk (paid orders only)</div>
+        <div className="flex flex-wrap gap-2">
+          <a href="/api/invoices/bulk?period=this_month" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This month</a>
+          <a href="/api/invoices/bulk?period=this_quarter" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This quarter</a>
+          <a href="/api/invoices/bulk?period=last_quarter" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last quarter</a>
+          <a href="/api/invoices/bulk?period=this_year" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This year</a>
+          <a href="/api/invoices/bulk?period=last_year" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last year</a>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-white border border-walnut/10 rounded-xl p-5">
           <div className="text-xs text-walnut/50 uppercase tracking-wide mb-1">
@@ -113,16 +124,6 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
         </div>
       </div>
 
-      <div className="bg-white border border-walnut/10 rounded-xl p-5 mb-6">
-        <div className="text-xs text-walnut/50 uppercase tracking-wide mb-3">Download invoices in bulk (paid orders only)</div>
-        <div className="flex flex-wrap gap-2">
-          <a href="/api/invoices/bulk?period=this_month" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This month</a>
-          <a href="/api/invoices/bulk?period=this_quarter" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This quarter</a>
-          <a href="/api/invoices/bulk?period=last_quarter" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last quarter</a>
-          <a href="/api/invoices/bulk?period=this_year" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This year</a>
-          <a href="/api/invoices/bulk?period=last_year" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last year</a>
-        </div>
-      </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <AddOrderWithCustomerPicker customers={allCustomers || []} />
