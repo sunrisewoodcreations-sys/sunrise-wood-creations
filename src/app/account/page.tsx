@@ -68,7 +68,6 @@ export default async function AccountPage() {
                       href={invoice.pdf_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
                       className="text-xs font-semibold text-ember hover:underline whitespace-nowrap"
                     >
                       Invoice #{invoice.invoice_number}
