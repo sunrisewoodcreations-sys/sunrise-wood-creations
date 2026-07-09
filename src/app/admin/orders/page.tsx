@@ -24,6 +24,23 @@ export default async function AdminOrdersPage() {
     .select("*, profiles:customer_id(full_name, email)")
     .order("created_at", { ascending: false });
 
+  const orderIds = (orders || []).map((o: any) => o.id);
+
+  const { data: invoices } = orderIds.length > 0
+    ? await supabase
+        .from("invoices")
+        .select("*")
+        .in("order_id", orderIds)
+        .order("created_at", { ascending: false })
+    : { data: [] as any[] };
+
+  const latestInvoiceByOrder: Record<string, any> = {};
+  (invoices || []).forEach((inv: any) => {
+    if (!latestInvoiceByOrder[inv.order_id]) {
+      latestInvoiceByOrder[inv.order_id] = inv;
+    }
+  });
+
   const { year: currentYear, month: currentMonth } = easternParts(new Date());
   const currentQuarter = Math.floor((currentMonth - 1) / 3); // 0-3
   const quarterLabel = `Q${currentQuarter + 1} ${currentYear}`;
@@ -89,10 +106,13 @@ export default async function AdminOrdersPage() {
             <th className="text-right px-4 py-3">Sales</th>
             <th className="text-right px-4 py-3">Paid</th>
             <th className="text-right px-4 py-3">Owed</th>
+            <th className="text-left px-4 py-3">Invoice</th>
           </tr>
         </thead>
         <tbody>
-          {orders?.map((order: any) => (
+          {orders?.map((order: any) => {
+            const invoice = latestInvoiceByOrder[order.id];
+            return (
             <tr key={order.id} className="border-t border-walnut/10 hover:bg-cream/60">
               <td className="px-4 py-3">
                 <Link href={`/admin/orders/${order.id}`} className="font-semibold text-walnut">
@@ -117,10 +137,24 @@ export default async function AdminOrdersPage() {
               }`}>
                 ${(((order.price_cents || 0) - (order.amount_paid_cents || 0)) / 100).toFixed(2)}
               </td>
+              <td className="px-4 py-3">
+                {invoice?.pdf_url ? (
+                  <a
+                    href={invoice.pdf_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold text-ember hover:underline"
+                  >
+                    Download #{invoice.invoice_number}
+                  </a>
+                ) : (
+                  <span className="text-xs text-walnut/40">—</span>
+                )}
+              </td>
             </tr>
-          ))}
+          );})}
           {orders?.length === 0 && (
-            <tr><td colSpan={7} className="px-4 py-6 text-center text-walnut/50">No orders yet.</td></tr>
+            <tr><td colSpan={8} className="px-4 py-6 text-center text-walnut/50">No orders yet.</td></tr>
           )}
         </tbody>
       </table>
