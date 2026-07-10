@@ -13,11 +13,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
 
-  // When the customer opens/polls this thread, mark any shop messages
-  // they haven't seen yet as read — this is one-directional on purpose:
-  // only the shop ever sees read status, so nothing marks customer
-  // messages as read here.
-  if (profile?.role !== "admin") {
+  // Only mark shop messages as read when the client tells us the page is
+  // actually visible/foregrounded on the customer's screen — a background
+  // tab silently polling for new messages shouldn't count as "read".
+  const shouldMarkRead = req.nextUrl.searchParams.get("markRead") === "1";
+
+  if (profile?.role !== "admin" && shouldMarkRead) {
     await supabase
       .from("order_messages")
       .update({ read_at: new Date().toISOString() })

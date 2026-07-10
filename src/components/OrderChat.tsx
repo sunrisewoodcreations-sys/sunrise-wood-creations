@@ -21,7 +21,8 @@ export default function OrderChat({ orderId, currentUserId, isAdmin }: { orderId
 
   const loadMessages = useCallback(async () => {
     try {
-      const res = await fetch(`/api/orders/${orderId}/messages`);
+      const isVisible = typeof document !== "undefined" && document.visibilityState === "visible";
+      const res = await fetch(`/api/orders/${orderId}/messages${isVisible ? "?markRead=1" : ""}`);
       if (res.ok) {
         const body = await res.json();
         setMessages(body.messages || []);
@@ -36,7 +37,18 @@ export default function OrderChat({ orderId, currentUserId, isAdmin }: { orderId
   useEffect(() => {
     loadMessages();
     const interval = setInterval(loadMessages, 4000);
-    return () => clearInterval(interval);
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        loadMessages();
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [loadMessages]);
 
   useEffect(() => {
