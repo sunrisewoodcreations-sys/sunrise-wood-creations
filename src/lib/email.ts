@@ -250,3 +250,35 @@ export async function sendInvoiceEmail(opts: {
     ]
   });
 }
+
+export async function sendNewMessageNotice(opts: {
+  orderTitle: string;
+  orderId: string;
+  customerName: string;
+  messageBody: string;
+}) {
+  const html = shell({
+    preheader: `${opts.customerName} sent a message about ${opts.orderTitle}`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">
+        <strong>${opts.customerName}</strong> sent a new message about <strong>${opts.orderTitle}</strong>:
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 8px;">
+        <tr>
+          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
+            "${opts.messageBody}"
+          </td>
+        </tr>
+      </table>
+    `,
+    buttonText: "Open the order",
+    buttonUrl: `${SITE_URL}/admin/orders/${opts.orderId}`
+  });
+
+  return resend.emails.send({
+    from: FROM,
+    to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
+    subject: `New message: ${opts.orderTitle}`,
+    html
+  });
+}

@@ -9,10 +9,12 @@ import AmountPaidForm from "@/components/AmountPaidForm";
 import EditOrderDateForm from "@/components/EditOrderDateForm";
 import SendStatusEmailButton from "@/components/SendStatusEmailButton";
 import SendInvoiceButton from "@/components/SendInvoiceButton";
+import OrderChat from "@/components/OrderChat";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 export default async function AdminOrderDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { data: order } = await supabase
     .from("orders")
@@ -182,6 +184,10 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           ))}
         </div>
       )}
+
+      <div className="mt-6">
+        <OrderChat orderId={order.id} currentUserId={user!.id} />
+      </div>
     </div>
   );
 }

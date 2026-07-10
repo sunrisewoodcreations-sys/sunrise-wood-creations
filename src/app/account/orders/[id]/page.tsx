@@ -5,6 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CompactProgressTracker from "@/components/CompactProgressTracker";
 import ProofResponse from "@/components/ProofResponse";
+import OrderChat from "@/components/OrderChat";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 export default async function OrderDetailPage({ params }: { params: { id: string } }) {
@@ -127,6 +128,10 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           {pendingProof && (
             <ProofResponse proofId={pendingProof.id} imageUrl={pendingProof.image_url} />
           )}
+
+          <div className="mt-6">
+            <OrderChat orderId={order.id} currentUserId={user.id} />
+          </div>
         </div>
       </div>
       <SiteFooter />
