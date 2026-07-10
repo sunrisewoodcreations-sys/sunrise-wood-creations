@@ -16,7 +16,10 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const CORNHOLE_PROMPT_PREFIX =
   "A single flat, top-down view design for a cornhole board (like a rectangular game board graphic), " +
   "clean crisp vector-style linework, bold clear shapes, high contrast, no photo-realistic textures unless requested, " +
-  "centered composition suitable for printing on a 24 inch by 48 inch board. Design request: ";
+  "centered composition suitable for printing on a 24 inch by 48 inch board. " +
+  "Do not include any circular hole, cutout, or moon-like shape unless it's specifically requested below. " +
+  "Do not add any text, words, banners, or mottos unless specifically requested below. " +
+  "Design request: ";
 
 export async function generateCornholeDesign(opts: {
   prompt: string;
