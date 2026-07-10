@@ -25,7 +25,7 @@ export default function SendStatusEmailButton({ orderId }: { orderId: string }) 
       <button
         onClick={handleSend}
         disabled={loading}
-        className="border border-black text-black px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
+        className="border border-[#1E3A5F] text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
       >
         {loading ? "Sending..." : "Send status email"}
       </button>

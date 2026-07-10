@@ -45,28 +45,28 @@ export default function AmountPaidForm({
   }
 
   return (
-    <form onSubmit={handleSave} className="bg-cream border border-black/10 rounded-lg p-4 mt-4">
+    <form onSubmit={handleSave} className="bg-cream border border-[#1E3A5F]/10 rounded-lg p-4 mt-4">
       <div className="grid grid-cols-3 gap-4 mb-3 text-sm">
         <div>
-          <div className="text-black/50 text-xs mb-1">Total</div>
-          <div className="font-semibold text-black">${total.toFixed(2)}</div>
+          <div className="text-[#1E3A5F]/50 text-xs mb-1">Total</div>
+          <div className="font-semibold text-[#1E3A5F]">${total.toFixed(2)}</div>
         </div>
         <div>
-          <div className="text-black/50 text-xs mb-1">Amount paid</div>
+          <div className="text-[#1E3A5F]/50 text-xs mb-1">Amount paid</div>
           <div className="flex items-center gap-1">
-            <span className="text-black/60">$</span>
+            <span className="text-[#1E3A5F]/60">$</span>
             <input
               type="number"
               step="0.01"
               min="0"
               value={amountPaid}
               onChange={e => setAmountPaid(e.target.value)}
-              className="w-24 border border-black/15 rounded-md px-2 py-1 text-sm"
+              className="w-24 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm"
             />
           </div>
         </div>
         <div>
-          <div className="text-black/50 text-xs mb-1">Still owed</div>
+          <div className="text-[#1E3A5F]/50 text-xs mb-1">Still owed</div>
           <div className={`font-semibold ${due > 0 ? "text-ember" : "text-sage"}`}>
             ${due.toFixed(2)}
           </div>
@@ -78,7 +78,7 @@ export default function AmountPaidForm({
       <button
         type="submit"
         disabled={loading}
-        className="bg-black text-white px-4 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
+        className="bg-[#1E3A5F] text-white px-4 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
       >
         {loading ? "Saving..." : "Save payment"}
       </button>

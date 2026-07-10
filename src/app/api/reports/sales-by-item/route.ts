@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const { width, height } = page.getSize();
-  const BLACK = rgb(0, 0, 0);
+  const BLACK = rgb(0.1176, 0.2275, 0.3725);
   const WHITE = rgb(1, 1, 1);
   const GRAY = rgb(0.4, 0.4, 0.4);
   const LIGHT_LINE = rgb(0.85, 0.85, 0.85);

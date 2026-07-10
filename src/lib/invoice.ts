@@ -4,7 +4,7 @@ import { sendInvoiceEmail } from "@/lib/email";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 const SALES_TAX_RATE = 0.06; // Michigan
-const WALNUT = rgb(0, 0, 0);
+const WALNUT = rgb(0.1176, 0.2275, 0.3725);
 const CREAM = rgb(1, 1, 1);
 const EMBER = rgb(0.85, 0.376, 0.227);
 const GRAY = rgb(0.4, 0.4, 0.4);

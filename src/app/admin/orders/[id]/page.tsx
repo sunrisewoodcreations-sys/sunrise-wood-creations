@@ -53,19 +53,19 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <Link href={`/admin/customers/${customer.id}`} className="text-sm text-black/60 inline-block">
+        <Link href={`/admin/customers/${customer.id}`} className="text-sm text-[#1E3A5F]/60 inline-block">
           ← Back to {customer.full_name}
         </Link>
         <DeleteOrderButton orderId={order.id} orderTitle={order.title} />
       </div>
 
-      <div className="bg-white border border-black/10 rounded-xl p-7 mb-6">
-        <h1 className="font-display text-2xl text-black mb-1">
+      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-7 mb-6">
+        <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">
           {productLabel(order.product_type as ProductType)} — {order.title}
         </h1>
-        <p className="text-sm text-black/60 mb-1">Customer: {customer.full_name} ({customer.email})</p>
+        <p className="text-sm text-[#1E3A5F]/60 mb-1">Customer: {customer.full_name} ({customer.email})</p>
         <EditOrderDateForm orderId={order.id} initialDate={order.created_at} />
-        <p className="text-sm text-black/60 mb-4">
+        <p className="text-sm text-[#1E3A5F]/60 mb-4">
           {order.size_details} · ${(order.price_cents / 100).toFixed(2)} · Placed {new Date(order.created_at).toLocaleDateString()}
         </p>
 
@@ -85,35 +85,35 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
       </div>
 
       {order.product_type === "cornhole" && (
-        <div className="bg-white border border-black/10 rounded-xl p-7">
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-7">
           <SendProofForm orderId={order.id} />
 
           {proofs && proofs.length > 0 && (
             <div className="mt-6">
-              <h3 className="font-semibold text-black text-sm mb-3">Proof history</h3>
+              <h3 className="font-semibold text-[#1E3A5F] text-sm mb-3">Proof history</h3>
               {proofs.map((p: any) => (
-                <div key={p.id} className="border-t border-black/10 pt-3 mt-3 first:border-0 first:pt-0 first:mt-0">
+                <div key={p.id} className="border-t border-[#1E3A5F]/10 pt-3 mt-3 first:border-0 first:pt-0 first:mt-0">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-mono text-black/50">
+                    <span className="text-xs font-mono text-[#1E3A5F]/50">
                       Sent {new Date(p.sent_at).toLocaleDateString("en-US", { timeZone: "America/New_York" })} at{" "}
                       {new Date(p.sent_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET
                     </span>
                     <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
                       p.status === "approved" ? "bg-sage/20 text-sage" :
-                      p.status === "changes_requested" ? "bg-ember/20 text-ember" : "bg-amber/20 text-black"
+                      p.status === "changes_requested" ? "bg-ember/20 text-ember" : "bg-amber/20 text-[#1E3A5F]"
                     }`}>
                       {p.status === "pending" ? "Awaiting response" : p.status === "approved" ? "Approved" : "Changes requested"}
                     </span>
                   </div>
                   {p.responded_at && (
-                    <div className="text-xs font-mono text-black/50 mb-1">
+                    <div className="text-xs font-mono text-[#1E3A5F]/50 mb-1">
                       {p.status === "approved" ? "Approved" : "Responded"}{" "}
                       {new Date(p.responded_at).toLocaleDateString("en-US", { timeZone: "America/New_York" })} at{" "}
                       {new Date(p.responded_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET
                     </div>
                   )}
                   {p.feedback && (
-                    <p className="text-sm bg-cream p-3 rounded-md text-black/80">"{p.feedback}"</p>
+                    <p className="text-sm bg-cream p-3 rounded-md text-[#1E3A5F]/80">"{p.feedback}"</p>
                   )}
                 </div>
               ))}
@@ -123,13 +123,13 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
       )}
 
       {invoices && invoices.length > 0 && (
-        <div className="bg-white border border-black/10 rounded-xl p-7 mt-6">
-          <h3 className="font-semibold text-black text-sm mb-3">Invoices sent to customer</h3>
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-7 mt-6">
+          <h3 className="font-semibold text-[#1E3A5F] text-sm mb-3">Invoices sent to customer</h3>
           {invoices.map((inv: any) => (
-            <div key={inv.id} className="flex items-center justify-between border-t border-black/10 pt-3 mt-3 first:border-0 first:pt-0 first:mt-0">
+            <div key={inv.id} className="flex items-center justify-between border-t border-[#1E3A5F]/10 pt-3 mt-3 first:border-0 first:pt-0 first:mt-0">
               <div>
-                <div className="text-sm font-semibold text-black">Invoice #{inv.invoice_number}</div>
-                <div className="text-xs font-mono text-black/50">
+                <div className="text-sm font-semibold text-[#1E3A5F]">Invoice #{inv.invoice_number}</div>
+                <div className="text-xs font-mono text-[#1E3A5F]/50">
                   {inv.sent_at
                     ? `Emailed ${new Date(inv.sent_at).toLocaleDateString("en-US", { timeZone: "America/New_York" })} at ${new Date(inv.sent_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET`
                     : "Not yet emailed"}
@@ -145,7 +145,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                   Download PDF
                 </a>
               ) : (
-                <span className="text-xs text-black/40">Unavailable</span>
+                <span className="text-xs text-[#1E3A5F]/40">Unavailable</span>
               )}
             </div>
           ))}
