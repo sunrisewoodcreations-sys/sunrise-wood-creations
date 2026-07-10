@@ -6,6 +6,15 @@ const FROM = process.env.EMAIL_FROM || "Sunrise Wood Creations <orders@sunrisewo
 const FROM_INVOICE = process.env.EMAIL_FROM_INVOICE || "Sunrise Wood Creations <invoice@sunrisewoodcreations.com>";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com";
 
+function escapeHtml(s: string) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 function shell(opts: { preheader: string; bodyHtml: string; buttonText?: string; buttonUrl?: string }) {
   const button = opts.buttonUrl && opts.buttonText
     ? `
@@ -313,6 +322,42 @@ export async function sendCustomerNewMessageNotice(opts: {
     from: FROM,
     to: opts.toEmail,
     subject: `New message about your order: ${opts.orderTitle}`,
+    html
+  });
+}
+
+export async function sendGuestMessageNotice(opts: {
+  name: string;
+  email: string;
+  body: string;
+}) {
+  const safeName = escapeHtml(opts.name);
+  const safeBody = escapeHtml(opts.body);
+
+  const html = shell({
+    preheader: `New website chat message from ${safeName}`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">
+        <strong>${safeName}</strong> (${escapeHtml(opts.email)}) sent a message through the website chat bubble:
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 8px;">
+        <tr>
+          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
+            "${safeBody}"
+          </td>
+        </tr>
+      </table>
+      <p style="margin: 16px 0 0; font-size: 13px; color: #8a7a6b;">
+        Just reply directly to this email to write back to them at ${escapeHtml(opts.email)}.
+      </p>
+    `
+  });
+
+  return resend.emails.send({
+    from: FROM,
+    replyTo: opts.email,
+    to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
+    subject: `Website chat: ${safeName}`,
     html
   });
 }

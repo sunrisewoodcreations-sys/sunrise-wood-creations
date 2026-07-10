@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_SITE_CONTENT, SiteContent, PRODUCT_ORDER } from "@/lib/siteContent";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import GuestChatWidget from "@/components/GuestChatWidget";
 
 export const metadata: Metadata = {
   title: "Custom cornhole boards, wooden signs, planters & cutting boards",
@@ -52,6 +53,7 @@ export default async function HomePage() {
         </div>
       </section>
       <SiteFooter />
+      <GuestChatWidget />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_SITE_CONTENT, SiteContent, ProductKey, PRODUCT_ORDER } from "@/lib/siteContent";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import GuestChatWidget from "@/components/GuestChatWidget";
 
 export function generateStaticParams() {
   return PRODUCT_ORDER.map(slug => ({ slug }));
@@ -41,6 +42,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         </a>
       </section>
       <SiteFooter />
+      <GuestChatWidget />
     </div>
   );
 }
