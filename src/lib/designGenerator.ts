@@ -35,9 +35,10 @@ export async function generateCornholeDesign(opts: {
     // Reference image provided — use the edits endpoint so the result is
     // guided by what was uploaded.
     const form = new FormData();
-    form.append("model", "gpt-image-1");
+    form.append("model", "gpt-image-1.5");
     form.append("prompt", fullPrompt);
     form.append("size", "1024x1536");
+    form.append("quality", "high");
     form.append(
       "image",
       new Blob([opts.referenceImageBuffer], { type: opts.referenceImageMimeType || "image/png" }),
@@ -57,9 +58,10 @@ export async function generateCornholeDesign(opts: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gpt-image-1",
+        model: "gpt-image-1.5",
         prompt: fullPrompt,
-        size: "1024x1536"
+        size: "1024x1536",
+        quality: "high"
       })
     });
   }
