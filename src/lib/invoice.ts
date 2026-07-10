@@ -16,6 +16,7 @@ async function buildInvoicePdf(opts: {
   invoiceDate: Date;
   customerName: string;
   itemDescription: string;
+  quantity: number;
   totalCents: number;
   paidCents: number;
 }): Promise<Buffer> {
@@ -66,9 +67,11 @@ async function buildInvoicePdf(opts: {
   page.drawLine({ start: { x: 40, y }, end: { x: width - 40, y }, thickness: 1, color: LIGHT_LINE });
   y -= 20;
 
+  const qty = Math.max(1, opts.quantity || 1);
+  const unitPrice = subtotal / qty;
   page.drawText(opts.itemDescription, { x: col.desc, y, size: 10, font, color: WALNUT });
-  page.drawText("1", { x: col.qty, y, size: 10, font, color: WALNUT });
-  page.drawText(`$${subtotal.toFixed(2)}`, { x: col.price, y, size: 10, font, color: WALNUT });
+  page.drawText(String(qty), { x: col.qty, y, size: 10, font, color: WALNUT });
+  page.drawText(`$${unitPrice.toFixed(2)}`, { x: col.price, y, size: 10, font, color: WALNUT });
   page.drawText(`$${subtotal.toFixed(2)}`, { x: col.amount, y, size: 10, font, color: WALNUT });
   y -= 30;
 
@@ -103,6 +106,33 @@ async function buildInvoicePdf(opts: {
 export async function issueInvoiceForOrder(order: any, customer: { email: string; full_name: string }) {
   const admin = createAdminClient();
 
+  // If this order is linked to a saved product with enough stock on hand,
+  // and we haven't already deducted stock for it, mark it ready for pickup
+  // and take the stock out of inventory — it's already made.
+  if (order.product_id && !order.stock_deducted) {
+    const { data: product } = await admin
+      .from("products")
+      .select("stock_quantity")
+      .eq("id", order.product_id)
+      .maybeSingle();
+
+    const neededQty = order.quantity || 1;
+    if (product && (product.stock_quantity || 0) >= neededQty) {
+      await admin
+        .from("products")
+        .update({ stock_quantity: product.stock_quantity - neededQty })
+        .eq("id", order.product_id);
+
+      await admin
+        .from("orders")
+        .update({ status: "ready_for_pickup", stock_deducted: true })
+        .eq("id", order.id);
+
+      order.status = "ready_for_pickup";
+      order.stock_deducted = true;
+    }
+  }
+
   // Compute the next invoice number directly from what's already in the
   // table, rather than a separate database sequence — one less moving
   // part that could silently get out of sync.
@@ -126,6 +156,7 @@ export async function issueInvoiceForOrder(order: any, customer: { email: string
     invoiceDate: new Date(order.created_at),
     customerName: customer.full_name,
     itemDescription,
+    quantity: order.quantity || 1,
     totalCents: order.price_cents || 0,
     paidCents: order.amount_paid_cents || 0
   });

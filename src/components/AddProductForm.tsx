@@ -17,6 +17,7 @@ export default function AddProductForm() {
   const [name, setName] = useState("");
   const [sizeDetails, setSizeDetails] = useState("");
   const [price, setPrice] = useState("");
+  const [stockQuantity, setStockQuantity] = useState("0");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -28,7 +29,7 @@ export default function AddProductForm() {
     const res = await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price })
+      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, stockQuantity })
     });
     const body = await res.json().catch(() => ({}));
     setLoading(false);
@@ -38,7 +39,7 @@ export default function AddProductForm() {
       return;
     }
 
-    setName(""); setSizeDetails(""); setPrice("");
+    setName(""); setSizeDetails(""); setPrice(""); setStockQuantity("0");
     setOpen(false);
     router.refresh();
   }
@@ -71,6 +72,10 @@ export default function AddProductForm() {
         <div>
           <label className="block text-xs font-semibold text-black mb-1">Price ($)</label>
           <input value={price} onChange={e => setPrice(e.target.value)} placeholder="55" className="w-full border border-black/15 rounded-md px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-black mb-1">Stock on hand</label>
+          <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} placeholder="0" className="w-full border border-black/15 rounded-md px-3 py-2 text-sm" />
         </div>
       </div>
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}

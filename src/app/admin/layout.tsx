@@ -24,6 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/customers" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white">Customers</Link>
           <Link href="/admin/orders" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white">Orders</Link>
           <Link href="/admin/products" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white">Products</Link>
+          <Link href="/admin/designs" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white">Designs</Link>
         </nav>
         <form action={signOut} className="mt-10">
           <button className="text-xs text-white/50 hover:text-white">Log out</button>

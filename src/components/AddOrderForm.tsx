@@ -16,6 +16,7 @@ export default function AddOrderForm({ customerId }: { customerId: string }) {
   const [title, setTitle] = useState("");
   const [sizeDetails, setSizeDetails] = useState("");
   const [price, setPrice] = useState("");
+  const [quantity, setQuantity] = useState("1");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
@@ -29,7 +30,7 @@ export default function AddOrderForm({ customerId }: { customerId: string }) {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customerId, productType, title, sizeDetails, priceCents: price })
+        body: JSON.stringify({ customerId, productType, title, sizeDetails, priceCents: price, quantity })
       });
 
       const body = await res.json().catch(() => ({}));
@@ -41,7 +42,7 @@ export default function AddOrderForm({ customerId }: { customerId: string }) {
       }
 
       setLoading(false);
-      setTitle(""); setSizeDetails(""); setPrice("");
+      setTitle(""); setSizeDetails(""); setPrice(""); setQuantity("1");
       setOpen(false);
       router.refresh();
     } catch (err) {
@@ -78,6 +79,10 @@ export default function AddOrderForm({ customerId }: { customerId: string }) {
         <div>
           <label className="block text-xs font-semibold text-black mb-1">Price ($)</label>
           <input value={price} onChange={e => setPrice(e.target.value)} placeholder="225" className="w-full border border-black/15 rounded-md px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-black mb-1">Qty</label>
+          <input type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} className="w-full border border-black/15 rounded-md px-3 py-2 text-sm" />
         </div>
       </div>
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}

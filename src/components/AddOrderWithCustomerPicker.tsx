@@ -36,6 +36,9 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
   const [title, setTitle] = useState("");
   const [sizeDetails, setSizeDetails] = useState("");
   const [price, setPrice] = useState("");
+  const [quantity, setQuantity] = useState("1");
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [unitPriceCents, setUnitPriceCents] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -121,9 +124,20 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
     setProductType(p.product_type);
     setTitle(p.name);
     setSizeDetails(p.size_details || "");
-    setPrice((p.price_cents / 100).toString());
+    setSelectedProductId(p.id);
+    setUnitPriceCents(p.price_cents);
+    setPrice(((p.price_cents * Number(quantity || 1)) / 100).toString());
     setProductSearch(p.name);
     setProductDropdownOpen(false);
+  }
+
+  function handleQuantityChange(newQty: string) {
+    setQuantity(newQty);
+    // If a saved product is selected, keep the total price in sync with quantity.
+    if (unitPriceCents != null) {
+      const qtyNum = Number(newQty) || 0;
+      setPrice(((unitPriceCents * qtyNum) / 100).toString());
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -143,7 +157,9 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
           productType,
           title,
           sizeDetails,
-          priceCents: price
+          priceCents: price,
+          quantity,
+          productId: selectedProductId
         })
       });
       const body = await res.json().catch(() => ({}));
@@ -153,7 +169,8 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
         return;
       }
       setLoading(false);
-      setTitle(""); setSizeDetails(""); setPrice("");
+      setTitle(""); setSizeDetails(""); setPrice(""); setQuantity("1");
+      setSelectedProductId(null); setUnitPriceCents(null); setProductSearch("");
       clearSelection();
       setOpen(false);
       router.refresh();
@@ -264,7 +281,11 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-black mb-1">Product type</label>
-              <select value={productType} onChange={e => setProductType(e.target.value)} className="w-full border border-black/15 rounded-md px-3 py-2 text-sm">
+              <select
+                value={productType}
+                onChange={e => { setProductType(e.target.value); setSelectedProductId(null); setUnitPriceCents(null); }}
+                className="w-full border border-black/15 rounded-md px-3 py-2 text-sm"
+              >
                 {PRODUCT_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
               </select>
             </div>
@@ -284,7 +305,22 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
             </div>
             <div>
               <label className="block text-xs font-semibold text-black mb-1">Price ($)</label>
-              <input value={price} onChange={e => setPrice(e.target.value)} placeholder="225" className="w-full border border-black/15 rounded-md px-3 py-2 text-sm" />
+              <input
+                value={price}
+                onChange={e => { setPrice(e.target.value); setUnitPriceCents(null); }}
+                placeholder="225"
+                className="w-full border border-black/15 rounded-md px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-black mb-1">Qty</label>
+              <input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={e => handleQuantityChange(e.target.value)}
+                className="w-full border border-black/15 rounded-md px-3 py-2 text-sm"
+              />
             </div>
           </div>
           {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
