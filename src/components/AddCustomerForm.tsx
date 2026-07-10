@@ -64,7 +64,7 @@ export default function AddCustomerForm() {
       <button
         type="submit"
         disabled={status === "loading"}
-        className="bg-ember text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60"
+        className="bg-[#1E3A5F] text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60"
       >
         {status === "loading" ? "Sending..." : "Create customer & send setup email"}
       </button>
