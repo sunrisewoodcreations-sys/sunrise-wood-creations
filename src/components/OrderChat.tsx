@@ -8,9 +8,10 @@ type Message = {
   sender_role: "admin" | "customer";
   body: string;
   created_at: string;
+  read_at: string | null;
 };
 
-export default function OrderChat({ orderId, currentUserId }: { orderId: string; currentUserId: string }) {
+export default function OrderChat({ orderId, currentUserId, isAdmin }: { orderId: string; currentUserId: string; isAdmin?: boolean }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -94,6 +95,9 @@ export default function OrderChat({ orderId, currentUserId }: { orderId: string;
                     hour: "numeric",
                     minute: "2-digit"
                   })}
+                  {isAdmin && isMine && m.sender_role === "admin" && (
+                    <> · {m.read_at ? "Read" : "Sent"}</>
+                  )}
                 </div>
               </div>
             </div>

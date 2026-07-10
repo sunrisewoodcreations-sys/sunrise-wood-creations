@@ -186,7 +186,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
       )}
 
       <div className="mt-6">
-        <OrderChat orderId={order.id} currentUserId={user!.id} />
+        <OrderChat orderId={order.id} currentUserId={user!.id} isAdmin />
       </div>
     </div>
   );
