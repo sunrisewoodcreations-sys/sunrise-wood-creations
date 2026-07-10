@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_SITE_CONTENT, SiteContent, PRODUCT_ORDER } from "@/lib/siteContent";
 import AccountMenu from "@/components/AccountMenu";
+import MobileNavToggle from "@/components/MobileNavToggle";
 
 // Same header as the homepage, pulled into one shared component so the
 // public site and account pages always match — no copy-pasting the nav
@@ -25,7 +26,7 @@ export default async function SiteHeader() {
     .filter(p => p.enabled);
 
   return (
-    <header className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-walnut/10 bg-cream">
+    <header className="relative flex items-center justify-between px-6 md:px-10 py-4 border-b border-walnut/10 bg-cream">
       <Link href="/" className="font-display text-lg md:text-xl text-walnut font-semibold">
         Sunrise Wood Creations
       </Link>
@@ -36,13 +37,16 @@ export default async function SiteHeader() {
           </Link>
         ))}
       </nav>
-      {role ? (
-        <AccountMenu role={role} name={fullName} />
-      ) : (
-        <Link href="/login" className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold">
-          Login
-        </Link>
-      )}
+      <div className="flex items-center gap-3">
+        <MobileNavToggle links={visibleProducts} />
+        {role ? (
+          <AccountMenu role={role} name={fullName} />
+        ) : (
+          <Link href="/login" className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold">
+            Login
+          </Link>
+        )}
+      </div>
     </header>
   );
 }

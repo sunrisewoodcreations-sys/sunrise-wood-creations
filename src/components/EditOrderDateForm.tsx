@@ -35,17 +35,17 @@ export default function EditOrderDateForm({ orderId, initialDate }: { orderId: s
 
   return (
     <form onSubmit={handleSave} className="flex items-center gap-2 mb-3">
-      <label className="text-xs text-walnut/50">Date placed:</label>
+      <label className="text-xs text-black/50">Date placed:</label>
       <input
         type="date"
         value={date}
         onChange={e => setDate(e.target.value)}
-        className="border border-walnut/15 rounded-md px-2 py-1 text-sm"
+        className="border border-black/15 rounded-md px-2 py-1 text-sm"
       />
       <button
         type="submit"
         disabled={loading}
-        className="bg-walnut text-white px-3 py-1 rounded-md text-xs font-semibold disabled:opacity-60"
+        className="bg-black text-white px-3 py-1 rounded-md text-xs font-semibold disabled:opacity-60"
       >
         {loading ? "Saving..." : "Save"}
       </button>

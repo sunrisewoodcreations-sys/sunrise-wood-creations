@@ -167,7 +167,7 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
     return (
       <button
         onClick={() => setOpen(true)}
-        className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap"
+        className="bg-black text-cream px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap"
       >
         + Add order
       </button>
@@ -175,13 +175,13 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
   }
 
   return (
-    <div className="bg-white border border-walnut/10 rounded-xl p-5 mb-6 space-y-4">
+    <div className="bg-white border border-black/10 rounded-xl p-5 mb-6 space-y-4">
       {/* Customer picker */}
       <div>
-        <label className="block text-xs font-semibold text-walnut mb-1">Customer</label>
+        <label className="block text-xs font-semibold text-black mb-1">Customer</label>
         {selectedCustomer ? (
-          <div className="flex items-center justify-between border border-walnut/15 rounded-md px-3 py-2 text-sm bg-cream/50">
-            <span>{selectedCustomer.full_name} <span className="text-walnut/50">({selectedCustomer.email})</span></span>
+          <div className="flex items-center justify-between border border-black/15 rounded-md px-3 py-2 text-sm bg-cream/50">
+            <span>{selectedCustomer.full_name} <span className="text-black/50">({selectedCustomer.email})</span></span>
             <button type="button" onClick={clearSelection} className="text-xs text-ember font-semibold ml-3">
               Change
             </button>
@@ -193,24 +193,24 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
               onChange={e => { setSearch(e.target.value); setDropdownOpen(true); }}
               onFocus={() => setDropdownOpen(true)}
               placeholder="Search customers by name or email..."
-              className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm"
+              className="w-full border border-black/15 rounded-md px-3 py-2 text-sm"
             />
             {dropdownOpen && (
-              <div className="absolute z-20 mt-1 w-full bg-white border border-walnut/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
+              <div className="absolute z-20 mt-1 w-full bg-white border border-black/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
                 {filtered.length > 0 ? (
                   filtered.map(c => (
                     <button
                       key={c.id}
                       type="button"
                       onClick={() => selectCustomer(c)}
-                      className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-walnut/5 last:border-0"
+                      className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-black/5 last:border-0"
                     >
-                      <div className="font-medium text-walnut">{c.full_name}</div>
-                      <div className="text-xs text-walnut/50">{c.email}</div>
+                      <div className="font-medium text-black">{c.full_name}</div>
+                      <div className="text-xs text-black/50">{c.email}</div>
                     </button>
                   ))
                 ) : (
-                  <div className="px-3 py-3 text-sm text-walnut/60">
+                  <div className="px-3 py-3 text-sm text-black/60">
                     No matching customers.
                     <button
                       type="button"
@@ -232,30 +232,30 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
         <form onSubmit={handleSubmit} className="space-y-3">
           {productType !== "cornhole" && matchingProducts.length > 0 && (
             <div className="relative" ref={productSearchRef}>
-              <label className="block text-xs font-semibold text-walnut mb-1">Fill in from a saved product (optional)</label>
+              <label className="block text-xs font-semibold text-black mb-1">Fill in from a saved product (optional)</label>
               <input
                 value={productSearch}
                 onChange={e => { setProductSearch(e.target.value); setProductDropdownOpen(true); }}
                 onFocus={() => setProductDropdownOpen(true)}
                 placeholder="Search saved products..."
-                className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm"
+                className="w-full border border-black/15 rounded-md px-3 py-2 text-sm"
               />
               {productDropdownOpen && (
-                <div className="absolute z-20 mt-1 w-full bg-white border border-walnut/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
+                <div className="absolute z-20 mt-1 w-full bg-white border border-black/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
                   {filteredProducts.length > 0 ? (
                     filteredProducts.map(p => (
                       <button
                         key={p.id}
                         type="button"
                         onClick={() => applyProduct(p.id)}
-                        className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-walnut/5 last:border-0"
+                        className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-black/5 last:border-0"
                       >
-                        <div className="font-medium text-walnut">{p.name}</div>
-                        <div className="text-xs text-walnut/50">${(p.price_cents / 100).toFixed(2)}{p.size_details ? ` · ${p.size_details}` : ""}</div>
+                        <div className="font-medium text-black">{p.name}</div>
+                        <div className="text-xs text-black/50">${(p.price_cents / 100).toFixed(2)}{p.size_details ? ` · ${p.size_details}` : ""}</div>
                       </button>
                     ))
                   ) : (
-                    <div className="px-3 py-3 text-sm text-walnut/50">No matching products.</div>
+                    <div className="px-3 py-3 text-sm text-black/50">No matching products.</div>
                   )}
                 </div>
               )}
@@ -263,28 +263,28 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
           )}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-walnut mb-1">Product type</label>
-              <select value={productType} onChange={e => setProductType(e.target.value)} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm">
+              <label className="block text-xs font-semibold text-black mb-1">Product type</label>
+              <select value={productType} onChange={e => setProductType(e.target.value)} className="w-full border border-black/15 rounded-md px-3 py-2 text-sm">
                 {PRODUCT_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-walnut mb-1">Order title / description</label>
+              <label className="block text-xs font-semibold text-black mb-1">Order title / description</label>
               <input
                 required
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder={productType === "cornhole" ? "Design name (e.g. Michigan flag)" : "Order title / description"}
-                className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm"
+                className="w-full border border-black/15 rounded-md px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-walnut mb-1">Size / details</label>
-              <input value={sizeDetails} onChange={e => setSizeDetails(e.target.value)} placeholder="24in x 48in, 2 boards" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-black mb-1">Size / details</label>
+              <input value={sizeDetails} onChange={e => setSizeDetails(e.target.value)} placeholder="24in x 48in, 2 boards" className="w-full border border-black/15 rounded-md px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-walnut mb-1">Price ($)</label>
-              <input value={price} onChange={e => setPrice(e.target.value)} placeholder="225" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-black mb-1">Price ($)</label>
+              <input value={price} onChange={e => setPrice(e.target.value)} placeholder="225" className="w-full border border-black/15 rounded-md px-3 py-2 text-sm" />
             </div>
           </div>
           {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
@@ -292,7 +292,7 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
             <button type="submit" disabled={loading} className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60">
               {loading ? "Creating..." : "Create order"}
             </button>
-            <button type="button" onClick={() => setOpen(false)} className="border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold">
+            <button type="button" onClick={() => setOpen(false)} className="border border-black text-black px-4 py-2 rounded-md text-sm font-semibold">
               Cancel
             </button>
           </div>
@@ -300,7 +300,7 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
       )}
 
       {!selectedCustomer && (
-        <button type="button" onClick={() => setOpen(false)} className="text-xs text-walnut/50 underline">
+        <button type="button" onClick={() => setOpen(false)} className="text-xs text-black/50 underline">
           Cancel
         </button>
       )}
@@ -309,14 +309,14 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
       {showCreateCustomer && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-sm">
-            <h3 className="font-display text-lg text-walnut mb-3">Create new customer</h3>
+            <h3 className="font-display text-lg text-black mb-3">Create new customer</h3>
             {customerCreatedMsg ? (
               <div>
                 <p className="text-sm text-sage font-semibold mb-4">{customerCreatedMsg}</p>
                 <button
                   type="button"
                   onClick={() => { setShowCreateCustomer(false); setCustomerCreatedMsg(""); }}
-                  className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold"
+                  className="bg-black text-cream px-4 py-2 rounded-md text-sm font-semibold"
                 >
                   Done
                 </button>
@@ -324,19 +324,19 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
             ) : (
               <form onSubmit={handleCreateCustomer} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-walnut mb-1">Full name</label>
-                  <input required value={newName} onChange={e => setNewName(e.target.value)} placeholder="Jane Doe" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+                  <label className="block text-xs font-semibold text-black mb-1">Full name</label>
+                  <input required value={newName} onChange={e => setNewName(e.target.value)} placeholder="Jane Doe" className="w-full border border-black/15 rounded-md px-3 py-2 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-walnut mb-1">Email</label>
-                  <input required type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="jane@example.com" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+                  <label className="block text-xs font-semibold text-black mb-1">Email</label>
+                  <input required type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="jane@example.com" className="w-full border border-black/15 rounded-md px-3 py-2 text-sm" />
                 </div>
                 {customerCreateError && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{customerCreateError}</p>}
                 <div className="flex gap-2">
                   <button type="submit" disabled={creatingCustomer} className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60">
                     {creatingCustomer ? "Sending..." : "Create & send invite"}
                   </button>
-                  <button type="button" onClick={() => setShowCreateCustomer(false)} className="border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold">
+                  <button type="button" onClick={() => setShowCreateCustomer(false)} className="border border-black text-black px-4 py-2 rounded-md text-sm font-semibold">
                     Cancel
                   </button>
                 </div>

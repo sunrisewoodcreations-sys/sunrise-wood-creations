@@ -38,13 +38,13 @@ export default function StatusUpdater({ orderId, productType, currentStatus }: {
         value={status}
         onChange={e => handleChange(e.target.value)}
         disabled={loading}
-        className="border border-walnut/15 rounded-md px-3 py-2 text-sm"
+        className="border border-black/15 rounded-md px-3 py-2 text-sm"
       >
         {steps.map(s => (
           <option key={s.key} value={s.key}>{s.label}</option>
         ))}
       </select>
-      {loading && <span className="text-xs text-walnut/50">Saving...</span>}
+      {loading && <span className="text-xs text-black/50">Saving...</span>}
       {saved && <span className="text-xs text-sage font-semibold">Saved — customer notified by email</span>}
     </div>
   );

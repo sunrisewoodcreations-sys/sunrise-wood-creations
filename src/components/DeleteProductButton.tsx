@@ -30,7 +30,7 @@ export default function DeleteProductButton({ productId }: { productId: string }
       <button onClick={handleDelete} disabled={loading} className="text-ember font-semibold mr-2">
         {loading ? "Deleting..." : "Confirm"}
       </button>
-      <button onClick={() => setConfirming(false)} className="text-walnut/50">
+      <button onClick={() => setConfirming(false)} className="text-black/50">
         Cancel
       </button>
     </span>

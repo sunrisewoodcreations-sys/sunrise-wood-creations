@@ -27,8 +27,8 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="border border-dashed border-ember bg-ember/5 rounded-lg p-4">
-      <h3 className="font-semibold text-walnut text-sm mb-2">Send a design proof</h3>
-      <p className="text-xs text-walnut/60 mb-2">
+      <h3 className="font-semibold text-black text-sm mb-2">Send a design proof</h3>
+      <p className="text-xs text-black/60 mb-2">
         Paste the link to the design image (uploaded to your Supabase storage). The customer gets an email to approve or request changes.
       </p>
       <div className="flex gap-2">
@@ -37,7 +37,7 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
           value={imageUrl}
           onChange={e => setImageUrl(e.target.value)}
           placeholder="https://..."
-          className="flex-1 border border-walnut/15 rounded-md px-3 py-2 text-sm"
+          className="flex-1 border border-black/15 rounded-md px-3 py-2 text-sm"
         />
         <button
           type="submit"

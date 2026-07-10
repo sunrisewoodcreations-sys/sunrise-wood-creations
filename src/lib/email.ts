@@ -3,6 +3,7 @@ import { productLabel, statusLabel, ProductType } from "./statusSteps";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM || "Sunrise Wood Creations <orders@sunrisewoodcreations.com>";
+const FROM_INVOICE = process.env.EMAIL_FROM_INVOICE || "Sunrise Wood Creations <invoice@sunrisewoodcreations.com>";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com";
 
 function shell(opts: { preheader: string; bodyHtml: string; buttonText?: string; buttonUrl?: string }) {
@@ -47,8 +48,13 @@ function shell(opts: { preheader: string; bodyHtml: string; buttonText?: string;
           </tr>
           <tr>
             <td style="padding: 20px 32px; background-color: #F7F1E6; border-top: 1px solid #e5d9c3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 13px; color: #8a7a6b;">
-              Questions? Call <a href="tel:2697621460" style="color: #8a7a6b;">(269) 762-1460</a> or email
-              <a href="mailto:sunrisewoodcreations@gmail.com" style="color: #8a7a6b;">sunrisewoodcreations@gmail.com</a>.
+              <p style="margin: 0 0 8px;">
+                This inbox is not monitored — we don't receive replies sent here.
+              </p>
+              <p style="margin: 0;">
+                Questions? Call <a href="tel:2697621460" style="color: #8a7a6b;">(269) 762-1460</a> or email
+                <a href="mailto:sunrisewoodcreations@gmail.com" style="color: #8a7a6b;">sunrisewoodcreations@gmail.com</a>.
+              </p>
             </td>
           </tr>
         </table>
@@ -233,7 +239,7 @@ export async function sendInvoiceEmail(opts: {
   });
 
   return resend.emails.send({
-    from: FROM,
+    from: FROM_INVOICE,
     to: opts.toEmail,
     subject: opts.paidInFull
       ? `Paid in full — Invoice #${opts.invoiceNumber} — Sunrise Wood Creations`

@@ -34,23 +34,23 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-walnut mb-1">Customers</h1>
-      <p className="text-sm text-walnut/60 mb-6">Search, view, and add customers.</p>
+      <h1 className="font-display text-2xl text-black mb-1">Customers</h1>
+      <p className="text-sm text-black/60 mb-6">Search, view, and add customers.</p>
 
       <form method="GET" className="mb-6">
         <input
           name="q"
           defaultValue={query}
           placeholder="Search customers by name or email..."
-          className="w-full max-w-md px-3 py-2.5 border border-walnut/15 rounded-md text-sm"
+          className="w-full max-w-md px-3 py-2.5 border border-black/15 rounded-md text-sm"
         />
       </form>
 
       <AddCustomerForm />
 
-      <table className="w-full bg-white border border-walnut/10 rounded-xl overflow-hidden text-sm">
+      <table className="w-full bg-white border border-black/10 rounded-xl overflow-hidden text-sm">
         <thead>
-          <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+          <tr className="bg-black text-white text-xs uppercase tracking-wide">
             <th className="text-left px-4 py-3">Name</th>
             <th className="text-left px-4 py-3">Email</th>
             <th className="text-left px-4 py-3">Orders</th>
@@ -61,23 +61,23 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
         </thead>
         <tbody>
           {rows.map((c: any) => (
-            <tr key={c.id} className="border-t border-walnut/10 hover:bg-cream/60">
+            <tr key={c.id} className="border-t border-black/10 hover:bg-cream/60">
               <td className="px-4 py-3">
-                <Link href={`/admin/customers/${c.id}`} className="font-semibold text-walnut">
+                <Link href={`/admin/customers/${c.id}`} className="font-semibold text-black">
                   {c.full_name}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-walnut/70">{c.email}</td>
-              <td className="px-4 py-3 text-walnut/70">{c.orderCount}</td>
-              <td className="px-4 py-3 text-right text-walnut/70">${c.totalSales.toFixed(2)}</td>
-              <td className="px-4 py-3 text-right text-walnut/70">${c.totalPaid.toFixed(2)}</td>
+              <td className="px-4 py-3 text-black/70">{c.email}</td>
+              <td className="px-4 py-3 text-black/70">{c.orderCount}</td>
+              <td className="px-4 py-3 text-right text-black/70">${c.totalSales.toFixed(2)}</td>
+              <td className="px-4 py-3 text-right text-black/70">${c.totalPaid.toFixed(2)}</td>
               <td className={`px-4 py-3 text-right font-semibold ${c.owed > 0 ? "text-ember" : "text-sage"}`}>
                 ${c.owed.toFixed(2)}
               </td>
             </tr>
           ))}
           {rows.length === 0 && (
-            <tr><td colSpan={6} className="px-4 py-6 text-center text-walnut/50">No customers found.</td></tr>
+            <tr><td colSpan={6} className="px-4 py-6 text-center text-black/50">No customers found.</td></tr>
           )}
         </tbody>
       </table>

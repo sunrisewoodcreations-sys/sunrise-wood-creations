@@ -95,38 +95,38 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-walnut mb-1">Orders</h1>
-      <p className="text-sm text-walnut/60 mb-6">All orders, across every customer.</p>
+      <h1 className="font-display text-2xl text-black mb-1">Orders</h1>
+      <p className="text-sm text-black/60 mb-6">All orders, across every customer.</p>
 
-      <div className="bg-white border border-walnut/10 rounded-xl p-5 mb-6">
-        <div className="text-xs text-walnut/50 uppercase tracking-wide mb-3">Download invoices in bulk (paid orders only)</div>
+      <div className="bg-white border border-black/10 rounded-xl p-5 mb-6">
+        <div className="text-xs text-black/50 uppercase tracking-wide mb-3">Download invoices in bulk (paid orders only)</div>
         <div className="flex flex-wrap gap-2">
-          <a href="/api/invoices/bulk?period=this_month" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This month</a>
-          <a href="/api/invoices/bulk?period=this_quarter" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This quarter</a>
-          <a href="/api/invoices/bulk?period=last_quarter" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last quarter</a>
-          <a href="/api/invoices/bulk?period=this_year" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This year</a>
-          <a href="/api/invoices/bulk?period=last_year" className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last year</a>
+          <a href="/api/invoices/bulk?period=this_month" className="border border-black/20 text-black px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This month</a>
+          <a href="/api/invoices/bulk?period=this_quarter" className="border border-black/20 text-black px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This quarter</a>
+          <a href="/api/invoices/bulk?period=last_quarter" className="border border-black/20 text-black px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last quarter</a>
+          <a href="/api/invoices/bulk?period=this_year" className="border border-black/20 text-black px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This year</a>
+          <a href="/api/invoices/bulk?period=last_year" className="border border-black/20 text-black px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last year</a>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white border border-walnut/10 rounded-xl p-5">
-          <div className="text-xs text-walnut/50 uppercase tracking-wide mb-1">
+        <div className="bg-white border border-black/10 rounded-xl p-5">
+          <div className="text-xs text-black/50 uppercase tracking-wide mb-1">
             {quarterLabel} sales (after tax removed)
           </div>
-          <div className="text-2xl font-display text-walnut">${quarterSales.toFixed(2)}</div>
+          <div className="text-2xl font-display text-black">${quarterSales.toFixed(2)}</div>
         </div>
         <div className="bg-ember/5 border border-ember/20 rounded-xl p-5">
-          <div className="text-xs text-walnut/50 uppercase tracking-wide mb-1">
+          <div className="text-xs text-black/50 uppercase tracking-wide mb-1">
             Sales tax owed ({quarterLabel}, 6% MI)
           </div>
           <div className="text-2xl font-display text-ember">${quarterTaxOwed.toFixed(2)}</div>
         </div>
-        <div className="bg-white border border-walnut/10 rounded-xl p-5">
-          <div className="text-xs text-walnut/50 uppercase tracking-wide mb-1">
+        <div className="bg-white border border-black/10 rounded-xl p-5">
+          <div className="text-xs text-black/50 uppercase tracking-wide mb-1">
             Sales year-to-date ({currentYear}, after tax removed)
           </div>
-          <div className="text-2xl font-display text-walnut">${yearSales.toFixed(2)}</div>
+          <div className="text-2xl font-display text-black">${yearSales.toFixed(2)}</div>
         </div>
       </div>
 
@@ -139,14 +139,14 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
             name="q"
             defaultValue={query}
             placeholder="Search orders by customer name or email..."
-            className="w-full px-3 py-2.5 border border-walnut/15 rounded-md text-sm"
+            className="w-full px-3 py-2.5 border border-black/15 rounded-md text-sm"
           />
         </form>
       </div>
 
-      <table className="w-full bg-white border border-walnut/10 rounded-xl overflow-hidden text-sm">
+      <table className="w-full bg-white border border-black/10 rounded-xl overflow-hidden text-sm">
         <thead>
-          <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+          <tr className="bg-black text-white text-xs uppercase tracking-wide">
             <th className="text-left px-4 py-3">Order</th>
             <th className="text-left px-4 py-3">Customer</th>
             <th className="text-left px-4 py-3">Date</th>
@@ -162,23 +162,23 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
           {orders?.map((order: any) => {
             const invoice = latestInvoiceByOrder[order.id];
             return (
-            <tr key={order.id} className="border-t border-walnut/10 hover:bg-cream/60">
+            <tr key={order.id} className="border-t border-black/10 hover:bg-cream/60">
               <td className="px-4 py-3">
-                <Link href={`/admin/orders/${order.id}`} className="font-semibold text-walnut">
+                <Link href={`/admin/orders/${order.id}`} className="font-semibold text-black">
                   {productLabel(order.product_type as ProductType)} — {order.title}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-walnut/70">{order.profiles?.full_name}</td>
-              <td className="px-4 py-3 font-mono text-walnut/70">
+              <td className="px-4 py-3 text-black/70">{order.profiles?.full_name}</td>
+              <td className="px-4 py-3 font-mono text-black/70">
                 {new Date(order.created_at).toLocaleDateString()}
               </td>
-              <td className="px-4 py-3 text-walnut/70">
+              <td className="px-4 py-3 text-black/70">
                 {statusLabel(order.product_type as ProductType, order.status)}
               </td>
-              <td className="px-4 py-3 text-right text-walnut/70">
+              <td className="px-4 py-3 text-right text-black/70">
                 ${((order.price_cents || 0) / 100).toFixed(2)}
               </td>
-              <td className="px-4 py-3 text-right text-walnut/70">
+              <td className="px-4 py-3 text-right text-black/70">
                 ${((order.amount_paid_cents || 0) / 100).toFixed(2)}
               </td>
               <td className={`px-4 py-3 text-right font-semibold ${
@@ -197,7 +197,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                     Download #{invoice.invoice_number}
                   </a>
                 ) : (
-                  <span className="text-xs text-walnut/40">—</span>
+                  <span className="text-xs text-black/40">—</span>
                 )}
               </td>
               <td className="px-4 py-3 text-right">
@@ -206,7 +206,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
             </tr>
           );})}
           {orders?.length === 0 && (
-            <tr><td colSpan={9} className="px-4 py-6 text-center text-walnut/50">No orders yet.</td></tr>
+            <tr><td colSpan={9} className="px-4 py-6 text-center text-black/50">No orders yet.</td></tr>
           )}
         </tbody>
       </table>

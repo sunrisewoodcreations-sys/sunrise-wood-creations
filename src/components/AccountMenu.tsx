@@ -32,7 +32,10 @@ export default function AccountMenu({ role, name }: { role: "admin" | "customer"
         { href: "/admin/customers", label: "Customers" },
         { href: "/admin/orders", label: "Order Manager" }
       ]
-    : [{ href: "/account", label: "My Orders" }];
+    : [
+        { href: "/account", label: "My Orders" },
+        { href: "/", label: "Back to website" }
+      ];
 
   return (
     <div className="relative" ref={menuRef}>

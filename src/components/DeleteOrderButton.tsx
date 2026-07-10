@@ -37,7 +37,7 @@ export default function DeleteOrderButton({ orderId, orderTitle }: { orderId: st
 
   return (
     <div className="border border-ember/30 bg-ember/5 rounded-md p-3 text-sm">
-      <p className="text-walnut mb-2 font-semibold">
+      <p className="text-black mb-2 font-semibold">
         Delete "{orderTitle}" permanently? This can't be undone.
       </p>
       {error && <p className="text-ember text-xs mb-2">{error}</p>}
@@ -52,7 +52,7 @@ export default function DeleteOrderButton({ orderId, orderTitle }: { orderId: st
         <button
           onClick={() => setConfirming(false)}
           disabled={loading}
-          className="border border-walnut/20 text-walnut px-3 py-1.5 rounded-md text-xs font-semibold"
+          className="border border-black/20 text-black px-3 py-1.5 rounded-md text-xs font-semibold"
         >
           Cancel
         </button>

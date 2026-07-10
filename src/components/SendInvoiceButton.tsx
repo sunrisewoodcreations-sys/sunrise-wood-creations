@@ -28,7 +28,7 @@ export default function SendInvoiceButton({ orderId }: { orderId: string }) {
       <button
         onClick={handleSend}
         disabled={loading}
-        className="border border-walnut text-walnut px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
+        className="border border-black text-black px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
       >
         {loading ? "Sending..." : "Send invoice"}
       </button>

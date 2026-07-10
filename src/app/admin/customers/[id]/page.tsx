@@ -37,15 +37,15 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
   return (
     <div>
-      <Link href="/admin/customers" className="text-sm text-walnut/60 mb-4 inline-block">← All customers</Link>
-      <h1 className="font-display text-2xl text-walnut mb-1">{customer.full_name}</h1>
-      <p className="text-sm text-walnut/60 mb-6">{customer.email}</p>
+      <Link href="/admin/customers" className="text-sm text-black/60 mb-4 inline-block">← All customers</Link>
+      <h1 className="font-display text-2xl text-black mb-1">{customer.full_name}</h1>
+      <p className="text-sm text-black/60 mb-6">{customer.email}</p>
 
       <AddOrderForm customerId={customer.id} />
 
-      <table className="w-full bg-white border border-walnut/10 rounded-xl overflow-hidden text-sm">
+      <table className="w-full bg-white border border-black/10 rounded-xl overflow-hidden text-sm">
         <thead>
-          <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+          <tr className="bg-black text-white text-xs uppercase tracking-wide">
             <th className="text-left px-4 py-3">Order</th>
             <th className="text-left px-4 py-3">Date</th>
             <th className="text-left px-4 py-3">Size / details</th>
@@ -60,23 +60,23 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
           {orders?.map((order: any) => {
             const invoice = latestInvoiceByOrder[order.id];
             return (
-              <tr key={order.id} className="border-t border-walnut/10 hover:bg-cream/60">
+              <tr key={order.id} className="border-t border-black/10 hover:bg-cream/60">
                 <td className="px-4 py-3">
-                  <Link href={`/admin/orders/${order.id}`} className="font-semibold text-walnut">
+                  <Link href={`/admin/orders/${order.id}`} className="font-semibold text-black">
                     {productLabel(order.product_type as ProductType)} — {order.title}
                   </Link>
                 </td>
-                <td className="px-4 py-3 font-mono text-walnut/70">
+                <td className="px-4 py-3 font-mono text-black/70">
                   {new Date(order.created_at).toLocaleDateString()}
                 </td>
-                <td className="px-4 py-3 text-walnut/70">{order.size_details}</td>
-                <td className="px-4 py-3 text-walnut/70">
+                <td className="px-4 py-3 text-black/70">{order.size_details}</td>
+                <td className="px-4 py-3 text-black/70">
                   {statusLabel(order.product_type as ProductType, order.status)}
                 </td>
-                <td className="px-4 py-3 text-right text-walnut/70">
+                <td className="px-4 py-3 text-right text-black/70">
                   ${((order.price_cents || 0) / 100).toFixed(2)}
                 </td>
-                <td className="px-4 py-3 text-right text-walnut/70">
+                <td className="px-4 py-3 text-right text-black/70">
                   ${((order.amount_paid_cents || 0) / 100).toFixed(2)}
                 </td>
                 <td className={`px-4 py-3 text-right font-semibold ${
@@ -95,14 +95,14 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
                       Download #{invoice.invoice_number}
                     </a>
                   ) : (
-                    <span className="text-xs text-walnut/40">—</span>
+                    <span className="text-xs text-black/40">—</span>
                   )}
                 </td>
               </tr>
             );
           })}
           {orders?.length === 0 && (
-            <tr><td colSpan={8} className="px-4 py-6 text-center text-walnut/50">No orders yet.</td></tr>
+            <tr><td colSpan={8} className="px-4 py-6 text-center text-black/50">No orders yet.</td></tr>
           )}
         </tbody>
       </table>

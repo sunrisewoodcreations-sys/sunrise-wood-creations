@@ -4,11 +4,12 @@ import { sendInvoiceEmail } from "@/lib/email";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 const SALES_TAX_RATE = 0.06; // Michigan
-const WALNUT = rgb(0.24, 0.17, 0.12);
-const CREAM = rgb(0.97, 0.945, 0.9);
+const WALNUT = rgb(0, 0, 0);
+const CREAM = rgb(1, 1, 1);
 const EMBER = rgb(0.85, 0.376, 0.227);
 const GRAY = rgb(0.4, 0.4, 0.4);
 const LIGHT_LINE = rgb(0.85, 0.85, 0.85);
+const GREEN = rgb(0.22, 0.5, 0.34);
 
 async function buildInvoicePdf(opts: {
   invoiceNumber: number;
@@ -40,14 +41,14 @@ async function buildInvoicePdf(opts: {
   const tax = total - subtotal;
 
   const metaX = width - 220;
-  function metaRow(label: string, value: string, yy: number) {
+  function metaRow(label: string, value: string, yy: number, color?: ReturnType<typeof rgb>) {
     page.drawText(label, { x: metaX, y: yy, size: 10, font: bold, color: GRAY });
-    page.drawText(value, { x: metaX + 110, y: yy, size: 10, font, color: WALNUT });
+    page.drawText(value, { x: metaX + 110, y: yy, size: 10, font, color: color || WALNUT });
   }
   let metaY = height - 100;
   metaRow("Invoice Number:", String(opts.invoiceNumber), metaY); metaY -= 16;
   metaRow("Invoice Date:", opts.invoiceDate.toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric", month: "long", day: "numeric" }), metaY); metaY -= 16;
-  metaRow("Amount Due:", `$${due.toFixed(2)}`, metaY);
+  metaRow("Amount Due:", `$${due.toFixed(2)}`, metaY, due <= 0 ? GREEN : EMBER);
 
   y -= 30;
   page.drawText("BILL TO", { x: 40, y, size: 9, font: bold, color: GRAY });
@@ -73,16 +74,17 @@ async function buildInvoicePdf(opts: {
 
   page.drawLine({ start: { x: 300, y: y + 14 }, end: { x: width - 40, y: y + 14 }, thickness: 1, color: LIGHT_LINE });
 
-  function totalsRow(label: string, value: string, yy: number, big?: boolean) {
-    page.drawText(label, { x: 380, y: yy, size: big ? 11 : 10, font: big ? bold : font, color: big ? EMBER : WALNUT });
-    page.drawText(value, { x: col.amount, y: yy, size: big ? 11 : 10, font: big ? bold : font, color: big ? EMBER : WALNUT });
+  function totalsRow(label: string, value: string, yy: number, big?: boolean, color?: ReturnType<typeof rgb>) {
+    const c = color || (big ? EMBER : WALNUT);
+    page.drawText(label, { x: 380, y: yy, size: big ? 11 : 10, font: big ? bold : font, color: c });
+    page.drawText(value, { x: col.amount, y: yy, size: big ? 11 : 10, font: big ? bold : font, color: c });
   }
   totalsRow("Subtotal:", `$${subtotal.toFixed(2)}`, y); y -= 18;
   totalsRow("Sales Tax (6%):", `$${tax.toFixed(2)}`, y); y -= 18;
   page.drawLine({ start: { x: 300, y: y + 12 }, end: { x: width - 40, y: y + 12 }, thickness: 1, color: WALNUT });
   totalsRow("Total:", `$${total.toFixed(2)}`, y, true); y -= 24;
   totalsRow("Amount paid:", `$${paid.toFixed(2)}`, y); y -= 18;
-  totalsRow("Amount Due:", `$${due.toFixed(2)}`, y, true);
+  totalsRow("Amount Due:", `$${due.toFixed(2)}`, y, true, due <= 0 ? GREEN : EMBER);
   y -= 50;
 
   page.drawText("Notes", { x: 40, y, size: 9, font: bold, color: GRAY });
@@ -101,12 +103,21 @@ async function buildInvoicePdf(opts: {
 export async function issueInvoiceForOrder(order: any, customer: { email: string; full_name: string }) {
   const admin = createAdminClient();
 
-  const { data: numberData, error: numberError } = await admin.rpc("next_invoice_number");
-  if (numberError || !numberData) {
-    console.error("Couldn't get next invoice number:", numberError?.message);
+  // Compute the next invoice number directly from what's already in the
+  // table, rather than a separate database sequence — one less moving
+  // part that could silently get out of sync.
+  const { data: maxRow, error: maxError } = await admin
+    .from("invoices")
+    .select("invoice_number")
+    .order("invoice_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (maxError) {
+    console.error("Couldn't determine next invoice number:", maxError.message);
     return;
   }
-  const invoiceNumber = numberData as number;
+  const invoiceNumber = (maxRow?.invoice_number || 109) + 1;
 
   const itemDescription = `${productLabel(order.product_type as ProductType)} — ${order.title}`;
 
