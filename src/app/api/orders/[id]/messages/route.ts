@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { sendNewMessageNotice } from "@/lib/email";
+import { sendNewMessageNotice, sendCustomerNewMessageNotice } from "@/lib/email";
 
 // Both admin and the order's own customer can read/send here — RLS on
 // the order_messages table already enforces who's allowed to see what,
@@ -52,9 +52,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  // Let the shop know when a customer messages in, so it doesn't sit
-  // unnoticed. No notification back to the customer on admin replies —
-  // they can check their account page.
+  // Let the other side know a new message came in — the shop when a
+  // customer messages, and the customer when the shop replies.
   if (senderRole === "customer") {
     try {
       const { data: order } = await supabase.from("orders").select("id, title").eq("id", params.id).single();
@@ -68,6 +67,26 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       }
     } catch (err) {
       console.error("New-message notice failed to send:", err);
+    }
+  } else {
+    try {
+      const { data: order } = await supabase
+        .from("orders")
+        .select("id, title, profiles:customer_id(email, full_name)")
+        .eq("id", params.id)
+        .single();
+      const customer = (order as any)?.profiles;
+      if (order && customer?.email) {
+        await sendCustomerNewMessageNotice({
+          toEmail: customer.email,
+          customerName: customer.full_name || "there",
+          orderTitle: order.title,
+          orderId: order.id,
+          messageBody: messageBody.trim()
+        });
+      }
+    } catch (err) {
+      console.error("Customer new-message notice failed to send:", err);
     }
   }
 

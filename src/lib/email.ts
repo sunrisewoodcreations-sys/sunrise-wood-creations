@@ -282,3 +282,37 @@ export async function sendNewMessageNotice(opts: {
     html
   });
 }
+
+export async function sendCustomerNewMessageNotice(opts: {
+  toEmail: string;
+  customerName: string;
+  orderTitle: string;
+  orderId: string;
+  messageBody: string;
+}) {
+  const html = shell({
+    preheader: `New message about your order: ${opts.orderTitle}`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
+      <p style="margin: 0 0 16px;">
+        You've got a new message about your order — <strong>${opts.orderTitle}</strong>:
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 8px;">
+        <tr>
+          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
+            "${opts.messageBody}"
+          </td>
+        </tr>
+      </table>
+    `,
+    buttonText: "View and reply",
+    buttonUrl: `${SITE_URL}/account/orders/${opts.orderId}`
+  });
+
+  return resend.emails.send({
+    from: FROM,
+    to: opts.toEmail,
+    subject: `New message about your order: ${opts.orderTitle}`,
+    html
+  });
+}
