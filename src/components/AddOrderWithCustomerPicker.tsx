@@ -13,6 +13,28 @@ const PRODUCT_TYPES = [
 type Customer = { id: string; full_name: string; email: string };
 type SavedProduct = { id: string; product_type: string; name: string; size_details: string | null; price_cents: number };
 
+type LineItem = {
+  productType: string;
+  title: string;
+  sizeDetails: string;
+  price: string; // total for this line (unit price x quantity), editable
+  quantity: string;
+  selectedProductId: string | null;
+  unitPriceCents: number | null;
+};
+
+function blankLineItem(): LineItem {
+  return {
+    productType: "cornhole",
+    title: "",
+    sizeDetails: "",
+    price: "",
+    quantity: "1",
+    selectedProductId: null,
+    unitPriceCents: null
+  };
+}
+
 export default function AddOrderWithCustomerPicker({ customers, products }: { customers: Customer[]; products: SavedProduct[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -31,14 +53,8 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
   const [customerCreatedMsg, setCustomerCreatedMsg] = useState("");
   const [customerCreateError, setCustomerCreateError] = useState("");
 
-  // Order fields
-  const [productType, setProductType] = useState("cornhole");
-  const [title, setTitle] = useState("");
-  const [sizeDetails, setSizeDetails] = useState("");
-  const [price, setPrice] = useState("");
-  const [quantity, setQuantity] = useState("1");
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [unitPriceCents, setUnitPriceCents] = useState<number | null>(null);
+  // Line items — one order can now hold several different items.
+  const [items, setItems] = useState<LineItem[]>([blankLineItem()]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -97,53 +113,55 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
     router.refresh();
   }
 
-  // Saved-product search/select state
-  const [productSearch, setProductSearch] = useState("");
-  const [productDropdownOpen, setProductDropdownOpen] = useState(false);
-  const productSearchRef = useRef<HTMLDivElement>(null);
+  function updateItem(index: number, patch: Partial<LineItem>) {
+    setItems(prev => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
+  }
 
-  useEffect(() => {
-    function handleClickOutsideProduct(e: MouseEvent) {
-      if (productSearchRef.current && !productSearchRef.current.contains(e.target as Node)) {
-        setProductDropdownOpen(false);
-      }
+  function addItemRow() {
+    setItems(prev => [...prev, blankLineItem()]);
+  }
+
+  function removeItemRow(index: number) {
+    setItems(prev => prev.length === 1 ? prev : prev.filter((_, i) => i !== index));
+  }
+
+  function applySavedProduct(index: number, productId: string) {
+    if (!productId) {
+      updateItem(index, { selectedProductId: null, unitPriceCents: null });
+      return;
     }
-    document.addEventListener("mousedown", handleClickOutsideProduct);
-    return () => document.removeEventListener("mousedown", handleClickOutsideProduct);
-  }, []);
-
-  const matchingProducts = products.filter(p => p.product_type === productType);
-  const filteredProducts = productSearch.trim()
-    ? matchingProducts.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
-    : matchingProducts;
-
-  function applyProduct(productId: string) {
-    if (!productId) return;
     const p = products.find(pr => pr.id === productId);
     if (!p) return;
-    setProductType(p.product_type);
-    setTitle(p.name);
-    setSizeDetails(p.size_details || "");
-    setSelectedProductId(p.id);
-    setUnitPriceCents(p.price_cents);
-    setPrice(((p.price_cents * Number(quantity || 1)) / 100).toString());
-    setProductSearch(p.name);
-    setProductDropdownOpen(false);
+    const qty = Number(items[index].quantity) || 1;
+    updateItem(index, {
+      title: p.name,
+      sizeDetails: p.size_details || "",
+      selectedProductId: p.id,
+      unitPriceCents: p.price_cents,
+      price: ((p.price_cents * qty) / 100).toString()
+    });
   }
 
-  function handleQuantityChange(newQty: string) {
-    setQuantity(newQty);
-    // If a saved product is selected, keep the total price in sync with quantity.
-    if (unitPriceCents != null) {
+  function changeItemQuantity(index: number, newQty: string) {
+    const item = items[index];
+    const patch: Partial<LineItem> = { quantity: newQty };
+    if (item.unitPriceCents != null) {
       const qtyNum = Number(newQty) || 0;
-      setPrice(((unitPriceCents * qtyNum) / 100).toString());
+      patch.price = ((item.unitPriceCents * qtyNum) / 100).toString();
     }
+    updateItem(index, patch);
   }
+
+  const grandTotal = items.reduce((sum, it) => sum + (Number(it.price) || 0), 0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedCustomer) {
       setError("Pick a customer first.");
+      return;
+    }
+    if (items.some(it => !it.title.trim())) {
+      setError("Every item needs a title/description.");
       return;
     }
     setLoading(true);
@@ -154,12 +172,14 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId: selectedCustomer.id,
-          productType,
-          title,
-          sizeDetails,
-          priceCents: price,
-          quantity,
-          productId: selectedProductId
+          items: items.map(it => ({
+            productType: it.productType,
+            productId: it.selectedProductId,
+            title: it.title,
+            sizeDetails: it.sizeDetails,
+            quantity: it.quantity,
+            priceCents: Math.round((Number(it.price) || 0) * 100)
+          }))
         })
       });
       const body = await res.json().catch(() => ({}));
@@ -169,8 +189,7 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
         return;
       }
       setLoading(false);
-      setTitle(""); setSizeDetails(""); setPrice(""); setQuantity("1");
-      setSelectedProductId(null); setUnitPriceCents(null); setProductSearch("");
+      setItems([blankLineItem()]);
       clearSelection();
       setOpen(false);
       router.refresh();
@@ -244,85 +263,112 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
         )}
       </div>
 
-      {/* Order fields — only shown once a customer is picked */}
+      {/* Items — only shown once a customer is picked */}
       {selectedCustomer && (
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {productType !== "cornhole" && matchingProducts.length > 0 && (
-            <div className="relative" ref={productSearchRef}>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Fill in from a saved product (optional)</label>
-              <input
-                value={productSearch}
-                onChange={e => { setProductSearch(e.target.value); setProductDropdownOpen(true); }}
-                onFocus={() => setProductDropdownOpen(true)}
-                placeholder="Search saved products..."
-                className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
-              />
-              {productDropdownOpen && (
-                <div className="absolute z-20 mt-1 w-full bg-white border border-[#1E3A5F]/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
-                  {filteredProducts.length > 0 ? (
-                    filteredProducts.map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => applyProduct(p.id)}
-                        className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-[#1E3A5F]/5 last:border-0"
-                      >
-                        <div className="font-medium text-[#1E3A5F]">{p.name}</div>
-                        <div className="text-xs text-[#1E3A5F]/50">${(p.price_cents / 100).toFixed(2)}{p.size_details ? ` · ${p.size_details}` : ""}</div>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="px-3 py-3 text-sm text-[#1E3A5F]/50">No matching products.</div>
-                  )}
-                </div>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-[#1E3A5F] mb-2">Items on this order</label>
+            <div className="space-y-3">
+              {items.map((item, index) => {
+                const matchingProducts = products.filter(p => p.product_type === item.productType);
+                return (
+                  <div key={index} className="border border-[#1E3A5F]/10 rounded-lg p-3 bg-cream/30">
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Product type</label>
+                        <select
+                          value={item.productType}
+                          onChange={e => updateItem(index, { productType: e.target.value, selectedProductId: null, unitPriceCents: null })}
+                          className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                        >
+                          {PRODUCT_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                        </select>
+                      </div>
+                      {item.productType !== "cornhole" && matchingProducts.length > 0 && (
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Fill in from saved product</label>
+                          <select
+                            onChange={e => applySavedProduct(index, e.target.value)}
+                            value={item.selectedProductId || ""}
+                            className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                          >
+                            <option value="">— Choose —</option>
+                            {matchingProducts.map(p => (
+                              <option key={p.id} value={p.id}>{p.name} — ${(p.price_cents / 100).toFixed(2)}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="col-span-2">
+                        <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Title / description</label>
+                        <input
+                          required
+                          value={item.title}
+                          onChange={e => updateItem(index, { title: e.target.value })}
+                          placeholder={item.productType === "cornhole" ? "Design name (e.g. Michigan flag)" : "Title / description"}
+                          className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Size / details</label>
+                        <input
+                          value={item.sizeDetails}
+                          onChange={e => updateItem(index, { sizeDetails: e.target.value })}
+                          className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Qty</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={e => changeItemQuantity(index, e.target.value)}
+                          className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2 mt-2 items-end">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Total price ($)</label>
+                        <input
+                          value={item.price}
+                          onChange={e => updateItem(index, { price: e.target.value, unitPriceCents: null })}
+                          placeholder="55"
+                          className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                        />
+                      </div>
+                      <div className="col-span-3 flex justify-end">
+                        {items.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeItemRow(index)}
+                            className="text-xs text-ember/70 hover:text-ember underline"
+                          >
+                            Remove this item
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          )}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Product type</label>
-              <select
-                value={productType}
-                onChange={e => { setProductType(e.target.value); setSelectedProductId(null); setUnitPriceCents(null); }}
-                className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
-              >
-                {PRODUCT_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Order title / description</label>
-              <input
-                required
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                placeholder={productType === "cornhole" ? "Design name (e.g. Michigan flag)" : "Order title / description"}
-                className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Size / details</label>
-              <input value={sizeDetails} onChange={e => setSizeDetails(e.target.value)} placeholder="24in x 48in, 2 boards" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Price ($)</label>
-              <input
-                value={price}
-                onChange={e => { setPrice(e.target.value); setUnitPriceCents(null); }}
-                placeholder="225"
-                className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Qty</label>
-              <input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={e => handleQuantityChange(e.target.value)}
-                className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
-              />
-            </div>
+            <button
+              type="button"
+              onClick={addItemRow}
+              className="mt-2 text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream"
+            >
+              + Add another item
+            </button>
           </div>
+
+          <div className="text-sm font-semibold text-[#1E3A5F] text-right">
+            Order total: ${grandTotal.toFixed(2)}
+          </div>
+
           {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={loading} className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60">

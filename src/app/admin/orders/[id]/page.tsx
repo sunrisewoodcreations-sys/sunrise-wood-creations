@@ -41,6 +41,12 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
     .eq("order_id", order.id)
     .order("created_at", { ascending: false });
 
+  const { data: orderItems } = await supabase
+    .from("order_items")
+    .select("*")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: true });
+
   // Keep the earliest time each status was reached, in case a status
   // ever gets logged more than once.
   const statusTimestamps: Record<string, string> = {};
@@ -68,6 +74,31 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         <p className="text-sm text-[#1E3A5F]/60 mb-4">
           {order.size_details} · ${(order.price_cents / 100).toFixed(2)} · Placed {new Date(order.created_at).toLocaleDateString()}
         </p>
+
+        {orderItems && orderItems.length > 1 && (
+          <div className="mb-4 border border-[#1E3A5F]/10 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-cream text-[#1E3A5F] text-xs uppercase">
+                  <th className="text-left px-3 py-2">Item</th>
+                  <th className="text-left px-3 py-2">Size / details</th>
+                  <th className="text-right px-3 py-2">Qty</th>
+                  <th className="text-right px-3 py-2">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orderItems.map((it: any) => (
+                  <tr key={it.id} className="border-t border-[#1E3A5F]/10">
+                    <td className="px-3 py-2 text-[#1E3A5F]/80">{it.title}</td>
+                    <td className="px-3 py-2 text-[#1E3A5F]/60">{it.size_details || "—"}</td>
+                    <td className="px-3 py-2 text-right text-[#1E3A5F]/80">{it.quantity}</td>
+                    <td className="px-3 py-2 text-right text-[#1E3A5F]/80">${((it.unit_price_cents * it.quantity) / 100).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <AmountPaidForm
           orderId={order.id}

@@ -94,24 +94,41 @@ export async function GET(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  let query = admin
+  let ordersQuery = admin
     .from("orders")
-    .select("title, product_type, quantity, price_cents, product_id, products:product_id(name)")
+    .select("id, title, product_type, quantity, price_cents, product_id, created_at, products:product_id(name)")
     .lt("created_at", range.end.toISOString());
+  if (range.start) ordersQuery = ordersQuery.gte("created_at", range.start.toISOString());
 
-  if (range.start) {
-    query = query.gte("created_at", range.start.toISOString());
+  const { data: ordersInRange, error: ordersError } = await ordersQuery;
+  if (ordersError) {
+    return NextResponse.json({ error: ordersError.message }, { status: 400 });
   }
 
-  const { data: orders, error } = await query;
+  const orderIds = (ordersInRange || []).map((o: any) => o.id);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
+  const { data: itemRows } = orderIds.length > 0
+    ? await admin
+        .from("order_items")
+        .select("order_id, title, quantity, unit_price_cents, product_id, products:product_id(name)")
+        .in("order_id", orderIds)
+    : { data: [] as any[] };
 
-  // Group by saved product name if linked, otherwise by the raw title typed in.
+  const orderIdsWithItems = new Set((itemRows || []).map((it: any) => it.order_id));
+
   const itemTotals: Record<string, { qty: number; revenueCents: number }> = {};
-  (orders || []).forEach((o: any) => {
+
+  // Orders with real line items: count each item individually.
+  (itemRows || []).forEach((it: any) => {
+    const key = it.products?.name || it.title || "Untitled";
+    if (!itemTotals[key]) itemTotals[key] = { qty: 0, revenueCents: 0 };
+    itemTotals[key].qty += it.quantity || 1;
+    itemTotals[key].revenueCents += (it.unit_price_cents || 0) * (it.quantity || 1);
+  });
+
+  // Legacy orders with no order_items rows: count the whole order as one line.
+  (ordersInRange || []).forEach((o: any) => {
+    if (orderIdsWithItems.has(o.id)) return;
     const key = o.products?.name || o.title || "Untitled";
     if (!itemTotals[key]) itemTotals[key] = { qty: 0, revenueCents: 0 };
     itemTotals[key].qty += o.quantity || 1;

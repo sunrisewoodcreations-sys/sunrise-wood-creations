@@ -43,6 +43,12 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     .eq("order_id", order.id)
     .order("created_at", { ascending: true });
 
+  const { data: orderItems } = await supabase
+    .from("order_items")
+    .select("*")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: true });
+
   const statusTimestamps: Record<string, string> = {};
   (history || []).forEach((h: any) => {
     if (!statusTimestamps[h.status]) statusTimestamps[h.status] = h.created_at;
@@ -76,6 +82,29 @@ export default async function OrderDetailPage({ params }: { params: { id: string
             />
           )}
           <p className="text-sm text-walnut/60 mb-4">{order.size_details}</p>
+
+          {orderItems && orderItems.length > 1 && (
+            <div className="mb-4 border border-walnut/10 rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-cream text-walnut text-xs uppercase">
+                    <th className="text-left px-3 py-2">Item</th>
+                    <th className="text-right px-3 py-2">Qty</th>
+                    <th className="text-right px-3 py-2">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orderItems.map((it: any) => (
+                    <tr key={it.id} className="border-t border-walnut/10">
+                      <td className="px-3 py-2 text-walnut/80">{it.title}</td>
+                      <td className="px-3 py-2 text-right text-walnut/80">{it.quantity}</td>
+                      <td className="px-3 py-2 text-right text-walnut/80">${((it.unit_price_cents * it.quantity) / 100).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {invoices && invoices.length > 0 ? (
             <div className="mb-4 space-y-2">
