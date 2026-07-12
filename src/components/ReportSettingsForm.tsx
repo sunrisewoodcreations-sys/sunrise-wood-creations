@@ -14,16 +14,19 @@ const FREQUENCIES = [
 
 export default function ReportSettingsForm({
   initialFrequency,
-  initialTaxPercent,
+  initialMichiganPercent,
+  initialFederalPercent,
   initialEmail
 }: {
   initialFrequency: string;
-  initialTaxPercent: number;
+  initialMichiganPercent: number;
+  initialFederalPercent: number;
   initialEmail: string;
 }) {
   const router = useRouter();
   const [frequency, setFrequency] = useState(initialFrequency);
-  const [taxPercent, setTaxPercent] = useState(String(initialTaxPercent));
+  const [michiganPercent, setMichiganPercent] = useState(String(initialMichiganPercent));
+  const [federalPercent, setFederalPercent] = useState(String(initialFederalPercent));
   const [email, setEmail] = useState(initialEmail);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -38,7 +41,12 @@ export default function ReportSettingsForm({
     const res = await fetch("/api/report-settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ frequency, estimatedTaxSetAsidePercent: taxPercent, recipientEmail: email })
+      body: JSON.stringify({
+        frequency,
+        michiganIncomeTaxPercent: michiganPercent,
+        federalIncomeTaxPercent: federalPercent,
+        recipientEmail: email
+      })
     });
 
     setLoading(false);
@@ -59,25 +67,49 @@ export default function ReportSettingsForm({
           {FREQUENCIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
         </select>
       </div>
+
       <div>
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">
-          Income tax set-aside percentage
-        </label>
+        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Michigan state income tax rate</label>
         <div className="flex items-center gap-2">
           <input
             type="number"
             min="0"
             max="100"
-            value={taxPercent}
-            onChange={e => setTaxPercent(e.target.value)}
+            step="0.01"
+            value={michiganPercent}
+            onChange={e => setMichiganPercent(e.target.value)}
             className="w-24 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
           />
           <span className="text-sm text-[#1E3A5F]/60">% of profit</span>
         </div>
         <p className="text-xs text-[#1E3A5F]/50 mt-1">
-          This is a planning estimate you control — not a real tax calculation. Ask your tax preparer what percentage makes sense for you.
+          Defaults to Michigan's actual flat individual income tax rate (4.25% for 2026). This is a real, calculable
+          number — but doesn't account for your personal exemption or other adjustments, so treat it as close, not exact.
         </p>
       </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Federal income tax set-aside</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="0.01"
+            value={federalPercent}
+            onChange={e => setFederalPercent(e.target.value)}
+            className="w-24 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+          />
+          <span className="text-sm text-[#1E3A5F]/60">% of profit</span>
+        </div>
+        <p className="text-xs text-[#1E3A5F]/50 mt-1">
+          Unlike Michigan's flat rate, federal income tax depends on your total household income and filing status —
+          there's no single correct number software can calculate for you. The default (15.3%) is just the
+          self-employment tax floor (Social Security + Medicare); your actual federal bill is likely higher once
+          income tax brackets are added. Ask your tax preparer for a number tailored to you.
+        </p>
+      </div>
+
       <div>
         <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Send the report to</label>
         <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />

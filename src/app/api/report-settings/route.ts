@@ -10,7 +10,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  const { frequency, estimatedTaxSetAsidePercent, recipientEmail } = await req.json();
+  const { frequency, michiganIncomeTaxPercent, federalIncomeTaxPercent, recipientEmail } = await req.json();
 
   const validFrequencies = ["off", "daily", "weekly", "monthly", "quarterly", "yearly"];
   if (!validFrequencies.includes(frequency)) {
@@ -24,7 +24,8 @@ export async function PATCH(req: NextRequest) {
     .from("report_settings")
     .update({
       frequency,
-      estimated_tax_set_aside_percent: Math.max(0, Math.min(100, Number(estimatedTaxSetAsidePercent) || 0)),
+      michigan_income_tax_percent: Math.max(0, Math.min(100, Number(michiganIncomeTaxPercent) || 0)),
+      federal_income_tax_percent: Math.max(0, Math.min(100, Number(federalIncomeTaxPercent) || 0)),
       recipient_email: recipientEmail.trim()
     })
     .eq("id", 1);

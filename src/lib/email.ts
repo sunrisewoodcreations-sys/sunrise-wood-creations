@@ -444,7 +444,8 @@ export async function sendFinancialReportEmail(opts: {
   totalMaterialsCost: number;
   totalProfit: number;
   salesTaxOwed: number;
-  estimatedIncomeTaxSetAside: number;
+  michiganIncomeTaxOwed: number;
+  federalIncomeTaxOwed: number;
   pdfBuffer: Buffer;
 }) {
   const html = shell({
@@ -456,11 +457,13 @@ export async function sendFinancialReportEmail(opts: {
         <tr><td style="padding: 4px 0; color: #6b4d1a;">Materials used (planters):</td><td style="padding: 4px 0; text-align: right; font-weight: bold;">$${opts.totalMaterialsCost.toFixed(2)}</td></tr>
         <tr><td style="padding: 4px 0; color: #6b4d1a;">Profit:</td><td style="padding: 4px 0; text-align: right; font-weight: bold;">$${opts.totalProfit.toFixed(2)}</td></tr>
         <tr><td style="padding: 4px 0; color: #6b4d1a;">Sales tax owed (6% MI):</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #D9603A;">$${opts.salesTaxOwed.toFixed(2)}</td></tr>
-        <tr><td style="padding: 4px 0; color: #6b4d1a;">Suggested income tax set-aside:</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #D9603A;">$${opts.estimatedIncomeTaxSetAside.toFixed(2)}</td></tr>
+        <tr><td style="padding: 4px 0; color: #6b4d1a;">Michigan income tax:</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #D9603A;">$${opts.michiganIncomeTaxOwed.toFixed(2)}</td></tr>
+        <tr><td style="padding: 4px 0; color: #6b4d1a;">Federal income tax (set-aside):</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #D9603A;">$${opts.federalIncomeTaxOwed.toFixed(2)}</td></tr>
       </table>
       <p style="margin: 0 0 8px; font-size: 13px; color: #8a7a6b;">
-        The income tax figure is just profit × the percentage you've set in Report Settings — it's a planning estimate,
-        not a real tax calculation. Confirm actual amounts owed with your tax preparer.
+        Sales tax and Michigan income tax use real statutory rates. Federal income tax is a planning estimate you
+        control in Report Settings, since it genuinely depends on your total income and filing status — confirm
+        exact amounts owed with your tax preparer.
       </p>
       <p style="margin: 0; font-size: 13px; color: #8a7a6b;">Full item-by-item breakdown is attached as a PDF.</p>
     `

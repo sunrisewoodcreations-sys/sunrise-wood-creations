@@ -3,6 +3,8 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+const SALES_TAX_RATE = 0.06; // Michigan
+
 function easternMidnightUtc(year: number, month: number, day: number): Date {
   for (const offsetHours of [4, 5]) {
     const guess = new Date(Date.UTC(year, month - 1, day, offsetHours, 0, 0));
@@ -40,7 +42,6 @@ function getDateRange(period: string, now: Date): { start: Date | null; end: Dat
   }
 
   if (period === "this_week") {
-    // Week starts Sunday.
     const weekdayFormatter = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short" });
     const weekdayShort = weekdayFormatter.format(now);
     const weekdayIndex = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(weekdayShort);
@@ -94,8 +95,10 @@ export async function GET(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // Only count orders actually picked up within this window — and by the
-  // date they were picked up, not the date they were originally placed.
+  const { data: settings } = await admin.from("report_settings").select("*").eq("id", 1).maybeSingle();
+  const michiganPercent = Number(settings?.michigan_income_tax_percent) || 4.25;
+  const federalPercent = Number(settings?.federal_income_tax_percent) || 15.3;
+
   let pickupQuery = admin
     .from("order_status_history")
     .select("order_id, created_at")
@@ -120,7 +123,7 @@ export async function GET(req: NextRequest) {
   const { data: ordersInRange, error: ordersError } = pickedUpOrderIds.length > 0
     ? await admin
         .from("orders")
-        .select("id, title, product_type, quantity, price_cents, product_id, created_at, products:product_id(name)")
+        .select("id, title, product_type, quantity, price_cents, product_id, material_cost_cents, created_at, products:product_id(name, cost_cents)")
         .in("id", pickedUpOrderIds)
     : { data: [] as any[], error: null };
   if (ordersError) {
@@ -132,37 +135,71 @@ export async function GET(req: NextRequest) {
   const { data: itemRows } = orderIds.length > 0
     ? await admin
         .from("order_items")
-        .select("order_id, title, quantity, unit_price_cents, product_id, products:product_id(name)")
+        .select("order_id, title, quantity, unit_price_cents, product_id, products:product_id(name, cost_cents)")
         .in("order_id", orderIds)
     : { data: [] as any[] };
 
   const orderIdsWithItems = new Set((itemRows || []).map((it: any) => it.order_id));
 
-  const itemTotals: Record<string, { qty: number; revenueCents: number }> = {};
+  // Real picket-based material cost per order (when logged) takes priority
+  // over the flat product cost — same rule as the automated financial report.
+  const materialCostByOrder: Record<string, number> = {};
+  (ordersInRange || []).forEach((o: any) => {
+    if (o.material_cost_cents != null) materialCostByOrder[o.id] = o.material_cost_cents;
+  });
+  const materialCostAlreadyApplied = new Set<string>();
 
-  // Orders with real line items: count each item individually.
+  const itemTotals: Record<string, { qty: number; revenueCents: number; costCents: number }> = {};
+
   (itemRows || []).forEach((it: any) => {
     const key = it.products?.name || it.title || "Untitled";
-    if (!itemTotals[key]) itemTotals[key] = { qty: 0, revenueCents: 0 };
+    if (!itemTotals[key]) itemTotals[key] = { qty: 0, revenueCents: 0, costCents: 0 };
     itemTotals[key].qty += it.quantity || 1;
     itemTotals[key].revenueCents += (it.unit_price_cents || 0) * (it.quantity || 1);
+
+    const orderMaterialCost = materialCostByOrder[it.order_id];
+    if (orderMaterialCost != null) {
+      if (!materialCostAlreadyApplied.has(it.order_id)) {
+        itemTotals[key].costCents += orderMaterialCost;
+        materialCostAlreadyApplied.add(it.order_id);
+      }
+    } else {
+      itemTotals[key].costCents += (it.products?.cost_cents || 0) * (it.quantity || 1);
+    }
   });
 
-  // Legacy orders with no order_items rows: count the whole order as one line.
   (ordersInRange || []).forEach((o: any) => {
     if (orderIdsWithItems.has(o.id)) return;
     const key = o.products?.name || o.title || "Untitled";
-    if (!itemTotals[key]) itemTotals[key] = { qty: 0, revenueCents: 0 };
+    if (!itemTotals[key]) itemTotals[key] = { qty: 0, revenueCents: 0, costCents: 0 };
     itemTotals[key].qty += o.quantity || 1;
     itemTotals[key].revenueCents += o.price_cents || 0;
+
+    if (o.material_cost_cents != null) {
+      itemTotals[key].costCents += o.material_cost_cents;
+    } else {
+      itemTotals[key].costCents += (o.products?.cost_cents || 0) * (o.quantity || 1);
+    }
   });
 
   const rows = Object.entries(itemTotals)
-    .map(([name, v]) => ({ name, qty: v.qty, revenue: v.revenueCents / 100 }))
+    .map(([name, v]) => ({
+      name,
+      qty: v.qty,
+      revenue: v.revenueCents / 100,
+      cost: v.costCents / 100,
+      profit: (v.revenueCents - v.costCents) / 100
+    }))
     .sort((a, b) => b.revenue - a.revenue);
 
-  const grandTotal = rows.reduce((sum, r) => sum + r.revenue, 0);
+  const grandRevenue = rows.reduce((sum, r) => sum + r.revenue, 0);
+  const grandCost = rows.reduce((sum, r) => sum + r.cost, 0);
+  const grandProfit = grandRevenue - grandCost;
   const grandQty = rows.reduce((sum, r) => sum + r.qty, 0);
+
+  const salesTaxOwed = grandRevenue - grandRevenue / (1 + SALES_TAX_RATE);
+  const michiganIncomeTaxOwed = grandProfit > 0 ? grandProfit * (michiganPercent / 100) : 0;
+  const federalIncomeTaxOwed = grandProfit > 0 ? grandProfit * (federalPercent / 100) : 0;
 
   // Build the PDF.
   const doc = await PDFDocument.create();
@@ -170,41 +207,60 @@ export async function GET(req: NextRequest) {
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const { width, height } = page.getSize();
-  const BLACK = rgb(0.1176, 0.2275, 0.3725);
+  const NAVY = rgb(0.1176, 0.2275, 0.3725);
   const WHITE = rgb(1, 1, 1);
   const GRAY = rgb(0.4, 0.4, 0.4);
+  const EMBER = rgb(0.85, 0.376, 0.227);
+  const GREEN = rgb(0.22, 0.5, 0.34);
   const LIGHT_LINE = rgb(0.85, 0.85, 0.85);
 
-  page.drawRectangle({ x: 0, y: height - 90, width, height: 90, color: BLACK });
+  page.drawRectangle({ x: 0, y: height - 90, width, height: 90, color: NAVY });
   page.drawText("Sunrise Wood Creations LLC", { x: 40, y: height - 45, size: 20, font: bold, color: WHITE });
   page.drawText("Sales by item report", { x: 40, y: height - 68, size: 12, font, color: WHITE });
 
   let y = height - 120;
-  page.drawText(`Period: ${range.label}`, { x: 40, y, size: 12, font: bold, color: BLACK });
+  page.drawText(`Period: ${range.label}`, { x: 40, y, size: 12, font: bold, color: NAVY });
   y -= 30;
 
-  const col = { name: 40, qty: 380, revenue: 470 };
+  const col = { name: 40, qty: 280, revenue: 340, cost: 420, profit: 500 };
   page.drawLine({ start: { x: 40, y: y + 14 }, end: { x: width - 40, y: y + 14 }, thickness: 1, color: LIGHT_LINE });
-  page.drawText("Item", { x: col.name, y, size: 9, font: bold, color: BLACK });
-  page.drawText("Qty sold", { x: col.qty, y, size: 9, font: bold, color: BLACK });
-  page.drawText("Revenue", { x: col.revenue, y, size: 9, font: bold, color: BLACK });
+  page.drawText("Item", { x: col.name, y, size: 9, font: bold, color: NAVY });
+  page.drawText("Qty", { x: col.qty, y, size: 9, font: bold, color: NAVY });
+  page.drawText("Revenue", { x: col.revenue, y, size: 9, font: bold, color: NAVY });
+  page.drawText("Cost", { x: col.cost, y, size: 9, font: bold, color: NAVY });
+  page.drawText("Profit", { x: col.profit, y, size: 9, font: bold, color: NAVY });
   y -= 10;
   page.drawLine({ start: { x: 40, y }, end: { x: width - 40, y }, thickness: 1, color: LIGHT_LINE });
   y -= 20;
 
   for (const row of rows) {
-    if (y < 60) break; // simple single-page cap
-    page.drawText(row.name.slice(0, 55), { x: col.name, y, size: 10, font, color: BLACK });
-    page.drawText(String(row.qty), { x: col.qty, y, size: 10, font, color: BLACK });
-    page.drawText(`$${row.revenue.toFixed(2)}`, { x: col.revenue, y, size: 10, font, color: BLACK });
-    y -= 18;
+    if (y < 220) break; // single-page cap, leaves room for the tax summary below
+    page.drawText(row.name.slice(0, 38), { x: col.name, y, size: 9, font, color: NAVY });
+    page.drawText(String(row.qty), { x: col.qty, y, size: 9, font, color: NAVY });
+    page.drawText(`$${row.revenue.toFixed(2)}`, { x: col.revenue, y, size: 9, font, color: NAVY });
+    page.drawText(`$${row.cost.toFixed(2)}`, { x: col.cost, y, size: 9, font, color: NAVY });
+    page.drawText(`$${row.profit.toFixed(2)}`, { x: col.profit, y, size: 9, font, color: row.profit >= 0 ? GREEN : EMBER });
+    y -= 16;
   }
 
   y -= 10;
-  page.drawLine({ start: { x: 300, y: y + 14 }, end: { x: width - 40, y: y + 14 }, thickness: 1, color: BLACK });
-  page.drawText("Total:", { x: 300, y, size: 11, font: bold, color: BLACK });
-  page.drawText(String(grandQty), { x: col.qty, y, size: 11, font: bold, color: BLACK });
-  page.drawText(`$${grandTotal.toFixed(2)}`, { x: col.revenue, y, size: 11, font: bold, color: BLACK });
+  page.drawLine({ start: { x: 40, y: y + 14 }, end: { x: width - 40, y: y + 14 }, thickness: 1, color: NAVY });
+
+  function summaryRow(label: string, value: string, yy: number, color?: ReturnType<typeof rgb>) {
+    page.drawText(label, { x: 40, y: yy, size: 10, font: bold, color: NAVY });
+    page.drawText(value, { x: col.profit, y: yy, size: 10, font: bold, color: color || NAVY });
+  }
+  summaryRow("Total revenue:", `$${grandRevenue.toFixed(2)}`, y); y -= 18;
+  summaryRow("Total cost:", `$${grandCost.toFixed(2)}`, y); y -= 18;
+  summaryRow("Profit:", `$${grandProfit.toFixed(2)}`, y, grandProfit >= 0 ? GREEN : EMBER); y -= 22;
+  summaryRow("Sales tax owed (6% MI):", `$${salesTaxOwed.toFixed(2)}`, y, EMBER); y -= 18;
+  summaryRow(`Michigan income tax (${michiganPercent}%):`, `$${michiganIncomeTaxOwed.toFixed(2)}`, y, EMBER); y -= 18;
+  summaryRow(`Federal income tax set-aside (${federalPercent}%):`, `$${federalIncomeTaxOwed.toFixed(2)}`, y, EMBER); y -= 32;
+
+  page.drawText(`Total items sold: ${grandQty}`, { x: 40, y, size: 9, font, color: GRAY }); y -= 24;
+  page.drawText("Sales tax and Michigan income tax use real statutory rates. Federal income tax is a", { x: 40, y, size: 8, font, color: GRAY }); y -= 11;
+  page.drawText("planning estimate you control in Report Settings. Cost only reflects items with a cost", { x: 40, y, size: 8, font, color: GRAY }); y -= 11;
+  page.drawText("entered in Products, or picket usage logged on planter orders. Confirm exact amounts with your tax preparer.", { x: 40, y, size: 8, font, color: GRAY });
 
   if (rows.length === 0) {
     page.drawText("No sales found for this period.", { x: 40, y: height - 160, size: 11, font, color: GRAY });

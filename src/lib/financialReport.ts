@@ -131,8 +131,10 @@ async function buildFinancialReportPdf(opts: {
   totalMaterialsCost: number;
   totalProfit: number;
   salesTaxOwed: number;
-  estimatedTaxSetAside: number;
-  taxSetAsidePercent: number;
+  michiganIncomeTaxOwed: number;
+  michiganPercent: number;
+  federalIncomeTaxOwed: number;
+  federalPercent: number;
 }): Promise<Buffer> {
   const doc = await PDFDocument.create();
   const page = doc.addPage([612, 792]);
@@ -181,11 +183,12 @@ async function buildFinancialReportPdf(opts: {
   summaryRow("  of which materials (planters):", `$${opts.totalMaterialsCost.toFixed(2)}`, y); y -= 20;
   summaryRow("Profit:", `$${opts.totalProfit.toFixed(2)}`, y, opts.totalProfit >= 0 ? GREEN : EMBER); y -= 20;
   summaryRow("Sales tax owed (6% MI):", `$${opts.salesTaxOwed.toFixed(2)}`, y, EMBER); y -= 20;
-  summaryRow(`Suggested income tax set-aside (${opts.taxSetAsidePercent}%):`, `$${opts.estimatedTaxSetAside.toFixed(2)}`, y, EMBER); y -= 34;
+  summaryRow(`Michigan income tax (${opts.michiganPercent}%):`, `$${opts.michiganIncomeTaxOwed.toFixed(2)}`, y, EMBER); y -= 20;
+  summaryRow(`Federal income tax set-aside (${opts.federalPercent}%):`, `$${opts.federalIncomeTaxOwed.toFixed(2)}`, y, EMBER); y -= 34;
 
-  page.drawText("The income tax figure is profit x the percentage you set in Report Settings —", { x: 40, y, size: 9, font, color: GRAY }); y -= 12;
-  page.drawText("a planning estimate, not a real tax calculation. Profit only reflects items with a", { x: 40, y, size: 9, font, color: GRAY }); y -= 12;
-  page.drawText("cost entered in your Products list. Confirm actual amounts owed with your tax preparer.", { x: 40, y, size: 9, font, color: GRAY });
+  page.drawText("Sales tax and Michigan income tax use real statutory rates. Federal income tax is a", { x: 40, y, size: 9, font, color: GRAY }); y -= 12;
+  page.drawText("planning estimate you control in Report Settings, since it depends on your total income and", { x: 40, y, size: 9, font, color: GRAY }); y -= 12;
+  page.drawText("filing status. Profit only reflects items with a cost entered. Confirm exact amounts with your tax preparer.", { x: 40, y, size: 9, font, color: GRAY });
 
   const bytes = await doc.save();
   return Buffer.from(bytes);
@@ -303,8 +306,10 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
   const totalProfit = totalRevenue - totalCost;
   const totalMaterialsCost = totalMaterialsCostCents / 100;
   const salesTaxOwed = totalRevenue - totalRevenue / (1 + SALES_TAX_RATE);
-  const taxSetAsidePercent = Number(settings.estimated_tax_set_aside_percent) || 0;
-  const estimatedTaxSetAside = totalProfit > 0 ? totalProfit * (taxSetAsidePercent / 100) : 0;
+  const michiganPercent = Number(settings.michigan_income_tax_percent) || 4.25;
+  const federalPercent = Number(settings.federal_income_tax_percent) || 15.3;
+  const michiganIncomeTaxOwed = totalProfit > 0 ? totalProfit * (michiganPercent / 100) : 0;
+  const federalIncomeTaxOwed = totalProfit > 0 ? totalProfit * (federalPercent / 100) : 0;
 
   const pdfBuffer = await buildFinancialReportPdf({
     periodLabel: period.label,
@@ -314,9 +319,10 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
     totalMaterialsCost,
     totalProfit,
     salesTaxOwed,
-    estimatedTaxSetAside,
-    taxSetAsidePercent
-
+    michiganIncomeTaxOwed,
+    michiganPercent,
+    federalIncomeTaxOwed,
+    federalPercent
   });
 
   await sendFinancialReportEmail({
@@ -326,7 +332,8 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
     totalMaterialsCost,
     totalProfit,
     salesTaxOwed,
-    estimatedIncomeTaxSetAside: estimatedTaxSetAside,
+    michiganIncomeTaxOwed,
+    federalIncomeTaxOwed,
     pdfBuffer
   });
 

@@ -15,7 +15,8 @@ export default async function ReportSettingsPage() {
 
       <ReportSettingsForm
         initialFrequency={settings?.frequency || "off"}
-        initialTaxPercent={Number(settings?.estimated_tax_set_aside_percent) || 25}
+        initialMichiganPercent={Number(settings?.michigan_income_tax_percent) || 4.25}
+        initialFederalPercent={Number(settings?.federal_income_tax_percent) || 15.3}
         initialEmail={settings?.recipient_email || "sunrisewoodcreations@gmail.com"}
       />
     </div>
