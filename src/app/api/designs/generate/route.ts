@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateCornholeDesign } from "@/lib/designGenerator";
@@ -45,11 +46,32 @@ export async function POST(req: NextRequest) {
 
   let resultBuffer: Buffer;
   try {
-    resultBuffer = await generateCornholeDesign({
+    const rawBuffer = await generateCornholeDesign({
       prompt,
       referenceImageBuffer,
       referenceImageMimeType
     });
+
+    // OpenAI's image sizes don't include an exact 24x48 (1:2) board
+    // ratio — the tallest option it offers is closer to 2:3. Rather than
+    // hand back a design that's the wrong shape for a real board, crop
+    // it down to the correct 1:2 ratio here, keeping the centered
+    // content (since prompts are written to keep the design centered).
+    const metadata = await sharp(rawBuffer).metadata();
+    const width = metadata.width || 1024;
+    const height = metadata.height || 1536;
+    const targetWidth = Math.round(height / 2);
+
+    if (targetWidth < width) {
+      const left = Math.round((width - targetWidth) / 2);
+      resultBuffer = await sharp(rawBuffer)
+        .extract({ left, top: 0, width: targetWidth, height })
+        .toBuffer();
+    } else {
+      // Already narrower than 1:2 (unlikely) — leave as-is rather than
+      // stretch or pad, which would distort or add blank space.
+      resultBuffer = rawBuffer;
+    }
   } catch (err: any) {
     console.error("Design generation failed:", err);
     return NextResponse.json({ error: err.message || "Generation failed" }, { status: 500 });
