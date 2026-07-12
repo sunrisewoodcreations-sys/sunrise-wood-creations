@@ -37,14 +37,22 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
       <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Customers</h1>
       <p className="text-sm text-[#1E3A5F]/60 mb-6">Search, view, and add customers.</p>
 
-      <form method="GET" className="mb-6">
-        <input
-          name="q"
-          defaultValue={query}
-          placeholder="Search customers by name or email..."
-          className="w-full max-w-md px-3 py-2.5 border border-[#1E3A5F]/15 rounded-md text-sm"
-        />
-      </form>
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <form method="GET" className="flex-1 min-w-[240px]">
+          <input
+            name="q"
+            defaultValue={query}
+            placeholder="Search customers by name or email..."
+            className="w-full px-3 py-2.5 border border-[#1E3A5F]/15 rounded-md text-sm"
+          />
+        </form>
+        <a
+          href="/api/export/customers"
+          className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-2 rounded-md text-xs font-semibold hover:bg-cream whitespace-nowrap"
+        >
+          Export CSV
+        </a>
+      </div>
 
       <AddCustomerForm />
 

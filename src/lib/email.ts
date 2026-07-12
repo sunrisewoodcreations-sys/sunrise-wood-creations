@@ -4,6 +4,7 @@ import { productLabel, statusLabel, ProductType } from "./statusSteps";
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM || "Sunrise Wood Creations <orders@sunrisewoodcreations.com>";
 const FROM_INVOICE = process.env.EMAIL_FROM_INVOICE || "Sunrise Wood Creations <invoice@sunrisewoodcreations.com>";
+const FROM_ADMIN_REPORT = process.env.EMAIL_FROM_ADMIN_REPORT || "Sunrise Wood Creations <admin@sunrisewoodcreations.com>";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com";
 
 function escapeHtml(s: string) {
@@ -359,5 +360,117 @@ export async function sendGuestMessageNotice(opts: {
     to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
     subject: `Website chat: ${safeName}`,
     html
+  });
+}
+
+export async function sendLowStockAlert(opts: {
+  productName: string;
+  remainingStock: number;
+  threshold: number;
+}) {
+  const html = shell({
+    preheader: `Low stock: ${opts.productName}`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">
+        <strong>${escapeHtml(opts.productName)}</strong> is running low —
+        only <strong>${opts.remainingStock}</strong> left on hand (your alert threshold is ${opts.threshold}).
+      </p>
+      <p style="margin: 0;">Might be time to make more.</p>
+    `,
+    buttonText: "Open Products",
+    buttonUrl: `${SITE_URL}/admin/products`
+  });
+
+  return resend.emails.send({
+    from: FROM,
+    to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
+    subject: `Low stock: ${opts.productName}`,
+    html
+  });
+}
+
+export async function sendQuoteRequestNotice(opts: {
+  name: string;
+  email: string;
+  phone?: string;
+  productType?: string;
+  dimensions?: string;
+  woodType?: string;
+  budget?: string;
+  timeline?: string;
+  description: string;
+}) {
+  const row = (label: string, value?: string) =>
+    value ? `<p style="margin: 0 0 6px;"><strong>${label}:</strong> ${escapeHtml(value)}</p>` : "";
+
+  const html = shell({
+    preheader: `New quote request from ${escapeHtml(opts.name)}`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">New custom quote request:</p>
+      ${row("Name", opts.name)}
+      ${row("Email", opts.email)}
+      ${row("Phone", opts.phone)}
+      ${row("Product type", opts.productType)}
+      ${row("Dimensions", opts.dimensions)}
+      ${row("Wood type", opts.woodType)}
+      ${row("Budget", opts.budget)}
+      ${row("Timeline", opts.timeline)}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 12px 0 8px;">
+        <tr>
+          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
+            "${escapeHtml(opts.description)}"
+          </td>
+        </tr>
+      </table>
+      <p style="margin: 16px 0 0; font-size: 13px; color: #8a7a6b;">
+        Reply directly to this email to write back to ${escapeHtml(opts.email)}.
+      </p>
+    `
+  });
+
+  return resend.emails.send({
+    from: FROM,
+    replyTo: opts.email,
+    to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
+    subject: `Quote request: ${opts.name}`,
+    html
+  });
+}
+
+export async function sendFinancialReportEmail(opts: {
+  toEmail: string;
+  periodLabel: string;
+  totalRevenue: number;
+  totalProfit: number;
+  salesTaxOwed: number;
+  estimatedIncomeTaxSetAside: number;
+  pdfBuffer: Buffer;
+}) {
+  const html = shell({
+    preheader: `Your ${opts.periodLabel} financial summary is ready`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">Here's your financial summary for <strong>${opts.periodLabel}</strong>:</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
+        <tr><td style="padding: 4px 0; color: #6b4d1a;">Total sales:</td><td style="padding: 4px 0; text-align: right; font-weight: bold;">$${opts.totalRevenue.toFixed(2)}</td></tr>
+        <tr><td style="padding: 4px 0; color: #6b4d1a;">Profit:</td><td style="padding: 4px 0; text-align: right; font-weight: bold;">$${opts.totalProfit.toFixed(2)}</td></tr>
+        <tr><td style="padding: 4px 0; color: #6b4d1a;">Sales tax owed (6% MI):</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #D9603A;">$${opts.salesTaxOwed.toFixed(2)}</td></tr>
+        <tr><td style="padding: 4px 0; color: #6b4d1a;">Suggested income tax set-aside:</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #D9603A;">$${opts.estimatedIncomeTaxSetAside.toFixed(2)}</td></tr>
+      </table>
+      <p style="margin: 0 0 8px; font-size: 13px; color: #8a7a6b;">
+        The income tax figure is just profit × the percentage you've set in Report Settings — it's a planning estimate,
+        not a real tax calculation. Confirm actual amounts owed with your tax preparer.
+      </p>
+      <p style="margin: 0; font-size: 13px; color: #8a7a6b;">Full item-by-item breakdown is attached as a PDF.</p>
+    `
+  });
+
+  return resend.emails.send({
+    from: FROM_ADMIN_REPORT,
+    to: opts.toEmail,
+    subject: `Financial summary: ${opts.periodLabel}`,
+    html,
+    attachments: [
+      { filename: `financial-summary-${opts.periodLabel.replace(/\s+/g, "-")}.pdf`, content: opts.pdfBuffer.toString("base64") }
+    ]
   });
 }

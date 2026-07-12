@@ -17,7 +17,9 @@ export default function AddProductForm() {
   const [name, setName] = useState("");
   const [sizeDetails, setSizeDetails] = useState("");
   const [price, setPrice] = useState("");
+  const [costPrice, setCostPrice] = useState("");
   const [stockQuantity, setStockQuantity] = useState("0");
+  const [lowStockThreshold, setLowStockThreshold] = useState("0");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -29,7 +31,7 @@ export default function AddProductForm() {
     const res = await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, stockQuantity })
+      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold })
     });
     const body = await res.json().catch(() => ({}));
     setLoading(false);
@@ -39,7 +41,7 @@ export default function AddProductForm() {
       return;
     }
 
-    setName(""); setSizeDetails(""); setPrice(""); setStockQuantity("0");
+    setName(""); setSizeDetails(""); setPrice(""); setCostPrice(""); setStockQuantity("0"); setLowStockThreshold("0");
     setOpen(false);
     router.refresh();
   }
@@ -74,8 +76,16 @@ export default function AddProductForm() {
           <input value={price} onChange={e => setPrice(e.target.value)} placeholder="55" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
+          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Your cost ($)</label>
+          <input value={costPrice} onChange={e => setCostPrice(e.target.value)} placeholder="20" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+        </div>
+        <div>
           <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Stock on hand</label>
           <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} placeholder="0" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Low stock alert at</label>
+          <input value={lowStockThreshold} onChange={e => setLowStockThreshold(e.target.value)} placeholder="2" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
         </div>
       </div>
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}

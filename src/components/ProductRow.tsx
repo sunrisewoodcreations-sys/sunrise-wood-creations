@@ -17,7 +17,9 @@ type Product = {
   name: string;
   size_details: string | null;
   price_cents: number;
+  cost_cents: number;
   stock_quantity: number;
+  low_stock_threshold: number;
 };
 
 export default function ProductRow({ product }: { product: Product }) {
@@ -31,7 +33,11 @@ export default function ProductRow({ product }: { product: Product }) {
   const [name, setName] = useState(product.name);
   const [sizeDetails, setSizeDetails] = useState(product.size_details || "");
   const [price, setPrice] = useState((product.price_cents / 100).toString());
+  const [costPrice, setCostPrice] = useState(((product.cost_cents ?? 0) / 100).toString());
   const [stockQuantity, setStockQuantity] = useState(String(product.stock_quantity ?? 0));
+  const [lowStockThreshold, setLowStockThreshold] = useState(String(product.low_stock_threshold ?? 0));
+
+  const margin = (product.price_cents - (product.cost_cents || 0)) / 100;
 
   async function handleSave() {
     setLoading(true);
@@ -39,7 +45,7 @@ export default function ProductRow({ product }: { product: Product }) {
     const res = await fetch(`/api/products/${product.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, stockQuantity })
+      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold })
     });
     setLoading(false);
     if (res.ok) {
@@ -76,7 +82,14 @@ export default function ProductRow({ product }: { product: Product }) {
           <input value={price} onChange={e => setPrice(e.target.value)} className="w-20 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
         </td>
         <td className="px-4 py-3 text-right">
+          <input value={costPrice} onChange={e => setCostPrice(e.target.value)} className="w-20 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
+        </td>
+        <td className="px-4 py-3 text-right text-[#1E3A5F]/40">—</td>
+        <td className="px-4 py-3 text-right">
           <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} className="w-16 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
+        </td>
+        <td className="px-4 py-3 text-right">
+          <input value={lowStockThreshold} onChange={e => setLowStockThreshold(e.target.value)} className="w-16 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
         </td>
         <td className="px-4 py-3 text-right whitespace-nowrap">
           <button onClick={handleSave} disabled={loading} className="text-sage font-semibold text-xs mr-3">
@@ -89,15 +102,22 @@ export default function ProductRow({ product }: { product: Product }) {
     );
   }
 
+  const isLowStock = (product.stock_quantity ?? 0) <= (product.low_stock_threshold ?? 0);
+
   return (
     <tr className="border-t border-[#1E3A5F]/10">
       <td className="px-4 py-3 text-[#1E3A5F]/70">{product.name}</td>
       <td className="px-4 py-3 text-[#1E3A5F]/70">{productLabel(product.product_type as ProductType)}</td>
       <td className="px-4 py-3 text-[#1E3A5F]/70">{product.size_details || "—"}</td>
       <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${(product.price_cents / 100).toFixed(2)}</td>
-      <td className={`px-4 py-3 text-right font-semibold ${(product.stock_quantity ?? 0) > 0 ? "text-sage" : "text-ember"}`}>
+      <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${((product.cost_cents ?? 0) / 100).toFixed(2)}</td>
+      <td className={`px-4 py-3 text-right font-semibold ${margin >= 0 ? "text-sage" : "text-ember"}`}>
+        ${margin.toFixed(2)}
+      </td>
+      <td className={`px-4 py-3 text-right font-semibold ${isLowStock ? "text-ember" : "text-sage"}`}>
         {product.stock_quantity ?? 0}
       </td>
+      <td className="px-4 py-3 text-right text-[#1E3A5F]/50">{product.low_stock_threshold ?? 0}</td>
       <td className="px-4 py-3 text-right whitespace-nowrap">
         {confirmingDelete ? (
           <>

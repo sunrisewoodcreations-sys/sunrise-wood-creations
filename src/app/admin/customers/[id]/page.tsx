@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { productLabel, statusLabel, ProductType } from "@/lib/statusSteps";
 import AddOrderForm from "@/components/AddOrderForm";
+import CustomerNotes from "@/components/CustomerNotes";
 
 export default async function CustomerDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -40,6 +41,8 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
       <Link href="/admin/customers" className="text-sm text-[#1E3A5F]/60 mb-4 inline-block">← All customers</Link>
       <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">{customer.full_name}</h1>
       <p className="text-sm text-[#1E3A5F]/60 mb-6">{customer.email}</p>
+
+      <CustomerNotes customerId={customer.id} />
 
       <AddOrderForm customerId={customer.id} />
 

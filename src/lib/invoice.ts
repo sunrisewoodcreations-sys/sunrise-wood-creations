@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendInvoiceEmail } from "@/lib/email";
+import { sendInvoiceEmail, sendLowStockAlert } from "@/lib/email";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 const SALES_TAX_RATE = 0.06; // Michigan
@@ -16,6 +16,31 @@ type InvoiceLineItem = {
   quantity: number;
   lineTotalCents: number; // this item's share of the tax-inclusive total
 };
+
+// Checks one product's stock against its own threshold, and sends a
+// warning email the first time it dips at or below that line. Won't send
+// again for the same dip — the alert flag only resets when someone
+// manually restocks it back above the threshold (see the products PATCH route).
+async function checkAndSendLowStockAlert(admin: ReturnType<typeof createAdminClient>, productId: string) {
+  const { data: product } = await admin
+    .from("products")
+    .select("name, stock_quantity, low_stock_threshold, low_stock_alert_sent")
+    .eq("id", productId)
+    .maybeSingle();
+
+  if (!product) return;
+  const stock = product.stock_quantity || 0;
+  const threshold = product.low_stock_threshold || 0;
+
+  if (stock <= threshold && !product.low_stock_alert_sent) {
+    try {
+      await sendLowStockAlert({ productName: product.name, remainingStock: stock, threshold });
+      await admin.from("products").update({ low_stock_alert_sent: true }).eq("id", productId);
+    } catch (err) {
+      console.error("Low-stock alert failed to send:", err);
+    }
+  }
+}
 
 async function buildInvoicePdf(opts: {
   invoiceNumber: number;
@@ -149,6 +174,7 @@ export async function issueInvoiceForOrder(order: any, customer: { email: string
               .from("products")
               .update({ stock_quantity: stockById[it.product_id] - it.quantity })
               .eq("id", it.product_id);
+            await checkAndSendLowStockAlert(admin, it.product_id);
           }
           await admin.from("orders").update({ status: "ready_for_pickup", stock_deducted: true }).eq("id", order.id);
           order.status = "ready_for_pickup";
@@ -166,6 +192,7 @@ export async function issueInvoiceForOrder(order: any, customer: { email: string
       const neededQty = order.quantity || 1;
       if (product && (product.stock_quantity || 0) >= neededQty) {
         await admin.from("products").update({ stock_quantity: product.stock_quantity - neededQty }).eq("id", order.product_id);
+        await checkAndSendLowStockAlert(admin, order.product_id);
         await admin.from("orders").update({ status: "ready_for_pickup", stock_deducted: true }).eq("id", order.id);
         order.status = "ready_for_pickup";
         order.stock_deducted = true;

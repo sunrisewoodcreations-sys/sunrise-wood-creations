@@ -31,8 +31,11 @@ export default async function HomePage() {
         <p className="text-walnut/70 max-w-lg mx-auto mb-7">
           {content.hero.subheading}
         </p>
-        <a href={`tel:${content.contact.phone.replace(/\D/g, "")}`} className="inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold">
+        <a href={`tel:${content.contact.phone.replace(/\D/g, "")}`} className="inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold mr-3">
           {content.hero.ctaText}
+        </a>
+        <a href="/request-quote" className="inline-block border border-walnut text-walnut px-7 py-3.5 rounded-md font-semibold">
+          Request a custom quote
         </a>
       </section>
       <section className="max-w-5xl mx-auto px-6 py-14 md:py-20">

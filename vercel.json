@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/send-financial-report",
+      "schedule": "0 13 * * *"
+    }
+  ]
+}

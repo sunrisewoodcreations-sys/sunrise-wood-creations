@@ -142,6 +142,12 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
             className="w-full px-3 py-2.5 border border-[#1E3A5F]/15 rounded-md text-sm"
           />
         </form>
+        <a
+          href="/api/export/orders"
+          className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-2 rounded-md text-xs font-semibold hover:bg-cream whitespace-nowrap"
+        >
+          Export CSV
+        </a>
       </div>
 
       <table className="w-full bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden text-sm">
