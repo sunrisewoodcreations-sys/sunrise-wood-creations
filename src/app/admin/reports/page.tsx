@@ -1,7 +1,17 @@
+import Link from "next/link";
+
 export default function ReportsPage() {
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Sales by item</h1>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="font-display text-2xl text-[#1E3A5F]">Sales by item</h1>
+        <Link
+          href="/admin/report-settings"
+          className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream"
+        >
+          Report Settings →
+        </Link>
+      </div>
       <p className="text-sm text-[#1E3A5F]/60 mb-6">
         See how much of each item sold, and how much revenue it brought in, for any time period. Downloads as a PDF.
       </p>

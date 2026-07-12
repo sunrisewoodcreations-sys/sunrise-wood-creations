@@ -28,6 +28,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       .is("read_at", null);
   }
 
+  if (profile?.role === "admin" && shouldMarkRead) {
+    await supabase.from("orders").update({ admin_last_read_at: new Date().toISOString() }).eq("id", params.id);
+  }
+
   const { data: messages, error } = await supabase
     .from("order_messages")
     .select("*")
