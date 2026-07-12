@@ -40,7 +40,31 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
     <div>
       <Link href="/admin/customers" className="text-sm text-[#1E3A5F]/60 mb-4 inline-block">← All customers</Link>
       <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">{customer.full_name}</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">{customer.email}</p>
+      <p className="text-sm text-[#1E3A5F]/60 mb-6">{customer.has_real_email === false ? <span className="italic">No email on file</span> : customer.email}</p>
+
+      {customer.has_real_email !== false && (
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 mb-6">
+          <h3 className="text-sm font-semibold text-[#1E3A5F] mb-1">Their email preferences</h3>
+          <p className="text-xs text-[#1E3A5F]/50 mb-3">
+            Set by the customer themselves — read-only here. If something's off, you'll need to message them directly instead of relying on an automatic email.
+          </p>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            {[
+              { label: "Order status updates", on: customer.notify_order_updates },
+              { label: "Invoices", on: customer.notify_invoices },
+              { label: "Design proofs", on: customer.notify_proofs },
+              { label: "Messages from you", on: customer.notify_messages }
+            ].map(item => (
+              <div key={item.label} className="flex items-center justify-between border border-[#1E3A5F]/10 rounded-md px-3 py-2">
+                <span className="text-[#1E3A5F]/80">{item.label}</span>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${item.on ? "bg-sage/20 text-sage" : "bg-ember/20 text-ember"}`}>
+                  {item.on ? "ON" : "OFF"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <CustomerNotes customerId={customer.id} />
 

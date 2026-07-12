@@ -64,6 +64,24 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
     }
   });
 
+  // Sales/tax totals only count orders that have actually been picked up,
+  // bucketed by the date they were picked up — not the date they were placed.
+  const { data: pickupEvents } = orderIds.length > 0
+    ? await supabase
+        .from("order_status_history")
+        .select("order_id, created_at")
+        .eq("status", "picked_up")
+        .in("order_id", orderIds)
+        .order("created_at", { ascending: true })
+    : { data: [] as any[] };
+
+  const pickedUpAtByOrder: Record<string, string> = {};
+  (pickupEvents || []).forEach((ev: any) => {
+    if (!pickedUpAtByOrder[ev.order_id]) {
+      pickedUpAtByOrder[ev.order_id] = ev.created_at;
+    }
+  });
+
   const { year: currentYear, month: currentMonth } = easternParts(new Date());
   const currentQuarter = Math.floor((currentMonth - 1) / 3); // 0-3
   const quarterLabel = `Q${currentQuarter + 1} ${currentYear}`;
@@ -72,7 +90,10 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   let yearSalesCents = 0;
 
   (orders || []).forEach((order: any) => {
-    const { year, month } = easternParts(order.created_at);
+    const pickedUpAt = pickedUpAtByOrder[order.id];
+    if (!pickedUpAt) return; // not picked up yet — doesn't count toward sales/tax
+
+    const { year, month } = easternParts(pickedUpAt);
     const quarter = Math.floor((month - 1) / 3);
 
     if (year === currentYear) {

@@ -11,6 +11,7 @@ import EditDueDateForm from "@/components/EditDueDateForm";
 import SendStatusEmailButton from "@/components/SendStatusEmailButton";
 import SendInvoiceButton from "@/components/SendInvoiceButton";
 import OrderChat from "@/components/OrderChat";
+import PicketUsageForm from "@/components/PicketUsageForm";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 export default async function AdminOrderDetailPage({ params }: { params: { id: string } }) {
@@ -78,6 +79,14 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         <p className="text-sm text-[#1E3A5F]/60 mb-4">
           {order.size_details} · ${(order.price_cents / 100).toFixed(2)} · Placed {new Date(order.created_at).toLocaleDateString()}
         </p>
+
+        {order.product_type === "planter" && (
+          <PicketUsageForm
+            orderId={order.id}
+            initialPicketsUsed={order.pickets_used}
+            initialMaterialCostCents={order.material_cost_cents}
+          />
+        )}
 
         {orderItems && orderItems.length > 1 && (
           <div className="mb-4 border border-[#1E3A5F]/10 rounded-lg overflow-hidden">

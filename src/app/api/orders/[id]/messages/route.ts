@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendNewMessageNotice, sendCustomerNewMessageNotice } from "@/lib/email";
+import { shouldNotify } from "@/lib/notify";
 
 // Both admin and the order's own customer can read/send here — RLS on
 // the order_messages table already enforces who's allowed to see what,
@@ -88,11 +89,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     try {
       const { data: order } = await supabase
         .from("orders")
-        .select("id, title, profiles:customer_id(email, full_name)")
+        .select("id, title, profiles:customer_id(email, full_name, has_real_email, notify_messages)")
         .eq("id", params.id)
         .single();
       const customer = (order as any)?.profiles;
-      if (order && customer?.email) {
+      if (order && customer && shouldNotify(customer, "messages")) {
         await sendCustomerNewMessageNotice({
           toEmail: customer.email,
           customerName: customer.full_name || "there",

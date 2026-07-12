@@ -13,7 +13,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const { data: order } = await supabase
     .from("orders")
-    .select("*, profiles:customer_id(email, full_name)")
+    .select("*, profiles:customer_id(email, full_name, has_real_email, notify_invoices)")
     .eq("id", params.id)
     .single();
 

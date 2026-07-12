@@ -1,6 +1,7 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendInvoiceEmail, sendLowStockAlert } from "@/lib/email";
+import { shouldNotify } from "@/lib/notify";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 const SALES_TAX_RATE = 0.06; // Michigan
@@ -141,7 +142,10 @@ async function buildInvoicePdf(opts: {
 // Call this whenever an order's payment changes, or when it's marked
 // "picked_up" — each call generates and emails a fresh invoice reflecting
 // the current total, amount paid, and balance due at that moment.
-export async function issueInvoiceForOrder(order: any, customer: { email: string; full_name: string }) {
+export async function issueInvoiceForOrder(
+  order: any,
+  customer: { email: string; full_name: string; has_real_email?: boolean; notify_invoices?: boolean }
+) {
   const admin = createAdminClient();
 
   const { data: orderItems } = await admin
@@ -260,17 +264,22 @@ export async function issueInvoiceForOrder(order: any, customer: { email: string
     paid_in_full: paidInFull
   });
 
-  try {
-    await sendInvoiceEmail({
-      toEmail: customer.email,
-      customerName: customer.full_name,
-      orderTitle: order.title,
-      paidInFull,
-      invoiceNumber,
-      pdfBuffer
-    });
-    await admin.from("invoices").update({ sent_at: new Date().toISOString() }).eq("invoice_number", invoiceNumber);
-  } catch (err) {
-    console.error("Invoice email failed to send:", err);
+  // The invoice PDF is always generated and stored (so it's there for the
+  // customer's account page or a manual download) even if we don't email
+  // it — the preference only controls whether an email actually goes out.
+  if (shouldNotify(customer, "invoices")) {
+    try {
+      await sendInvoiceEmail({
+        toEmail: customer.email,
+        customerName: customer.full_name,
+        orderTitle: order.title,
+        paidInFull,
+        invoiceNumber,
+        pdfBuffer
+      });
+      await admin.from("invoices").update({ sent_at: new Date().toISOString() }).eq("invoice_number", invoiceNumber);
+    } catch (err) {
+      console.error("Invoice email failed to send:", err);
+    }
   }
 }

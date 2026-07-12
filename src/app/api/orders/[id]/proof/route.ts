@@ -6,6 +6,7 @@ import os from "os";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendProofReadyEmail } from "@/lib/email";
+import { shouldNotify } from "@/lib/notify";
 
 // Vercel's servers have no fonts installed, so sharp's SVG text rendering
 // (which uses fontconfig under the hood) can't find anything to draw with
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const { data: order } = await supabase
     .from("orders")
-    .select("*, profiles:customer_id(email, full_name)")
+    .select("*, profiles:customer_id(email, full_name, has_real_email, notify_proofs)")
     .eq("id", params.id)
     .single();
 
@@ -122,14 +123,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 
   const customer = (order as any).profiles;
-  await sendProofReadyEmail({
-    toEmail: customer.email,
-    customerName: customer.full_name,
-    orderTitle: order.title,
-    orderId: order.id,
-    imageUrl: watermarkedUrl,
-    respondToken: newProof.respond_token
-  });
+  if (shouldNotify(customer, "proofs")) {
+    await sendProofReadyEmail({
+      toEmail: customer.email,
+      customerName: customer.full_name,
+      orderTitle: order.title,
+      orderId: order.id,
+      imageUrl: watermarkedUrl,
+      respondToken: newProof.respond_token
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

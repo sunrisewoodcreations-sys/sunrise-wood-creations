@@ -34,6 +34,7 @@ export default function AccountMenu({ role, name }: { role: "admin" | "customer"
       ]
     : [
         { href: "/account", label: "My Orders" },
+        { href: "/account/settings", label: "Email preferences" },
         { href: "/", label: "Back to website" }
       ];
 

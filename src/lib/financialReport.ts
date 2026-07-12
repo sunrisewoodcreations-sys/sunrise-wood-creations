@@ -128,6 +128,7 @@ async function buildFinancialReportPdf(opts: {
   rows: { name: string; qty: number; revenue: number; cost: number; profit: number }[];
   totalRevenue: number;
   totalCost: number;
+  totalMaterialsCost: number;
   totalProfit: number;
   salesTaxOwed: number;
   estimatedTaxSetAside: number;
@@ -177,6 +178,7 @@ async function buildFinancialReportPdf(opts: {
   }
   summaryRow("Total sales:", `$${opts.totalRevenue.toFixed(2)}`, y); y -= 20;
   summaryRow("Total cost:", `$${opts.totalCost.toFixed(2)}`, y); y -= 20;
+  summaryRow("  of which materials (planters):", `$${opts.totalMaterialsCost.toFixed(2)}`, y); y -= 20;
   summaryRow("Profit:", `$${opts.totalProfit.toFixed(2)}`, y, opts.totalProfit >= 0 ? GREEN : EMBER); y -= 20;
   summaryRow("Sales tax owed (6% MI):", `$${opts.salesTaxOwed.toFixed(2)}`, y, EMBER); y -= 20;
   summaryRow(`Suggested income tax set-aside (${opts.taxSetAsidePercent}%):`, `$${opts.estimatedTaxSetAside.toFixed(2)}`, y, EMBER); y -= 34;
@@ -201,11 +203,35 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
     return { sent: false, reason: "Already sent for this period." };
   }
 
-  const { data: ordersInRange } = await admin
-    .from("orders")
-    .select("id, title, quantity, price_cents, product_id, products:product_id(name, cost_cents)")
+  // Only count orders that have actually been picked up — and bucket them
+  // by the date they were picked up, not the date they were placed. An
+  // order placed last month but picked up this month belongs in this
+  // period's report, not last period's.
+  const { data: pickupEvents } = await admin
+    .from("order_status_history")
+    .select("order_id, created_at")
+    .eq("status", "picked_up")
     .gte("created_at", period.start.toISOString())
-    .lt("created_at", period.end.toISOString());
+    .lt("created_at", period.end.toISOString())
+    .order("created_at", { ascending: true });
+
+  // Dedupe in case an order somehow got marked picked_up more than once —
+  // only count it the first time within this period.
+  const pickedUpOrderIds: string[] = [];
+  const seenOrderIds = new Set<string>();
+  (pickupEvents || []).forEach((ev: any) => {
+    if (!seenOrderIds.has(ev.order_id)) {
+      seenOrderIds.add(ev.order_id);
+      pickedUpOrderIds.push(ev.order_id);
+    }
+  });
+
+  const { data: ordersInRange } = pickedUpOrderIds.length > 0
+    ? await admin
+        .from("orders")
+        .select("id, title, quantity, price_cents, product_id, material_cost_cents, products:product_id(name, cost_cents)")
+        .in("id", pickedUpOrderIds)
+    : { data: [] as any[] };
 
   const orderIds = (ordersInRange || []).map((o: any) => o.id);
 
@@ -218,6 +244,17 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
 
   const orderIdsWithItems = new Set((itemRows || []).map((it: any) => it.order_id));
 
+  // Real picket-based material cost per order, when it's been logged —
+  // this takes priority over the flat product cost for that order's items.
+  const materialCostByOrder: Record<string, number> = {};
+  (ordersInRange || []).forEach((o: any) => {
+    if (o.material_cost_cents != null) materialCostByOrder[o.id] = o.material_cost_cents;
+  });
+  const totalMaterialsCostCents = Object.values(materialCostByOrder).reduce((s, c) => s + c, 0);
+  // Tracks which orders' material cost has already been counted, so it's
+  // only applied once even if an order has multiple order_items rows.
+  const materialCostAlreadyApplied = new Set<string>();
+
   const totals: Record<string, { qty: number; revenueCents: number; costCents: number }> = {};
 
   (itemRows || []).forEach((it: any) => {
@@ -225,7 +262,16 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
     if (!totals[key]) totals[key] = { qty: 0, revenueCents: 0, costCents: 0 };
     totals[key].qty += it.quantity || 1;
     totals[key].revenueCents += (it.unit_price_cents || 0) * (it.quantity || 1);
-    totals[key].costCents += (it.products?.cost_cents || 0) * (it.quantity || 1);
+
+    const orderMaterialCost = materialCostByOrder[it.order_id];
+    if (orderMaterialCost != null) {
+      if (!materialCostAlreadyApplied.has(it.order_id)) {
+        totals[key].costCents += orderMaterialCost;
+        materialCostAlreadyApplied.add(it.order_id);
+      }
+    } else {
+      totals[key].costCents += (it.products?.cost_cents || 0) * (it.quantity || 1);
+    }
   });
 
   (ordersInRange || []).forEach((o: any) => {
@@ -234,7 +280,12 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
     if (!totals[key]) totals[key] = { qty: 0, revenueCents: 0, costCents: 0 };
     totals[key].qty += o.quantity || 1;
     totals[key].revenueCents += o.price_cents || 0;
-    totals[key].costCents += (o.products?.cost_cents || 0) * (o.quantity || 1);
+
+    if (o.material_cost_cents != null) {
+      totals[key].costCents += o.material_cost_cents;
+    } else {
+      totals[key].costCents += (o.products?.cost_cents || 0) * (o.quantity || 1);
+    }
   });
 
   const rows = Object.entries(totals)
@@ -250,6 +301,7 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
   const totalRevenue = rows.reduce((s, r) => s + r.revenue, 0);
   const totalCost = rows.reduce((s, r) => s + r.cost, 0);
   const totalProfit = totalRevenue - totalCost;
+  const totalMaterialsCost = totalMaterialsCostCents / 100;
   const salesTaxOwed = totalRevenue - totalRevenue / (1 + SALES_TAX_RATE);
   const taxSetAsidePercent = Number(settings.estimated_tax_set_aside_percent) || 0;
   const estimatedTaxSetAside = totalProfit > 0 ? totalProfit * (taxSetAsidePercent / 100) : 0;
@@ -259,16 +311,19 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
     rows,
     totalRevenue,
     totalCost,
+    totalMaterialsCost,
     totalProfit,
     salesTaxOwed,
     estimatedTaxSetAside,
     taxSetAsidePercent
+
   });
 
   await sendFinancialReportEmail({
     toEmail: settings.recipient_email,
     periodLabel: period.label,
     totalRevenue,
+    totalMaterialsCost,
     totalProfit,
     salesTaxOwed,
     estimatedIncomeTaxSetAside: estimatedTaxSetAside,

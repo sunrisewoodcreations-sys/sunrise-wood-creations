@@ -4,7 +4,7 @@ import { productLabel, statusLabel, ProductType } from "./statusSteps";
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM || "Sunrise Wood Creations <orders@sunrisewoodcreations.com>";
 const FROM_INVOICE = process.env.EMAIL_FROM_INVOICE || "Sunrise Wood Creations <invoice@sunrisewoodcreations.com>";
-const FROM_ADMIN_REPORT = process.env.EMAIL_FROM_ADMIN_REPORT || "Sunrise Wood Creations <admin@sunrisewoodcreations.com>";
+const FROM_ADMIN_REPORT = process.env.EMAIL_FROM_ADMIN_REPORT || "Sunrise Wood Creations <reports@sunrisewoodcreations.com>";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com";
 
 function escapeHtml(s: string) {
@@ -441,6 +441,7 @@ export async function sendFinancialReportEmail(opts: {
   toEmail: string;
   periodLabel: string;
   totalRevenue: number;
+  totalMaterialsCost: number;
   totalProfit: number;
   salesTaxOwed: number;
   estimatedIncomeTaxSetAside: number;
@@ -452,6 +453,7 @@ export async function sendFinancialReportEmail(opts: {
       <p style="margin: 0 0 16px;">Here's your financial summary for <strong>${opts.periodLabel}</strong>:</p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
         <tr><td style="padding: 4px 0; color: #6b4d1a;">Total sales:</td><td style="padding: 4px 0; text-align: right; font-weight: bold;">$${opts.totalRevenue.toFixed(2)}</td></tr>
+        <tr><td style="padding: 4px 0; color: #6b4d1a;">Materials used (planters):</td><td style="padding: 4px 0; text-align: right; font-weight: bold;">$${opts.totalMaterialsCost.toFixed(2)}</td></tr>
         <tr><td style="padding: 4px 0; color: #6b4d1a;">Profit:</td><td style="padding: 4px 0; text-align: right; font-weight: bold;">$${opts.totalProfit.toFixed(2)}</td></tr>
         <tr><td style="padding: 4px 0; color: #6b4d1a;">Sales tax owed (6% MI):</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #D9603A;">$${opts.salesTaxOwed.toFixed(2)}</td></tr>
         <tr><td style="padding: 4px 0; color: #6b4d1a;">Suggested income tax set-aside:</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #D9603A;">$${opts.estimatedIncomeTaxSetAside.toFixed(2)}</td></tr>

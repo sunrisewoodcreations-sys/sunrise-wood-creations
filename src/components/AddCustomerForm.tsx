@@ -35,6 +35,8 @@ export default function AddCustomerForm() {
     setTimeout(() => setStatus("idle"), 3000);
   }
 
+  const hasEmail = !!email.trim();
+
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-[#1E3A5F]/10 rounded-xl p-6 mb-7">
       <h2 className="font-display text-lg text-[#1E3A5F] mb-4">Add a new customer</h2>
@@ -50,9 +52,8 @@ export default function AddCustomerForm() {
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Email</label>
+          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Email (optional)</label>
           <input
-            required
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
@@ -61,18 +62,21 @@ export default function AddCustomerForm() {
           />
         </div>
       </div>
+
       <button
         type="submit"
         disabled={status === "loading"}
         className="bg-[#1E3A5F] text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60"
       >
-        {status === "loading" ? "Sending..." : "Create customer & send setup email"}
+        {status === "loading" ? "Creating..." : "Create customer"}
       </button>
       <p className="text-xs text-[#1E3A5F]/50 mt-2">
-        {fullName.split(" ")[0] || "They"}&apos;ll get an email with a link to set a password and see their orders.
+        {hasEmail
+          ? `${fullName.split(" ")[0] || "They"}'ll get an email with a link to set a password and see their orders — they can choose their own notification preferences from their account.`
+          : "No account will be created — this is just a record for tracking their orders, with no notifications sent."}
       </p>
       {status === "error" && <p className="text-sm text-red-700 mt-2">{errorMsg}</p>}
-      {status === "done" && <p className="text-sm text-sage font-semibold mt-2">Customer created and invite sent.</p>}
+      {status === "done" && <p className="text-sm text-sage font-semibold mt-2">Customer created.</p>}
     </form>
   );
 }

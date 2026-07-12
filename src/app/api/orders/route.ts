@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendOrderStatusEmail } from "@/lib/email";
+import { shouldNotify } from "@/lib/notify";
 import { ProductType } from "@/lib/statusSteps";
 
 type IncomingItem = {
@@ -34,10 +35,6 @@ export async function POST(req: NextRequest) {
 
   let items: IncomingItem[];
 
-  // New multi-item orders send an `items` array. The older single-item
-  // form (still used on a customer's individual page) sends flat fields
-  // directly — normalize that into the same one-item array shape so both
-  // paths share the same logic below.
   if (Array.isArray(body.items) && body.items.length > 0) {
     items = body.items;
   } else {
@@ -64,19 +61,11 @@ export async function POST(req: NextRequest) {
   const totalPriceCents = normalizedItems.reduce((sum, it) => sum + it.priceCents, 0);
   const totalQuantity = normalizedItems.reduce((sum, it) => sum + it.quantity, 0);
 
-  // The order-level title/size/product summarize the whole order for
-  // places that just need one line (like the orders list table). The
-  // real breakdown lives in order_items.
   const orderTitle = normalizedItems.length === 1
     ? normalizedItems[0].title
     : `${normalizedItems[0].title} + ${normalizedItems.length - 1} more item${normalizedItems.length - 1 === 1 ? "" : "s"}`;
   const orderSizeDetails = normalizedItems.length === 1 ? normalizedItems[0].sizeDetails : null;
-  // If every item shares one product type, use that for the status/progress
-  // bar; otherwise default to the first item's type (mixed-type orders are
-  // a known simplification — the progress bar reflects the first item).
-  const orderProductType = normalizedItems.every(it => it.productType === normalizedItems[0].productType)
-    ? normalizedItems[0].productType
-    : normalizedItems[0].productType;
+  const orderProductType = normalizedItems[0].productType;
   const orderProductId = normalizedItems.length === 1 ? normalizedItems[0].productId : null;
 
   const { data: order, error } = await admin
@@ -115,11 +104,11 @@ export async function POST(req: NextRequest) {
 
   const { data: customer } = await supabase
     .from("profiles")
-    .select("email, full_name")
+    .select("email, full_name, has_real_email, notify_order_updates")
     .eq("id", customerId)
     .single();
 
-  if (customer?.email) {
+  if (customer && shouldNotify(customer, "order_updates")) {
     try {
       await sendOrderStatusEmail({
         toEmail: customer.email,

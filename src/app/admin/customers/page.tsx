@@ -8,7 +8,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
 
   let customersQuery = supabase
     .from("profiles")
-    .select("id, full_name, email, orders:orders(price_cents, amount_paid_cents)")
+    .select("id, full_name, email, has_real_email, orders:orders(price_cents, amount_paid_cents)")
     .eq("role", "customer")
     .order("full_name");
 
@@ -75,7 +75,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
                   {c.full_name}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-[#1E3A5F]/70">{c.email}</td>
+              <td className="px-4 py-3 text-[#1E3A5F]/70">{c.has_real_email === false ? <span className="text-[#1E3A5F]/40 italic">No email on file</span> : c.email}</td>
               <td className="px-4 py-3 text-[#1E3A5F]/70">{c.orderCount}</td>
               <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${c.totalSales.toFixed(2)}</td>
               <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${c.totalPaid.toFixed(2)}</td>

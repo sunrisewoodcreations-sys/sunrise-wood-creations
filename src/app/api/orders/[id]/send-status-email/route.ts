@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendOrderStatusEmail } from "@/lib/email";
+import { shouldNotify } from "@/lib/notify";
 import { ProductType } from "@/lib/statusSteps";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -14,13 +15,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const { data: order } = await supabase
     .from("orders")
-    .select("*, profiles:customer_id(email, full_name)")
+    .select("*, profiles:customer_id(email, full_name, has_real_email, notify_order_updates)")
     .eq("id", params.id)
     .single();
 
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
   const customer = (order as any).profiles;
+
+  if (!shouldNotify(customer, "order_updates")) {
+    return NextResponse.json({ error: "This customer has opted out of order update emails (or has no email on file)." }, { status: 400 });
+  }
+
   const balanceDueCents = order.status === "ready_for_pickup"
     ? (order.price_cents || 0) - (order.amount_paid_cents || 0)
     : undefined;

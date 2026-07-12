@@ -19,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .from("orders")
     .update({ status })
     .eq("id", params.id)
-    .select("*, profiles:customer_id(email, full_name)")
+    .select("*, profiles:customer_id(email, full_name, has_real_email, notify_invoices)")
     .single();
 
   if (error || !order) {

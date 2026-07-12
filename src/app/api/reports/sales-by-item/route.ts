@@ -94,13 +94,35 @@ export async function GET(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  let ordersQuery = admin
-    .from("orders")
-    .select("id, title, product_type, quantity, price_cents, product_id, created_at, products:product_id(name)")
+  // Only count orders actually picked up within this window — and by the
+  // date they were picked up, not the date they were originally placed.
+  let pickupQuery = admin
+    .from("order_status_history")
+    .select("order_id, created_at")
+    .eq("status", "picked_up")
     .lt("created_at", range.end.toISOString());
-  if (range.start) ordersQuery = ordersQuery.gte("created_at", range.start.toISOString());
+  if (range.start) pickupQuery = pickupQuery.gte("created_at", range.start.toISOString());
 
-  const { data: ordersInRange, error: ordersError } = await ordersQuery;
+  const { data: pickupEvents, error: pickupError } = await pickupQuery;
+  if (pickupError) {
+    return NextResponse.json({ error: pickupError.message }, { status: 400 });
+  }
+
+  const pickedUpOrderIds: string[] = [];
+  const seenOrderIds = new Set<string>();
+  (pickupEvents || []).forEach((ev: any) => {
+    if (!seenOrderIds.has(ev.order_id)) {
+      seenOrderIds.add(ev.order_id);
+      pickedUpOrderIds.push(ev.order_id);
+    }
+  });
+
+  const { data: ordersInRange, error: ordersError } = pickedUpOrderIds.length > 0
+    ? await admin
+        .from("orders")
+        .select("id, title, product_type, quantity, price_cents, product_id, created_at, products:product_id(name)")
+        .in("id", pickedUpOrderIds)
+    : { data: [] as any[], error: null };
   if (ordersError) {
     return NextResponse.json({ error: ordersError.message }, { status: 400 });
   }
