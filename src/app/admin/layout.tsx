@@ -57,6 +57,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="w-60 bg-[#1E3A5F] text-white/80 p-6 flex-shrink-0">
         <div className="text-white font-display text-base mb-8 break-words leading-snug">Hello, {firstName}</div>
         <nav className="flex flex-col gap-1 text-sm">
+          <Link href="/admin/dashboard" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Dashboard</Link>
           <Link href="/admin/customers" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Customers</Link>
           <Link href="/admin/orders" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Orders</Link>
           <Link href="/admin/queue" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Queue</Link>
