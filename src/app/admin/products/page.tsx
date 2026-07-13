@@ -30,6 +30,7 @@ export default async function ProductsPage() {
             <th className="text-right px-4 py-3">Margin</th>
             <th className="text-right px-4 py-3">Stock</th>
             <th className="text-right px-4 py-3">Alert at</th>
+            <th className="text-right px-4 py-3">Pickets/item</th>
             <th className="text-right px-4 py-3">Actions</th>
           </tr>
         </thead>
@@ -38,7 +39,7 @@ export default async function ProductsPage() {
             <ProductRow key={p.id} product={p} />
           ))}
           {products?.length === 0 && (
-            <tr><td colSpan={9} className="px-4 py-6 text-center text-[#1E3A5F]/50">No products saved yet.</td></tr>
+            <tr><td colSpan={10} className="px-4 py-6 text-center text-[#1E3A5F]/50">No products saved yet.</td></tr>
           )}
         </tbody>
       </table>

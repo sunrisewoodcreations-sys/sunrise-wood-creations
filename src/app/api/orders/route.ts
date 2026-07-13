@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendOrderStatusEmail } from "@/lib/email";
 import { shouldNotify } from "@/lib/notify";
+import { consumePicketsFifo } from "@/lib/pickets";
 import { ProductType } from "@/lib/statusSteps";
 
 type IncomingItem = {
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  const { error: itemsError } = await admin.from("order_items").insert(
+  const { data: insertedItems, error: itemsError } = await admin.from("order_items").insert(
     normalizedItems.map(it => ({
       order_id: order.id,
       product_id: it.productId,
@@ -97,10 +98,39 @@ export async function POST(req: NextRequest) {
       quantity: it.quantity,
       unit_price_cents: it.quantity > 0 ? Math.round(it.priceCents / it.quantity) : it.priceCents
     }))
-  );
+  ).select();
 
   if (itemsError) {
     console.error("Couldn't save order items:", itemsError.message);
+  }
+
+  // Auto-log picket usage for any item linked to a saved product that
+  // has a default "pickets per unit" set — no manual entry needed.
+  const productIds = [...new Set((insertedItems || []).map((it: any) => it.product_id).filter(Boolean))];
+  if (productIds.length > 0) {
+    const { data: linkedProducts } = await admin
+      .from("products")
+      .select("id, pickets_per_unit")
+      .in("id", productIds);
+
+    const picketsPerUnitByProduct: Record<string, number> = {};
+    (linkedProducts || []).forEach((p: any) => { picketsPerUnitByProduct[p.id] = p.pickets_per_unit || 0; });
+
+    for (const item of insertedItems || []) {
+      const perUnit = item.product_id ? picketsPerUnitByProduct[item.product_id] || 0 : 0;
+      if (perUnit > 0) {
+        const neededQty = perUnit * item.quantity;
+        const result = await consumePicketsFifo(admin, neededQty, order.id, item.id);
+        if (result.ok) {
+          await admin.from("order_items").update({
+            pickets_used: neededQty,
+            material_cost_cents: result.totalCostCents
+          }).eq("id", item.id);
+        } else {
+          console.error(`Auto picket consumption failed for item ${item.id}:`, result.error);
+        }
+      }
+    }
   }
 
   const { data: customer } = await supabase

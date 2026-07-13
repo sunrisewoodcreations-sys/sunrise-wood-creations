@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  const { productType, name, sizeDetails, priceCents, costCents, stockQuantity, lowStockThreshold } = await req.json();
+  const { productType, name, sizeDetails, priceCents, costCents, stockQuantity, lowStockThreshold, picketsPerUnit } = await req.json();
   if (!productType || !name?.trim()) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
@@ -24,7 +24,8 @@ export async function POST(req: NextRequest) {
       price_cents: Math.round(Number(priceCents) * 100) || 0,
       cost_cents: Math.round(Number(costCents) * 100) || 0,
       stock_quantity: Math.max(0, Math.round(Number(stockQuantity)) || 0),
-      low_stock_threshold: Math.max(0, Math.round(Number(lowStockThreshold)) || 0)
+      low_stock_threshold: Math.max(0, Math.round(Number(lowStockThreshold)) || 0),
+      pickets_per_unit: Math.max(0, Math.round(Number(picketsPerUnit)) || 0)
     })
     .select()
     .single();

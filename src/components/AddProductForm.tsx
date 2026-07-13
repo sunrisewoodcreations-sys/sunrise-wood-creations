@@ -20,6 +20,7 @@ export default function AddProductForm() {
   const [costPrice, setCostPrice] = useState("");
   const [stockQuantity, setStockQuantity] = useState("0");
   const [lowStockThreshold, setLowStockThreshold] = useState("0");
+  const [picketsPerUnit, setPicketsPerUnit] = useState("0");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -31,7 +32,7 @@ export default function AddProductForm() {
     const res = await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold })
+      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold, picketsPerUnit })
     });
     const body = await res.json().catch(() => ({}));
     setLoading(false);
@@ -41,7 +42,7 @@ export default function AddProductForm() {
       return;
     }
 
-    setName(""); setSizeDetails(""); setPrice(""); setCostPrice(""); setStockQuantity("0"); setLowStockThreshold("0");
+    setName(""); setSizeDetails(""); setPrice(""); setCostPrice(""); setStockQuantity("0"); setLowStockThreshold("0"); setPicketsPerUnit("0");
     setOpen(false);
     router.refresh();
   }
@@ -87,6 +88,13 @@ export default function AddProductForm() {
           <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Low stock alert at</label>
           <input value={lowStockThreshold} onChange={e => setLowStockThreshold(e.target.value)} placeholder="2" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
         </div>
+        {productType === "planter" && (
+          <div>
+            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Pickets used per item</label>
+            <input value={picketsPerUnit} onChange={e => setPicketsPerUnit(e.target.value)} placeholder="5" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <p className="text-[10px] text-[#1E3A5F]/40 mt-1">Orders using this product auto-log and cost this many pickets — no manual entry needed.</p>
+          </div>
+        )}
       </div>
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
       <div className="flex gap-2">

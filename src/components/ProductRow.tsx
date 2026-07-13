@@ -20,6 +20,7 @@ type Product = {
   cost_cents: number;
   stock_quantity: number;
   low_stock_threshold: number;
+  pickets_per_unit: number;
 };
 
 export default function ProductRow({ product }: { product: Product }) {
@@ -36,6 +37,7 @@ export default function ProductRow({ product }: { product: Product }) {
   const [costPrice, setCostPrice] = useState(((product.cost_cents ?? 0) / 100).toString());
   const [stockQuantity, setStockQuantity] = useState(String(product.stock_quantity ?? 0));
   const [lowStockThreshold, setLowStockThreshold] = useState(String(product.low_stock_threshold ?? 0));
+  const [picketsPerUnit, setPicketsPerUnit] = useState(String(product.pickets_per_unit ?? 0));
 
   const margin = (product.price_cents - (product.cost_cents || 0)) / 100;
 
@@ -45,7 +47,7 @@ export default function ProductRow({ product }: { product: Product }) {
     const res = await fetch(`/api/products/${product.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold })
+      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold, picketsPerUnit })
     });
     setLoading(false);
     if (res.ok) {
@@ -91,6 +93,13 @@ export default function ProductRow({ product }: { product: Product }) {
         <td className="px-4 py-3 text-right">
           <input value={lowStockThreshold} onChange={e => setLowStockThreshold(e.target.value)} className="w-16 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
         </td>
+        <td className="px-4 py-3 text-right">
+          {productType === "planter" ? (
+            <input value={picketsPerUnit} onChange={e => setPicketsPerUnit(e.target.value)} className="w-16 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
+          ) : (
+            <span className="text-[#1E3A5F]/30">—</span>
+          )}
+        </td>
         <td className="px-4 py-3 text-right whitespace-nowrap">
           <button onClick={handleSave} disabled={loading} className="text-sage font-semibold text-xs mr-3">
             {loading ? "Saving..." : "Save"}
@@ -118,6 +127,9 @@ export default function ProductRow({ product }: { product: Product }) {
         {product.stock_quantity ?? 0}
       </td>
       <td className="px-4 py-3 text-right text-[#1E3A5F]/50">{product.low_stock_threshold ?? 0}</td>
+      <td className="px-4 py-3 text-right text-[#1E3A5F]/50">
+        {product.product_type === "planter" ? (product.pickets_per_unit ?? 0) : "—"}
+      </td>
       <td className="px-4 py-3 text-right whitespace-nowrap">
         {confirmingDelete ? (
           <>
