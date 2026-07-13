@@ -419,7 +419,6 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
                   <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Email (optional)</label>
                   <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="jane@example.com" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
                 </div>
-                </div>
                 {customerCreateError && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{customerCreateError}</p>}
                 <div className="flex gap-2">
                   <button type="submit" disabled={creatingCustomer} className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60">
