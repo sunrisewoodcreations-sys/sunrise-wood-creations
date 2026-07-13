@@ -43,7 +43,7 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
   });
 
   if (orderIds.length === 0) {
-    return { revenue: 0, cost: 0, profit: 0 };
+    return { revenue: 0, cost: 0, profit: 0, materialsCost: 0 };
   }
 
   const { data: orders } = await supabase
@@ -62,6 +62,7 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
     if (o.material_cost_cents != null) materialCostByOrder[o.id] = o.material_cost_cents;
   });
   const materialCostApplied = new Set<string>();
+  let materialsCostCents = 0;
 
   let revenueCents = 0;
   let costCents = 0;
@@ -72,6 +73,7 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
     if (orderMaterialCost != null) {
       if (!materialCostApplied.has(it.order_id)) {
         costCents += orderMaterialCost;
+        materialsCostCents += orderMaterialCost;
         materialCostApplied.add(it.order_id);
       }
     } else {
@@ -84,12 +86,18 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
     revenueCents += o.price_cents || 0;
     if (o.material_cost_cents != null) {
       costCents += o.material_cost_cents;
+      materialsCostCents += o.material_cost_cents;
     } else {
       costCents += (o.products?.cost_cents || 0) * (o.quantity || 1);
     }
   });
 
-  return { revenue: revenueCents / 100, cost: costCents / 100, profit: (revenueCents - costCents) / 100 };
+  return {
+    revenue: revenueCents / 100,
+    cost: costCents / 100,
+    profit: (revenueCents - costCents) / 100,
+    materialsCost: materialsCostCents / 100
+  };
 }
 
 function SummaryBox({ label, value, color }: { label: string; value: string; color?: string }) {
@@ -147,16 +155,18 @@ export default async function ReportsPage() {
       </p>
 
       <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">{quarterLabel}</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
         <SummaryBox label="Profit" value={`$${quarterTotals.profit.toFixed(2)}`} color={quarterTotals.profit >= 0 ? "text-sage" : "text-ember"} />
+        <SummaryBox label="Pickets used" value={`-$${quarterTotals.materialsCost.toFixed(2)}`} color="text-ember" />
         <SummaryBox label="Sales tax owed (6% MI)" value={`$${quarterTax.salesTax.toFixed(2)}`} color="text-ember" />
         <SummaryBox label={`Michigan income tax (${michiganPercent}%)`} value={`$${quarterTax.michiganTax.toFixed(2)}`} color="text-ember" />
         <SummaryBox label={`Federal income tax (${federalPercent}%)`} value={`$${quarterTax.federalTax.toFixed(2)}`} color="text-ember" />
       </div>
 
       <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">Year to date ({year})</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
         <SummaryBox label="Profit" value={`$${yearTotals.profit.toFixed(2)}`} color={yearTotals.profit >= 0 ? "text-sage" : "text-ember"} />
+        <SummaryBox label="Pickets used" value={`-$${yearTotals.materialsCost.toFixed(2)}`} color="text-ember" />
         <SummaryBox label="Sales tax owed (6% MI)" value={`$${yearTax.salesTax.toFixed(2)}`} color="text-ember" />
         <SummaryBox label={`Michigan income tax (${michiganPercent}%)`} value={`$${yearTax.michiganTax.toFixed(2)}`} color="text-ember" />
         <SummaryBox label={`Federal income tax (${federalPercent}%)`} value={`$${yearTax.federalTax.toFixed(2)}`} color="text-ember" />

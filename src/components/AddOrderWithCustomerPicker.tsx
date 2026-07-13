@@ -105,9 +105,15 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
       return;
     }
 
-    setCustomerCreatedMsg(
-      `Invite sent to ${newName}. They'll appear in this list once they set up their account — you can add this order once they have.`
-    );
+    if (newEmail.trim()) {
+      setCustomerCreatedMsg(
+        `Invite sent to ${newName}. They'll appear in this list once they set up their account — you can add this order once they have.`
+      );
+    } else {
+      setCustomerCreatedMsg(
+        `${newName} was added with no account. Close this, search their name, and you can add this order right now.`
+      );
+    }
     setNewName("");
     setNewEmail("");
     router.refresh();
@@ -410,8 +416,9 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
                   <input required value={newName} onChange={e => setNewName(e.target.value)} placeholder="Jane Doe" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Email</label>
-                  <input required type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="jane@example.com" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+                  <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Email (optional)</label>
+                  <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="jane@example.com" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+                </div>
                 </div>
                 {customerCreateError && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{customerCreateError}</p>}
                 <div className="flex gap-2">

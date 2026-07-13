@@ -13,9 +13,15 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
   const admin = createAdminClient();
 
-  // Remove any proofs tied to this order first, in case the database
-  // isn't set up to cascade-delete them automatically.
+  // Clean up everything that references this order first — several
+  // tables built up over time may not all have automatic cascade-delete
+  // configured, so we clear them explicitly rather than rely on that.
   await admin.from("proofs").delete().eq("order_id", params.id);
+  await admin.from("order_items").delete().eq("order_id", params.id);
+  await admin.from("order_messages").delete().eq("order_id", params.id);
+  await admin.from("invoices").delete().eq("order_id", params.id);
+  await admin.from("order_status_history").delete().eq("order_id", params.id);
+  await admin.from("quote_requests").update({ converted_order_id: null }).eq("converted_order_id", params.id);
 
   const { error } = await admin.from("orders").delete().eq("id", params.id);
 
