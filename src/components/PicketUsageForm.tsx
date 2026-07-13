@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+// Legacy fallback: used only for orders with NO itemized breakdown at
+// all (created before multi-item orders existed). New orders use
+// PicketUsageItemForm instead, one per planter item.
 export default function PicketUsageForm({
-  orderItemId,
-  itemLabel,
+  orderId,
   initialPicketsUsed,
   initialMaterialCostCents
 }: {
-  orderItemId: string;
-  itemLabel: string;
+  orderId: string;
   initialPicketsUsed: number | null;
   initialMaterialCostCents: number | null;
 }) {
@@ -24,7 +25,7 @@ export default function PicketUsageForm({
     setLoading(true);
     setError("");
 
-    const res = await fetch(`/api/order-items/${orderItemId}/picket-usage`, {
+    const res = await fetch(`/api/orders/${orderId}/picket-usage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ picketsUsed })
@@ -41,8 +42,8 @@ export default function PicketUsageForm({
 
   if (initialPicketsUsed != null) {
     return (
-      <div className="bg-cream/50 border border-[#1E3A5F]/10 rounded-lg px-4 py-3 mb-3 text-sm">
-        <span className="text-[#1E3A5F]/70">{itemLabel} — Pickets used: </span>
+      <div className="bg-cream/50 border border-[#1E3A5F]/10 rounded-lg px-4 py-3 mb-4 text-sm">
+        <span className="text-[#1E3A5F]/70">Pickets used: </span>
         <span className="font-semibold text-[#1E3A5F]">{initialPicketsUsed}</span>
         <span className="text-[#1E3A5F]/70"> — Material cost: </span>
         <span className="font-semibold text-[#1E3A5F]">${((initialMaterialCostCents || 0) / 100).toFixed(2)}</span>
@@ -51,10 +52,8 @@ export default function PicketUsageForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-cream/50 border border-[#1E3A5F]/10 rounded-lg px-4 py-3 mb-3">
-      <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">
-        How many pickets did "{itemLabel}" use?
-      </label>
+    <form onSubmit={handleSubmit} className="bg-cream/50 border border-[#1E3A5F]/10 rounded-lg px-4 py-3 mb-4">
+      <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">How many pickets did this planter use?</label>
       <div className="flex items-center gap-2">
         <input
           type="number"
@@ -74,7 +73,7 @@ export default function PicketUsageForm({
       </div>
       {error && <p className="text-xs text-ember mt-2">{error}</p>}
       <p className="text-[10px] text-[#1E3A5F]/40 mt-2">
-        This can only be entered once per item — it deducts from your picket inventory (oldest pallet first).
+        This can only be entered once per order — it deducts from your picket inventory (oldest pallet first).
       </p>
     </form>
   );
