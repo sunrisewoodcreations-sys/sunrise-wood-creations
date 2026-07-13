@@ -135,19 +135,11 @@ export async function GET(req: NextRequest) {
   const { data: itemRows } = orderIds.length > 0
     ? await admin
         .from("order_items")
-        .select("order_id, title, quantity, unit_price_cents, product_id, products:product_id(name, cost_cents)")
+        .select("order_id, title, quantity, unit_price_cents, product_id, material_cost_cents, products:product_id(name, cost_cents)")
         .in("order_id", orderIds)
     : { data: [] as any[] };
 
   const orderIdsWithItems = new Set((itemRows || []).map((it: any) => it.order_id));
-
-  // Real picket-based material cost per order (when logged) takes priority
-  // over the flat product cost — same rule as the automated financial report.
-  const materialCostByOrder: Record<string, number> = {};
-  (ordersInRange || []).forEach((o: any) => {
-    if (o.material_cost_cents != null) materialCostByOrder[o.id] = o.material_cost_cents;
-  });
-  const materialCostAlreadyApplied = new Set<string>();
 
   const itemTotals: Record<string, { qty: number; revenueCents: number; costCents: number }> = {};
 
@@ -157,12 +149,8 @@ export async function GET(req: NextRequest) {
     itemTotals[key].qty += it.quantity || 1;
     itemTotals[key].revenueCents += (it.unit_price_cents || 0) * (it.quantity || 1);
 
-    const orderMaterialCost = materialCostByOrder[it.order_id];
-    if (orderMaterialCost != null) {
-      if (!materialCostAlreadyApplied.has(it.order_id)) {
-        itemTotals[key].costCents += orderMaterialCost;
-        materialCostAlreadyApplied.add(it.order_id);
-      }
+    if (it.material_cost_cents != null) {
+      itemTotals[key].costCents += it.material_cost_cents;
     } else {
       itemTotals[key].costCents += (it.products?.cost_cents || 0) * (it.quantity || 1);
     }

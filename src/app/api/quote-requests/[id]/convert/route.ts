@@ -79,6 +79,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   await admin.from("order_items").insert({
     order_id: order.id,
+    product_type: productType,
     title,
     size_details: sizeDetails,
     quantity: 1,

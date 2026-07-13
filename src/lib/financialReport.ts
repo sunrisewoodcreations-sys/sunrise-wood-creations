@@ -241,22 +241,17 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
   const { data: itemRows } = orderIds.length > 0
     ? await admin
         .from("order_items")
-        .select("order_id, title, quantity, unit_price_cents, product_id, products:product_id(name, cost_cents)")
+        .select("order_id, title, quantity, unit_price_cents, product_id, material_cost_cents, products:product_id(name, cost_cents)")
         .in("order_id", orderIds)
     : { data: [] as any[] };
 
   const orderIdsWithItems = new Set((itemRows || []).map((it: any) => it.order_id));
 
-  // Real picket-based material cost per order, when it's been logged —
-  // this takes priority over the flat product cost for that order's items.
-  const materialCostByOrder: Record<string, number> = {};
-  (ordersInRange || []).forEach((o: any) => {
-    if (o.material_cost_cents != null) materialCostByOrder[o.id] = o.material_cost_cents;
-  });
-  const totalMaterialsCostCents = Object.values(materialCostByOrder).reduce((s, c) => s + c, 0);
-  // Tracks which orders' material cost has already been counted, so it's
-  // only applied once even if an order has multiple order_items rows.
-  const materialCostAlreadyApplied = new Set<string>();
+  // Real picket-based material cost is now tracked per item — each
+  // planter line item has its own logged cost, since one order can hold
+  // several different planters.
+  const totalMaterialsCostCents = (itemRows || []).reduce((s: number, it: any) => s + (it.material_cost_cents || 0), 0)
+    + (ordersInRange || []).filter((o: any) => !orderIdsWithItems.has(o.id)).reduce((s: number, o: any) => s + (o.material_cost_cents || 0), 0);
 
   const totals: Record<string, { qty: number; revenueCents: number; costCents: number }> = {};
 
@@ -266,12 +261,8 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
     totals[key].qty += it.quantity || 1;
     totals[key].revenueCents += (it.unit_price_cents || 0) * (it.quantity || 1);
 
-    const orderMaterialCost = materialCostByOrder[it.order_id];
-    if (orderMaterialCost != null) {
-      if (!materialCostAlreadyApplied.has(it.order_id)) {
-        totals[key].costCents += orderMaterialCost;
-        materialCostAlreadyApplied.add(it.order_id);
-      }
+    if (it.material_cost_cents != null) {
+      totals[key].costCents += it.material_cost_cents;
     } else {
       totals[key].costCents += (it.products?.cost_cents || 0) * (it.quantity || 1);
     }

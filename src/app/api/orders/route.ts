@@ -91,6 +91,7 @@ export async function POST(req: NextRequest) {
     normalizedItems.map(it => ({
       order_id: order.id,
       product_id: it.productId,
+      product_type: it.productType,
       title: it.title,
       size_details: it.sizeDetails,
       quantity: it.quantity,

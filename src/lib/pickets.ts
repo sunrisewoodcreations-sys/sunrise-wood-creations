@@ -15,7 +15,8 @@ type ConsumeResult =
 export async function consumePicketsFifo(
   admin: ReturnType<typeof createAdminClient>,
   quantityNeeded: number,
-  orderId: string
+  orderId: string,
+  orderItemId?: string
 ): Promise<ConsumeResult> {
   if (quantityNeeded <= 0) {
     return { ok: false, error: "Pickets used must be a positive number." };
@@ -59,7 +60,12 @@ export async function consumePicketsFifo(
 
   if (allocations.length > 0) {
     await admin.from("picket_usage_allocations").insert(
-      allocations.map(a => ({ order_id: orderId, purchase_id: a.purchase_id, quantity: a.quantity }))
+      allocations.map(a => ({
+        order_id: orderId,
+        order_item_id: orderItemId || null,
+        purchase_id: a.purchase_id,
+        quantity: a.quantity
+      }))
     );
   }
 

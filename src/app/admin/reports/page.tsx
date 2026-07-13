@@ -53,15 +53,10 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
 
   const { data: items } = await supabase
     .from("order_items")
-    .select("order_id, quantity, unit_price_cents, products:product_id(cost_cents)")
+    .select("order_id, quantity, unit_price_cents, material_cost_cents, products:product_id(cost_cents)")
     .in("order_id", orderIds);
 
   const orderIdsWithItems = new Set((items || []).map((it: any) => it.order_id));
-  const materialCostByOrder: Record<string, number> = {};
-  (orders || []).forEach((o: any) => {
-    if (o.material_cost_cents != null) materialCostByOrder[o.id] = o.material_cost_cents;
-  });
-  const materialCostApplied = new Set<string>();
   let materialsCostCents = 0;
 
   let revenueCents = 0;
@@ -69,13 +64,9 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
 
   (items || []).forEach((it: any) => {
     revenueCents += (it.unit_price_cents || 0) * (it.quantity || 1);
-    const orderMaterialCost = materialCostByOrder[it.order_id];
-    if (orderMaterialCost != null) {
-      if (!materialCostApplied.has(it.order_id)) {
-        costCents += orderMaterialCost;
-        materialsCostCents += orderMaterialCost;
-        materialCostApplied.add(it.order_id);
-      }
+    if (it.material_cost_cents != null) {
+      costCents += it.material_cost_cents;
+      materialsCostCents += it.material_cost_cents;
     } else {
       costCents += (it.products?.cost_cents || 0) * (it.quantity || 1);
     }

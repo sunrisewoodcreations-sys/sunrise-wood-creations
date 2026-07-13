@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function PicketUsageForm({
+export default function PicketUsageItemForm({
   orderItemId,
-  itemLabel,
+  itemTitle,
   initialPicketsUsed,
   initialMaterialCostCents
 }: {
   orderItemId: string;
-  itemLabel: string;
+  itemTitle: string;
   initialPicketsUsed: number | null;
   initialMaterialCostCents: number | null;
 }) {
@@ -41,8 +41,8 @@ export default function PicketUsageForm({
 
   if (initialPicketsUsed != null) {
     return (
-      <div className="bg-cream/50 border border-[#1E3A5F]/10 rounded-lg px-4 py-3 mb-3 text-sm">
-        <span className="text-[#1E3A5F]/70">{itemLabel} — Pickets used: </span>
+      <div className="bg-cream/50 border border-[#1E3A5F]/10 rounded-lg px-4 py-2 mb-2 text-sm">
+        <span className="text-[#1E3A5F]/70">{itemTitle} — Pickets used: </span>
         <span className="font-semibold text-[#1E3A5F]">{initialPicketsUsed}</span>
         <span className="text-[#1E3A5F]/70"> — Material cost: </span>
         <span className="font-semibold text-[#1E3A5F]">${((initialMaterialCostCents || 0) / 100).toFixed(2)}</span>
@@ -51,9 +51,9 @@ export default function PicketUsageForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-cream/50 border border-[#1E3A5F]/10 rounded-lg px-4 py-3 mb-3">
+    <form onSubmit={handleSubmit} className="bg-cream/50 border border-[#1E3A5F]/10 rounded-lg px-4 py-2 mb-2">
       <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">
-        How many pickets did "{itemLabel}" use?
+        {itemTitle} — how many pickets did this one use?
       </label>
       <div className="flex items-center gap-2">
         <input
@@ -73,9 +73,6 @@ export default function PicketUsageForm({
         </button>
       </div>
       {error && <p className="text-xs text-ember mt-2">{error}</p>}
-      <p className="text-[10px] text-[#1E3A5F]/40 mt-2">
-        This can only be entered once per item — it deducts from your picket inventory (oldest pallet first).
-      </p>
     </form>
   );
 }
