@@ -59,7 +59,7 @@ export async function consumePicketsFifo(
   }
 
   if (allocations.length > 0) {
-    await admin.from("picket_usage_allocations").insert(
+    const { error: allocError } = await admin.from("picket_usage_allocations").insert(
       allocations.map(a => ({
         order_id: orderId,
         order_item_id: orderItemId || null,
@@ -67,6 +67,9 @@ export async function consumePicketsFifo(
         quantity: a.quantity
       }))
     );
+    if (allocError) {
+      console.error("Couldn't record picket allocation (stock was still deducted, but a delete won't be able to restore it):", allocError.message);
+    }
   }
 
   return { ok: true, totalCostCents };
