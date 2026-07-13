@@ -133,7 +133,8 @@ export default async function ReportsPage() {
     const salesTax = totals.revenue - totals.revenue / (1 + SALES_TAX_RATE);
     const michiganTax = totals.profit > 0 ? totals.profit * (michiganPercent / 100) : 0;
     const federalTax = totals.profit > 0 ? totals.profit * (federalPercent / 100) : 0;
-    return { salesTax, michiganTax, federalTax };
+    const takeHome = totals.profit - salesTax - michiganTax - federalTax;
+    return { salesTax, michiganTax, federalTax, takeHome };
   }
 
   const quarterTax = taxFigures(quarterTotals);
@@ -155,21 +156,23 @@ export default async function ReportsPage() {
       </p>
 
       <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">{quarterLabel}</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-6">
         <SummaryBox label="Profit" value={`$${quarterTotals.profit.toFixed(2)}`} color={quarterTotals.profit >= 0 ? "text-sage" : "text-ember"} />
         <SummaryBox label="Pickets used" value={`-$${quarterTotals.materialsCost.toFixed(2)}`} color="text-ember" />
         <SummaryBox label="Sales tax owed (6% MI)" value={`$${quarterTax.salesTax.toFixed(2)}`} color="text-ember" />
         <SummaryBox label={`Michigan income tax (${michiganPercent}%)`} value={`$${quarterTax.michiganTax.toFixed(2)}`} color="text-ember" />
         <SummaryBox label={`Federal income tax (${federalPercent}%)`} value={`$${quarterTax.federalTax.toFixed(2)}`} color="text-ember" />
+        <SummaryBox label="Take-home (after all tax)" value={`$${quarterTax.takeHome.toFixed(2)}`} color={quarterTax.takeHome >= 0 ? "text-sage" : "text-ember"} />
       </div>
 
       <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">Year to date ({year})</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-6">
         <SummaryBox label="Profit" value={`$${yearTotals.profit.toFixed(2)}`} color={yearTotals.profit >= 0 ? "text-sage" : "text-ember"} />
         <SummaryBox label="Pickets used" value={`-$${yearTotals.materialsCost.toFixed(2)}`} color="text-ember" />
         <SummaryBox label="Sales tax owed (6% MI)" value={`$${yearTax.salesTax.toFixed(2)}`} color="text-ember" />
         <SummaryBox label={`Michigan income tax (${michiganPercent}%)`} value={`$${yearTax.michiganTax.toFixed(2)}`} color="text-ember" />
         <SummaryBox label={`Federal income tax (${federalPercent}%)`} value={`$${yearTax.federalTax.toFixed(2)}`} color="text-ember" />
+        <SummaryBox label="Take-home (after all tax)" value={`$${yearTax.takeHome.toFixed(2)}`} color={yearTax.takeHome >= 0 ? "text-sage" : "text-ember"} />
       </div>
 
       <p className="text-xs text-[#1E3A5F]/40 mb-6">

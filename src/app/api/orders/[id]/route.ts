@@ -13,6 +13,28 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
   const admin = createAdminClient();
 
+  // If this order used pickets, return them to the exact pallet(s) they
+  // came from before deleting anything.
+  const { data: allocations } = await admin
+    .from("picket_usage_allocations")
+    .select("purchase_id, quantity")
+    .eq("order_id", params.id);
+
+  for (const alloc of allocations || []) {
+    const { data: purchase } = await admin
+      .from("picket_purchases")
+      .select("remaining_quantity")
+      .eq("id", alloc.purchase_id)
+      .maybeSingle();
+    if (purchase) {
+      await admin
+        .from("picket_purchases")
+        .update({ remaining_quantity: purchase.remaining_quantity + alloc.quantity })
+        .eq("id", alloc.purchase_id);
+    }
+  }
+  await admin.from("picket_usage_allocations").delete().eq("order_id", params.id);
+
   // Clean up everything that references this order first — several
   // tables built up over time may not all have automatic cascade-delete
   // configured, so we clear them explicitly rather than rely on that.

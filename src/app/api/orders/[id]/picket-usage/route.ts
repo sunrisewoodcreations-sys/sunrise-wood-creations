@@ -29,7 +29,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "Enter how many pickets were used" }, { status: 400 });
   }
 
-  const result = await consumePicketsFifo(admin, qty);
+  const result = await consumePicketsFifo(admin, qty, params.id);
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
