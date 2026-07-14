@@ -84,6 +84,11 @@ export default async function AccountPage() {
                     <div className="text-xs text-walnut/50 font-mono">
                       Placed {new Date(order.created_at).toLocaleDateString()}
                     </div>
+                    {order.due_date && !["ready_for_pickup", "picked_up"].includes(order.status) && (
+                      <div className="text-xs text-walnut/50 font-mono">
+                        Estimated completion date: {new Date(order.due_date + "T00:00:00").toLocaleDateString()}
+                      </div>
+                    )}
                   </Link>
                   <div className="flex items-center gap-3">
                     {invoice?.pdf_url && (
