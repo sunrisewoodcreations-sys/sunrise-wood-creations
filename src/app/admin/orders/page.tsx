@@ -392,7 +392,11 @@ export default async function AdminOrdersPage({
                       {productLabel(order.product_type as ProductType)} — {order.title}
                     </Link>
                   </td>
-                  <td className="px-4 py-3.5 text-[#1E3A5F]/70">{order.profiles?.full_name}</td>
+                  <td className="px-4 py-3.5 text-[#1E3A5F]/70">
+                    <Link href={`/admin/customers/${order.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
+                      {order.profiles?.full_name}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3.5 font-mono text-[#1E3A5F]/70">
                     {new Date(order.created_at).toLocaleDateString()}
                   </td>

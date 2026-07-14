@@ -269,17 +269,18 @@ export default async function DashboardPage() {
             const style = REASON_STYLE[reason];
             const balanceCents = (o.price_cents || 0) - (o.amount_paid_cents || 0);
             return (
-              <Link
+              <div
                 key={o.id}
-                href={`/admin/orders/${o.id}`}
                 className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors"
               >
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold text-[#1E3A5F] truncate">
+                  <Link href={`/admin/orders/${o.id}`} className="text-sm font-semibold text-[#1E3A5F] truncate hover:underline block">
                     {productLabel(o.product_type as ProductType)} — {o.title}
-                  </div>
+                  </Link>
                   <div className="text-xs text-[#1E3A5F]/60">
-                    {o.profiles?.full_name}
+                    <Link href={`/admin/customers/${o.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
+                      {o.profiles?.full_name}
+                    </Link>
                     {o.due_date && ` · Due ${new Date(o.due_date + "T00:00:00").toLocaleDateString()}`}
                   </div>
                 </div>
@@ -291,7 +292,7 @@ export default async function DashboardPage() {
                     {style.label}
                   </span>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
@@ -307,7 +308,9 @@ export default async function DashboardPage() {
                   {productLabel(o.product_type as ProductType)} — {o.title}
                 </Link>
                 <div className="text-xs text-[#1E3A5F]/60 mt-0.5">
-                  {o.profiles?.full_name}
+                  <Link href={`/admin/customers/${o.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
+                    {o.profiles?.full_name}
+                  </Link>
                   {o.due_date && ` · Due ${new Date(o.due_date + "T00:00:00").toLocaleDateString()}`}
                 </div>
               </div>
