@@ -47,20 +47,20 @@ export function statusLabel(productType: ProductType, statusKey: string) {
 export function statusColor(statusKey: string): string {
   switch (statusKey) {
     case "order_placed":
-      return "bg-[#1E3A5F]/10 text-[#1E3A5F]";
+      return "bg-[#1E3A5F] text-white";
     case "deposit_received":
-      return "bg-amber/25 text-[#1E3A5F]";
+      return "bg-amber text-white";
     case "design_proof_sent":
-      return "bg-ember/15 text-ember";
+      return "bg-ember text-white";
     case "design_approved":
-      return "bg-sage/15 text-sage";
+      return "bg-sage text-white";
     case "being_assembled":
     case "being_built":
-      return "bg-amber/25 text-[#1E3A5F]";
+      return "bg-amber text-white";
     case "ready_for_pickup":
-      return "bg-sage/20 text-sage";
+      return "bg-sage text-white";
     case "picked_up":
-      return "bg-[#1E3A5F]/5 text-[#1E3A5F]/50";
+      return "bg-[#1E3A5F]/10 text-[#1E3A5F]/60";
     default:
       return "bg-[#1E3A5F]/10 text-[#1E3A5F]";
   }

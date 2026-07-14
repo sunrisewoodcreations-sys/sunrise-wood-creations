@@ -35,22 +35,34 @@ function easternDateParts(date: Date) {
 
 type SortKey = "due_date" | "created_at" | "customer" | "status" | "balance";
 
-function SummaryCard({ label, value, color }: { label: string; value: string | number; color?: string }) {
-  return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-4">
+function SummaryCard({
+  label, value, color, href, active
+}: { label: string; value: string | number; color?: string; href?: string; active?: boolean }) {
+  const content = (
+    <div
+      className={`bg-white border rounded-xl p-4 transition-all ${
+        active
+          ? "border-[#1E3A5F] ring-2 ring-[#1E3A5F]/20 shadow-sm"
+          : "border-[#1E3A5F]/10"
+      } ${href ? "hover:shadow-md hover:border-[#1E3A5F]/30 hover:-translate-y-0.5 cursor-pointer" : ""}`}
+    >
       <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1">{label}</div>
       <div className={`text-xl font-display ${color || "text-[#1E3A5F]"}`}>{value}</div>
     </div>
   );
+
+  if (!href) return content;
+  return <Link href={href} className="block">{content}</Link>;
 }
 
 function SortLink({
-  label, sortKey, currentSort, currentDir, query
-}: { label: string; sortKey: SortKey; currentSort: string; currentDir: string; query: string }) {
+  label, sortKey, currentSort, currentDir, query, filter
+}: { label: string; sortKey: SortKey; currentSort: string; currentDir: string; query: string; filter: string }) {
   const isActive = currentSort === sortKey;
   const nextDir = isActive && currentDir === "asc" ? "desc" : "asc";
   const params = new URLSearchParams();
   if (query) params.set("q", query);
+  if (filter) params.set("filter", filter);
   params.set("sort", sortKey);
   params.set("dir", nextDir);
 
@@ -65,12 +77,13 @@ function SortLink({
 export default async function AdminOrdersPage({
   searchParams
 }: {
-  searchParams: { q?: string; sort?: string; dir?: string };
+  searchParams: { q?: string; sort?: string; dir?: string; filter?: string };
 }) {
   const supabase = createClient();
   const query = searchParams.q?.trim() || "";
   const sortKey = (searchParams.sort as SortKey) || "created_at";
   const sortDir = searchParams.dir === "asc" ? "asc" : "desc";
+  const activeFilter = searchParams.filter || "";
 
   let ordersQuery = supabase
     .from("orders")
@@ -178,8 +191,14 @@ export default async function AdminOrdersPage({
   weekFromNow.setDate(weekFromNow.getDate() + 7);
   const { year: wy, month: wm, day: wd } = easternDateParts(weekFromNow);
   const weekFromNowStr = `${wy}-${String(wm).padStart(2, "0")}-${String(wd).padStart(2, "0")}`;
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const { year: tmy, month: tmm, day: tmd } = easternDateParts(tomorrow);
+  const tomorrowStr = `${tmy}-${String(tmm).padStart(2, "0")}-${String(tmd).padStart(2, "0")}`;
 
-  // --- New summary row calculations ---
+  // --- New summary row calculations (always based on the full,
+  // unfiltered order list, so the cards' own numbers stay accurate
+  // no matter which filter is currently active). ---
   const totalActive = orders.filter((o: any) => o.status !== "picked_up").length;
   const dueToday = orders.filter((o: any) => o.status !== "picked_up" && o.due_date === todayStr).length;
   const dueThisWeek = orders.filter((o: any) => o.status !== "picked_up" && o.due_date && o.due_date >= todayStr && o.due_date <= weekFromNowStr).length;
@@ -187,9 +206,24 @@ export default async function AdminOrdersPage({
   const waitingOnPayment = orders.filter((o: any) => o.status !== "picked_up" && (o.amount_paid_cents || 0) < (o.price_cents || 0)).length;
   const readyForPickup = orders.filter((o: any) => o.status === "ready_for_pickup").length;
 
+  // --- New: which of the fetched (searched) orders match the currently
+  // active summary-card filter. Search and everything above stays
+  // untouched — this only narrows what's displayed in the table. ---
+  const filteredOrders = orders.filter((o: any) => {
+    switch (activeFilter) {
+      case "active": return o.status !== "picked_up";
+      case "due_today": return o.status !== "picked_up" && o.due_date === todayStr;
+      case "due_week": return o.status !== "picked_up" && o.due_date && o.due_date >= todayStr && o.due_date <= weekFromNowStr;
+      case "waiting_customer": return waitingOnCustomerOrderIds.has(o.id);
+      case "waiting_payment": return o.status !== "picked_up" && (o.amount_paid_cents || 0) < (o.price_cents || 0);
+      case "ready_pickup": return o.status === "ready_for_pickup";
+      default: return true;
+    }
+  });
+
   // --- New: sort the fetched orders in memory (same list, just reordered
   // for display — search and all existing querying above is untouched). ---
-  const sorted = [...orders].sort((a: any, b: any) => {
+  const sorted = [...filteredOrders].sort((a: any, b: any) => {
     let cmp = 0;
     if (sortKey === "due_date") {
       cmp = (a.due_date || "9999-99-99").localeCompare(b.due_date || "9999-99-99");
@@ -207,20 +241,45 @@ export default async function AdminOrdersPage({
     return sortDir === "asc" ? cmp : -cmp;
   });
 
+  function filterHref(filterValue: string) {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (sortKey !== "created_at") params.set("sort", sortKey);
+    if (sortDir !== "desc") params.set("dir", sortDir);
+    // Clicking the already-active card clears the filter instead of re-applying it.
+    if (activeFilter !== filterValue) params.set("filter", filterValue);
+    const qs = params.toString();
+    return `/admin/orders${qs ? `?${qs}` : ""}`;
+  }
+
   return (
     <div>
       <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Orders</h1>
       <p className="text-sm text-[#1E3A5F]/60 mb-6">All orders, across every customer.</p>
 
-      {/* New summary row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        <SummaryCard label="Total active" value={totalActive} />
-        <SummaryCard label="Due today" value={dueToday} color={dueToday > 0 ? "text-ember" : undefined} />
-        <SummaryCard label="Due this week" value={dueThisWeek} />
-        <SummaryCard label="Waiting on customer" value={waitingOnCustomer} color={waitingOnCustomer > 0 ? "text-ember" : undefined} />
-        <SummaryCard label="Waiting on payment" value={waitingOnPayment} color={waitingOnPayment > 0 ? "text-ember" : undefined} />
-        <SummaryCard label="Ready for pickup" value={readyForPickup} color="text-sage" />
+      {/* New summary row — click a card to filter the table below */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
+        <SummaryCard label="Total active" value={totalActive} href={filterHref("active")} active={activeFilter === "active"} />
+        <SummaryCard label="Due today" value={dueToday} color={dueToday > 0 ? "text-ember" : undefined} href={filterHref("due_today")} active={activeFilter === "due_today"} />
+        <SummaryCard label="Due this week" value={dueThisWeek} href={filterHref("due_week")} active={activeFilter === "due_week"} />
+        <SummaryCard label="Waiting on customer" value={waitingOnCustomer} color={waitingOnCustomer > 0 ? "text-ember" : undefined} href={filterHref("waiting_customer")} active={activeFilter === "waiting_customer"} />
+        <SummaryCard label="Waiting on payment" value={waitingOnPayment} color={waitingOnPayment > 0 ? "text-ember" : undefined} href={filterHref("waiting_payment")} active={activeFilter === "waiting_payment"} />
+        <SummaryCard label="Ready for pickup" value={readyForPickup} color="text-sage" href={filterHref("ready_pickup")} active={activeFilter === "ready_pickup"} />
       </div>
+
+      {activeFilter ? (
+        <div className="flex items-center gap-2 mb-6 text-sm">
+          <span className="text-[#1E3A5F]/60">Showing filtered results ({sorted.length})</span>
+          <Link
+            href={(() => { const p = new URLSearchParams(); if (query) p.set("q", query); if (sortKey !== "created_at") p.set("sort", sortKey); if (sortDir !== "desc") p.set("dir", sortDir); const qs = p.toString(); return `/admin/orders${qs ? `?${qs}` : ""}`; })()}
+            className="text-ember font-semibold hover:underline"
+          >
+            Clear filter ✕
+          </Link>
+        </div>
+      ) : (
+        <div className="mb-3" />
+      )}
 
       <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 mb-6">
         <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-3">Download invoices in bulk (paid orders only)</div>
@@ -266,6 +325,7 @@ export default async function AdminOrdersPage({
           />
           {sortKey !== "created_at" && <input type="hidden" name="sort" value={sortKey} />}
           {sortDir !== "desc" && <input type="hidden" name="dir" value={sortDir} />}
+          {activeFilter && <input type="hidden" name="filter" value={activeFilter} />}
         </form>
         <a
           href="/api/export/orders"
@@ -279,16 +339,16 @@ export default async function AdminOrdersPage({
         <table className="w-full bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden text-sm">
           <thead>
             <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
-              <th className="text-left px-4 py-3">Product</th>
-              <th className="text-left px-4 py-3"><SortLink label="Customer" sortKey="customer" currentSort={sortKey} currentDir={sortDir} query={query} /></th>
-              <th className="text-left px-4 py-3"><SortLink label="Order date" sortKey="created_at" currentSort={sortKey} currentDir={sortDir} query={query} /></th>
-              <th className="text-left px-4 py-3"><SortLink label="Status" sortKey="status" currentSort={sortKey} currentDir={sortDir} query={query} /></th>
-              <th className="text-left px-4 py-3"><SortLink label="Due date" sortKey="due_date" currentSort={sortKey} currentDir={sortDir} query={query} /></th>
-              <th className="text-right px-4 py-3">Sales</th>
-              <th className="text-right px-4 py-3">Paid</th>
-              <th className="text-right px-4 py-3"><SortLink label="Balance due" sortKey="balance" currentSort={sortKey} currentDir={sortDir} query={query} /></th>
-              <th className="text-left px-4 py-3">Invoice</th>
-              <th className="text-right px-4 py-3">Actions</th>
+              <th className="text-left px-4 py-3.5">Product</th>
+              <th className="text-left px-4 py-3.5"><SortLink label="Customer" sortKey="customer" currentSort={sortKey} currentDir={sortDir} query={query} filter={activeFilter} /></th>
+              <th className="text-left px-4 py-3.5"><SortLink label="Order date" sortKey="created_at" currentSort={sortKey} currentDir={sortDir} query={query} filter={activeFilter} /></th>
+              <th className="text-left px-4 py-3.5"><SortLink label="Status" sortKey="status" currentSort={sortKey} currentDir={sortDir} query={query} filter={activeFilter} /></th>
+              <th className="text-left px-4 py-3.5"><SortLink label="Due date" sortKey="due_date" currentSort={sortKey} currentDir={sortDir} query={query} filter={activeFilter} /></th>
+              <th className="text-right px-4 py-3.5">Sales</th>
+              <th className="text-right px-4 py-3.5">Paid</th>
+              <th className="text-right px-4 py-3.5"><SortLink label="Balance due" sortKey="balance" currentSort={sortKey} currentDir={sortDir} query={query} filter={activeFilter} /></th>
+              <th className="text-left px-4 py-3.5">Invoice</th>
+              <th className="text-right px-4 py-3.5">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -297,44 +357,54 @@ export default async function AdminOrdersPage({
               const balanceCents = (order.price_cents || 0) - (order.amount_paid_cents || 0);
               const isOverdue = order.status !== "picked_up" && order.due_date && order.due_date < todayStr;
               const isDueToday = order.status !== "picked_up" && order.due_date === todayStr;
-              const rowBg = isOverdue ? "bg-ember/5" : isDueToday ? "bg-amber/10" : "";
+              const isDueTomorrow = order.status !== "picked_up" && order.due_date === tomorrowStr;
+              const rowBg = isOverdue
+                ? "bg-ember/10 border-l-4 border-l-ember"
+                : isDueToday
+                ? "bg-amber/15"
+                : isDueTomorrow
+                ? "bg-amber/5"
+                : "";
 
               return (
-                <tr key={order.id} className={`border-t border-[#1E3A5F]/10 hover:bg-cream/60 ${rowBg}`}>
-                  <td className="px-4 py-3">
+                <tr key={order.id} className={`border-t border-[#1E3A5F]/10 hover:bg-cream/70 transition-colors ${rowBg}`}>
+                  <td className="px-4 py-3.5">
                     <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#1E3A5F]">
                       {productLabel(order.product_type as ProductType)} — {order.title}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-[#1E3A5F]/70">{order.profiles?.full_name}</td>
-                  <td className="px-4 py-3 font-mono text-[#1E3A5F]/70">
+                  <td className="px-4 py-3.5 text-[#1E3A5F]/70">{order.profiles?.full_name}</td>
+                  <td className="px-4 py-3.5 font-mono text-[#1E3A5F]/70">
                     {new Date(order.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3.5">
                     <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColor(order.status)}`}>
                       {statusLabel(order.product_type as ProductType, order.status)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-mono">
+                  <td className="px-4 py-3.5 font-mono">
                     {order.due_date ? (
-                      <span className={isOverdue ? "text-ember font-semibold" : isDueToday ? "text-ember font-semibold" : "text-[#1E3A5F]/70"}>
+                      <span className={isOverdue || isDueToday ? "text-ember font-semibold" : isDueTomorrow ? "text-[#1E3A5F] font-semibold" : "text-[#1E3A5F]/70"}>
+                        {isOverdue && "⚠ "}
                         {new Date(order.due_date + "T00:00:00").toLocaleDateString()}
-                        {isOverdue ? " (overdue)" : isDueToday ? " (today)" : ""}
+                        {isOverdue ? " (overdue)" : isDueToday ? " (today)" : isDueTomorrow ? " (tomorrow)" : ""}
                       </span>
                     ) : (
                       <span className="text-[#1E3A5F]/30">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right text-[#1E3A5F]/70">
+                  <td className="px-4 py-3.5 text-right text-[#1E3A5F]/70">
                     ${((order.price_cents || 0) / 100).toFixed(2)}
                   </td>
-                  <td className="px-4 py-3 text-right text-[#1E3A5F]/70">
+                  <td className="px-4 py-3.5 text-right text-[#1E3A5F]/70">
                     ${((order.amount_paid_cents || 0) / 100).toFixed(2)}
                   </td>
-                  <td className={`px-4 py-3 text-right font-semibold ${balanceCents > 0 ? "text-ember" : "text-sage"}`}>
-                    ${(balanceCents / 100).toFixed(2)}
+                  <td className="px-4 py-3.5 text-right">
+                    <span className={`text-base font-bold ${balanceCents > 0 ? "text-ember" : "text-sage"}`}>
+                      ${(balanceCents / 100).toFixed(2)}
+                    </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3.5">
                     {invoice?.pdf_url ? (
                       <a
                         href={invoice.pdf_url}
@@ -348,7 +418,7 @@ export default async function AdminOrdersPage({
                       <span className="text-xs text-[#1E3A5F]/40">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3.5">
                     <div className="flex flex-col items-end gap-1.5">
                       <Link
                         href={`/admin/orders/${order.id}`}
