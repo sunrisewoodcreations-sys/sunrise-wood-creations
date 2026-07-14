@@ -26,7 +26,7 @@ export default async function QueuePage() {
             <th className="text-left px-4 py-3">Order</th>
             <th className="text-left px-4 py-3">Customer</th>
             <th className="text-left px-4 py-3">Status</th>
-            <th className="text-left px-4 py-3">Estimated completion date</th>
+            <th className="text-left px-4 py-3">Estimated pickup date</th>
           </tr>
         </thead>
         <tbody>

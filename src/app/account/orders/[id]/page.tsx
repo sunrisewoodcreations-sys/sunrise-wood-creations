@@ -86,7 +86,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
           {order.due_date && (
             <p className="text-sm text-walnut/60 mb-4">
-              Estimated completion date: {new Date(order.due_date + "T00:00:00").toLocaleDateString("en-US", { timeZone: "America/New_York", month: "long", day: "numeric", year: "numeric" })}
+              Estimated pickup date: {new Date(order.due_date + "T00:00:00").toLocaleDateString("en-US", { timeZone: "America/New_York", month: "long", day: "numeric", year: "numeric" })}
             </p>
           )}
 

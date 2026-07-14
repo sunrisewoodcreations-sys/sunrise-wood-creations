@@ -376,7 +376,7 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
 
           <div className="flex items-center justify-between gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Estimated completion date (optional)</label>
+              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Estimated pickup date (optional)</label>
               <input
                 type="date"
                 value={dueDate}
