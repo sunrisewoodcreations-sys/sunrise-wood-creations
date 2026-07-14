@@ -85,8 +85,11 @@ export default async function AccountPage() {
                       Placed {new Date(order.created_at).toLocaleDateString()}
                     </div>
                     {order.due_date && !["ready_for_pickup", "picked_up"].includes(order.status) && (
-                      <div className="text-xs text-walnut/50 font-mono">
-                        Estimated completion date: {new Date(order.due_date + "T00:00:00").toLocaleDateString()}
+                      <div className="text-xs mt-1">
+                        <div className="text-walnut/50 uppercase tracking-wide font-semibold text-[10px]">Estimated completion date</div>
+                        <div className="text-walnut font-mono font-semibold text-sm">
+                          {new Date(order.due_date + "T00:00:00").toLocaleDateString()}
+                        </div>
                       </div>
                     )}
                   </Link>
