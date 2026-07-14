@@ -29,7 +29,7 @@ export default function EditDueDateForm({ orderId, initialDueDate }: { orderId: 
 
   return (
     <form onSubmit={handleSave} className="flex items-center gap-2 mb-3">
-      <label className="text-xs text-[#1E3A5F]/50">Needed by:</label>
+      <label className="text-xs text-[#1E3A5F]/50">Estimated completion date:</label>
       <input
         type="date"
         value={date}
