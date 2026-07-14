@@ -8,12 +8,12 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
 
   let customersQuery = supabase
     .from("profiles")
-    .select("id, full_name, email, has_real_email, orders:orders(price_cents, amount_paid_cents)")
+    .select("id, full_name, email, phone, has_real_email, orders:orders(price_cents, amount_paid_cents)")
     .eq("role", "customer")
     .order("full_name");
 
   if (query) {
-    customersQuery = customersQuery.or(`full_name.ilike.%${query}%,email.ilike.%${query}%`);
+    customersQuery = customersQuery.or(`full_name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%`);
   }
 
   const { data: customers } = await customersQuery;
@@ -42,7 +42,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
           <input
             name="q"
             defaultValue={query}
-            placeholder="Search customers by name or email..."
+            placeholder="Search customers by name, email, or phone..."
             className="w-full px-3 py-2.5 border border-[#1E3A5F]/15 rounded-md text-sm"
           />
         </form>

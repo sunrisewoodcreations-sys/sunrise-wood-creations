@@ -59,6 +59,11 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
   // orderList is sorted newest-first, so the last entry is the earliest order.
   const firstOrderDate = totalOrders > 0 ? orderList[totalOrders - 1].created_at : null;
   const lastOrderDate = totalOrders > 0 ? orderList[0].created_at : null;
+  const completedOrders = orderList.filter((o: any) => o.status === "picked_up").length;
+  const outstandingBalanceCents = orderList.reduce(
+    (sum: number, o: any) => sum + Math.max(0, (o.price_cents || 0) - (o.amount_paid_cents || 0)),
+    0
+  );
 
   return (
     <div>
@@ -79,10 +84,12 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         <AddOrderForm customerId={customer.id} />
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-        <StatCard label="Lifetime revenue" value={`$${(lifetimeRevenueCents / 100).toFixed(2)}`} color="text-sage" />
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+        <StatCard label="Lifetime value" value={`$${(lifetimeRevenueCents / 100).toFixed(2)}`} color="text-sage" />
         <StatCard label="Total orders" value={String(totalOrders)} />
+        <StatCard label="Completed orders" value={String(completedOrders)} color="text-sage" />
         <StatCard label="Avg order value" value={`$${(avgOrderValueCents / 100).toFixed(2)}`} />
+        <StatCard label="Outstanding balance" value={`$${(outstandingBalanceCents / 100).toFixed(2)}`} color={outstandingBalanceCents > 0 ? "text-ember" : "text-sage"} />
         <StatCard label="First order" value={firstOrderDate ? new Date(firstOrderDate).toLocaleDateString() : "—"} />
         <StatCard label="Last order" value={lastOrderDate ? new Date(lastOrderDate).toLocaleDateString() : "—"} />
       </div>
