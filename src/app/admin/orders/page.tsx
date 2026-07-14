@@ -40,14 +40,21 @@ function SummaryCard({
 }: { label: string; value: string | number; color?: string; href?: string; active?: boolean }) {
   const content = (
     <div
-      className={`bg-white border rounded-xl p-4 transition-all ${
+      className={`bg-white border rounded-xl p-5 shadow-sm transition-all ${
         active
-          ? "border-[#1E3A5F] ring-2 ring-[#1E3A5F]/20 shadow-sm"
+          ? "border-[#1E3A5F] ring-2 ring-[#1E3A5F]/25 shadow-md"
           : "border-[#1E3A5F]/10"
-      } ${href ? "hover:shadow-md hover:border-[#1E3A5F]/30 hover:-translate-y-0.5 cursor-pointer" : ""}`}
+      } ${href ? "hover:shadow-lg hover:border-[#1E3A5F]/30 hover:-translate-y-0.5 cursor-pointer" : ""}`}
     >
-      <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1">{label}</div>
-      <div className={`text-xl font-display ${color || "text-[#1E3A5F]"}`}>{value}</div>
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide">{label}</div>
+        {active && (
+          <span className="text-[10px] font-semibold text-[#1E3A5F] bg-[#1E3A5F]/10 px-1.5 py-0.5 rounded-full">
+            ✓ Active
+          </span>
+        )}
+      </div>
+      <div className={`text-2xl font-display ${color || "text-[#1E3A5F]"}`}>{value}</div>
     </div>
   );
 
@@ -241,6 +248,15 @@ export default async function AdminOrdersPage({
     return sortDir === "asc" ? cmp : -cmp;
   });
 
+  const filterLabels: Record<string, string> = {
+    active: "Total active",
+    due_today: "Due today",
+    due_week: "Due this week",
+    waiting_customer: "Waiting on customer",
+    waiting_payment: "Waiting on payment",
+    ready_pickup: "Ready for pickup"
+  };
+
   function filterHref(filterValue: string) {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
@@ -258,7 +274,7 @@ export default async function AdminOrdersPage({
       <p className="text-sm text-[#1E3A5F]/60 mb-6">All orders, across every customer.</p>
 
       {/* New summary row — click a card to filter the table below */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
         <SummaryCard label="Total active" value={totalActive} href={filterHref("active")} active={activeFilter === "active"} />
         <SummaryCard label="Due today" value={dueToday} color={dueToday > 0 ? "text-ember" : undefined} href={filterHref("due_today")} active={activeFilter === "due_today"} />
         <SummaryCard label="Due this week" value={dueThisWeek} href={filterHref("due_week")} active={activeFilter === "due_week"} />
@@ -268,11 +284,14 @@ export default async function AdminOrdersPage({
       </div>
 
       {activeFilter ? (
-        <div className="flex items-center gap-2 mb-6 text-sm">
-          <span className="text-[#1E3A5F]/60">Showing filtered results ({sorted.length})</span>
+        <div className="flex items-center justify-between gap-3 mb-6 bg-[#1E3A5F]/5 border border-[#1E3A5F]/15 rounded-lg px-4 py-3">
+          <div className="text-sm text-[#1E3A5F]">
+            Filtering by <span className="font-semibold">{filterLabels[activeFilter] || activeFilter}</span>
+            <span className="text-[#1E3A5F]/60"> — {sorted.length} order{sorted.length === 1 ? "" : "s"} match</span>
+          </div>
           <Link
             href={(() => { const p = new URLSearchParams(); if (query) p.set("q", query); if (sortKey !== "created_at") p.set("sort", sortKey); if (sortDir !== "desc") p.set("dir", sortDir); const qs = p.toString(); return `/admin/orders${qs ? `?${qs}` : ""}`; })()}
-            className="text-ember font-semibold hover:underline"
+            className="text-ember font-semibold text-sm hover:underline whitespace-nowrap"
           >
             Clear filter ✕
           </Link>
@@ -378,7 +397,7 @@ export default async function AdminOrdersPage({
                     {new Date(order.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3.5">
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColor(order.status)}`}>
+                    <span className={`inline-block px-3 py-1.5 rounded-full text-[13px] font-semibold ${statusColor(order.status)}`}>
                       {statusLabel(order.product_type as ProductType, order.status)}
                     </span>
                   </td>
