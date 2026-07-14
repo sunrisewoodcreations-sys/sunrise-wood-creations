@@ -34,29 +34,67 @@ function easternDateParts(date: Date) {
   };
 }
 
+// Small hand-written inline icons — no icon library added. Each uses
+// currentColor so it inherits whatever text color is passed to it.
+function Icon({ name, className }: { name: string; className?: string }) {
+  const common = { className, fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, viewBox: "0 0 24 24" };
+  switch (name) {
+    case "box":
+      return <svg {...common}><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M12 13v8" /></svg>;
+    case "hammer":
+      return <svg {...common}><path d="M14.5 3.5l6 6L18 12l-6-6 2.5-2.5z" /><path d="M13 8L4 17l3 3 9-9" /></svg>;
+    case "check-circle":
+      return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M8.5 12.5l2.5 2.5 5-5" /></svg>;
+    case "message":
+      return <svg {...common}><path d="M21 11.5a8.4 8.4 0 0 1-8.4 8.4 8.3 8.3 0 0 1-3.8-.9L3 21l1.9-5.7a8.3 8.3 0 0 1-.9-3.8A8.4 8.4 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5z" /></svg>;
+    case "dollar":
+      return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 7v10M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1-3 2.3c0 1.4 1.3 1.9 3 2.2 1.7.3 3 .9 3 2.3 0 1.3-1.3 2.2-3 2.2s-3-1-3-2.4" /></svg>;
+    case "clock-alert":
+      return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>;
+    case "trending-up":
+      return <svg {...common}><path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" /></svg>;
+    case "layers":
+      return <svg {...common}><path d="M12 3l9 5-9 5-9-5 9-5z" /><path d="M3 13l9 5 9-5" /></svg>;
+    default:
+      return null;
+  }
+}
+
 function SummaryCard({
-  label, value, color, href
-}: { label: string; value: string | number; color?: string; href?: string }) {
+  label, value, color, href, icon, tint
+}: { label: string; value: string | number; color?: string; href?: string; icon: string; tint: string }) {
   const content = (
     <div className={`bg-white border border-[#1E3A5F]/10 rounded-xl p-5 shadow-sm transition-all ${href ? "hover:shadow-lg hover:border-[#1E3A5F]/30 hover:-translate-y-0.5 cursor-pointer" : ""}`}>
-      <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1.5">{label}</div>
-      <div className={`text-2xl font-display ${color || "text-[#1E3A5F]"}`}>{value}</div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide font-semibold">{label}</div>
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${tint}`}>
+          <Icon name={icon} className="w-4 h-4" />
+        </div>
+      </div>
+      <div className={`text-3xl font-display font-semibold ${color || "text-[#1E3A5F]"}`}>{value}</div>
     </div>
   );
   if (!href) return content;
   return <Link href={href} className="block">{content}</Link>;
 }
 
-function SectionCard({ title, children, emptyText, count }: { title: string; children: React.ReactNode; emptyText?: string; count?: number }) {
+function SectionCard({ title, children, emptyText, emptyIcon, count }: { title: string; children: React.ReactNode; emptyText?: string; emptyIcon?: string; count?: number }) {
   return (
     <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
-      <div className="px-4 py-3 border-b border-[#1E3A5F]/10 flex items-center justify-between">
+      <div className="px-4 py-3.5 border-b border-[#1E3A5F]/10 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-[#1E3A5F]">{title}</h2>
         {typeof count === "number" && count > 0 && (
-          <span className="text-xs font-semibold text-[#1E3A5F]/50">{count}</span>
+          <span className="text-xs font-semibold text-[#1E3A5F]/40 bg-[#1E3A5F]/5 px-2 py-0.5 rounded-full">{count}</span>
         )}
       </div>
-      <div>{children || <p className="px-4 py-6 text-center text-sm text-[#1E3A5F]/50">{emptyText}</p>}</div>
+      <div>
+        {children || (
+          <div className="flex flex-col items-center justify-center gap-2 px-4 py-8">
+            <Icon name={emptyIcon || "layers"} className="w-6 h-6 text-[#1E3A5F]/25" />
+            <p className="text-sm text-[#1E3A5F]/50">{emptyText}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -162,19 +200,19 @@ export default async function DashboardPage() {
   const lowInventoryProducts = (products || []).filter((p: any) => (p.stock_quantity ?? 0) <= (p.low_stock_threshold ?? 0));
 
   return (
-    <div>
+    <div className="bg-cream/40 -m-8 p-8 min-h-full">
       <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Dashboard</h1>
       <p className="text-sm text-[#1E3A5F]/60 mb-6">Your daily command center — today's priorities first.</p>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-        <SummaryCard label="New orders" value={newOrders} href="/admin/orders" />
-        <SummaryCard label="In production" value={inProduction} href="/admin/orders" />
-        <SummaryCard label="Ready for pickup" value={readyForPickup} color="text-sage" href="/admin/orders?filter=ready_pickup" />
-        <SummaryCard label="Waiting on customer" value={waitingOnCustomer} color={waitingOnCustomer > 0 ? "text-ember" : undefined} href="/admin/orders?filter=waiting_customer" />
-        <SummaryCard label="Waiting on payment" value={waitingOnPayment} color={waitingOnPayment > 0 ? "text-ember" : undefined} href="/admin/orders?filter=waiting_payment" />
-        <SummaryCard label="Overdue" value={overdue} color={overdue > 0 ? "text-ember" : "text-sage"} />
-        <SummaryCard label="Sales this month" value={`$${(salesThisMonthCents / 100).toFixed(2)}`} color="text-sage" href="/admin/reports" />
-        <SummaryCard label="Cedar pickets remaining" value={remainingPickets} href="/admin/pickets" />
+        <SummaryCard label="New orders" value={newOrders} href="/admin/orders" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+        <SummaryCard label="In production" value={inProduction} href="/admin/orders" icon="hammer" tint="bg-amber/20 text-amber" />
+        <SummaryCard label="Ready for pickup" value={readyForPickup} color="text-sage" href="/admin/orders?filter=ready_pickup" icon="check-circle" tint="bg-sage/15 text-sage" />
+        <SummaryCard label="Waiting on customer" value={waitingOnCustomer} color={waitingOnCustomer > 0 ? "text-ember" : undefined} href="/admin/orders?filter=waiting_customer" icon="message" tint="bg-ember/15 text-ember" />
+        <SummaryCard label="Waiting on payment" value={waitingOnPayment} color={waitingOnPayment > 0 ? "text-ember" : undefined} href="/admin/orders?filter=waiting_payment" icon="dollar" tint="bg-amber/20 text-amber" />
+        <SummaryCard label="Overdue" value={overdue} color={overdue > 0 ? "text-ember" : "text-sage"} icon="clock-alert" tint={overdue > 0 ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"} />
+        <SummaryCard label="Sales this month" value={`$${(salesThisMonthCents / 100).toFixed(2)}`} color="text-sage" href="/admin/reports" icon="trending-up" tint="bg-sage/15 text-sage" />
+        <SummaryCard label="Cedar pickets remaining" value={remainingPickets} href="/admin/pickets" icon="layers" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
       </div>
 
       {/* Lightweight status-mix bar — built entirely from the order data
@@ -217,7 +255,15 @@ export default async function DashboardPage() {
         </div>
         <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
           {attentionShown.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-[#1E3A5F]/50">Nothing needs your attention right now — nice.</p>
+            <div className="flex flex-col items-center justify-center gap-3 px-4 py-10">
+              <div className="w-12 h-12 rounded-full bg-sage/15 flex items-center justify-center">
+                <Icon name="check-circle" className="w-7 h-7 text-sage" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-[#1E3A5F]">You're all caught up</p>
+                <p className="text-xs text-[#1E3A5F]/50 mt-0.5">Nothing overdue, unpaid, or waiting on anyone right now.</p>
+              </div>
+            </div>
           )}
           {attentionShown.map(({ order: o, reason }) => {
             const style = REASON_STYLE[reason];
@@ -292,7 +338,7 @@ export default async function DashboardPage() {
       </SectionCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <SectionCard title="Recent messages" emptyText="No conversations yet.">
+        <SectionCard title="Recent messages" emptyText="No conversations yet." emptyIcon="message">
           {recentConversations.map((m: any) => {
             const order = m.orders;
             return (
@@ -313,7 +359,7 @@ export default async function DashboardPage() {
           })}
         </SectionCard>
 
-        <SectionCard title="Recent quote requests" emptyText="No quote requests yet.">
+        <SectionCard title="Recent quote requests" emptyText="No quote requests yet." emptyIcon="message">
           {(recentQuotes || []).map((q: any) => (
             <Link key={q.id} href="/admin/quotes" className="flex items-center justify-between px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors">
               <div className="min-w-0">
@@ -330,7 +376,7 @@ export default async function DashboardPage() {
           ))}
         </SectionCard>
 
-        <SectionCard title="Low inventory alerts" emptyText="Everything's well stocked.">
+        <SectionCard title="Low inventory alerts" emptyText="Everything's well stocked." emptyIcon="box">
           {lowInventoryProducts.map((p: any) => (
             <Link key={p.id} href="/admin/products" className="flex items-center justify-between px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors">
               <div className="text-sm font-semibold text-[#1E3A5F]">{p.name}</div>
