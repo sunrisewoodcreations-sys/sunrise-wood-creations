@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import { productLabel, ProductType } from "@/lib/statusSteps";
+import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
 import CompactProgressTracker from "@/components/CompactProgressTracker";
 
 export default async function AccountPage() {
@@ -56,16 +56,18 @@ export default async function AccountPage() {
     <div className="min-h-screen bg-cream flex flex-col">
       <SiteHeader />
       <div className="max-w-2xl mx-auto px-4 py-10 flex-1 w-full">
-        <div className="bg-white border border-walnut/10 rounded-xl p-6 sm:p-7">
-          <h1 className="font-display text-2xl text-walnut mb-1">Your orders</h1>
-          <p className="text-sm text-walnut/60 mb-6">Signed in as {user.email}</p>
+        <h1 className="font-display text-2xl text-walnut mb-1">Your orders</h1>
+        <p className="text-sm text-walnut/60 mb-6">Signed in as {user.email}</p>
 
-          {(!orders || orders.length === 0) && (
+        {(!orders || orders.length === 0) && (
+          <div className="bg-white border border-walnut/10 rounded-xl shadow-sm p-6">
             <p className="text-sm text-walnut/60">
               No orders yet. Once you place an order, it'll show up here.
             </p>
-          )}
+          </div>
+        )}
 
+        <div className="space-y-4">
           {orders?.map(order => {
             const invoice = latestInvoiceByOrder[order.id];
             const orderStatusTimestamps = statusTimestampsByOrder[order.id] || {};
@@ -75,12 +77,17 @@ export default async function AccountPage() {
             return (
               <div
                 key={order.id}
-                className="py-5 sm:py-6 border-b border-walnut/10 last:border-b-0 first:pt-0"
+                className="bg-white border border-walnut/10 rounded-xl shadow-sm p-5 sm:p-6"
               >
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <Link href={`/account/orders/${order.id}`} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
-                    <div className="font-semibold text-walnut text-base mb-1.5">
-                      {productLabel(order.product_type as ProductType)} — {order.title}
+                    <div className="flex items-center flex-wrap gap-2 mb-1.5">
+                      <div className="font-semibold text-walnut text-base">
+                        {productLabel(order.product_type as ProductType)} — {order.title}
+                      </div>
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusColor(order.status)}`}>
+                        {statusLabel(order.product_type as ProductType, order.status)}
+                      </span>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
@@ -96,34 +103,26 @@ export default async function AccountPage() {
                           </span>
                         </div>
                       )}
+
+                      {isPickedUp && orderStatusTimestamps["picked_up"] && (
+                        <div className="text-[11px] text-walnut/40 font-mono">
+                          {new Date(orderStatusTimestamps["picked_up"]).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })},{" "}
+                          {new Date(orderStatusTimestamps["picked_up"]).toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" })} ET
+                        </div>
+                      )}
                     </div>
                   </Link>
 
-                  <div className="flex items-center sm:items-end gap-3 sm:flex-col sm:gap-2 flex-shrink-0">
-                    {invoice?.pdf_url && (
-                      <a
-                        href={invoice.pdf_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-semibold text-ember hover:underline whitespace-nowrap"
-                      >
-                        Download invoice
-                      </a>
-                    )}
-                    {isPickedUp && (
-                      <div className="flex flex-col items-end">
-                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-sage/20 text-sage whitespace-nowrap">
-                          Picked up
-                        </span>
-                        {orderStatusTimestamps["picked_up"] && (
-                          <span className="text-[10px] text-walnut/40 font-mono mt-1 whitespace-nowrap">
-                            {new Date(orderStatusTimestamps["picked_up"]).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })},{" "}
-                            {new Date(orderStatusTimestamps["picked_up"]).toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" })} ET
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  {invoice?.pdf_url && (
+                    <a
+                      href={invoice.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-ember hover:underline whitespace-nowrap flex-shrink-0"
+                    >
+                      Download invoice
+                    </a>
+                  )}
                 </div>
 
                 {!isPickedUp && (
