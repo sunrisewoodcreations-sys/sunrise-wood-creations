@@ -88,7 +88,7 @@ export default async function AccountPage() {
                       <div className="text-xs mt-1">
                         <div className="text-walnut/50 uppercase tracking-wide font-semibold text-[10px]">Estimated completion date</div>
                         <div className="text-walnut font-mono font-semibold text-sm">
-                          {new Date(order.due_date + "T00:00:00").toLocaleDateString()}
+                          {new Date(order.due_date + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                         </div>
                       </div>
                     )}
