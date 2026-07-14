@@ -25,10 +25,16 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { customerId } = body;
+  const { customerId, dueDate } = body;
 
   if (!customerId) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  // Same validation already used by the standalone due-date edit route —
+  // empty means "no due date set", which is fine.
+  if (dueDate && isNaN(Date.parse(dueDate))) {
+    return NextResponse.json({ error: "Invalid due date" }, { status: 400 });
   }
 
   const admin = createAdminClient();
@@ -79,7 +85,8 @@ export async function POST(req: NextRequest) {
       price_cents: totalPriceCents,
       quantity: totalQuantity,
       product_id: orderProductId,
-      status: initialStatus
+      status: initialStatus,
+      due_date: dueDate || null
     })
     .select()
     .single();

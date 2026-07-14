@@ -55,6 +55,7 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
 
   // Line items — one order can now hold several different items.
   const [items, setItems] = useState<LineItem[]>([blankLineItem()]);
+  const [dueDate, setDueDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -178,6 +179,7 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId: selectedCustomer.id,
+          dueDate,
           items: items.map(it => ({
             productType: it.productType,
             productId: it.selectedProductId,
@@ -196,6 +198,7 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
       }
       setLoading(false);
       setItems([blankLineItem()]);
+      setDueDate("");
       clearSelection();
       setOpen(false);
       router.refresh();
@@ -371,8 +374,19 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
             </button>
           </div>
 
-          <div className="text-sm font-semibold text-[#1E3A5F] text-right">
-            Order total: ${grandTotal.toFixed(2)}
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Needed by (optional)</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+                className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="text-sm font-semibold text-[#1E3A5F] text-right">
+              Order total: ${grandTotal.toFixed(2)}
+            </div>
           </div>
 
           {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
