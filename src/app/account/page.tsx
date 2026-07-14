@@ -56,9 +56,9 @@ export default async function AccountPage() {
     <div className="min-h-screen bg-cream flex flex-col">
       <SiteHeader />
       <div className="max-w-2xl mx-auto px-4 py-10 flex-1 w-full">
-        <div className="bg-white border border-walnut/10 rounded-xl p-7">
+        <div className="bg-white border border-walnut/10 rounded-xl p-6 sm:p-7">
           <h1 className="font-display text-2xl text-walnut mb-1">Your orders</h1>
-          <p className="text-sm text-walnut/60 mb-5">Signed in as {user.email}</p>
+          <p className="text-sm text-walnut/60 mb-6">Signed in as {user.email}</p>
 
           {(!orders || orders.length === 0) && (
             <p className="text-sm text-walnut/60">
@@ -70,30 +70,36 @@ export default async function AccountPage() {
             const invoice = latestInvoiceByOrder[order.id];
             const orderStatusTimestamps = statusTimestampsByOrder[order.id] || {};
             const isPickedUp = order.status === "picked_up";
+            const showPickupDate = order.due_date && !["ready_for_pickup", "picked_up"].includes(order.status);
 
             return (
               <div
                 key={order.id}
-                className="py-4 border-b border-walnut/10 last:border-b-0"
+                className="py-5 sm:py-6 border-b border-walnut/10 last:border-b-0 first:pt-0"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <Link href={`/account/orders/${order.id}`} className="flex-1 hover:opacity-80">
-                    <div className="font-semibold text-walnut text-sm">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <Link href={`/account/orders/${order.id}`} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
+                    <div className="font-semibold text-walnut text-base mb-1.5">
                       {productLabel(order.product_type as ProductType)} — {order.title}
                     </div>
-                    <div className="text-xs text-walnut/50 font-mono">
-                      Order placed: {new Date(order.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                    </div>
-                    {order.due_date && !["ready_for_pickup", "picked_up"].includes(order.status) && (
-                      <div className="text-xs mt-1">
-                        <div className="text-walnut/50 uppercase tracking-wide font-semibold text-[10px]">Estimated pickup date</div>
-                        <div className="text-walnut font-mono font-semibold text-sm">
-                          {new Date(order.due_date + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                        </div>
+
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                      <div className="text-xs text-walnut/50 font-mono">
+                        Order placed: {new Date(order.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                       </div>
-                    )}
+
+                      {showPickupDate && (
+                        <div className="inline-flex items-center gap-1.5 bg-amber/10 border border-amber/25 rounded-md px-2.5 py-1">
+                          <span className="text-walnut/60 uppercase tracking-wide font-semibold text-[10px]">Estimated pickup</span>
+                          <span className="text-walnut font-mono font-semibold text-xs">
+                            {new Date(order.due_date + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </Link>
-                  <div className="flex items-center gap-3">
+
+                  <div className="flex items-center sm:items-end gap-3 sm:flex-col sm:gap-2 flex-shrink-0">
                     {invoice?.pdf_url && (
                       <a
                         href={invoice.pdf_url}
@@ -121,11 +127,13 @@ export default async function AccountPage() {
                 </div>
 
                 {!isPickedUp && (
-                  <CompactProgressTracker
-                    productType={order.product_type as ProductType}
-                    currentStatus={order.status}
-                    statusTimestamps={orderStatusTimestamps}
-                  />
+                  <div className="mt-4 sm:mt-5">
+                    <CompactProgressTracker
+                      productType={order.product_type as ProductType}
+                      currentStatus={order.status}
+                      statusTimestamps={orderStatusTimestamps}
+                    />
+                  </div>
                 )}
               </div>
             );
