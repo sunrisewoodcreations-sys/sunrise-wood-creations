@@ -84,6 +84,12 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           )}
           <p className="text-sm text-walnut/60 mb-4">{order.size_details}</p>
 
+          {order.due_date && (
+            <p className="text-sm text-walnut/60 mb-4">
+              Estimated completion date: {new Date(order.due_date + "T00:00:00").toLocaleDateString("en-US", { timeZone: "America/New_York", month: "long", day: "numeric", year: "numeric" })}
+            </p>
+          )}
+
           {orderItems && orderItems.length > 1 && (
             <div className="mb-4 border border-walnut/10 rounded-lg overflow-hidden">
               <table className="w-full text-sm">
