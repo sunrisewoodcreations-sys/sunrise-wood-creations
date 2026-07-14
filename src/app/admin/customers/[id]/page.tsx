@@ -30,6 +30,11 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
     .eq("customer_id", params.id)
     .order("created_at", { ascending: false });
 
+  const { data: savedProducts } = await supabase
+    .from("products")
+    .select("id, product_type, name, size_details, price_cents")
+    .order("name");
+
   const orderList = orders || [];
   const orderIds = orderList.map((o: any) => o.id);
 
@@ -81,7 +86,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
             initialAddress={customer.address}
           />
         </div>
-        <AddOrderForm customerId={customer.id} />
+        <AddOrderForm customerId={customer.id} products={savedProducts || []} />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
