@@ -41,3 +41,27 @@ export function statusLabel(productType: ProductType, statusKey: string) {
   const match = steps.find(s => s.key === statusKey);
   return match ? match.label : statusKey;
 }
+
+// Badge color for a given status, covering every status key across both
+// step sets. Purely additive — used by the Orders table's status badges.
+export function statusColor(statusKey: string): string {
+  switch (statusKey) {
+    case "order_placed":
+      return "bg-[#1E3A5F]/10 text-[#1E3A5F]";
+    case "deposit_received":
+      return "bg-amber/25 text-[#1E3A5F]";
+    case "design_proof_sent":
+      return "bg-ember/15 text-ember";
+    case "design_approved":
+      return "bg-sage/15 text-sage";
+    case "being_assembled":
+    case "being_built":
+      return "bg-amber/25 text-[#1E3A5F]";
+    case "ready_for_pickup":
+      return "bg-sage/20 text-sage";
+    case "picked_up":
+      return "bg-[#1E3A5F]/5 text-[#1E3A5F]/50";
+    default:
+      return "bg-[#1E3A5F]/10 text-[#1E3A5F]";
+  }
+}
