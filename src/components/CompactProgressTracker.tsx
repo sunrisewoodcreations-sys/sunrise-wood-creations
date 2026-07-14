@@ -46,7 +46,7 @@ export default function CompactProgressTracker({
               {isDone && "✓"}
               {isCurrent && <span className="w-2 h-2 rounded-full bg-ember" />}
             </div>
-            <div className={`text-[9px] text-center mt-1 leading-tight px-0.5 ${isCurrent ? "text-ember font-semibold" : "text-walnut/50"}`}>
+            <div className={`text-[11px] sm:text-xs text-center mt-1 leading-tight px-0.5 ${isCurrent ? "text-ember font-semibold" : "text-walnut/70 font-medium"}`}>
               {step.label}
             </div>
             {(isDone || isCurrent) && stamp && (

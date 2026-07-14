@@ -69,7 +69,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
     <div>
       <Link href="/admin/customers" className="text-sm text-[#1E3A5F]/60 mb-4 inline-block">← All customers</Link>
 
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">{customer.full_name}</h1>
           <p className="text-sm text-[#1E3A5F]/60 mb-3">
@@ -84,19 +84,19 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         <AddOrderForm customerId={customer.id} />
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
         <StatCard label="Lifetime value" value={`$${(lifetimeRevenueCents / 100).toFixed(2)}`} color="text-sage" />
+        <StatCard label="Outstanding balance" value={`$${(outstandingBalanceCents / 100).toFixed(2)}`} color={outstandingBalanceCents > 0 ? "text-ember" : "text-sage"} />
         <StatCard label="Total orders" value={String(totalOrders)} />
         <StatCard label="Completed orders" value={String(completedOrders)} color="text-sage" />
         <StatCard label="Avg order value" value={`$${(avgOrderValueCents / 100).toFixed(2)}`} />
-        <StatCard label="Outstanding balance" value={`$${(outstandingBalanceCents / 100).toFixed(2)}`} color={outstandingBalanceCents > 0 ? "text-ember" : "text-sage"} />
         <StatCard label="First order" value={firstOrderDate ? new Date(firstOrderDate).toLocaleDateString() : "—"} />
         <StatCard label="Last order" value={lastOrderDate ? new Date(lastOrderDate).toLocaleDateString() : "—"} />
       </div>
 
       {customer.has_real_email !== false && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 mb-6">
-          <h3 className="text-sm font-semibold text-[#1E3A5F] mb-1">Their email preferences</h3>
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5 mb-6">
+          <h2 className="font-display text-lg text-[#1E3A5F] mb-1">Email preferences</h2>
           <p className="text-xs text-[#1E3A5F]/50 mb-3">
             Set by the customer themselves — read-only here. If something's off, you'll need to message them directly instead of relying on an automatic email.
           </p>
@@ -118,11 +118,13 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         </div>
       )}
 
-      <CustomerNotes customerId={customer.id} />
+      <div className="mb-6">
+        <CustomerNotes customerId={customer.id} />
+      </div>
 
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-2 mt-2">Order history</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden text-sm">
+      <h2 className="font-display text-lg text-[#1E3A5F] mb-2">Order timeline</h2>
+      <div className="overflow-x-auto overflow-y-hidden bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+        <table className="w-full text-sm">
           <thead>
             <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
               <th className="text-left px-4 py-3">Order</th>

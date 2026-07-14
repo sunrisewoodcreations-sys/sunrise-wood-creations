@@ -61,8 +61,8 @@ function Icon({ name, className }: { name: string; className?: string }) {
 }
 
 function SummaryCard({
-  label, value, color, href, icon, tint
-}: { label: string; value: string | number; color?: string; href?: string; icon: string; tint: string }) {
+  label, value, subValue, color, href, icon, tint
+}: { label: string; value: string | number; subValue?: string; color?: string; href?: string; icon: string; tint: string }) {
   const content = (
     <div className={`bg-white border border-[#1E3A5F]/10 rounded-xl p-5 shadow-sm transition-all ${href ? "hover:shadow-lg hover:border-[#1E3A5F]/30 hover:-translate-y-0.5 cursor-pointer" : ""}`}>
       <div className="flex items-center justify-between mb-3">
@@ -72,6 +72,7 @@ function SummaryCard({
         </div>
       </div>
       <div className={`text-3xl font-display font-semibold ${color || "text-[#1E3A5F]"}`}>{value}</div>
+      {subValue && <div className="text-xs text-[#1E3A5F]/50 mt-1">{subValue}</div>}
     </div>
   );
   if (!href) return content;
@@ -154,8 +155,20 @@ export default async function DashboardPage() {
   const inProduction = allOrders.filter(o => !["order_placed", "ready_for_pickup", "picked_up"].includes(o.status)).length;
   const waitingOnCustomerOrderIds = new Set((pendingProofs || []).map((p: any) => p.order_id));
   const waitingOnCustomer = waitingOnCustomerOrderIds.size;
-  const waitingOnPayment = allOrders.filter(o => o.status !== "picked_up" && (o.amount_paid_cents || 0) < (o.price_cents || 0)).length;
+  const waitingOnPaymentOrders = allOrders.filter(o => o.status !== "picked_up" && (o.amount_paid_cents || 0) < (o.price_cents || 0));
+  const waitingOnPayment = waitingOnPaymentOrders.length;
+  const outstandingBalanceCents = waitingOnPaymentOrders.reduce(
+    (sum, o) => sum + ((o.price_cents || 0) - (o.amount_paid_cents || 0)),
+    0
+  );
   const overdue = allOrders.filter(o => o.status !== "picked_up" && o.due_date && o.due_date < todayStr).length;
+
+  // Same "due within the next 7 days" boundary already used on the Orders page.
+  const weekFromNow = new Date();
+  weekFromNow.setDate(weekFromNow.getDate() + 7);
+  const { year: wy, month: wm, day: wd } = easternDateParts(weekFromNow);
+  const weekFromNowStr = `${wy}-${String(wm).padStart(2, "0")}-${String(wd).padStart(2, "0")}`;
+  const dueThisWeek = allOrders.filter(o => o.status !== "picked_up" && o.due_date && o.due_date >= todayStr && o.due_date <= weekFromNowStr).length;
 
   const pickedUpOrderIdsThisMonth = new Set((pickupEventsThisMonth || []).map((e: any) => e.order_id));
   const salesThisMonthCents = allOrders
@@ -163,6 +176,12 @@ export default async function DashboardPage() {
     .reduce((sum, o) => sum + (o.price_cents || 0), 0);
 
   const remainingPickets = (picketPurchases || []).reduce((sum: number, p: any) => sum + (p.remaining_quantity || 0), 0);
+  // No per-business picket threshold exists anywhere yet (unlike products,
+  // which have their own configurable low_stock_threshold) — 50 is a
+  // reasonable default warning line, using the same red/green convention
+  // already used on the Products page. Easy to make configurable later.
+  const PICKET_LOW_STOCK_THRESHOLD = 50;
+  const isPicketsLow = remainingPickets <= PICKET_LOW_STOCK_THRESHOLD;
 
   // --- "Needs your attention" — one entry per order, tagged with its
   // single highest-priority reason (an order that's both overdue and
@@ -204,46 +223,10 @@ export default async function DashboardPage() {
       <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Dashboard</h1>
       <p className="text-sm text-[#1E3A5F]/60 mb-6">Your daily command center — today's priorities first.</p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-        <SummaryCard label="New orders" value={newOrders} href="/admin/orders" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
-        <SummaryCard label="In production" value={inProduction} href="/admin/orders" icon="hammer" tint="bg-amber/20 text-amber" />
-        <SummaryCard label="Ready for pickup" value={readyForPickup} color="text-sage" href="/admin/orders?filter=ready_pickup" icon="check-circle" tint="bg-sage/15 text-sage" />
-        <SummaryCard label="Waiting on customer" value={waitingOnCustomer} color={waitingOnCustomer > 0 ? "text-ember" : undefined} href="/admin/orders?filter=waiting_customer" icon="message" tint="bg-ember/15 text-ember" />
-        <SummaryCard label="Waiting on payment" value={waitingOnPayment} color={waitingOnPayment > 0 ? "text-ember" : undefined} href="/admin/orders?filter=waiting_payment" icon="dollar" tint="bg-amber/20 text-amber" />
-        <SummaryCard label="Overdue" value={overdue} color={overdue > 0 ? "text-ember" : "text-sage"} icon="clock-alert" tint={overdue > 0 ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"} />
-        <SummaryCard label="Sales this month" value={`$${(salesThisMonthCents / 100).toFixed(2)}`} color="text-sage" href="/admin/reports" icon="trending-up" tint="bg-sage/15 text-sage" />
-        <SummaryCard label="Cedar pickets remaining" value={remainingPickets} href="/admin/pickets" icon="layers" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
-      </div>
-
-      {/* Lightweight status-mix bar — built entirely from the order data
-          already fetched above, no new tables or chart library. */}
-      {activeOrders.length > 0 && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-4 mb-8 shadow-sm">
-          <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Active orders by stage ({activeOrders.length})</div>
-          <div className="flex h-3 rounded-full overflow-hidden mb-2">
-            {statusMix.map(([status, count]) => (
-              <div
-                key={status}
-                className={statusColor(status).split(" ")[0]}
-                style={{ width: `${(count / activeOrders.length) * 100}%` }}
-                title={`${STATUS_MIX_LABELS[status] || status}: ${count}`}
-              />
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#1E3A5F]/60">
-            {statusMix.map(([status, count]) => (
-              <span key={status} className="inline-flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${statusColor(status).split(" ")[0]}`} />
-                {STATUS_MIX_LABELS[status] || status} ({count})
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Needs your attention — the actual daily priority list, sorted
           overdue first, then due today, waiting on customer, waiting on
-          payment, and finally ready for pickup. */}
+          payment, and finally ready for pickup. This is the first major
+          section on the page on purpose, ahead of the summary cards. */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-display text-lg text-[#1E3A5F]">Needs your attention</h2>
@@ -297,6 +280,59 @@ export default async function DashboardPage() {
           })}
         </div>
       </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+        <SummaryCard label="New orders" value={newOrders} href="/admin/orders" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+        <SummaryCard label="In production" value={inProduction} href="/admin/orders" icon="hammer" tint="bg-amber/20 text-amber" />
+        <SummaryCard label="Ready for pickup" value={readyForPickup} color="text-sage" href="/admin/orders?filter=ready_pickup" icon="check-circle" tint="bg-sage/15 text-sage" />
+        <SummaryCard label="Due this week" value={dueThisWeek} href="/admin/orders?filter=due_week" icon="clock-alert" tint="bg-amber/20 text-amber" />
+        <SummaryCard label="Waiting on customer" value={waitingOnCustomer} color={waitingOnCustomer > 0 ? "text-ember" : undefined} href="/admin/orders?filter=waiting_customer" icon="message" tint="bg-ember/15 text-ember" />
+        <SummaryCard
+          label="Waiting on payment"
+          value={`$${(outstandingBalanceCents / 100).toFixed(2)}`}
+          subValue={`${waitingOnPayment} order${waitingOnPayment === 1 ? "" : "s"}`}
+          color={outstandingBalanceCents > 0 ? "text-ember" : undefined}
+          href="/admin/orders?filter=waiting_payment"
+          icon="dollar"
+          tint="bg-amber/20 text-amber"
+        />
+        <SummaryCard label="Overdue" value={overdue} color={overdue > 0 ? "text-ember" : "text-sage"} icon="clock-alert" tint={overdue > 0 ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"} />
+        <SummaryCard label="Sales this month" value={`$${(salesThisMonthCents / 100).toFixed(2)}`} color="text-sage" href="/admin/reports" icon="trending-up" tint="bg-sage/15 text-sage" />
+        <SummaryCard
+          label="Cedar pickets remaining"
+          value={remainingPickets}
+          color={isPicketsLow ? "text-ember" : "text-sage"}
+          href="/admin/pickets"
+          icon="layers"
+          tint={isPicketsLow ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"}
+        />
+      </div>
+
+      {/* Lightweight status-mix bar — built entirely from the order data
+          already fetched above, no new tables or chart library. */}
+      {activeOrders.length > 0 && (
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-4 mb-8 shadow-sm">
+          <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Active orders by stage ({activeOrders.length})</div>
+          <div className="flex h-3 rounded-full overflow-hidden mb-2">
+            {statusMix.map(([status, count]) => (
+              <div
+                key={status}
+                className={statusColor(status).split(" ")[0]}
+                style={{ width: `${(count / activeOrders.length) * 100}%` }}
+                title={`${STATUS_MIX_LABELS[status] || status}: ${count}`}
+              />
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#1E3A5F]/60">
+            {statusMix.map(([status, count]) => (
+              <span key={status} className="inline-flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${statusColor(status).split(" ")[0]}`} />
+                {STATUS_MIX_LABELS[status] || status} ({count})
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <SectionCard title="Recent orders" count={recentOrders.length}>
         {recentOrders.map(o => {

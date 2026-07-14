@@ -81,7 +81,7 @@ export default async function AccountPage() {
               >
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <Link href={`/account/orders/${order.id}`} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
-                    <div className="flex items-center flex-wrap gap-2 mb-1.5">
+                    <div className="flex items-center flex-wrap gap-3 mb-2">
                       <div className="font-semibold text-walnut text-base">
                         {productLabel(order.product_type as ProductType)} — {order.title}
                       </div>
@@ -90,19 +90,20 @@ export default async function AccountPage() {
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                      <div className="text-xs text-walnut/50 font-mono">
-                        Order placed: {new Date(order.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                      </div>
-
+                    <div className="flex flex-col gap-1.5">
                       {showPickupDate && (
-                        <div className="inline-flex items-center gap-1.5 bg-amber/10 border border-amber/25 rounded-md px-2.5 py-1">
-                          <span className="text-walnut/60 uppercase tracking-wide font-semibold text-[10px]">Estimated pickup</span>
-                          <span className="text-walnut font-mono font-semibold text-xs">
+                        <div className="inline-flex items-center gap-2 bg-amber/20 border border-amber/40 rounded-md px-3 py-1.5 w-fit">
+                          <span className="text-walnut/70 uppercase tracking-wide font-bold text-[11px]">Estimated pickup</span>
+                          <span className="text-walnut font-mono font-bold text-sm">
                             {new Date(order.due_date + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                           </span>
                         </div>
                       )}
+
+                      <div className="text-[11px] text-walnut/40 font-mono">
+                        Order placed: {new Date(order.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                      </div>
+
 
                       {isPickedUp && orderStatusTimestamps["picked_up"] && (
                         <div className="text-[11px] text-walnut/40 font-mono">
