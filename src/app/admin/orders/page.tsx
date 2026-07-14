@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
+import { productLabel, ProductType } from "@/lib/statusSteps";
 import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import SendInvoiceButton from "@/components/SendInvoiceButton";
 import SendStatusEmailButton from "@/components/SendStatusEmailButton";
+import StatusUpdater from "@/components/StatusUpdater";
 
 const SALES_TAX_RATE = 0.06; // Michigan
 
@@ -34,6 +35,31 @@ function easternDateParts(date: Date) {
 }
 
 type SortKey = "due_date" | "created_at" | "customer" | "status" | "balance";
+
+// Whole-day difference between two Y-M-D date strings, computed at UTC
+// noon on both sides to sidestep any DST edge cases.
+function daysBetween(fromStr: string, toStr: string): number {
+  const from = new Date(`${fromStr}T12:00:00Z`);
+  const to = new Date(`${toStr}T12:00:00Z`);
+  return Math.round((to.getTime() - from.getTime()) / 86400000);
+}
+
+function priorityInfo(todayStr: string, dueDate: string | null, status: string): { label: string; badge: string; daysText: string } | null {
+  if (status === "picked_up") return null; // completed orders don't need a priority signal
+  if (!dueDate) return { label: "Future", badge: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60", daysText: "No due date" };
+
+  const days = daysBetween(todayStr, dueDate);
+  if (days < 0) {
+    return { label: "Overdue", badge: "bg-ember text-white", daysText: `${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} overdue` };
+  }
+  if (days === 0) {
+    return { label: "Today", badge: "bg-amber text-white", daysText: "Due today" };
+  }
+  if (days <= 7) {
+    return { label: "This Week", badge: "bg-amber/60 text-white", daysText: days === 1 ? "Due tomorrow" : `${days} days left` };
+  }
+  return { label: "Future", badge: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60", daysText: `${days} days left` };
+}
 
 function SummaryCard({
   label, value, color, href, active
@@ -207,6 +233,7 @@ export default async function AdminOrdersPage({
   // unfiltered order list, so the cards' own numbers stay accurate
   // no matter which filter is currently active). ---
   const totalActive = orders.filter((o: any) => o.status !== "picked_up").length;
+  const overdueCount = orders.filter((o: any) => o.status !== "picked_up" && o.due_date && o.due_date < todayStr).length;
   const dueToday = orders.filter((o: any) => o.status !== "picked_up" && o.due_date === todayStr).length;
   const dueThisWeek = orders.filter((o: any) => o.status !== "picked_up" && o.due_date && o.due_date >= todayStr && o.due_date <= weekFromNowStr).length;
   const waitingOnCustomer = orders.filter((o: any) => waitingOnCustomerOrderIds.has(o.id)).length;
@@ -219,6 +246,7 @@ export default async function AdminOrdersPage({
   const filteredOrders = orders.filter((o: any) => {
     switch (activeFilter) {
       case "active": return o.status !== "picked_up";
+      case "overdue": return o.status !== "picked_up" && o.due_date && o.due_date < todayStr;
       case "due_today": return o.status !== "picked_up" && o.due_date === todayStr;
       case "due_week": return o.status !== "picked_up" && o.due_date && o.due_date >= todayStr && o.due_date <= weekFromNowStr;
       case "waiting_customer": return waitingOnCustomerOrderIds.has(o.id);
@@ -250,6 +278,7 @@ export default async function AdminOrdersPage({
 
   const filterLabels: Record<string, string> = {
     active: "Total active",
+    overdue: "Overdue",
     due_today: "Due today",
     due_week: "Due this week",
     waiting_customer: "Waiting on customer",
@@ -274,8 +303,9 @@ export default async function AdminOrdersPage({
       <p className="text-sm text-[#1E3A5F]/60 mb-6">All orders, across every customer.</p>
 
       {/* New summary row — click a card to filter the table below */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4 mb-4">
         <SummaryCard label="Total active" value={totalActive} href={filterHref("active")} active={activeFilter === "active"} />
+        <SummaryCard label="Overdue" value={overdueCount} color={overdueCount > 0 ? "text-ember" : "text-sage"} href={filterHref("overdue")} active={activeFilter === "overdue"} />
         <SummaryCard label="Due today" value={dueToday} color={dueToday > 0 ? "text-ember" : undefined} href={filterHref("due_today")} active={activeFilter === "due_today"} />
         <SummaryCard label="Due this week" value={dueThisWeek} href={filterHref("due_week")} active={activeFilter === "due_week"} />
         <SummaryCard label="Waiting on customer" value={waitingOnCustomer} color={waitingOnCustomer > 0 ? "text-ember" : undefined} href={filterHref("waiting_customer")} active={activeFilter === "waiting_customer"} />
@@ -363,6 +393,7 @@ export default async function AdminOrdersPage({
               <th className="text-left px-4 py-3.5"><SortLink label="Order date" sortKey="created_at" currentSort={sortKey} currentDir={sortDir} query={query} filter={activeFilter} /></th>
               <th className="text-left px-4 py-3.5"><SortLink label="Status" sortKey="status" currentSort={sortKey} currentDir={sortDir} query={query} filter={activeFilter} /></th>
               <th className="text-left px-4 py-3.5"><SortLink label="Due date" sortKey="due_date" currentSort={sortKey} currentDir={sortDir} query={query} filter={activeFilter} /></th>
+              <th className="text-left px-4 py-3.5">Priority</th>
               <th className="text-right px-4 py-3.5">Sales</th>
               <th className="text-right px-4 py-3.5">Paid</th>
               <th className="text-right px-4 py-3.5"><SortLink label="Balance due" sortKey="balance" currentSort={sortKey} currentDir={sortDir} query={query} filter={activeFilter} /></th>
@@ -377,6 +408,7 @@ export default async function AdminOrdersPage({
               const isOverdue = order.status !== "picked_up" && order.due_date && order.due_date < todayStr;
               const isDueToday = order.status !== "picked_up" && order.due_date === todayStr;
               const isDueTomorrow = order.status !== "picked_up" && order.due_date === tomorrowStr;
+              const priority = priorityInfo(todayStr, order.due_date, order.status);
               const rowBg = isOverdue
                 ? "bg-ember/10 border-l-4 border-l-ember"
                 : isDueToday
@@ -401,9 +433,7 @@ export default async function AdminOrdersPage({
                     {new Date(order.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3.5">
-                    <span className={`inline-block px-3 py-1.5 rounded-full text-[13px] font-semibold ${statusColor(order.status)}`}>
-                      {statusLabel(order.product_type as ProductType, order.status)}
-                    </span>
+                    <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
                   </td>
                   <td className="px-4 py-3.5 font-mono">
                     {order.due_date ? (
@@ -414,6 +444,18 @@ export default async function AdminOrdersPage({
                       </span>
                     ) : (
                       <span className="text-[#1E3A5F]/30">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3.5">
+                    {priority ? (
+                      <div>
+                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${priority.badge}`}>
+                          {priority.label}
+                        </span>
+                        <div className="text-[11px] text-[#1E3A5F]/50 mt-1 whitespace-nowrap">{priority.daysText}</div>
+                      </div>
+                    ) : (
+                      <span className="text-[#1E3A5F]/30 text-xs">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3.5 text-right text-[#1E3A5F]/70">
@@ -458,7 +500,7 @@ export default async function AdminOrdersPage({
               );
             })}
             {sorted.length === 0 && (
-              <tr><td colSpan={10} className="px-4 py-6 text-center text-[#1E3A5F]/50">No orders yet.</td></tr>
+              <tr><td colSpan={11} className="px-4 py-6 text-center text-[#1E3A5F]/50">No orders yet.</td></tr>
             )}
           </tbody>
         </table>
