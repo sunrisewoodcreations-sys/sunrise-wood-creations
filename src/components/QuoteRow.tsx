@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AdminButton from "@/components/AdminButton";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -87,9 +88,9 @@ export default function QuoteRow({ quote }: { quote: any }) {
           </a>
         ) : (
           !converting && (
-            <button onClick={() => setConverting(true)} className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-2 py-1 hover:bg-cream">
+            <AdminButton variant="secondary" size="sm" onClick={() => setConverting(true)}>
               Convert to order
-            </button>
+            </AdminButton>
           )
         )}
       </div>
@@ -106,9 +107,9 @@ export default function QuoteRow({ quote }: { quote: any }) {
             <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Price ($)</label>
             <input required value={price} onChange={e => setPrice(e.target.value)} placeholder="150" className="w-24 border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm" />
           </div>
-          <button type="submit" disabled={loading} className="bg-ember text-white px-4 py-1.5 rounded-md text-sm font-semibold disabled:opacity-60">
+          <AdminButton type="submit" size="sm" disabled={loading}>
             {loading ? "Creating..." : "Create order"}
-          </button>
+          </AdminButton>
           <button type="button" onClick={() => setConverting(false)} className="text-xs text-[#1E3A5F]/50 underline">Cancel</button>
           {error && <p className="text-xs text-ember w-full">{error}</p>}
         </form>

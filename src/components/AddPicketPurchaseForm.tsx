@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AdminButton from "@/components/AdminButton";
 
 export default function AddPicketPurchaseForm() {
   const router = useRouter();
@@ -40,9 +41,9 @@ export default function AddPicketPurchaseForm() {
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="bg-[#1E3A5F] text-white px-4 py-2 rounded-md text-sm font-semibold mb-5">
+      <AdminButton onClick={() => setOpen(true)} className="mb-5">
         + Log a pallet purchase
-      </button>
+      </AdminButton>
     );
   }
 
@@ -64,12 +65,12 @@ export default function AddPicketPurchaseForm() {
       </div>
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
       <div className="flex gap-2">
-        <button type="submit" disabled={loading} className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60">
+        <AdminButton type="submit" disabled={loading}>
           {loading ? "Saving..." : "Log purchase"}
-        </button>
-        <button type="button" onClick={() => setOpen(false)} className="border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold">
+        </AdminButton>
+        <AdminButton type="button" variant="secondary" onClick={() => setOpen(false)}>
           Cancel
-        </button>
+        </AdminButton>
       </div>
     </form>
   );

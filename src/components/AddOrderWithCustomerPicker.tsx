@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import AdminButton from "@/components/AdminButton";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -210,12 +211,9 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
 
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="bg-[#1E3A5F] text-cream px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap"
-      >
+      <AdminButton onClick={() => setOpen(true)}>
         + Add order
-      </button>
+      </AdminButton>
     );
   }
 
@@ -391,12 +389,12 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
 
           {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
           <div className="flex gap-2">
-            <button type="submit" disabled={loading} className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60">
+            <AdminButton type="submit" disabled={loading}>
               {loading ? "Creating..." : "Create order"}
-            </button>
-            <button type="button" onClick={() => setOpen(false)} className="border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold">
+            </AdminButton>
+            <AdminButton type="button" variant="secondary" onClick={() => setOpen(false)}>
               Cancel
-            </button>
+            </AdminButton>
           </div>
         </form>
       )}
@@ -415,13 +413,12 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
             {customerCreatedMsg ? (
               <div>
                 <p className="text-sm text-sage font-semibold mb-4">{customerCreatedMsg}</p>
-                <button
+                <AdminButton
                   type="button"
                   onClick={() => { setShowCreateCustomer(false); setCustomerCreatedMsg(""); }}
-                  className="bg-[#1E3A5F] text-cream px-4 py-2 rounded-md text-sm font-semibold"
                 >
                   Done
-                </button>
+                </AdminButton>
               </div>
             ) : (
               <form onSubmit={handleCreateCustomer} className="space-y-3">
@@ -435,12 +432,12 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
                 </div>
                 {customerCreateError && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{customerCreateError}</p>}
                 <div className="flex gap-2">
-                  <button type="submit" disabled={creatingCustomer} className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60">
+                  <AdminButton type="submit" disabled={creatingCustomer}>
                     {creatingCustomer ? "Sending..." : "Create & send invite"}
-                  </button>
-                  <button type="button" onClick={() => setShowCreateCustomer(false)} className="border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold">
+                  </AdminButton>
+                  <AdminButton type="button" variant="secondary" onClick={() => setShowCreateCustomer(false)}>
                     Cancel
-                  </button>
+                  </AdminButton>
                 </div>
               </form>
             )}

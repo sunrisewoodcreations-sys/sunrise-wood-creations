@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import AdminButton from "@/components/AdminButton";
 
 export default function DesignGeneratorForm() {
   const router = useRouter();
@@ -64,13 +65,9 @@ export default function DesignGeneratorForm() {
           />
         </div>
         {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60"
-        >
+        <AdminButton type="submit" disabled={loading}>
           {loading ? "Generating... (this can take up to a minute)" : "Generate design"}
-        </button>
+        </AdminButton>
       </form>
 
       {resultUrl && (

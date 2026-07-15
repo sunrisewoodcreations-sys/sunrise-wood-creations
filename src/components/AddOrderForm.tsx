@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AdminButton from "@/components/AdminButton";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -86,9 +87,9 @@ export default function AddOrderForm({ customerId, products = [] }: { customerId
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="bg-[#1E3A5F] text-cream px-4 py-2 rounded-md text-sm font-semibold mb-5">
+      <AdminButton onClick={() => setOpen(true)} className="mb-5">
         + Add order
-      </button>
+      </AdminButton>
     );
   }
 
@@ -139,12 +140,12 @@ export default function AddOrderForm({ customerId, products = [] }: { customerId
       </div>
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
       <div className="flex gap-2">
-        <button type="submit" disabled={loading} className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60">
+        <AdminButton type="submit" disabled={loading}>
           {loading ? "Creating..." : "Create order"}
-        </button>
-        <button type="button" onClick={() => { setOpen(false); setError(""); }} className="border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold">
+        </AdminButton>
+        <AdminButton type="button" variant="secondary" onClick={() => { setOpen(false); setError(""); }}>
           Cancel
-        </button>
+        </AdminButton>
       </div>
     </form>
   );

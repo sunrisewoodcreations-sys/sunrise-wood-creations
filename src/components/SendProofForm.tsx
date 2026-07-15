@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AdminButton from "@/components/AdminButton";
 
 export default function SendProofForm({ orderId }: { orderId: string }) {
   const router = useRouter();
@@ -39,13 +40,9 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
           placeholder="https://..."
           className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
         />
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60"
-        >
+        <AdminButton type="submit" disabled={loading}>
           {loading ? "Sending..." : "Send proof"}
-        </button>
+        </AdminButton>
       </div>
       {sent && <p className="text-xs text-sage font-semibold mt-2">Proof sent — customer notified by email.</p>}
     </form>
