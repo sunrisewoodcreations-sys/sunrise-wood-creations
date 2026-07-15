@@ -292,8 +292,8 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
-        <SummaryCard label="New orders" value={newOrders} href="/admin/orders" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
-        <SummaryCard label="In production" value={inProduction} href="/admin/orders" icon="hammer" tint="bg-amber/20 text-amber" />
+        <SummaryCard label="New orders" value={newOrders} href="/admin/orders?filter=new" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+        <SummaryCard label="In production" value={inProduction} href="/admin/orders?filter=in_production" icon="hammer" tint="bg-amber/20 text-amber" />
         <SummaryCard label="Ready for pickup" value={readyForPickup} color="text-sage" href="/admin/orders?filter=ready_pickup" icon="check-circle" tint="bg-sage/15 text-sage" />
         <SummaryCard label="Due this week" value={dueThisWeek} href="/admin/orders?filter=due_week" icon="clock-alert" tint="bg-amber/20 text-amber" />
         <SummaryCard label="Waiting on customer" value={waitingOnCustomer} color={waitingOnCustomer > 0 ? "text-ember" : undefined} href="/admin/orders?filter=waiting_customer" icon="message" tint="bg-ember/15 text-ember" />

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import AdminMobileNav from "@/components/AdminMobileNav";
 
 async function getBadgeCounts(supabase: ReturnType<typeof createClient>) {
   const [{ count: unrespondedQuotes }, { count: unrespondedGuestChats }, { data: orders }, { data: customerMessages }] =
@@ -52,9 +53,27 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const firstName = profile?.full_name?.split(" ")[0] || "there";
 
+  const navLinks = [
+    { href: "/admin/dashboard", label: "Dashboard" },
+    { href: "/admin/customers", label: "Customers" },
+    { href: "/admin/orders", label: "Orders" },
+    { href: "/admin/queue", label: "Queue" },
+    { href: "/admin/calendar", label: "Calendar" },
+    { href: "/admin/messages", label: "Messages", badge: badges.messages },
+    { href: "/admin/quotes", label: "Quotes", badge: badges.quotes },
+    { href: "/admin/pickets", label: "Picket Inventory" },
+    { href: "/admin/products", label: "Products" },
+    { href: "/admin/designs", label: "Designs" },
+    { href: "/admin/reports", label: "Reports" }
+  ];
+
   return (
-    <div className="min-h-screen flex bg-white">
-      <div className="w-60 bg-[#1E3A5F] text-white/80 p-6 flex-shrink-0">
+    <div className="min-h-screen md:flex bg-white">
+      <AdminMobileNav links={navLinks} firstName={firstName} onSignOut={signOut} />
+
+      {/* Desktop sidebar — completely unchanged, just now hidden below md
+          and shown as a flex item at md and up, instead of always-on. */}
+      <div className="hidden md:block w-60 bg-[#1E3A5F] text-white/80 p-6 flex-shrink-0">
         <div className="text-white font-display text-base mb-8 break-words leading-snug">Hello, {firstName}</div>
         <nav className="flex flex-col gap-1 text-sm">
           <Link href="/admin/dashboard" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Dashboard</Link>
@@ -77,7 +96,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <button className="text-xs text-white/50 hover:text-white">Log out</button>
         </form>
       </div>
-      <div className="flex-1 p-8">{children}</div>
+
+      <div className="flex-1 p-4 md:p-8 overflow-x-hidden">{children}</div>
     </div>
   );
 }

@@ -247,6 +247,8 @@ export default async function AdminOrdersPage({
   const filteredOrders = orders.filter((o: any) => {
     switch (activeFilter) {
       case "active": return o.status !== "picked_up";
+      case "new": return o.status === "order_placed";
+      case "in_production": return !["order_placed", "ready_for_pickup", "picked_up"].includes(o.status);
       case "overdue": return o.status !== "picked_up" && o.due_date && o.due_date < todayStr;
       case "due_today": return o.status !== "picked_up" && o.due_date === todayStr;
       case "due_week": return o.status !== "picked_up" && o.due_date && o.due_date >= todayStr && o.due_date <= weekFromNowStr;
@@ -279,6 +281,8 @@ export default async function AdminOrdersPage({
 
   const filterLabels: Record<string, string> = {
     active: "Total active",
+    new: "New orders",
+    in_production: "In production",
     overdue: "Overdue",
     due_today: "Due today",
     due_week: "Due this week",
