@@ -142,10 +142,10 @@ async function buildInvoicePdf(opts: {
 // Call this whenever an order's payment changes, or when it's marked
 // "picked_up" — each call generates and emails a fresh invoice reflecting
 // the current total, amount paid, and balance due at that moment.
-export async function issueInvoiceForOrder(
+export async function generateInvoicePdfForOrder(
   order: any,
-  customer: { email: string; full_name: string; has_real_email?: boolean; notify_invoices?: boolean }
-) {
+  customer: { full_name: string }
+): Promise<{ pdfBuffer: Buffer; invoiceNumber: number; paidInFull: boolean } | null> {
   const admin = createAdminClient();
 
   const { data: orderItems } = await admin
@@ -232,7 +232,7 @@ export async function issueInvoiceForOrder(
 
     if (maxError) {
       console.error("Couldn't determine next invoice number:", maxError.message);
-      return;
+      return null;
     }
     invoiceNumber = (maxRow?.invoice_number || 109) + 1;
   }
@@ -284,6 +284,19 @@ export async function issueInvoiceForOrder(
       paid_in_full: paidInFull
     });
   }
+
+  return { pdfBuffer, invoiceNumber, paidInFull };
+}
+
+export async function issueInvoiceForOrder(
+  order: any,
+  customer: { email: string; full_name: string; has_real_email?: boolean; notify_invoices?: boolean }
+) {
+  const admin = createAdminClient();
+
+  const result = await generateInvoicePdfForOrder(order, customer);
+  if (!result) return;
+  const { pdfBuffer, invoiceNumber, paidInFull } = result;
 
   // The invoice PDF is always generated and stored (so it's there for the
   // customer's account page or a manual download) even if we don't email

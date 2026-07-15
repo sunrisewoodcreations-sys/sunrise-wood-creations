@@ -83,6 +83,8 @@ export async function sendOrderStatusEmail(opts: {
   orderId: string;
   newStatus: string;
   balanceDueCents?: number;
+  invoicePdfBuffer?: Buffer;
+  invoiceNumber?: number;
 }) {
   const label = statusLabel(opts.productType, opts.newStatus);
   const balanceHtml = typeof opts.balanceDueCents === "number"
@@ -120,11 +122,16 @@ export async function sendOrderStatusEmail(opts: {
     buttonUrl: `${SITE_URL}/account/orders/${opts.orderId}`
   });
 
+  const attachments = opts.invoicePdfBuffer && opts.invoiceNumber
+    ? [{ filename: `invoice-${opts.invoiceNumber}.pdf`, content: opts.invoicePdfBuffer.toString("base64") }]
+    : undefined;
+
   return resend.emails.send({
     from: FROM,
     to: opts.toEmail,
     subject: `Your order is now: ${label}`,
-    html
+    html,
+    ...(attachments ? { attachments } : {})
   });
 }
 
