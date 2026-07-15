@@ -204,21 +204,38 @@ export async function issueInvoiceForOrder(
     }
   }
 
-  // Compute the next invoice number directly from what's already in the
-  // table, rather than a separate database sequence — one less moving
-  // part that could silently get out of sync.
-  const { data: maxRow, error: maxError } = await admin
+  // An order should only ever have ONE invoice number — reused and
+  // updated in place as the balance changes (e.g. a deposit invoice
+  // later becomes the final paid-in-full invoice at pickup), not a new
+  // invoice number every time this function runs.
+  const { data: existingInvoice } = await admin
     .from("invoices")
     .select("invoice_number")
-    .order("invoice_number", { ascending: false })
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (maxError) {
-    console.error("Couldn't determine next invoice number:", maxError.message);
-    return;
+  let invoiceNumber: number;
+  if (existingInvoice) {
+    invoiceNumber = existingInvoice.invoice_number;
+  } else {
+    // Compute the next invoice number directly from what's already in the
+    // table, rather than a separate database sequence — one less moving
+    // part that could silently get out of sync.
+    const { data: maxRow, error: maxError } = await admin
+      .from("invoices")
+      .select("invoice_number")
+      .order("invoice_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (maxError) {
+      console.error("Couldn't determine next invoice number:", maxError.message);
+      return;
+    }
+    invoiceNumber = (maxRow?.invoice_number || 109) + 1;
   }
-  const invoiceNumber = (maxRow?.invoice_number || 109) + 1;
 
   const lineItems: InvoiceLineItem[] = hasLineItems
     ? orderItems!.map((it: any) => ({
@@ -257,12 +274,16 @@ export async function issueInvoiceForOrder(
   const dueCents = (order.price_cents || 0) - (order.amount_paid_cents || 0);
   const paidInFull = dueCents <= 0;
 
-  await admin.from("invoices").insert({
-    order_id: order.id,
-    invoice_number: invoiceNumber,
-    pdf_url: pdfUrl,
-    paid_in_full: paidInFull
-  });
+  if (existingInvoice) {
+    await admin.from("invoices").update({ pdf_url: pdfUrl, paid_in_full: paidInFull }).eq("invoice_number", invoiceNumber);
+  } else {
+    await admin.from("invoices").insert({
+      order_id: order.id,
+      invoice_number: invoiceNumber,
+      pdf_url: pdfUrl,
+      paid_in_full: paidInFull
+    });
+  }
 
   // The invoice PDF is always generated and stored (so it's there for the
   // customer's account page or a manual download) even if we don't email

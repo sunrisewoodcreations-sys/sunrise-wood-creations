@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { issueInvoiceForOrder } from "@/lib/invoice";
+import { sendOrderStatusEmail } from "@/lib/email";
+import { shouldNotify } from "@/lib/notify";
+import { ProductType } from "@/lib/statusSteps";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -19,7 +22,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .from("orders")
     .update({ status })
     .eq("id", params.id)
-    .select("*, profiles:customer_id(email, full_name, has_real_email, notify_invoices)")
+    .select("*, profiles:customer_id(email, full_name, has_real_email, notify_invoices, notify_order_updates)")
     .single();
 
   if (error || !order) {
@@ -37,6 +40,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   // deposit_received (shows what's left after the deposit), and
   // picked_up (shows the final, zeroed-out balance). Every other status
   // change stays silent — use the buttons on the order page instead.
+  // Being built / being assembled and ready for pickup now also notify
+  // the customer automatically, same as order_placed — everything else
+  // (design proof sent, design approved, etc.) stays silent; use the
+  // "Send email" button on the order page for those.
+  if (["being_built", "being_assembled", "ready_for_pickup"].includes(status) && shouldNotify(customer, "order_updates")) {
+    const balanceDueCents = status === "ready_for_pickup"
+      ? (order.price_cents || 0) - (order.amount_paid_cents || 0)
+      : undefined;
+    try {
+      await sendOrderStatusEmail({
+        toEmail: customer.email,
+        customerName: customer.full_name,
+        productType: order.product_type as ProductType,
+        orderTitle: order.title,
+        orderId: order.id,
+        newStatus: status,
+        balanceDueCents
+      });
+    } catch (err) {
+      console.error("Status-update email failed to send:", err);
+    }
+  }
+
   if (status === "deposit_received") {
     try {
       await issueInvoiceForOrder(order, customer);

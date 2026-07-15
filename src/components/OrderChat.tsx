@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 type Message = {
   id: string;
@@ -12,12 +13,14 @@ type Message = {
 };
 
 export default function OrderChat({ orderId, currentUserId, isAdmin }: { orderId: string; currentUserId: string; isAdmin?: boolean }) {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasRefreshedRef = useRef(false);
 
   const loadMessages = useCallback(async () => {
     try {
@@ -26,13 +29,23 @@ export default function OrderChat({ orderId, currentUserId, isAdmin }: { orderId
       if (res.ok) {
         const body = await res.json();
         setMessages(body.messages || []);
+        // Marking read here updates admin_last_read_at server-side, but
+        // the sidebar's unread badge is computed in the shared layout —
+        // without this, Next.js can keep showing the stale count across
+        // client-side navigations until something forces a refetch. Only
+        // do this once per view (not every 4-second poll) to avoid
+        // refetching the whole page repeatedly for no reason.
+        if (isAdmin && isVisible && !hasRefreshedRef.current) {
+          hasRefreshedRef.current = true;
+          router.refresh();
+        }
       }
     } catch {
       // Silent — a failed poll just tries again next interval.
     } finally {
       setLoaded(true);
     }
-  }, [orderId]);
+  }, [orderId, isAdmin, router]);
 
   useEffect(() => {
     loadMessages();

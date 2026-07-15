@@ -296,7 +296,7 @@ export default async function DashboardPage() {
           icon="dollar"
           tint="bg-amber/20 text-amber"
         />
-        <SummaryCard label="Overdue" value={overdue} color={overdue > 0 ? "text-ember" : "text-sage"} icon="clock-alert" tint={overdue > 0 ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"} />
+        <SummaryCard label="Overdue" value={overdue} color={overdue > 0 ? "text-ember" : "text-sage"} href="/admin/orders?filter=overdue" icon="clock-alert" tint={overdue > 0 ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"} />
         <SummaryCard label="Sales this month" value={`$${(salesThisMonthCents / 100).toFixed(2)}`} color="text-sage" href="/admin/reports" icon="trending-up" tint="bg-sage/15 text-sage" />
         <SummaryCard
           label="Cedar pickets remaining"

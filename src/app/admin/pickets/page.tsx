@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import AddPicketPurchaseForm from "@/components/AddPicketPurchaseForm";
+import PicketPurchaseRow from "@/components/PicketPurchaseRow";
 
 export default async function PicketsPage() {
   const supabase = createClient();
@@ -42,22 +43,15 @@ export default async function PicketsPage() {
             <th className="text-right px-4 py-3">Total paid</th>
             <th className="text-right px-4 py-3">Cost per picket</th>
             <th className="text-right px-4 py-3">Remaining</th>
+            <th className="text-right px-4 py-3">Actions</th>
           </tr>
         </thead>
         <tbody>
           {purchases?.map((p: any) => (
-            <tr key={p.id} className="border-t border-[#1E3A5F]/10">
-              <td className="px-4 py-3 text-[#1E3A5F]/70">{new Date(p.purchased_at + "T00:00:00").toLocaleDateString()}</td>
-              <td className="px-4 py-3 text-right text-[#1E3A5F]/70">{p.quantity}</td>
-              <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${(p.total_cost_cents / 100).toFixed(2)}</td>
-              <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${(p.cost_per_picket_cents / 100).toFixed(2)}</td>
-              <td className={`px-4 py-3 text-right font-semibold ${p.remaining_quantity > 0 ? "text-sage" : "text-[#1E3A5F]/40"}`}>
-                {p.remaining_quantity}
-              </td>
-            </tr>
+            <PicketPurchaseRow key={p.id} purchase={p} />
           ))}
           {(!purchases || purchases.length === 0) && (
-            <tr><td colSpan={5} className="px-4 py-6 text-center text-[#1E3A5F]/50">No purchases logged yet.</td></tr>
+            <tr><td colSpan={6} className="px-4 py-6 text-center text-[#1E3A5F]/50">No purchases logged yet.</td></tr>
           )}
         </tbody>
       </table>
