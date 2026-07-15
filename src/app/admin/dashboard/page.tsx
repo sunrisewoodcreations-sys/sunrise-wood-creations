@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
 import SendInvoiceButton from "@/components/SendInvoiceButton";
 import SendStatusEmailButton from "@/components/SendStatusEmailButton";
+import { formatCalendarDate } from "@/lib/dateDisplay";
 
 // Same Eastern-time helpers already duplicated across the other report
 // pages in this app — kept local here too, rather than touching any
@@ -264,7 +265,7 @@ export default async function DashboardPage() {
                     <Link href={`/admin/customers/${o.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
                       {o.profiles?.full_name}
                     </Link>
-                    {o.due_date && ` · Due ${new Date(o.due_date + "T00:00:00").toLocaleDateString()}`}
+                    {o.due_date && ` · Due ${formatCalendarDate(o.due_date)}`}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -347,7 +348,7 @@ export default async function DashboardPage() {
                   <Link href={`/admin/customers/${o.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
                     {o.profiles?.full_name}
                   </Link>
-                  {o.due_date && ` · Due ${new Date(o.due_date + "T00:00:00").toLocaleDateString()}`}
+                  {o.due_date && ` · Due ${formatCalendarDate(o.due_date)}`}
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">

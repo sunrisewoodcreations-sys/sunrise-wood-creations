@@ -5,6 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
 import CompactProgressTracker from "@/components/CompactProgressTracker";
+import { formatCalendarDate } from "@/lib/dateDisplay";
 
 export default async function AccountPage() {
   const supabase = createClient();
@@ -95,7 +96,7 @@ export default async function AccountPage() {
                         <div className="inline-flex items-center gap-2 bg-amber/20 border border-amber/40 rounded-md px-3 py-1.5 w-fit">
                           <span className="text-walnut/70 uppercase tracking-wide font-bold text-[11px]">Estimated pickup</span>
                           <span className="text-walnut font-mono font-bold text-sm">
-                            {new Date(order.due_date + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                            {formatCalendarDate(order.due_date, "long")}
                           </span>
                         </div>
                       )}

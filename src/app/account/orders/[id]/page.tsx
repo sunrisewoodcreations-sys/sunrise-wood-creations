@@ -6,6 +6,7 @@ import SiteFooter from "@/components/SiteFooter";
 import CompactProgressTracker from "@/components/CompactProgressTracker";
 import ProofResponse from "@/components/ProofResponse";
 import OrderChat from "@/components/OrderChat";
+import { formatCalendarDate } from "@/lib/dateDisplay";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 export default async function OrderDetailPage({ params }: { params: { id: string } }) {
@@ -86,7 +87,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
           {order.due_date && (
             <p className="text-sm text-walnut/60 mb-4">
-              Estimated pickup date: {new Date(order.due_date + "T00:00:00").toLocaleDateString("en-US", { timeZone: "America/New_York", month: "long", day: "numeric", year: "numeric" })}
+              Estimated pickup date: {formatCalendarDate(order.due_date, "long")}
             </p>
           )}
 

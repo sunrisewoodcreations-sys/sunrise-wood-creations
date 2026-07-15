@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { productLabel, ProductType } from "@/lib/statusSteps";
+import { formatCalendarDate } from "@/lib/dateDisplay";
 import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import SendInvoiceButton from "@/components/SendInvoiceButton";
@@ -439,7 +440,7 @@ export default async function AdminOrdersPage({
                     {order.due_date ? (
                       <span className={isOverdue || isDueToday ? "text-ember font-semibold" : isDueTomorrow ? "text-[#1E3A5F] font-semibold" : "text-[#1E3A5F]/70"}>
                         {isOverdue && "⚠ "}
-                        {new Date(order.due_date + "T00:00:00").toLocaleDateString()}
+                        {formatCalendarDate(order.due_date)}
                         {isOverdue ? " (overdue)" : isDueToday ? " (today)" : isDueTomorrow ? " (tomorrow)" : ""}
                       </span>
                     ) : (

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { productLabel, statusLabel, ProductType } from "@/lib/statusSteps";
+import { formatCalendarDate } from "@/lib/dateDisplay";
 
 export default async function QueuePage() {
   const supabase = createClient();
@@ -47,7 +48,7 @@ export default async function QueuePage() {
                 </td>
                 <td className={`px-4 py-3 font-mono ${isOverdue ? "text-ember font-semibold" : isToday ? "text-sage font-semibold" : "text-[#1E3A5F]/70"}`}>
                   {order.due_date
-                    ? `${new Date(order.due_date + "T00:00:00").toLocaleDateString()}${isOverdue ? " (overdue)" : isToday ? " (today)" : ""}`
+                    ? `${formatCalendarDate(order.due_date)}${isOverdue ? " (overdue)" : isToday ? " (today)" : ""}`
                     : "—"}
                 </td>
               </tr>
