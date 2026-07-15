@@ -56,7 +56,8 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
 
       <AddCustomerForm />
 
-      <table className="w-full bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden text-sm">
+      <div className="overflow-x-auto bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+      <table className="w-full text-sm">
         <thead>
           <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
             <th className="text-left px-4 py-3">Name</th>
@@ -89,6 +90,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

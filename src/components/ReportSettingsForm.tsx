@@ -60,7 +60,7 @@ export default function ReportSettingsForm({
   }
 
   return (
-    <form onSubmit={handleSave} className="bg-white border border-[#1E3A5F]/10 rounded-xl p-6 space-y-4 max-w-lg">
+    <form onSubmit={handleSave} className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-6 space-y-4 max-w-lg">
       <div>
         <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">How often should this email send?</label>
         <select value={frequency} onChange={e => setFrequency(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm">

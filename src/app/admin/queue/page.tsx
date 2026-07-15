@@ -20,7 +20,8 @@ export default async function QueuePage() {
       <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Build queue</h1>
       <p className="text-sm text-[#1E3A5F]/60 mb-6">Every order still in progress, soonest due date first.</p>
 
-      <table className="w-full bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden text-sm">
+      <div className="overflow-x-auto bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+      <table className="w-full text-sm">
         <thead>
           <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
             <th className="text-left px-4 py-3">Order</th>
@@ -57,6 +58,7 @@ export default async function QueuePage() {
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

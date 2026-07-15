@@ -86,7 +86,7 @@ export default function StartNewChatPicker({ customers }: { customers: Customer[
   }
 
   return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 mb-6 space-y-4">
+    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5 mb-6 space-y-4">
       <div>
         <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Which customer?</label>
         {selectedCustomer ? (

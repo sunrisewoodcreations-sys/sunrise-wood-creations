@@ -32,7 +32,7 @@ export default function MessagesTabs({
       </div>
 
       {tab === "customer" && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden">
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm overflow-hidden">
           {conversations.length === 0 && (
             <p className="px-4 py-6 text-center text-sm text-[#1E3A5F]/50">No conversations yet.</p>
           )}
@@ -63,7 +63,7 @@ export default function MessagesTabs({
       )}
 
       {tab === "guest" && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden">
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm overflow-hidden">
           {guestMessages.length === 0 && (
             <p className="px-4 py-6 text-center text-sm text-[#1E3A5F]/50">No website chat messages yet.</p>
           )}

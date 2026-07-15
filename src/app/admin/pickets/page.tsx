@@ -21,11 +21,11 @@ export default async function PicketsPage() {
       </p>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5">
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5">
           <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1">Pickets remaining</div>
           <div className="text-2xl font-display text-[#1E3A5F]">{totalRemaining}</div>
         </div>
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5">
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5">
           <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1">Value of remaining stock</div>
           <div className="text-2xl font-display text-[#1E3A5F]">${(totalValueRemainingCents / 100).toFixed(2)}</div>
         </div>
@@ -33,7 +33,8 @@ export default async function PicketsPage() {
 
       <AddPicketPurchaseForm />
 
-      <table className="w-full bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden text-sm">
+      <div className="overflow-x-auto bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+      <table className="w-full text-sm">
         <thead>
           <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
             <th className="text-left px-4 py-3">Date purchased</th>
@@ -60,6 +61,7 @@ export default async function PicketsPage() {
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

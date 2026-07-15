@@ -29,7 +29,7 @@ export default async function DesignsPage() {
                 href={d.result_image_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block bg-white border border-[#1E3A5F]/10 rounded-lg overflow-hidden hover:opacity-90"
+                className="block bg-white border border-[#1E3A5F]/10 rounded-lg shadow-sm overflow-hidden hover:opacity-90"
               >
                 {d.result_image_url && (
                   <img src={d.result_image_url} alt={d.prompt} className="w-full h-32 object-cover" />

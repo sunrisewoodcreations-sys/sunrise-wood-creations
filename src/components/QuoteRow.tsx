@@ -50,7 +50,7 @@ export default function QuoteRow({ quote }: { quote: any }) {
   }
 
   return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5">
+    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5">
       <div className="flex items-center justify-between mb-2">
         <div className="font-semibold text-[#1E3A5F]">
           {quote.name} <span className="font-normal text-[#1E3A5F]/50">({quote.email})</span>

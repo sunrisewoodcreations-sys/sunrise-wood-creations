@@ -104,10 +104,10 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         )}
 
         {orderItems && orderItems.length > 1 && (
-          <div className="mb-4 border border-[#1E3A5F]/10 rounded-lg overflow-hidden">
+          <div className="mb-4 border border-[#1E3A5F]/10 rounded-lg overflow-x-auto overflow-y-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-cream text-[#1E3A5F] text-xs uppercase">
+                <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
                   <th className="text-left px-3 py-2">Item</th>
                   <th className="text-left px-3 py-2">Size / details</th>
                   <th className="text-right px-3 py-2">Qty</th>
@@ -117,10 +117,10 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               <tbody>
                 {orderItems.map((it: any) => (
                   <tr key={it.id} className="border-t border-[#1E3A5F]/10">
-                    <td className="px-3 py-2 text-[#1E3A5F]/80">{it.title}</td>
-                    <td className="px-3 py-2 text-[#1E3A5F]/60">{it.size_details || "—"}</td>
-                    <td className="px-3 py-2 text-right text-[#1E3A5F]/80">{it.quantity}</td>
-                    <td className="px-3 py-2 text-right text-[#1E3A5F]/80">${((it.unit_price_cents * it.quantity) / 100).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-[#1E3A5F]/70">{it.title}</td>
+                    <td className="px-3 py-2 text-[#1E3A5F]/70">{it.size_details || "—"}</td>
+                    <td className="px-3 py-2 text-right text-[#1E3A5F]/70">{it.quantity}</td>
+                    <td className="px-3 py-2 text-right text-[#1E3A5F]/70">${((it.unit_price_cents * it.quantity) / 100).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -93,7 +93,7 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
 
 function SummaryBox({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5">
+    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5">
       <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1">{label}</div>
       <div className={`text-2xl font-display ${color || "text-[#1E3A5F]"}`}>{value}</div>
     </div>
@@ -134,7 +134,7 @@ export default async function ReportsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display text-2xl text-[#1E3A5F]">Reports</h1>
+        <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Reports</h1>
         <Link
           href="/admin/report-settings"
           className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream"
@@ -177,7 +177,7 @@ export default async function ReportsPage() {
         See how much of each item sold, and the same tax breakdown, for any custom time period.
       </p>
 
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5">
+      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5">
         <div className="flex flex-wrap gap-2">
           <a href="/api/reports/sales-by-item?period=today" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Today</a>
           <a href="/api/reports/sales-by-item?period=this_week" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This week</a>
