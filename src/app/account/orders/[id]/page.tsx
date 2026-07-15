@@ -6,6 +6,7 @@ import SiteFooter from "@/components/SiteFooter";
 import CompactProgressTracker from "@/components/CompactProgressTracker";
 import ProofResponse from "@/components/ProofResponse";
 import OrderChat from "@/components/OrderChat";
+import PaymentSummary from "@/components/PaymentSummary";
 import { formatCalendarDate } from "@/lib/dateDisplay";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
@@ -90,6 +91,8 @@ export default async function OrderDetailPage({ params }: { params: { id: string
               Estimated pickup date: {formatCalendarDate(order.due_date, "long")}
             </p>
           )}
+
+          <PaymentSummary priceCents={order.price_cents || 0} amountPaidCents={order.amount_paid_cents || 0} />
 
           {orderItems && orderItems.length > 1 && (
             <div className="mb-4 border border-walnut/10 rounded-lg overflow-hidden">

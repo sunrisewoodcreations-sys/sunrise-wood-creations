@@ -5,6 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
 import CompactProgressTracker from "@/components/CompactProgressTracker";
+import PaymentSummary from "@/components/PaymentSummary";
 import { formatCalendarDate } from "@/lib/dateDisplay";
 
 export default async function AccountPage() {
@@ -125,6 +126,10 @@ export default async function AccountPage() {
                       Download invoice
                     </a>
                   )}
+                </div>
+
+                <div className="mt-4">
+                  <PaymentSummary priceCents={order.price_cents || 0} amountPaidCents={order.amount_paid_cents || 0} />
                 </div>
 
                 {!isPickedUp && (
