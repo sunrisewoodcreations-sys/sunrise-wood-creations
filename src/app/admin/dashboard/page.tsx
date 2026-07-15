@@ -101,14 +101,6 @@ function SectionCard({ title, children, emptyText, emptyIcon, count }: { title: 
   );
 }
 
-const REASON_STYLE: Record<string, { label: string; badge: string }> = {
-  overdue: { label: "Overdue", badge: "bg-ember text-white" },
-  due_today: { label: "Due today", badge: "bg-amber text-white" },
-  waiting_customer: { label: "Waiting on customer", badge: "bg-ember/80 text-white" },
-  waiting_payment: { label: "Waiting on payment", badge: "bg-amber/80 text-white" },
-  ready_pickup: { label: "Ready for pickup", badge: "bg-sage text-white" }
-};
-
 // The status-mix legend below combines orders across every product type
 // at once, so it needs a label per raw status key that isn't tied to one
 // product type's step list (statusLabel() requires a specific type).
@@ -122,6 +114,43 @@ const STATUS_MIX_LABELS: Record<string, string> = {
   ready_for_pickup: "Ready for pickup",
   picked_up: "Picked up"
 };
+
+function TaskSection({
+  emoji, title, orders, showBalance
+}: { emoji: string; title: string; orders: any[]; showBalance?: boolean }) {
+  if (orders.length === 0) return null;
+  return (
+    <div className="mb-6">
+      <h2 className="font-display text-base text-[#1E3A5F] mb-2">{emoji} {title} ({orders.length})</h2>
+      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+        {orders.map((o: any) => {
+          const balanceCents = (o.price_cents || 0) - (o.amount_paid_cents || 0);
+          return (
+            <div
+              key={o.id}
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors"
+            >
+              <div className="min-w-0">
+                <Link href={`/admin/orders/${o.id}`} className="text-sm font-semibold text-[#1E3A5F] truncate hover:underline block">
+                  {productLabel(o.product_type as ProductType)} — {o.title}
+                </Link>
+                <div className="text-xs text-[#1E3A5F]/60">
+                  <Link href={`/admin/customers/${o.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
+                    {o.profiles?.full_name}
+                  </Link>
+                  {o.due_date && ` · Due ${formatCalendarDate(o.due_date)}`}
+                </div>
+              </div>
+              {showBalance && (
+                <span className="text-sm font-bold text-ember flex-shrink-0">${(balanceCents / 100).toFixed(2)} due</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -171,6 +200,11 @@ export default async function DashboardPage() {
   const weekFromNowStr = `${wy}-${String(wm).padStart(2, "0")}-${String(wd).padStart(2, "0")}`;
   const dueThisWeek = allOrders.filter(o => o.status !== "picked_up" && o.due_date && o.due_date >= todayStr && o.due_date <= weekFromNowStr).length;
 
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const { year: ty, month: tm, day: td } = easternDateParts(tomorrow);
+  const tomorrowStr = `${ty}-${String(tm).padStart(2, "0")}-${String(td).padStart(2, "0")}`;
+
   const pickedUpOrderIdsThisMonth = new Set((pickupEventsThisMonth || []).map((e: any) => e.order_id));
   const salesThisMonthCents = allOrders
     .filter(o => pickedUpOrderIdsThisMonth.has(o.id))
@@ -184,23 +218,27 @@ export default async function DashboardPage() {
   const PICKET_LOW_STOCK_THRESHOLD = 50;
   const isPicketsLow = remainingPickets <= PICKET_LOW_STOCK_THRESHOLD;
 
-  // --- "Needs your attention" — one entry per order, tagged with its
-  // single highest-priority reason (an order that's both overdue and
-  // unpaid shows once, as "Overdue" — the most urgent reason only). ---
-  const PRIORITY_ORDER = ["overdue", "due_today", "waiting_customer", "waiting_payment", "ready_pickup"];
-  function attentionReason(o: any): string | null {
-    if (o.status !== "picked_up" && o.due_date && o.due_date < todayStr) return "overdue";
-    if (o.status !== "picked_up" && o.due_date === todayStr) return "due_today";
-    if (waitingOnCustomerOrderIds.has(o.id)) return "waiting_customer";
-    if (o.status !== "picked_up" && (o.amount_paid_cents || 0) < (o.price_cents || 0)) return "waiting_payment";
-    if (o.status === "ready_for_pickup") return "ready_pickup";
-    return null;
-  }
-  const attentionItems = allOrders
-    .map(o => ({ order: o, reason: attentionReason(o) }))
-    .filter((x): x is { order: any; reason: string } => x.reason !== null)
-    .sort((a, b) => PRIORITY_ORDER.indexOf(a.reason) - PRIORITY_ORDER.indexOf(b.reason));
-  const attentionShown = attentionItems.slice(0, 12);
+  // --- Today's Tasks — six independent checklists, not one combined
+  // list. An order can appear in more than one section on purpose (an
+  // order that's overdue AND unpaid genuinely needs attention for both
+  // reasons) — this is meant to be read like a shop-floor task list,
+  // not a single ranked feed. ---
+  const overdueOrders = allOrders.filter(o => o.status !== "picked_up" && o.due_date && o.due_date < todayStr);
+  // Glue needs at least 24 hours to dry — anything due for pickup
+  // tomorrow needs to be built today to be ready in time.
+  const buildTodayOrders = allOrders.filter(o => o.status !== "picked_up" && o.due_date === tomorrowStr);
+  const dueTodayOrders = allOrders.filter(o => o.status !== "picked_up" && o.due_date === todayStr);
+  const readyForPickupOrders = allOrders.filter(o => o.status === "ready_for_pickup");
+  const waitingOnCustomerTaskOrders = allOrders.filter(o => waitingOnCustomerOrderIds.has(o.id));
+  const outstandingBalanceTaskOrders = waitingOnPaymentOrders;
+
+  const anyTasks =
+    overdueOrders.length > 0 ||
+    buildTodayOrders.length > 0 ||
+    dueTodayOrders.length > 0 ||
+    readyForPickupOrders.length > 0 ||
+    waitingOnCustomerTaskOrders.length > 0 ||
+    outstandingBalanceTaskOrders.length > 0;
 
   // --- Status mix — a lightweight visual indicator built entirely from
   // data already fetched above, no charting library, no new data. ---
@@ -224,21 +262,15 @@ export default async function DashboardPage() {
       <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Dashboard</h1>
       <p className="text-sm text-[#1E3A5F]/60 mb-6">Your daily command center — today's priorities first.</p>
 
-      {/* Needs your attention — the actual daily priority list, sorted
-          overdue first, then due today, waiting on customer, waiting on
-          payment, and finally ready for pickup. This is the first major
-          section on the page on purpose, ahead of the summary cards. */}
+      {/* Today's Tasks — six independent checklists reflecting how the
+          shop actually runs (including the 24-hour glue cure time), not
+          one combined ranked feed. This is the first major section on
+          the page on purpose, ahead of the summary cards. */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="font-display text-lg text-[#1E3A5F]">Needs your attention</h2>
-          {attentionItems.length > attentionShown.length && (
-            <Link href="/admin/orders" className="text-xs font-semibold text-ember hover:underline">
-              +{attentionItems.length - attentionShown.length} more — view all in Orders
-            </Link>
-          )}
-        </div>
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
-          {attentionShown.length === 0 && (
+        <h2 className="font-display text-lg text-[#1E3A5F] mb-3">Today's Tasks</h2>
+
+        {!anyTasks && (
+          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
             <div className="flex flex-col items-center justify-center gap-3 px-4 py-10">
               <div className="w-12 h-12 rounded-full bg-sage/15 flex items-center justify-center">
                 <Icon name="check-circle" className="w-7 h-7 text-sage" />
@@ -248,38 +280,15 @@ export default async function DashboardPage() {
                 <p className="text-xs text-[#1E3A5F]/50 mt-0.5">Nothing overdue, unpaid, or waiting on anyone right now.</p>
               </div>
             </div>
-          )}
-          {attentionShown.map(({ order: o, reason }) => {
-            const style = REASON_STYLE[reason];
-            const balanceCents = (o.price_cents || 0) - (o.amount_paid_cents || 0);
-            return (
-              <div
-                key={o.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors"
-              >
-                <div className="min-w-0">
-                  <Link href={`/admin/orders/${o.id}`} className="text-sm font-semibold text-[#1E3A5F] truncate hover:underline block">
-                    {productLabel(o.product_type as ProductType)} — {o.title}
-                  </Link>
-                  <div className="text-xs text-[#1E3A5F]/60">
-                    <Link href={`/admin/customers/${o.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
-                      {o.profiles?.full_name}
-                    </Link>
-                    {o.due_date && ` · Due ${formatCalendarDate(o.due_date)}`}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {balanceCents > 0 && reason === "waiting_payment" && (
-                    <span className="text-xs font-semibold text-ember">${(balanceCents / 100).toFixed(2)} due</span>
-                  )}
-                  <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${style.badge}`}>
-                    {style.label}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+          </div>
+        )}
+
+        <TaskSection emoji="🔴" title="Overdue Orders" orders={overdueOrders} />
+        <TaskSection emoji="🛠️" title="Build Today (pickup tomorrow — glue needs 24hrs)" orders={buildTodayOrders} />
+        <TaskSection emoji="📅" title="Due Today" orders={dueTodayOrders} />
+        <TaskSection emoji="🚚" title="Ready for Pickup" orders={readyForPickupOrders} />
+        <TaskSection emoji="💬" title="Waiting on Customer" orders={waitingOnCustomerTaskOrders} />
+        <TaskSection emoji="💰" title="Outstanding Balance" orders={outstandingBalanceTaskOrders} showBalance />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
