@@ -13,6 +13,8 @@ import SendInvoiceButton from "@/components/SendInvoiceButton";
 import OrderChat from "@/components/OrderChat";
 import PicketUsageItemForm from "@/components/PicketUsageItemForm";
 import PicketUsageForm from "@/components/PicketUsageForm";
+import OrderTimeline from "@/components/OrderTimeline";
+import { getOrderTimeline } from "@/lib/orderTimeline";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 export default async function AdminOrderDetailPage({ params }: { params: { id: string } }) {
@@ -27,6 +29,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
 
   if (!order) notFound();
   const customer = (order as any).profiles;
+  const timelineEvents = await getOrderTimeline(order.id);
 
   const { data: proofs } = await supabase
     .from("proofs")
@@ -213,6 +216,10 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
 
       <div className="mt-6">
         <OrderChat orderId={order.id} currentUserId={user!.id} isAdmin />
+      </div>
+
+      <div className="mt-6">
+        <OrderTimeline events={timelineEvents} />
       </div>
     </div>
   );
