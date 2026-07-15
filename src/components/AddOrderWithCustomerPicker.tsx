@@ -36,9 +36,20 @@ function blankLineItem(): LineItem {
   };
 }
 
-export default function AddOrderWithCustomerPicker({ customers, products }: { customers: Customer[]; products: SavedProduct[] }) {
+export default function AddOrderWithCustomerPicker({
+  customers = [],
+  products,
+  fixedCustomerId,
+  fixedCustomerName
+}: {
+  customers?: Customer[];
+  products: SavedProduct[];
+  fixedCustomerId?: string;
+  fixedCustomerName?: string;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const isFixedCustomer = !!fixedCustomerId;
 
   // Customer search/select state
   const [search, setSearch] = useState("");
@@ -162,9 +173,13 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
 
   const grandTotal = items.reduce((sum, it) => sum + (Number(it.price) || 0), 0);
 
+  const effectiveCustomer: Customer | null = isFixedCustomer
+    ? { id: fixedCustomerId!, full_name: fixedCustomerName || "", email: "" }
+    : selectedCustomer;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedCustomer) {
+    if (!effectiveCustomer) {
       setError("Pick a customer first.");
       return;
     }
@@ -179,7 +194,7 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerId: selectedCustomer.id,
+          customerId: effectiveCustomer.id,
           dueDate,
           items: items.map(it => ({
             productType: it.productType,
@@ -219,7 +234,16 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
 
   return (
     <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 mb-6 space-y-4">
-      {/* Customer picker */}
+      {/* Customer picker — skipped entirely when this form already knows
+          which customer it's for (e.g. embedded on their own page). */}
+      {isFixedCustomer ? (
+        <div>
+          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Customer</label>
+          <div className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm bg-cream/50">
+            {fixedCustomerName}
+          </div>
+        </div>
+      ) : (
       <div>
         <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Customer</label>
         {selectedCustomer ? (
@@ -269,9 +293,10 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
           </div>
         )}
       </div>
+      )}
 
-      {/* Items — only shown once a customer is picked */}
-      {selectedCustomer && (
+      {/* Items — only shown once a customer is picked (or always, when fixed) */}
+      {effectiveCustomer && (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-[#1E3A5F] mb-2">Items on this order</label>
@@ -399,7 +424,7 @@ export default function AddOrderWithCustomerPicker({ customers, products }: { cu
         </form>
       )}
 
-      {!selectedCustomer && (
+      {!isFixedCustomer && !selectedCustomer && (
         <button type="button" onClick={() => setOpen(false)} className="text-xs text-[#1E3A5F]/50 underline">
           Cancel
         </button>

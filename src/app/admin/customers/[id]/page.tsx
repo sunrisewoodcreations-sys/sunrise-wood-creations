@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
-import AddOrderForm from "@/components/AddOrderForm";
+import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
 import CustomerNotes from "@/components/CustomerNotes";
 import EditCustomerContactForm from "@/components/EditCustomerContactForm";
 
@@ -86,7 +86,11 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
             initialAddress={customer.address}
           />
         </div>
-        <AddOrderForm customerId={customer.id} products={savedProducts || []} />
+        <AddOrderWithCustomerPicker
+          products={savedProducts || []}
+          fixedCustomerId={customer.id}
+          fixedCustomerName={customer.full_name}
+        />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
