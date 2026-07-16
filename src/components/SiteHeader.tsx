@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_SITE_CONTENT, SiteContent, PRODUCT_ORDER } from "@/lib/siteContent";
 import AccountMenu from "@/components/AccountMenu";
@@ -27,8 +28,15 @@ export default async function SiteHeader() {
 
   return (
     <header className="relative flex items-center justify-between px-6 md:px-10 py-4 border-b border-walnut/10 bg-cream">
-      <Link href="/" className="font-display text-lg md:text-xl text-walnut font-semibold">
-        Sunrise Wood Creations
+      <Link href="/" className="flex-shrink-0">
+        <Image
+          src="/logo-header.png"
+          alt="Sunrise Wood Creations"
+          width={900}
+          height={455}
+          priority
+          className="h-12 md:h-16 w-auto"
+        />
       </Link>
       <nav className="hidden md:flex gap-7 text-sm font-medium">
         {visibleProducts.map(p => (

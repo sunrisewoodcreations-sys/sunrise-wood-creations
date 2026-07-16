@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { productLabel, ProductType } from "@/lib/statusSteps";
+import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
 import { formatCalendarDate } from "@/lib/dateDisplay";
 import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
@@ -308,7 +308,7 @@ export default async function AdminOrdersPage({
       <p className="text-sm text-[#1E3A5F]/60 mb-6">All orders, across every customer.</p>
 
       {/* New summary row — click a card to filter the table below */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-4 mb-4">
         <SummaryCard label="Total active" value={totalActive} href={filterHref("active")} active={activeFilter === "active"} />
         <SummaryCard label="Overdue" value={overdueCount} color={overdueCount > 0 ? "text-ember" : "text-sage"} href={filterHref("overdue")} active={activeFilter === "overdue"} />
         <SummaryCard label="Due today" value={dueToday} color={dueToday > 0 ? "text-ember" : undefined} href={filterHref("due_today")} active={activeFilter === "due_today"} />
@@ -367,10 +367,10 @@ export default async function AdminOrdersPage({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
         <AddOrderWithCustomerPicker customers={allCustomers || []} products={savedProducts || []} />
 
-        <form method="GET" className="flex-1 min-w-[240px]">
+        <form method="GET" className="flex-1 sm:min-w-[240px]">
           <input
             name="q"
             defaultValue={query}
@@ -383,13 +383,13 @@ export default async function AdminOrdersPage({
         </form>
         <a
           href="/api/export/orders"
-          className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-2 rounded-md text-xs font-semibold hover:bg-cream whitespace-nowrap"
+          className="text-center border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-2.5 sm:py-2 rounded-md text-xs font-semibold hover:bg-cream whitespace-nowrap"
         >
           Export CSV
         </a>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden text-sm">
           <thead>
             <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
@@ -509,6 +509,100 @@ export default async function AdminOrdersPage({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile card view — entirely separate from the desktop table
+          above (which is untouched), same data, same actions, same
+          filtering/sorting/search since it all reads from the same
+          `sorted` array computed once above. */}
+      <div className="md:hidden space-y-3">
+        {sorted.map((order: any) => {
+          const invoice = latestInvoiceByOrder[order.id];
+          const balanceCents = (order.price_cents || 0) - (order.amount_paid_cents || 0);
+          const isOverdue = order.status !== "picked_up" && order.due_date && order.due_date < todayStr;
+          const isDueToday = order.status !== "picked_up" && order.due_date === todayStr;
+          const isDueTomorrow = order.status !== "picked_up" && order.due_date === tomorrowStr;
+          const priority = priorityInfo(todayStr, order.due_date, order.status);
+
+          return (
+            <div
+              key={order.id}
+              className={`bg-white border rounded-xl shadow-sm p-4 ${
+                isOverdue ? "border-ember/40 border-l-4 border-l-ember bg-ember/5" : "border-[#1E3A5F]/10"
+              }`}
+            >
+              {/* Most important info first: who it's for, what it is, and its status */}
+              <Link href={`/admin/customers/${order.customer_id}`} className="text-base font-bold text-[#1E3A5F] active:underline">
+                {order.profiles?.full_name}
+              </Link>
+              <Link href={`/admin/orders/${order.id}`} className="block text-sm text-[#1E3A5F]/70 mb-2 active:underline">
+                {productLabel(order.product_type as ProductType)} — {order.title}
+              </Link>
+
+              <span className={`inline-block px-3 py-1.5 rounded-full text-sm font-bold whitespace-nowrap ${statusColor(order.status)}`}>
+                {statusLabel(order.product_type as ProductType, order.status)}
+              </span>
+
+              <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-[#1E3A5F]/10">
+                <div>
+                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide font-semibold">Pickup date</div>
+                  {order.due_date ? (
+                    <div className={`text-sm font-mono ${isOverdue || isDueToday ? "text-ember font-semibold" : isDueTomorrow ? "text-[#1E3A5F] font-semibold" : "text-[#1E3A5F]/70"}`}>
+                      {isOverdue && "⚠ "}
+                      {formatCalendarDate(order.due_date)}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-[#1E3A5F]/30">—</div>
+                  )}
+                  {priority && <div className="text-[11px] text-[#1E3A5F]/50 mt-0.5">{priority.daysText}</div>}
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide font-semibold">Amount due</div>
+                  <div className={`text-lg font-bold ${balanceCents > 0 ? "text-ember" : "text-sage"}`}>
+                    ${(balanceCents / 100).toFixed(2)}
+                  </div>
+                  <div className="text-[11px] text-[#1E3A5F]/50">
+                    ${((order.price_cents || 0) / 100).toFixed(2)} total
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-[#1E3A5F]/10">
+                <div className="mb-2">
+                  <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href={`/admin/orders/${order.id}`}
+                    className="flex-1 min-w-[100px] text-center border border-[#1E3A5F] text-[#1E3A5F] px-3 py-2.5 rounded-md text-sm font-semibold"
+                  >
+                    Open order
+                  </Link>
+                  {invoice?.pdf_url && (
+                    <a
+                      href={invoice.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 min-w-[100px] text-center border border-ember/30 text-ember px-3 py-2.5 rounded-md text-sm font-semibold"
+                    >
+                      Invoice #{invoice.invoice_number}
+                    </a>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-3 mt-2">
+                  <SendInvoiceButton orderId={order.id} />
+                  <SendStatusEmailButton orderId={order.id} />
+                  <DeleteOrderButton orderId={order.id} orderTitle={order.title} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {sorted.length === 0 && (
+          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-6 text-center text-sm text-[#1E3A5F]/50">
+            No orders yet.
+          </div>
+        )}
       </div>
     </div>
   );

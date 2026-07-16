@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_SITE_CONTENT, SiteContent, PRODUCT_ORDER } from "@/lib/siteContent";
@@ -25,6 +26,14 @@ export default async function HomePage() {
     <div>
       <SiteHeader />
       <section className="text-center px-6 py-16 md:py-24 bg-gradient-to-b from-amber/10 to-cream">
+        <Image
+          src="/logo-full.png"
+          alt="Sunrise Wood Creations — Handcrafted. Built to last."
+          width={1000}
+          height={1000}
+          priority
+          className="w-64 sm:w-80 md:w-96 h-auto mx-auto mb-6"
+        />
         <h1 className="font-display text-4xl md:text-5xl text-walnut font-semibold mb-4 whitespace-pre-line">
           {content.hero.heading}
         </h1>
