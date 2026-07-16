@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { TimelineEvent } from "@/lib/orderTimeline";
 
 // Small hand-written inline icons, matching the same zero-dependency
@@ -22,11 +23,21 @@ function Icon({ name, className }: { name: string; className?: string }) {
   }
 }
 
-export default function OrderTimeline({ events }: { events: TimelineEvent[] }) {
+export default function OrderTimeline({
+  events,
+  title = "Order activity timeline",
+  subtitle = "The complete history of this order, newest first.",
+  showOrderLabel = false
+}: {
+  events: TimelineEvent[];
+  title?: string;
+  subtitle?: string;
+  showOrderLabel?: boolean;
+}) {
   return (
     <div>
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-2">Order activity timeline</h2>
-      <p className="text-xs text-[#1E3A5F]/50 mb-3">The complete history of this order, newest first.</p>
+      <h2 className="font-display text-lg text-[#1E3A5F] mb-2">{title}</h2>
+      <p className="text-xs text-[#1E3A5F]/50 mb-3">{subtitle}</p>
 
       <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm overflow-hidden">
         {events.length === 0 && (
@@ -46,6 +57,11 @@ export default function OrderTimeline({ events }: { events: TimelineEvent[] }) {
                   {new Date(ev.timestamp).toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" })} ET
                 </div>
               </div>
+              {showOrderLabel && ev.orderId && (
+                <Link href={`/admin/orders/${ev.orderId}`} className="text-xs text-ember hover:underline">
+                  {ev.orderLabel}
+                </Link>
+              )}
               {ev.detail && <div className="text-xs text-[#1E3A5F]/60 mt-0.5 truncate">{ev.detail}</div>}
             </div>
           </div>

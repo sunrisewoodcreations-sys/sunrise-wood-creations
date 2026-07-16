@@ -8,6 +8,8 @@ export type TimelineEvent = {
   detail?: string;
   icon: string;
   color: string;
+  orderId?: string;
+  orderLabel?: string;
 };
 
 // Builds the full audit trail for one order by reading from tables that
@@ -149,4 +151,29 @@ export async function getOrderTimeline(orderId: string): Promise<TimelineEvent[]
   });
 
   return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+}
+
+// Combines the same per-order timeline above across every order a
+// customer has ever placed, into one chronological history — this is
+// the CRM-style "everything that's ever happened with this customer"
+// view. Reuses getOrderTimeline() for each order rather than
+// re-implementing any of its event-sourcing logic; this function only
+// adds which order each event belongs to, then merges and re-sorts.
+export async function getCustomerTimeline(
+  orders: { id: string; title: string; product_type: string }[]
+): Promise<TimelineEvent[]> {
+  const perOrderEvents = await Promise.all(
+    orders.map(async order => {
+      const events = await getOrderTimeline(order.id);
+      return events.map(ev => ({
+        ...ev,
+        orderId: order.id,
+        orderLabel: order.title
+      }));
+    })
+  );
+
+  return perOrderEvents
+    .flat()
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }

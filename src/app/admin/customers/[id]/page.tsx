@@ -5,6 +5,9 @@ import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statu
 import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
 import CustomerNotes from "@/components/CustomerNotes";
 import EditCustomerContactForm from "@/components/EditCustomerContactForm";
+import CustomerQuickActions from "@/components/CustomerQuickActions";
+import OrderTimeline from "@/components/OrderTimeline";
+import { getCustomerTimeline } from "@/lib/orderTimeline";
 
 function StatCard({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
@@ -65,9 +68,14 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
   const firstOrderDate = totalOrders > 0 ? orderList[totalOrders - 1].created_at : null;
   const lastOrderDate = totalOrders > 0 ? orderList[0].created_at : null;
   const completedOrders = orderList.filter((o: any) => o.status === "picked_up").length;
+  const activeOrders = orderList.filter((o: any) => o.status !== "picked_up").length;
   const outstandingBalanceCents = orderList.reduce(
     (sum: number, o: any) => sum + Math.max(0, (o.price_cents || 0) - (o.amount_paid_cents || 0)),
     0
+  );
+
+  const customerTimeline = await getCustomerTimeline(
+    orderList.map((o: any) => ({ id: o.id, title: o.title, product_type: o.product_type }))
   );
 
   return (
@@ -93,10 +101,18 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         />
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+      <CustomerQuickActions
+        orders={orderList}
+        customerEmail={customer.email}
+        customerName={customer.full_name}
+        hasRealEmail={customer.has_real_email !== false}
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-8">
         <StatCard label="Lifetime value" value={`$${(lifetimeRevenueCents / 100).toFixed(2)}`} color="text-sage" />
         <StatCard label="Outstanding balance" value={`$${(outstandingBalanceCents / 100).toFixed(2)}`} color={outstandingBalanceCents > 0 ? "text-ember" : "text-sage"} />
         <StatCard label="Total orders" value={String(totalOrders)} />
+        <StatCard label="Active orders" value={String(activeOrders)} color={activeOrders > 0 ? "text-amber" : undefined} />
         <StatCard label="Completed orders" value={String(completedOrders)} color="text-sage" />
         <StatCard label="Avg order value" value={`$${(avgOrderValueCents / 100).toFixed(2)}`} />
         <StatCard label="First order" value={firstOrderDate ? new Date(firstOrderDate).toLocaleDateString() : "—"} />
@@ -131,8 +147,8 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         <CustomerNotes customerId={customer.id} />
       </div>
 
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-2">Order timeline</h2>
-      <div className="overflow-x-auto overflow-y-hidden bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+      <h2 className="font-display text-lg text-[#1E3A5F] mb-2">Order history</h2>
+      <div className="hidden md:block overflow-x-auto overflow-y-hidden bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
@@ -198,6 +214,64 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile card view — separate from the desktop table above (which
+          is untouched), same data, same invoice links. */}
+      <div className="md:hidden space-y-3">
+        {orderList.map((order: any) => {
+          const invoice = latestInvoiceByOrder[order.id];
+          const balanceCents = (order.price_cents || 0) - (order.amount_paid_cents || 0);
+          return (
+            <div key={order.id} className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
+              <Link href={`/admin/orders/${order.id}`} className="text-sm font-semibold text-[#1E3A5F] active:underline block mb-1">
+                {productLabel(order.product_type as ProductType)} — {order.title}
+              </Link>
+              <div className="text-xs text-[#1E3A5F]/60 mb-2">{new Date(order.created_at).toLocaleDateString()}</div>
+              <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusColor(order.status)}`}>
+                {statusLabel(order.product_type as ProductType, order.status)}
+              </span>
+              <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[#1E3A5F]/10 text-sm">
+                <div>
+                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Sales</div>
+                  <div className="text-[#1E3A5F]/70">${((order.price_cents || 0) / 100).toFixed(2)}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Paid</div>
+                  <div className="text-[#1E3A5F]/70">${((order.amount_paid_cents || 0) / 100).toFixed(2)}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Owed</div>
+                  <div className={`font-semibold ${balanceCents > 0 ? "text-ember" : "text-sage"}`}>${(balanceCents / 100).toFixed(2)}</div>
+                </div>
+              </div>
+              {invoice?.pdf_url && (
+                <a
+                  href={invoice.pdf_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block mt-3 text-xs font-semibold text-ember active:underline"
+                >
+                  Download invoice #{invoice.invoice_number}
+                </a>
+              )}
+            </div>
+          );
+        })}
+        {orderList.length === 0 && (
+          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-6 text-center text-sm text-[#1E3A5F]/50">
+            No orders yet.
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6">
+        <OrderTimeline
+          events={customerTimeline}
+          title="Customer activity timeline"
+          subtitle="Every event across all of this customer's orders — status changes, payments, messages, and more — newest first."
+          showOrderLabel
+        />
       </div>
     </div>
   );

@@ -23,7 +23,9 @@ type Product = {
   pickets_per_unit: number;
 };
 
-export default function ProductRow({ product }: { product: Product }) {
+export default function ProductRow({
+  product, buildableNow, reservedQty, unitsSold
+}: { product: Product; buildableNow?: number | null; reservedQty?: number; unitsSold?: number }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -38,8 +40,10 @@ export default function ProductRow({ product }: { product: Product }) {
   const [stockQuantity, setStockQuantity] = useState(String(product.stock_quantity ?? 0));
   const [lowStockThreshold, setLowStockThreshold] = useState(String(product.low_stock_threshold ?? 0));
   const [picketsPerUnit, setPicketsPerUnit] = useState(String(product.pickets_per_unit ?? 0));
+  const [adjustmentReason, setAdjustmentReason] = useState("");
 
   const margin = (product.price_cents - (product.cost_cents || 0)) / 100;
+  const stockWillChange = Number(stockQuantity) !== (product.stock_quantity ?? 0);
 
   async function handleSave() {
     setLoading(true);
@@ -47,11 +51,12 @@ export default function ProductRow({ product }: { product: Product }) {
     const res = await fetch(`/api/products/${product.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold, picketsPerUnit })
+      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold, picketsPerUnit, adjustmentReason })
     });
     setLoading(false);
     if (res.ok) {
       setEditing(false);
+      setAdjustmentReason("");
       router.refresh();
     } else {
       const body = await res.json().catch(() => ({}));
@@ -68,6 +73,7 @@ export default function ProductRow({ product }: { product: Product }) {
 
   if (editing) {
     return (
+      <>
       <tr className="border-t border-[#1E3A5F]/10 bg-cream/40">
         <td className="px-4 py-3">
           <input value={name} onChange={e => setName(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm" />
@@ -100,6 +106,9 @@ export default function ProductRow({ product }: { product: Product }) {
             <span className="text-[#1E3A5F]/30">—</span>
           )}
         </td>
+        <td className="px-4 py-3 text-right text-[#1E3A5F]/30">—</td>
+        <td className="px-4 py-3 text-right text-[#1E3A5F]/30">—</td>
+        <td className="px-4 py-3 text-right text-[#1E3A5F]/30">—</td>
         <td className="px-4 py-3 text-right whitespace-nowrap">
           <button onClick={handleSave} disabled={loading} className="text-sage font-semibold text-xs mr-3">
             {loading ? "Saving..." : "Save"}
@@ -108,6 +117,22 @@ export default function ProductRow({ product }: { product: Product }) {
           {error && <div className="text-ember text-xs mt-1">{error}</div>}
         </td>
       </tr>
+      {stockWillChange && (
+        <tr className="bg-cream/40">
+          <td colSpan={13} className="px-4 pb-3">
+            <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">
+              Reason for stock change ({product.stock_quantity ?? 0} → {stockQuantity})
+            </label>
+            <input
+              value={adjustmentReason}
+              onChange={e => setAdjustmentReason(e.target.value)}
+              placeholder="e.g. Restocked, corrected count, damaged goods"
+              className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+            />
+          </td>
+        </tr>
+      )}
+      </>
     );
   }
 
@@ -129,6 +154,15 @@ export default function ProductRow({ product }: { product: Product }) {
       <td className="px-4 py-3 text-right text-[#1E3A5F]/50">{product.low_stock_threshold ?? 0}</td>
       <td className="px-4 py-3 text-right text-[#1E3A5F]/50">
         {product.product_type === "planter" ? (product.pickets_per_unit ?? 0) : "—"}
+      </td>
+      <td className="px-4 py-3 text-right font-semibold text-[#1E3A5F]">
+        {buildableNow != null ? buildableNow : "—"}
+      </td>
+      <td className={`px-4 py-3 text-right font-semibold ${(reservedQty ?? 0) > 0 ? "text-amber" : "text-[#1E3A5F]/30"}`}>
+        {reservedQty ?? 0}
+      </td>
+      <td className="px-4 py-3 text-right text-[#1E3A5F]/70">
+        {unitsSold ?? 0}
       </td>
       <td className="px-4 py-3 text-right whitespace-nowrap">
         {confirmingDelete ? (
