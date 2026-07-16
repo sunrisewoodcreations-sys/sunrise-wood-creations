@@ -27,21 +27,24 @@ export default function AdminMobileNav({
 
   return (
     <div className="md:hidden">
-      {/* Top bar — always visible on mobile, sits above the page content */}
-      <div className="flex items-center justify-between bg-[#1E3A5F] text-white px-4 py-3 sticky top-0 z-40">
-        <span className="font-display text-base">Hello, {firstName}</span>
+      {/* Top bar — always visible on mobile, sits above the page content.
+          Kept deliberately compact (reduced padding/icon/text size vs the
+          original) for one-handed use, since this bar is visible on every
+          single screen and eats into usable space otherwise. */}
+      <div className="flex items-center justify-between bg-[#1E3A5F] text-white px-4 py-2 sticky top-0 z-40">
+        <span className="font-display text-sm">Hello, {firstName}</span>
         <button
           onClick={() => setOpen(o => !o)}
           aria-label={open ? "Close menu" : "Open menu"}
           className="p-2 -mr-2"
         >
           {open ? (
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           ) : (
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="6" x2="21" y2="6" />
               <line x1="3" y1="12" x2="21" y2="12" />
               <line x1="3" y1="18" x2="21" y2="18" />
@@ -52,7 +55,7 @@ export default function AdminMobileNav({
 
       {/* Slide-down panel — large, touch-friendly rows, closes on tap */}
       {open && (
-        <div className="fixed inset-0 top-[52px] bg-[#1E3A5F] z-30 overflow-y-auto">
+        <div className="fixed inset-0 top-[44px] bg-[#1E3A5F] z-30 overflow-y-auto">
           <nav className="flex flex-col px-2 py-2">
             {links.map(link => (
               <Link

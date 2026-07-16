@@ -266,7 +266,7 @@ export default async function DashboardPage() {
           shop actually runs (including the 24-hour glue cure time), not
           one combined ranked feed. This is the first major section on
           the page on purpose, ahead of the summary cards. */}
-      <div className="mb-8">
+      <div className="mb-10 sm:mb-8">
         <h2 className="font-display text-lg text-[#1E3A5F] mb-3">Today's Tasks</h2>
 
         {!anyTasks && (
@@ -291,7 +291,7 @@ export default async function DashboardPage() {
         <TaskSection emoji="💰" title="Outstanding Balance" orders={outstandingBalanceTaskOrders} showBalance />
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sm:mb-4">
         <SummaryCard label="New orders" value={newOrders} href="/admin/orders?filter=new" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         <SummaryCard label="In production" value={inProduction} href="/admin/orders?filter=in_production" icon="hammer" tint="bg-amber/20 text-amber" />
         <SummaryCard label="Ready for pickup" value={readyForPickup} color="text-sage" href="/admin/orders?filter=ready_pickup" icon="check-circle" tint="bg-sage/15 text-sage" />
@@ -321,7 +321,7 @@ export default async function DashboardPage() {
       {/* Lightweight status-mix bar — built entirely from the order data
           already fetched above, no new tables or chart library. */}
       {activeOrders.length > 0 && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-4 mb-8 shadow-sm">
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-4 mb-10 sm:mb-8 shadow-sm">
           <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Active orders by stage ({activeOrders.length})</div>
           <div className="flex h-3 rounded-full overflow-hidden mb-2">
             {statusMix.map(([status, count]) => (
@@ -386,7 +386,7 @@ export default async function DashboardPage() {
         )}
       </SectionCard>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8 sm:mt-6">
         <SectionCard title="Recent messages" emptyText="No conversations yet." emptyIcon="message">
           {recentConversations.map((m: any) => {
             const order = m.orders;
