@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminButton from "@/components/AdminButton";
+import ProductBOMEditor, { BOMPartRow, emptyPartRow } from "@/components/ProductBOMEditor";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -22,6 +23,7 @@ export default function AddProductForm() {
   const [stockQuantity, setStockQuantity] = useState("0");
   const [lowStockThreshold, setLowStockThreshold] = useState("0");
   const [picketsPerUnit, setPicketsPerUnit] = useState("0");
+  const [partRows, setPartRows] = useState<BOMPartRow[]>([emptyPartRow()]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,14 +38,45 @@ export default function AddProductForm() {
       body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold, picketsPerUnit })
     });
     const body = await res.json().catch(() => ({}));
-    setLoading(false);
 
     if (!res.ok) {
+      setLoading(false);
       setError(body.error || "Something went wrong.");
       return;
     }
 
+    // Parts need the new product's ID, so this step can only happen
+    // after the product itself is created — not in parallel.
+    const validPartRows = partRows.filter(r => r.partName.trim() && Number(r.length) > 0);
+    if (validPartRows.length > 0) {
+      const partsRes = await fetch(`/api/products/${body.product.id}/bom-parts`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parts: validPartRows.map(r => ({
+            partName: r.partName,
+            length: r.length,
+            finalLength: r.finalLength || undefined,
+            quantityPerUnit: r.quantityPerUnit,
+            materialType: r.materialType,
+            isTrim: r.isTrim,
+            grainDirection: r.grainDirection || undefined
+          }))
+        })
+      });
+      if (!partsRes.ok) {
+        setLoading(false);
+        const partsBody = await partsRes.json().catch(() => ({}));
+        setError(`Product was created, but saving its parts failed: ${partsBody.error || "unknown error"}. Edit the product to add them.`);
+        setOpen(false);
+        router.refresh();
+        return;
+      }
+    }
+
+    setLoading(false);
     setName(""); setSizeDetails(""); setPrice(""); setCostPrice(""); setStockQuantity("0"); setLowStockThreshold("0"); setPicketsPerUnit("0");
+    setPartRows([emptyPartRow()]);
     setOpen(false);
     router.refresh();
   }
@@ -97,6 +130,11 @@ export default function AddProductForm() {
           </div>
         )}
       </div>
+
+      <div className="border-t border-[#1E3A5F]/10 pt-3">
+        <ProductBOMEditor rows={partRows} onChange={setPartRows} />
+      </div>
+
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
       <div className="flex gap-2">
         <AdminButton type="submit" disabled={loading}>
