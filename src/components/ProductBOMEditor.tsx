@@ -30,11 +30,17 @@ export function bomPartsToRows(parts: { part_name: string; length_inches: number
     : [emptyPartRow()];
 }
 
-// Purely a controlled display/edit grid now — no state of its own, no
-// save button, no API call. The parent (ProductRow) owns the actual
-// rows and saves them together with the rest of the product in one
-// combined Save action, so there's no longer a second, separate save
-// step that part edits could be silently lost by skipping.
+// A part name is still stored (the database column requires one), but
+// you never have to type it — if left blank, a sensible name is filled
+// in automatically at save time, using the row's position.
+export function withAutoNames(rows: BOMPartRow[]): BOMPartRow[] {
+  return rows.map((r, i) => ({ ...r, partName: r.partName.trim() || `Part ${i + 1}` }));
+}
+
+// Only shows Length, Quantity, and Trim, per your request — material
+// and grain direction are still stored (defaulted to "Cedar" and empty)
+// since the database keeps a place for them, but nothing about them is
+// shown or required here anymore.
 export default function ProductBOMEditor({
   rows,
   onChange
@@ -49,52 +55,30 @@ export default function ProductBOMEditor({
   return (
     <div className="bg-cream/40 border border-[#1E3A5F]/10 rounded-lg p-3">
       <div className="text-xs font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">
-        Parts used (Bill of Materials)
+        Parts used — length, quantity, and trim
       </div>
 
       {rows.map((row, i) => (
-        <div key={i} className="grid grid-cols-12 gap-1.5 mb-1.5 items-center">
-          <input
-            value={row.partName}
-            onChange={e => updateRow(i, { partName: e.target.value })}
-            placeholder="Part name"
-            className="col-span-3 border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-xs"
-          />
+        <div key={i} className="grid grid-cols-12 gap-2 mb-1.5 items-center">
           <input
             type="number"
             value={row.length}
             onChange={e => updateRow(i, { length: e.target.value })}
             placeholder="Length (in)"
-            className="col-span-2 border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-xs"
+            className="col-span-5 border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
           />
           <input
             type="number"
             value={row.quantityPerUnit}
             onChange={e => updateRow(i, { quantityPerUnit: e.target.value })}
             placeholder="Qty"
-            className="col-span-1 border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-xs"
+            className="col-span-3 border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
           />
-          <input
-            value={row.materialType}
-            onChange={e => updateRow(i, { materialType: e.target.value })}
-            placeholder="Material (e.g. Cedar)"
-            className="col-span-3 border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-xs"
-          />
-          <select
-            value={row.grainDirection}
-            onChange={e => updateRow(i, { grainDirection: e.target.value })}
-            className="col-span-1 border border-[#1E3A5F]/15 rounded-md px-1 py-1.5 text-xs"
-          >
-            <option value="">Grain</option>
-            <option value="length">Length</option>
-            <option value="width">Width</option>
-            <option value="either">Either</option>
-          </select>
-          <label className="col-span-1 flex items-center gap-1 text-[11px] text-[#1E3A5F]/70">
+          <label className="col-span-3 flex items-center gap-1.5 text-xs text-[#1E3A5F]/70">
             <input type="checkbox" checked={row.isTrim} onChange={e => updateRow(i, { isTrim: e.target.checked })} />
             Trim
           </label>
-          <button onClick={() => onChange(rows.filter((_, ri) => ri !== i))} className="col-span-1 text-ember text-xs font-semibold">✕</button>
+          <button onClick={() => onChange(rows.filter((_, ri) => ri !== i))} className="col-span-1 text-ember text-sm font-semibold">✕</button>
         </div>
       ))}
 

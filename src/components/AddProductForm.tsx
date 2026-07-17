@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminButton from "@/components/AdminButton";
-import ProductBOMEditor, { BOMPartRow, emptyPartRow } from "@/components/ProductBOMEditor";
+import ProductBOMEditor, { BOMPartRow, emptyPartRow, withAutoNames } from "@/components/ProductBOMEditor";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -47,7 +47,7 @@ export default function AddProductForm() {
 
     // Parts need the new product's ID, so this step can only happen
     // after the product itself is created — not in parallel.
-    const validPartRows = partRows.filter(r => r.partName.trim() && Number(r.length) > 0);
+    const validPartRows = withAutoNames(partRows.filter(r => Number(r.length) > 0));
     if (validPartRows.length > 0) {
       const partsRes = await fetch(`/api/products/${body.product.id}/bom-parts`, {
         method: "PATCH",

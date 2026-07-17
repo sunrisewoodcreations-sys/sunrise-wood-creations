@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { productLabel, ProductType } from "@/lib/statusSteps";
-import ProductBOMEditor, { BOMPartRow, bomPartsToRows } from "@/components/ProductBOMEditor";
+import ProductBOMEditor, { BOMPartRow, bomPartsToRows, withAutoNames } from "@/components/ProductBOMEditor";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -69,7 +69,7 @@ export default function ProductRow({
     setLoading(true);
     setError("");
 
-    const validPartRows = partRows.filter(r => r.partName.trim() && Number(r.length) > 0);
+    const validPartRows = withAutoNames(partRows.filter(r => Number(r.length) > 0));
 
     const [productRes, partsRes] = await Promise.all([
       fetch(`/api/products/${product.id}`, {
