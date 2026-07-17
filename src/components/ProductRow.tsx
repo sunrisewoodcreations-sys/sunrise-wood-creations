@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { productLabel, ProductType } from "@/lib/statusSteps";
-import ProductBOMEditor from "@/components/ProductBOMEditor";
+import ProductBOMEditor, { BOMPartRow, bomPartsToRows } from "@/components/ProductBOMEditor";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -46,6 +46,21 @@ export default function ProductRow({
   const [lowStockThreshold, setLowStockThreshold] = useState(String(product.low_stock_threshold ?? 0));
   const [picketsPerUnit, setPicketsPerUnit] = useState(String(product.pickets_per_unit ?? 0));
   const [adjustmentReason, setAdjustmentReason] = useState("");
+  const [partRows, setPartRows] = useState<BOMPartRow[]>(() => bomPartsToRows(bomParts || []));
+
+  // Keep the parts rows in sync with the real server data whenever it
+  // actually changes (e.g. after a save completes and this page
+  // refreshes) — not just once on first mount. This is what fixes
+  // parts appearing to "disappear": without this, reopening Edit could
+  // show whatever this component's very first snapshot happened to be.
+  const bomPartsKey = JSON.stringify(bomParts || []);
+  const lastSyncedBomKey = useRef(bomPartsKey);
+  useEffect(() => {
+    if (bomPartsKey !== lastSyncedBomKey.current) {
+      lastSyncedBomKey.current = bomPartsKey;
+      setPartRows(bomPartsToRows(bomParts || []));
+    }
+  }, [bomPartsKey, bomParts]);
 
   const margin = (product.price_cents - (product.cost_cents || 0)) / 100;
   const stockWillChange = Number(stockQuantity) !== (product.stock_quantity ?? 0);
@@ -53,19 +68,42 @@ export default function ProductRow({
   async function handleSave() {
     setLoading(true);
     setError("");
-    const res = await fetch(`/api/products/${product.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold, picketsPerUnit, adjustmentReason })
-    });
+
+    const validPartRows = partRows.filter(r => r.partName.trim() && Number(r.length) > 0);
+
+    const [productRes, partsRes] = await Promise.all([
+      fetch(`/api/products/${product.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold, picketsPerUnit, adjustmentReason })
+      }),
+      fetch(`/api/products/${product.id}/bom-parts`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parts: validPartRows.map(r => ({
+            partName: r.partName,
+            length: r.length,
+            finalLength: r.finalLength || undefined,
+            quantityPerUnit: r.quantityPerUnit,
+            materialType: r.materialType,
+            isTrim: r.isTrim,
+            grainDirection: r.grainDirection || undefined
+          }))
+        })
+      })
+    ]);
+
     setLoading(false);
-    if (res.ok) {
+
+    if (productRes.ok && partsRes.ok) {
       setEditing(false);
       setAdjustmentReason("");
       router.refresh();
     } else {
-      const body = await res.json().catch(() => ({}));
-      setError(body.error || "Couldn't save changes.");
+      const failedRes = !productRes.ok ? productRes : partsRes;
+      const body = await failedRes.json().catch(() => ({}));
+      setError(body.error || "Couldn't save changes. Nothing was closed so you don't lose your edits — fix the issue above and try again.");
     }
   }
 
@@ -151,7 +189,7 @@ export default function ProductRow({
       )}
       <tr className="bg-cream/40">
         <td colSpan={13} className="px-4 pb-3">
-          <ProductBOMEditor productId={product.id} initialParts={bomParts || []} />
+          <ProductBOMEditor rows={partRows} onChange={setPartRows} />
         </td>
       </tr>
       </>
