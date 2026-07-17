@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import AdminButton from "@/components/AdminButton";
 
@@ -18,6 +18,20 @@ function emptyRow(): BOMPartRow {
   return { partName: "", length: "", finalLength: "", quantityPerUnit: "1", materialType: "Cedar", isTrim: false, grainDirection: "" };
 }
 
+function toRows(parts: { part_name: string; length_inches: number; final_length_inches: number | null; quantity_per_unit: number; material_type: string; is_trim: boolean; grain_direction: string | null }[]): BOMPartRow[] {
+  return parts.length > 0
+    ? parts.map(p => ({
+        partName: p.part_name,
+        length: String(p.length_inches),
+        finalLength: p.final_length_inches != null ? String(p.final_length_inches) : "",
+        quantityPerUnit: String(p.quantity_per_unit),
+        materialType: p.material_type,
+        isTrim: p.is_trim,
+        grainDirection: p.grain_direction || ""
+      }))
+    : [emptyRow()];
+}
+
 export default function ProductBOMEditor({
   productId,
   initialParts
@@ -26,22 +40,26 @@ export default function ProductBOMEditor({
   initialParts: { part_name: string; length_inches: number; final_length_inches: number | null; quantity_per_unit: number; material_type: string; is_trim: boolean; grain_direction: string | null }[];
 }) {
   const router = useRouter();
-  const [rows, setRows] = useState<BOMPartRow[]>(
-    initialParts.length > 0
-      ? initialParts.map(p => ({
-          partName: p.part_name,
-          length: String(p.length_inches),
-          finalLength: p.final_length_inches != null ? String(p.final_length_inches) : "",
-          quantityPerUnit: String(p.quantity_per_unit),
-          materialType: p.material_type,
-          isTrim: p.is_trim,
-          grainDirection: p.grain_direction || ""
-        }))
-      : [emptyRow()]
-  );
+  const [rows, setRows] = useState<BOMPartRow[]>(() => toRows(initialParts));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+
+  // The root cause of "parts disappear after hide/show": this component
+  // used to only read initialParts once, on first mount. If the panel
+  // got hidden and shown again before the page's background refresh
+  // (triggered by a save) had actually finished, a fresh mount would
+  // grab whatever stale data the parent still had. Re-syncing whenever
+  // the real server data changes — not just on mount — fixes this at
+  // the source instead of relying on timing.
+  const initialPartsKey = JSON.stringify(initialParts);
+  const lastSyncedKey = useRef(initialPartsKey);
+  useEffect(() => {
+    if (initialPartsKey !== lastSyncedKey.current) {
+      lastSyncedKey.current = initialPartsKey;
+      setRows(toRows(initialParts));
+    }
+  }, [initialPartsKey, initialParts]);
 
   function updateRow(index: number, patch: Partial<BOMPartRow>) {
     setRows(rows.map((r, i) => (i === index ? { ...r, ...patch } : r)));

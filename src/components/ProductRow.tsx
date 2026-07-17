@@ -32,9 +32,9 @@ export default function ProductRow({
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
-  const [showParts, setShowParts] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const [error, setError] = useState("");
 
   const [productType, setProductType] = useState(product.product_type);
@@ -74,6 +74,18 @@ export default function ProductRow({
     const res = await fetch(`/api/products/${product.id}`, { method: "DELETE" });
     setLoading(false);
     if (res.ok) router.refresh();
+  }
+
+  async function handleDuplicate() {
+    setDuplicating(true);
+    const res = await fetch(`/api/products/${product.id}/duplicate`, { method: "POST" });
+    setDuplicating(false);
+    if (res.ok) {
+      router.refresh();
+    } else {
+      const body = await res.json().catch(() => ({}));
+      setError(body.error || "Couldn't duplicate this product.");
+    }
   }
 
   if (editing) {
@@ -137,6 +149,11 @@ export default function ProductRow({
           </td>
         </tr>
       )}
+      <tr className="bg-cream/40">
+        <td colSpan={13} className="px-4 pb-3">
+          <ProductBOMEditor productId={product.id} initialParts={bomParts || []} />
+        </td>
+      </tr>
       </>
     );
   }
@@ -181,19 +198,17 @@ export default function ProductRow({
         ) : (
           <>
             <button onClick={() => setEditing(true)} className="text-xs text-[#1E3A5F] hover:underline mr-3">Edit</button>
-            <button onClick={() => setShowParts(s => !s)} className="text-xs text-[#1E3A5F] hover:underline mr-3">
-              {showParts ? "Hide parts" : "Parts"}
+            <button onClick={handleDuplicate} disabled={duplicating} className="text-xs text-[#1E3A5F] hover:underline mr-3 disabled:opacity-50">
+              {duplicating ? "Duplicating..." : "Duplicate"}
             </button>
             <button onClick={() => setConfirmingDelete(true)} className="text-xs text-[#1E3A5F] hover:underline">Delete</button>
           </>
         )}
       </td>
     </tr>
-    {showParts && !editing && (
+    {error && !editing && (
       <tr>
-        <td colSpan={13} className="px-4 pb-3 bg-cream/20">
-          <ProductBOMEditor productId={product.id} initialParts={bomParts || []} />
-        </td>
+        <td colSpan={13} className="px-4 pb-2 text-xs text-ember">{error}</td>
       </tr>
     )}
     </>
