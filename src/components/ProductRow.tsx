@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { productLabel, ProductType } from "@/lib/statusSteps";
+import ProductBOMEditor from "@/components/ProductBOMEditor";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -24,10 +25,14 @@ type Product = {
 };
 
 export default function ProductRow({
-  product, buildableNow, reservedQty, unitsSold
-}: { product: Product; buildableNow?: number | null; reservedQty?: number; unitsSold?: number }) {
+  product, buildableNow, reservedQty, unitsSold, bomParts
+}: {
+  product: Product; buildableNow?: number | null; reservedQty?: number; unitsSold?: number;
+  bomParts?: { part_name: string; length_inches: number; final_length_inches: number | null; quantity_per_unit: number; material_type: string; is_trim: boolean; grain_direction: string | null }[];
+}) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const [showParts, setShowParts] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -139,6 +144,7 @@ export default function ProductRow({
   const isLowStock = (product.stock_quantity ?? 0) <= (product.low_stock_threshold ?? 0);
 
   return (
+    <>
     <tr className="border-t border-[#1E3A5F]/10">
       <td className="px-4 py-3 text-[#1E3A5F]/70">{product.name}</td>
       <td className="px-4 py-3 text-[#1E3A5F]/70">{productLabel(product.product_type as ProductType)}</td>
@@ -175,10 +181,21 @@ export default function ProductRow({
         ) : (
           <>
             <button onClick={() => setEditing(true)} className="text-xs text-[#1E3A5F] hover:underline mr-3">Edit</button>
+            <button onClick={() => setShowParts(s => !s)} className="text-xs text-[#1E3A5F] hover:underline mr-3">
+              {showParts ? "Hide parts" : "Parts"}
+            </button>
             <button onClick={() => setConfirmingDelete(true)} className="text-xs text-[#1E3A5F] hover:underline">Delete</button>
           </>
         )}
       </td>
     </tr>
+    {showParts && !editing && (
+      <tr>
+        <td colSpan={13} className="px-4 pb-3 bg-cream/20">
+          <ProductBOMEditor productId={product.id} initialParts={bomParts || []} />
+        </td>
+      </tr>
+    )}
+    </>
   );
 }

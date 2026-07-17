@@ -19,3 +19,13 @@ body {
     font-size: 16px;
   }
 }
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  @page {
+    margin: 0.5in;
+  }
+}

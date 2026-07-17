@@ -8,6 +8,7 @@ import DeleteOrderButton from "@/components/DeleteOrderButton";
 import AmountPaidForm from "@/components/AmountPaidForm";
 import EditOrderDateForm from "@/components/EditOrderDateForm";
 import EditDueDateForm from "@/components/EditDueDateForm";
+import EditProductionDateForm from "@/components/EditProductionDateForm";
 import SendStatusEmailButton from "@/components/SendStatusEmailButton";
 import SendInvoiceButton from "@/components/SendInvoiceButton";
 import OrderChat from "@/components/OrderChat";
@@ -80,6 +81,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         <p className="text-sm text-[#1E3A5F]/60 mb-1">Customer: {customer.full_name} ({customer.email})</p>
         <EditOrderDateForm orderId={order.id} initialDate={order.created_at} />
         <EditDueDateForm orderId={order.id} initialDueDate={order.due_date} />
+        <EditProductionDateForm orderId={order.id} initialProductionDate={order.production_date} />
         <p className="text-sm text-[#1E3A5F]/60 mb-4">
           {order.size_details} · ${(order.price_cents / 100).toFixed(2)} · Placed {new Date(order.created_at).toLocaleDateString()}
         </p>

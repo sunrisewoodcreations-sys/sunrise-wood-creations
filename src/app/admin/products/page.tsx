@@ -12,14 +12,22 @@ export default async function ProductsPage() {
     { data: orderItems },
     { data: legacyOrders },
     { data: picketPurchases },
-    { data: recentAdjustments }
+    { data: recentAdjustments },
+    { data: bomParts }
   ] = await Promise.all([
     supabase.from("products").select("*").order("created_at", { ascending: false }),
     supabase.from("order_items").select("product_id, quantity, orders:order_id(status)"),
     supabase.from("orders").select("product_id, quantity, status"),
     supabase.from("picket_purchases").select("remaining_quantity"),
-    supabase.from("product_stock_adjustments").select("*, products:product_id(name)").order("created_at", { ascending: false }).limit(15)
+    supabase.from("product_stock_adjustments").select("*, products:product_id(name)").order("created_at", { ascending: false }).limit(15),
+    supabase.from("product_bom_parts").select("*").order("sort_order", { ascending: true })
   ]);
+
+  const bomPartsByProduct: Record<string, any[]> = {};
+  (bomParts || []).forEach((part: any) => {
+    if (!bomPartsByProduct[part.product_id]) bomPartsByProduct[part.product_id] = [];
+    bomPartsByProduct[part.product_id].push(part);
+  });
 
   const remainingPickets = (picketPurchases || []).reduce((sum: number, p: any) => sum + (p.remaining_quantity || 0), 0);
 
@@ -117,6 +125,7 @@ export default async function ProductsPage() {
                 buildableNow={buildable}
                 reservedQty={reservedByProduct[p.id] || 0}
                 unitsSold={unitsSoldByProduct[p.id] || 0}
+                bomParts={bomPartsByProduct[p.id] || []}
               />
             );
           })}

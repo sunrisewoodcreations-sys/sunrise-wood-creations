@@ -190,7 +190,7 @@ export default function ProductionSchedule({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverDate, setDragOverDate] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [mobileTab, setMobileTab] = useState<"day" | "overdue" | "waiting" | "completed">("day");
+  const [mobileTab, setMobileTab] = useState<"day" | "unscheduled" | "overdue" | "waiting" | "completed">("day");
 
   const waitingSet = useMemo(() => new Set(waitingOnCustomerOrderIds), [waitingOnCustomerOrderIds]);
 
@@ -476,7 +476,7 @@ export default function ProductionSchedule({
           shrunk-down month grid, plus tabs for the other sections. */}
       <div className="md:hidden">
         <div className="flex gap-2 overflow-x-auto pb-2 mb-3 -mx-1 px-1">
-          {(["day", "overdue", "waiting", "completed"] as const).map(tab => (
+          {(["day", "unscheduled", "overdue", "waiting", "completed"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setMobileTab(tab)}
@@ -484,7 +484,7 @@ export default function ProductionSchedule({
                 mobileTab === tab ? "bg-[#1E3A5F] text-white" : "bg-white border border-[#1E3A5F]/15 text-[#1E3A5F]"
               }`}
             >
-              {tab === "day" ? "Day view" : tab === "waiting" ? "Waiting on customer" : tab}
+              {tab === "day" ? "Day view" : tab === "unscheduled" ? "Unscheduled" : tab === "waiting" ? "Waiting on customer" : tab}
             </button>
           ))}
         </div>
@@ -528,6 +528,20 @@ export default function ProductionSchedule({
           </div>
         )}
 
+        {mobileTab === "unscheduled" && (
+          unscheduled.length === 0 ? (
+            <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#1E3A5F]/50">
+              Everything active has a production date set.
+            </div>
+          ) : (
+            <div>
+              <p className="text-xs text-[#1E3A5F]/50 mb-2">Tap "Save" after picking a date on the order page, or use the desktop view to drag onto a day.</p>
+              {unscheduled.map(o => (
+                <OrderScheduleCard key={o.id} order={o} todayStr={todayStr} draggingId={draggingId} setDraggingId={setDraggingId} updateOrder={updateOrder} />
+              ))}
+            </div>
+          )
+        )}
         {mobileTab === "overdue" && (
           overdueOrders.length === 0 ? (
             <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#1E3A5F]/50">Nothing overdue.</div>
