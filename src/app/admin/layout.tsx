@@ -66,6 +66,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/pickets", label: "Picket Inventory" },
     { href: "/admin/products", label: "Products" },
     { href: "/admin/cutlist", label: "Cut List Generator" },
+    { href: "/admin/material-planning", label: "Material Planning" },
     { href: "/admin/designs", label: "Designs" },
     { href: "/admin/reports", label: "Reports" }
   ];
@@ -101,6 +102,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/pickets" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Picket Inventory</Link>
           <Link href="/admin/products" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Products</Link>
           <Link href="/admin/cutlist" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Cut List Generator</Link>
+          <Link href="/admin/material-planning" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Material Planning</Link>
           <Link href="/admin/designs" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Designs</Link>
           <Link href="/admin/reports" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Reports</Link>
         </nav>
