@@ -28,7 +28,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  const { productType, name, sizeDetails, priceCents, costCents, stockQuantity, lowStockThreshold, picketsPerUnit, adjustmentReason } = await req.json();
+  const { productType, name, sizeDetails, priceCents, costCents, stockQuantity, lowStockThreshold, picketsPerUnit } = await req.json();
   if (!productType || !name?.trim()) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
@@ -42,10 +42,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const newStock = Math.max(0, Math.round(Number(stockQuantity)) || 0);
   const newThreshold = Math.max(0, Math.round(Number(lowStockThreshold)) || 0);
   const stockChanged = existingProduct && existingProduct.stock_quantity !== newStock;
-
-  if (stockChanged && !adjustmentReason?.trim()) {
-    return NextResponse.json({ error: "Enter a reason for the stock change" }, { status: 400 });
-  }
 
   // If stock is being manually topped back up above the threshold, reset
   // the alert flag so a future dip below it sends a fresh warning email.
@@ -77,7 +73,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       product_id: params.id,
       old_quantity: existingProduct!.stock_quantity,
       new_quantity: newStock,
-      reason: adjustmentReason.trim()
+      reason: "Updated via Products page"
     });
   }
 

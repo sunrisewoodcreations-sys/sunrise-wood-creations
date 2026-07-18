@@ -150,6 +150,69 @@ async function buildInvoicePdf(opts: {
 // Call this whenever an order's payment changes, or when it's marked
 // "picked_up" — each call generates and emails a fresh invoice reflecting
 // the current total, amount paid, and balance due at that moment.
+// Checks whether enough stock is on hand to cover every item on this
+// order and, if so, deducts it and marks the order Ready for Pickup —
+// all-or-nothing across every item (if even one linked item doesn't
+// have enough stock, nothing gets deducted and the status stays as-is).
+// Used both when generating an invoice (existing behavior, unchanged)
+// and right at order creation (new — so an order that's already fully
+// in stock skips straight to Ready for Pickup instead of waiting for a
+// deposit or manual status change).
+export async function checkStockAndAutoMarkReady(admin: ReturnType<typeof createAdminClient>, order: any): Promise<void> {
+  if (order.stock_deducted) return;
+
+  const { data: orderItems } = await admin
+    .from("order_items")
+    .select("id, product_id, title, quantity, unit_price_cents")
+    .eq("order_id", order.id);
+
+  const hasLineItems = orderItems && orderItems.length > 0;
+
+  if (hasLineItems) {
+    const linkedItems = orderItems!.filter(it => it.product_id);
+    if (linkedItems.length > 0) {
+      const { data: productRows } = await admin
+        .from("products")
+        .select("id, stock_quantity")
+        .in("id", linkedItems.map(it => it.product_id));
+
+      const stockById: Record<string, number> = {};
+      (productRows || []).forEach((p: any) => { stockById[p.id] = p.stock_quantity || 0; });
+
+      const allInStock = linkedItems.every(it => (stockById[it.product_id] || 0) >= it.quantity);
+
+      if (allInStock) {
+        for (const it of linkedItems) {
+          await admin
+            .from("products")
+            .update({ stock_quantity: stockById[it.product_id] - it.quantity })
+            .eq("id", it.product_id);
+          await checkAndSendLowStockAlert(admin, it.product_id);
+        }
+        await admin.from("orders").update({ status: "ready_for_pickup", stock_deducted: true }).eq("id", order.id);
+        order.status = "ready_for_pickup";
+        order.stock_deducted = true;
+      }
+    }
+  } else if (order.product_id) {
+    // Legacy single-item order with no order_items rows.
+    const { data: product } = await admin
+      .from("products")
+      .select("stock_quantity")
+      .eq("id", order.product_id)
+      .maybeSingle();
+
+    const neededQty = order.quantity || 1;
+    if (product && (product.stock_quantity || 0) >= neededQty) {
+      await admin.from("products").update({ stock_quantity: product.stock_quantity - neededQty }).eq("id", order.product_id);
+      await checkAndSendLowStockAlert(admin, order.product_id);
+      await admin.from("orders").update({ status: "ready_for_pickup", stock_deducted: true }).eq("id", order.id);
+      order.status = "ready_for_pickup";
+      order.stock_deducted = true;
+    }
+  }
+}
+
 export async function generateInvoicePdfForOrder(
   order: any,
   customer: { full_name: string }
@@ -163,54 +226,7 @@ export async function generateInvoicePdfForOrder(
 
   const hasLineItems = orderItems && orderItems.length > 0;
 
-  // Stock check + auto "ready for pickup": this is all-or-nothing across
-  // every item on the order — if even one linked item doesn't have enough
-  // stock, nothing gets deducted and the status stays as-is.
-  if (!order.stock_deducted) {
-    if (hasLineItems) {
-      const linkedItems = orderItems!.filter(it => it.product_id);
-      if (linkedItems.length > 0) {
-        const { data: productRows } = await admin
-          .from("products")
-          .select("id, stock_quantity")
-          .in("id", linkedItems.map(it => it.product_id));
-
-        const stockById: Record<string, number> = {};
-        (productRows || []).forEach((p: any) => { stockById[p.id] = p.stock_quantity || 0; });
-
-        const allInStock = linkedItems.every(it => (stockById[it.product_id] || 0) >= it.quantity);
-
-        if (allInStock) {
-          for (const it of linkedItems) {
-            await admin
-              .from("products")
-              .update({ stock_quantity: stockById[it.product_id] - it.quantity })
-              .eq("id", it.product_id);
-            await checkAndSendLowStockAlert(admin, it.product_id);
-          }
-          await admin.from("orders").update({ status: "ready_for_pickup", stock_deducted: true }).eq("id", order.id);
-          order.status = "ready_for_pickup";
-          order.stock_deducted = true;
-        }
-      }
-    } else if (order.product_id) {
-      // Legacy single-item order with no order_items rows.
-      const { data: product } = await admin
-        .from("products")
-        .select("stock_quantity")
-        .eq("id", order.product_id)
-        .maybeSingle();
-
-      const neededQty = order.quantity || 1;
-      if (product && (product.stock_quantity || 0) >= neededQty) {
-        await admin.from("products").update({ stock_quantity: product.stock_quantity - neededQty }).eq("id", order.product_id);
-        await checkAndSendLowStockAlert(admin, order.product_id);
-        await admin.from("orders").update({ status: "ready_for_pickup", stock_deducted: true }).eq("id", order.id);
-        order.status = "ready_for_pickup";
-        order.stock_deducted = true;
-      }
-    }
-  }
+  await checkStockAndAutoMarkReady(admin, order);
 
   // An order should only ever have ONE invoice number — reused and
   // updated in place as the balance changes (e.g. a deposit invoice

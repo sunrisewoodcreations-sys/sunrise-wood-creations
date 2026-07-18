@@ -45,7 +45,6 @@ export default function ProductRow({
   const [stockQuantity, setStockQuantity] = useState(String(product.stock_quantity ?? 0));
   const [lowStockThreshold, setLowStockThreshold] = useState(String(product.low_stock_threshold ?? 0));
   const [picketsPerUnit, setPicketsPerUnit] = useState(String(product.pickets_per_unit ?? 0));
-  const [adjustmentReason, setAdjustmentReason] = useState("");
   const [partRows, setPartRows] = useState<BOMPartRow[]>(() => bomPartsToRows(bomParts || []));
 
   // Keep the parts rows in sync with the real server data whenever it
@@ -63,7 +62,6 @@ export default function ProductRow({
   }, [bomPartsKey, bomParts]);
 
   const margin = (product.price_cents - (product.cost_cents || 0)) / 100;
-  const stockWillChange = Number(stockQuantity) !== (product.stock_quantity ?? 0);
 
   async function handleSave() {
     setLoading(true);
@@ -75,7 +73,7 @@ export default function ProductRow({
       fetch(`/api/products/${product.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold, picketsPerUnit, adjustmentReason })
+        body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold, picketsPerUnit })
       }),
       fetch(`/api/products/${product.id}/bom-parts`, {
         method: "PATCH",
@@ -98,7 +96,6 @@ export default function ProductRow({
 
     if (productRes.ok && partsRes.ok) {
       setEditing(false);
-      setAdjustmentReason("");
       router.refresh();
     } else {
       const failedRes = !productRes.ok ? productRes : partsRes;
@@ -172,21 +169,6 @@ export default function ProductRow({
           {error && <div className="text-ember text-xs mt-1">{error}</div>}
         </td>
       </tr>
-      {stockWillChange && (
-        <tr className="bg-cream/40">
-          <td colSpan={13} className="px-4 pb-3">
-            <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">
-              Reason for stock change ({product.stock_quantity ?? 0} → {stockQuantity})
-            </label>
-            <input
-              value={adjustmentReason}
-              onChange={e => setAdjustmentReason(e.target.value)}
-              placeholder="e.g. Restocked, corrected count, damaged goods"
-              className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
-            />
-          </td>
-        </tr>
-      )}
       <tr className="bg-cream/40">
         <td colSpan={13} className="px-4 pb-3">
           <ProductBOMEditor rows={partRows} onChange={setPartRows} />

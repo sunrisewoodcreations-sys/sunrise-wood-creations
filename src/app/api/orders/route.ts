@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendOrderStatusEmail } from "@/lib/email";
 import { shouldNotify } from "@/lib/notify";
 import { consumePicketsFifo } from "@/lib/pickets";
+import { checkStockAndAutoMarkReady } from "@/lib/invoice";
 import { ProductType } from "@/lib/statusSteps";
 
 type IncomingItem = {
@@ -154,6 +155,12 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // If there's already enough stock on hand to cover this order, skip
+  // straight to Ready for Pickup instead of waiting for a deposit or a
+  // manual status change — same all-or-nothing stock check already used
+  // elsewhere (invoices, status changes), just also run right at creation.
+  await checkStockAndAutoMarkReady(admin, order);
+
   const { data: customer } = await supabase
     .from("profiles")
     .select("email, full_name, has_real_email, notify_order_updates")
@@ -168,7 +175,7 @@ export async function POST(req: NextRequest) {
         productType: orderProductType as ProductType,
         orderTitle: order.title,
         orderId: order.id,
-        newStatus: initialStatus
+        newStatus: order.status
       });
     } catch (err) {
       console.error("Order-placed email failed to send:", err);
