@@ -8,7 +8,7 @@ import DeleteOrderButton from "@/components/DeleteOrderButton";
 import AmountPaidForm from "@/components/AmountPaidForm";
 import EditOrderDateForm from "@/components/EditOrderDateForm";
 import EditDueDateForm from "@/components/EditDueDateForm";
-import EditProductionDateForm from "@/components/EditProductionDateForm";
+import { formatCalendarDate } from "@/lib/dateDisplay";
 import SendStatusEmailButton from "@/components/SendStatusEmailButton";
 import SendInvoiceButton from "@/components/SendInvoiceButton";
 import OrderChat from "@/components/OrderChat";
@@ -81,7 +81,17 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         <p className="text-sm text-[#1E3A5F]/60 mb-1">Customer: {customer.full_name} ({customer.email})</p>
         <EditOrderDateForm orderId={order.id} initialDate={order.created_at} />
         <EditDueDateForm orderId={order.id} initialDueDate={order.due_date} />
-        <EditProductionDateForm orderId={order.id} initialProductionDate={order.production_date} />
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-xs text-[#1E3A5F]/50">Production date:</span>
+          <span className="text-sm font-semibold text-[#1E3A5F]">
+            {order.production_date ? formatCalendarDate(order.production_date) : "—"}
+          </span>
+          <span className="text-xs text-[#1E3A5F]/40 italic">
+            {["ready_for_pickup", "completed"].includes(order.production_status)
+              ? "(locked — already ready/complete)"
+              : "(auto-set to 1 day before pickup)"}
+          </span>
+        </div>
         <p className="text-sm text-[#1E3A5F]/60 mb-4">
           {order.size_details} · ${(order.price_cents / 100).toFixed(2)} · Placed {new Date(order.created_at).toLocaleDateString()}
         </p>

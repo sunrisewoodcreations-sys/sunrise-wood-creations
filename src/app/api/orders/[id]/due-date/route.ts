@@ -18,9 +18,35 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const admin = createAdminClient();
+
+  // Production date is derived from pickup date (one day before, your
+  // glue's 24-hour cure time) and kept in sync automatically — except
+  // once an order is ready for pickup or fully completed, at which
+  // point production is effectively done and shouldn't silently shift
+  // just because the pickup date changed afterward.
+  const { data: existingOrder } = await admin
+    .from("orders")
+    .select("production_status")
+    .eq("id", params.id)
+    .maybeSingle();
+
+  const isProductionLocked = existingOrder?.production_status === "ready_for_pickup" || existingOrder?.production_status === "completed";
+
+  function oneDayBefore(dateStr: string): string {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const d = new Date(Date.UTC(year, month - 1, day));
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+  }
+
+  const updatePayload: Record<string, any> = { due_date: dueDate || null };
+  if (!isProductionLocked) {
+    updatePayload.production_date = dueDate ? oneDayBefore(dueDate) : null;
+  }
+
   const { error } = await admin
     .from("orders")
-    .update({ due_date: dueDate || null })
+    .update(updatePayload)
     .eq("id", params.id);
 
   if (error) {
