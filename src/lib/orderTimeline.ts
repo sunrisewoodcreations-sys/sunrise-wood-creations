@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { statusLabel, ProductType } from "@/lib/statusSteps";
+import { formatInvoiceNumber } from "@/lib/invoice";
 
 export type TimelineEvent = {
   timestamp: string;
@@ -94,7 +95,7 @@ export async function getOrderTimeline(orderId: string): Promise<TimelineEvent[]
 
   const { data: invoices } = await supabase
     .from("invoices")
-    .select("invoice_number, sent_at, paid_in_full")
+    .select("invoice_number, invoice_year, sent_at, paid_in_full")
     .eq("order_id", orderId)
     .not("sent_at", "is", null);
 
@@ -102,7 +103,7 @@ export async function getOrderTimeline(orderId: string): Promise<TimelineEvent[]
     events.push({
       timestamp: inv.sent_at,
       type: "invoice_sent",
-      label: `Invoice #${inv.invoice_number} sent`,
+      label: `Invoice #${formatInvoiceNumber(inv.invoice_year, inv.invoice_number)} sent`,
       detail: inv.paid_in_full ? "Paid in full" : undefined,
       icon: "dollar",
       color: "text-ember"

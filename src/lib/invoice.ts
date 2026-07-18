@@ -12,6 +12,13 @@ const GRAY = rgb(0.4, 0.4, 0.4);
 const LIGHT_LINE = rgb(0.85, 0.85, 0.85);
 const GREEN = rgb(0.22, 0.5, 0.34);
 
+// Single source of truth for displaying an invoice number as
+// "YYYY-NNNN" — used everywhere an invoice number is shown, so the
+// format only ever needs to change in one place.
+export function formatInvoiceNumber(year: number, number: number): string {
+  return `${year}-${number}`;
+}
+
 type InvoiceLineItem = {
   description: string;
   quantity: number;
@@ -45,6 +52,7 @@ async function checkAndSendLowStockAlert(admin: ReturnType<typeof createAdminCli
 
 async function buildInvoicePdf(opts: {
   invoiceNumber: number;
+  invoiceYear: number;
   invoiceDate: Date;
   customerName: string;
   lineItems: InvoiceLineItem[];
@@ -76,7 +84,7 @@ async function buildInvoicePdf(opts: {
     page.drawText(value, { x: metaX + 110, y: yy, size: 10, font, color: color || WALNUT });
   }
   let metaY = height - 100;
-  metaRow("Invoice Number:", String(opts.invoiceNumber), metaY); metaY -= 16;
+  metaRow("Invoice Number:", formatInvoiceNumber(opts.invoiceYear, opts.invoiceNumber), metaY); metaY -= 16;
   metaRow("Invoice Date:", opts.invoiceDate.toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric", month: "long", day: "numeric" }), metaY); metaY -= 16;
   metaRow("Amount Due:", `$${due.toFixed(2)}`, metaY, due <= 0 ? GREEN : EMBER);
 
@@ -145,7 +153,7 @@ async function buildInvoicePdf(opts: {
 export async function generateInvoicePdfForOrder(
   order: any,
   customer: { full_name: string }
-): Promise<{ pdfBuffer: Buffer; invoiceNumber: number; paidInFull: boolean } | null> {
+): Promise<{ pdfBuffer: Buffer; invoiceNumber: number; invoiceYear: number; paidInFull: boolean } | null> {
   const admin = createAdminClient();
 
   const { data: orderItems } = await admin
@@ -210,22 +218,33 @@ export async function generateInvoicePdfForOrder(
   // invoice number every time this function runs.
   const { data: existingInvoice } = await admin
     .from("invoices")
-    .select("invoice_number")
+    .select("invoice_number, invoice_year")
     .eq("order_id", order.id)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
+  // Invoice numbers reset to 1100 at the start of each calendar year
+  // (e.g. 2026-1100, then 2027-1100), so "the next number" is always
+  // scoped to the current year, not all-time. Eastern time, matching
+  // every other date calculation in this app.
+  const currentYear = Number(
+    new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric" }).format(new Date())
+  );
+
   let invoiceNumber: number;
+  let invoiceYear: number;
   if (existingInvoice) {
     invoiceNumber = existingInvoice.invoice_number;
+    invoiceYear = existingInvoice.invoice_year; // never changes once assigned, even if reused in a later calendar year
   } else {
     // Compute the next invoice number directly from what's already in the
-    // table, rather than a separate database sequence — one less moving
-    // part that could silently get out of sync.
+    // table for THIS year, rather than a separate database sequence —
+    // one less moving part that could silently get out of sync.
     const { data: maxRow, error: maxError } = await admin
       .from("invoices")
       .select("invoice_number")
+      .eq("invoice_year", currentYear)
       .order("invoice_number", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -234,7 +253,8 @@ export async function generateInvoicePdfForOrder(
       console.error("Couldn't determine next invoice number:", maxError.message);
       return null;
     }
-    invoiceNumber = (maxRow?.invoice_number || 109) + 1;
+    invoiceNumber = (maxRow?.invoice_number || 1099) + 1;
+    invoiceYear = currentYear;
   }
 
   const lineItems: InvoiceLineItem[] = hasLineItems
@@ -251,6 +271,7 @@ export async function generateInvoicePdfForOrder(
 
   const pdfBuffer = await buildInvoicePdf({
     invoiceNumber,
+    invoiceYear,
     invoiceDate: new Date(order.created_at),
     customerName: customer.full_name,
     lineItems,
@@ -258,7 +279,7 @@ export async function generateInvoicePdfForOrder(
     paidCents: order.amount_paid_cents || 0
   });
 
-  const filename = `invoice-${invoiceNumber}-${order.id}.pdf`;
+  const filename = `invoice-${invoiceYear}-${invoiceNumber}-${order.id}.pdf`;
   const { error: uploadError } = await admin.storage
     .from("invoices")
     .upload(filename, pdfBuffer, { contentType: "application/pdf", upsert: true });
@@ -274,18 +295,23 @@ export async function generateInvoicePdfForOrder(
   const dueCents = (order.price_cents || 0) - (order.amount_paid_cents || 0);
   const paidInFull = dueCents <= 0;
 
+  // Scoped by order_id, not invoice_number — since numbers now reset
+  // every year, two different invoices from different years could
+  // otherwise share the same number and both get updated by mistake.
+  // Every order has at most one invoice, so order_id is always unique here.
   if (existingInvoice) {
-    await admin.from("invoices").update({ pdf_url: pdfUrl, paid_in_full: paidInFull }).eq("invoice_number", invoiceNumber);
+    await admin.from("invoices").update({ pdf_url: pdfUrl, paid_in_full: paidInFull }).eq("order_id", order.id);
   } else {
     await admin.from("invoices").insert({
       order_id: order.id,
       invoice_number: invoiceNumber,
+      invoice_year: invoiceYear,
       pdf_url: pdfUrl,
       paid_in_full: paidInFull
     });
   }
 
-  return { pdfBuffer, invoiceNumber, paidInFull };
+  return { pdfBuffer, invoiceNumber, invoiceYear, paidInFull };
 }
 
 export async function issueInvoiceForOrder(
@@ -296,7 +322,7 @@ export async function issueInvoiceForOrder(
 
   const result = await generateInvoicePdfForOrder(order, customer);
   if (!result) return;
-  const { pdfBuffer, invoiceNumber, paidInFull } = result;
+  const { pdfBuffer, invoiceNumber, invoiceYear, paidInFull } = result;
 
   // The invoice PDF is always generated and stored (so it's there for the
   // customer's account page or a manual download) even if we don't email
@@ -309,9 +335,10 @@ export async function issueInvoiceForOrder(
         orderTitle: order.title,
         paidInFull,
         invoiceNumber,
+        invoiceYear,
         pdfBuffer
       });
-      await admin.from("invoices").update({ sent_at: new Date().toISOString() }).eq("invoice_number", invoiceNumber);
+      await admin.from("invoices").update({ sent_at: new Date().toISOString() }).eq("order_id", order.id);
     } catch (err) {
       console.error("Invoice email failed to send:", err);
     }

@@ -8,7 +8,7 @@ import AdminButton from "@/components/AdminButton";
 
 type Mode = "today" | "tomorrow" | "manual" | "saved";
 
-type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; hasBOM: boolean };
+type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; hasBOM: boolean; productionStatus: string };
 type BOMPartRow = { part_name: string; length_inches: number; final_length_inches: number | null; quantity_per_unit: number; material_type: string; is_trim: boolean };
 
 function toBOMPart(row: BOMPartRow): BOMPart {
@@ -48,7 +48,7 @@ export default function CutListGenerator({
   const [saveMessage, setSaveMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
-  function generateFromJobs(jobs: Job[], label: string) {
+  async function generateFromJobs(jobs: Job[], label: string) {
     const missing = jobs.filter(j => !j.hasBOM);
     if (missing.length > 0) {
       setGenerationError(`${missing.length} order(s) don't have a parts list defined yet (e.g. ${missing[0].productName || missing[0].orderTitle}). Add parts to that product on the Products page first.`);
@@ -63,6 +63,27 @@ export default function CutListGenerator({
       return parts.map(p => ({ ...p, quantityPerUnit: p.quantityPerUnit * j.quantity }));
     });
     runOptimization(mergeParts(partLists), label);
+
+    // Generating a real cut list means production is starting on these
+    // orders — mark each one Building, same status the Production
+    // Schedule page uses, via the same existing route (no new logic).
+    // Skip any order that's already further along (Ready for Pickup or
+    // Completed) so re-generating a list doesn't regress finished work
+    // back to "Building". Manual Selection has no real orders behind
+    // it, so this only ever applies to Today's/Tomorrow's.
+    const orderIdsToMark = [...new Set(
+      jobs.filter(j => !["ready_for_pickup", "completed"].includes(j.productionStatus)).map(j => j.orderId)
+    )];
+    await Promise.all(
+      orderIdsToMark.map(orderId =>
+        fetch(`/api/orders/${orderId}/production`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productionStatus: "building" })
+        }).catch(() => null)
+      )
+    );
+    router.refresh();
   }
 
   function generateFromManual() {

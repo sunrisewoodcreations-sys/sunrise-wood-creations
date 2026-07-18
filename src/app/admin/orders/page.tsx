@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
 import { formatCalendarDate } from "@/lib/dateDisplay";
+import { formatInvoiceNumber } from "@/lib/invoice";
 import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import SendInvoiceButton from "@/components/SendInvoiceButton";
@@ -482,7 +483,7 @@ export default async function AdminOrdersPage({
                         rel="noopener noreferrer"
                         className="text-xs font-semibold text-ember hover:underline"
                       >
-                        Download #{invoice.invoice_number}
+                        Download #{formatInvoiceNumber(invoice.invoice_year, invoice.invoice_number)}
                       </a>
                     ) : (
                       <span className="text-xs text-[#1E3A5F]/40">—</span>
@@ -585,7 +586,7 @@ export default async function AdminOrdersPage({
                       rel="noopener noreferrer"
                       className="flex-1 min-w-[100px] text-center border border-ember/30 text-ember px-3 py-2.5 rounded-md text-sm font-semibold"
                     >
-                      Invoice #{invoice.invoice_number}
+                      Invoice #{formatInvoiceNumber(invoice.invoice_year, invoice.invoice_number)}
                     </a>
                   )}
                 </div>

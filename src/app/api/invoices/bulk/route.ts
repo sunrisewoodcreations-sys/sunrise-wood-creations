@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
       const buffer = Buffer.from(await res.arrayBuffer());
       const orderTitle = (inv as any).orders?.title || "order";
       const safeTitle = orderTitle.replace(/[^a-z0-9\-_ ]/gi, "").trim().replace(/\s+/g, "-");
-      zip.file(`invoice-${inv.invoice_number}-${safeTitle}.pdf`, buffer);
+      zip.file(`invoice-${inv.invoice_year}-${inv.invoice_number}-${safeTitle}.pdf`, buffer);
     } catch {
       // Skip any invoice whose PDF can't be fetched rather than failing the whole batch.
     }

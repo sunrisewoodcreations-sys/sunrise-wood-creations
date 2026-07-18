@@ -85,6 +85,7 @@ export async function sendOrderStatusEmail(opts: {
   balanceDueCents?: number;
   invoicePdfBuffer?: Buffer;
   invoiceNumber?: number;
+  invoiceYear?: number;
 }) {
   const label = statusLabel(opts.productType, opts.newStatus);
   const balanceHtml = typeof opts.balanceDueCents === "number"
@@ -122,8 +123,8 @@ export async function sendOrderStatusEmail(opts: {
     buttonUrl: `${SITE_URL}/account/orders/${opts.orderId}`
   });
 
-  const attachments = opts.invoicePdfBuffer && opts.invoiceNumber
-    ? [{ filename: `invoice-${opts.invoiceNumber}.pdf`, content: opts.invoicePdfBuffer.toString("base64") }]
+  const attachments = opts.invoicePdfBuffer && opts.invoiceNumber && opts.invoiceYear
+    ? [{ filename: `invoice-${opts.invoiceYear}-${opts.invoiceNumber}.pdf`, content: opts.invoicePdfBuffer.toString("base64") }]
     : undefined;
 
   return resend.emails.send({
@@ -240,15 +241,17 @@ export async function sendInvoiceEmail(opts: {
   customerName: string;
   orderTitle: string;
   invoiceNumber: number;
+  invoiceYear: number;
   paidInFull: boolean;
   pdfBuffer: Buffer;
 }) {
+  const displayNumber = `${opts.invoiceYear}-${opts.invoiceNumber}`;
   const message = opts.paidInFull
-    ? `Attached is your final invoice (#${opts.invoiceNumber}) for <strong>${opts.orderTitle}</strong> — paid in full. Thanks so much for your business!`
-    : `Attached is your updated invoice (#${opts.invoiceNumber}) for <strong>${opts.orderTitle}</strong>, showing your payment and the remaining balance.`;
+    ? `Attached is your final invoice (#${displayNumber}) for <strong>${opts.orderTitle}</strong> — paid in full. Thanks so much for your business!`
+    : `Attached is your updated invoice (#${displayNumber}) for <strong>${opts.orderTitle}</strong>, showing your payment and the remaining balance.`;
 
   const html = shell({
-    preheader: opts.paidInFull ? `Paid in full — Invoice #${opts.invoiceNumber}` : `Invoice #${opts.invoiceNumber} update`,
+    preheader: opts.paidInFull ? `Paid in full — Invoice #${displayNumber}` : `Invoice #${displayNumber} update`,
     bodyHtml: `
       <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
       <p style="margin: 0 0 16px;">${message}</p>
@@ -259,11 +262,11 @@ export async function sendInvoiceEmail(opts: {
     from: FROM_INVOICE,
     to: opts.toEmail,
     subject: opts.paidInFull
-      ? `Paid in full — Invoice #${opts.invoiceNumber} — Sunrise Wood Creations`
-      : `Invoice #${opts.invoiceNumber} — Sunrise Wood Creations`,
+      ? `Paid in full — Invoice #${displayNumber} — Sunrise Wood Creations`
+      : `Invoice #${displayNumber} — Sunrise Wood Creations`,
     html,
     attachments: [
-      { filename: `invoice-${opts.invoiceNumber}.pdf`, content: opts.pdfBuffer.toString("base64") }
+      { filename: `invoice-${displayNumber}.pdf`, content: opts.pdfBuffer.toString("base64") }
     ]
   });
 }

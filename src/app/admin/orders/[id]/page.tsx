@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { formatInvoiceNumber } from "@/lib/invoice";
 import ProgressTracker from "@/components/ProgressTracker";
 import StatusUpdater from "@/components/StatusUpdater";
 import SendProofForm from "@/components/SendProofForm";
@@ -202,7 +203,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           {invoices.map((inv: any) => (
             <div key={inv.id} className="flex items-center justify-between border-t border-[#1E3A5F]/10 pt-3 mt-3 first:border-0 first:pt-0 first:mt-0">
               <div>
-                <div className="text-sm font-semibold text-[#1E3A5F]">Invoice #{inv.invoice_number}</div>
+                <div className="text-sm font-semibold text-[#1E3A5F]">Invoice #{formatInvoiceNumber(inv.invoice_year, inv.invoice_number)}</div>
                 <div className="text-xs font-mono text-[#1E3A5F]/50">
                   {inv.sent_at
                     ? `Emailed ${new Date(inv.sent_at).toLocaleDateString("en-US", { timeZone: "America/New_York" })} at ${new Date(inv.sent_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET`

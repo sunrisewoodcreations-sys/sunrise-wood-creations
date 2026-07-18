@@ -36,11 +36,11 @@ export default async function CutListPage() {
     supabase.from("product_bom_parts").select("*"),
     supabase
       .from("orders")
-      .select("id, title, product_id, quantity, production_date, profiles:customer_id(full_name)")
+      .select("id, title, product_id, quantity, production_date, production_status, profiles:customer_id(full_name)")
       .eq("product_type", "planter")
       .neq("status", "picked_up")
       .in("production_date", [todayStr, tomorrowStr]),
-    supabase.from("order_items").select("order_id, product_id, quantity, orders:order_id(production_date, product_type, status)"),
+    supabase.from("order_items").select("order_id, product_id, quantity, orders:order_id(production_date, product_type, status, production_status)"),
     supabase.from("saved_cut_lists").select("*").order("created_at", { ascending: false })
   ]);
 
@@ -58,7 +58,7 @@ export default async function CutListPage() {
   // legacy single-item orders (orders.product_id) and multi-item orders
   // (order_items.product_id), matching how the rest of the app already
   // handles this split.
-  type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; hasBOM: boolean };
+  type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; hasBOM: boolean; productionStatus: string };
 
   function buildJobs(dateStrToMatch: string): Job[] {
     const jobs: Job[] = [];
@@ -83,7 +83,8 @@ export default async function CutListPage() {
         productId: it.product_id,
         productName: product?.name || null,
         quantity: it.quantity || 1,
-        hasBOM: productIdsWithParts.has(it.product_id)
+        hasBOM: productIdsWithParts.has(it.product_id),
+        productionStatus: it.orders?.production_status || "waiting"
       });
     });
 
@@ -98,7 +99,8 @@ export default async function CutListPage() {
         productId: o.product_id,
         productName: product?.name || null,
         quantity: o.quantity || 1,
-        hasBOM: productIdsWithParts.has(o.product_id)
+        hasBOM: productIdsWithParts.has(o.product_id),
+        productionStatus: o.production_status || "waiting"
       });
     });
 

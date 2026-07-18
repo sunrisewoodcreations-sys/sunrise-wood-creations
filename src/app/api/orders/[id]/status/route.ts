@@ -60,11 +60,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (status === "ready_for_pickup") {
     let invoicePdfBuffer: Buffer | undefined;
     let invoiceNumber: number | undefined;
+    let invoiceYear: number | undefined;
     try {
       const result = await generateInvoicePdfForOrder(order, customer);
       if (result) {
         invoicePdfBuffer = result.pdfBuffer;
         invoiceNumber = result.invoiceNumber;
+        invoiceYear = result.invoiceYear;
       }
     } catch (err) {
       console.error("Invoice generation for Ready for Pickup email failed:", err);
@@ -82,7 +84,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           newStatus: status,
           balanceDueCents,
           invoicePdfBuffer,
-          invoiceNumber
+          invoiceNumber,
+          invoiceYear
         });
       } catch (err) {
         console.error("Status-update email failed to send:", err);

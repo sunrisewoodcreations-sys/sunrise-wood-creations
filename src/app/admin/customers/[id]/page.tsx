@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { formatInvoiceNumber } from "@/lib/invoice";
 import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
 import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
 import CustomerNotes from "@/components/CustomerNotes";
@@ -200,7 +201,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
                         rel="noopener noreferrer"
                         className="text-xs font-semibold text-ember hover:underline"
                       >
-                        Download #{invoice.invoice_number}
+                        Download #{formatInvoiceNumber(invoice.invoice_year, invoice.invoice_number)}
                       </a>
                     ) : (
                       <span className="text-xs text-[#1E3A5F]/40">—</span>
@@ -252,7 +253,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
                   rel="noopener noreferrer"
                   className="inline-block mt-3 text-xs font-semibold text-ember active:underline"
                 >
-                  Download invoice #{invoice.invoice_number}
+                  Download invoice #{formatInvoiceNumber(invoice.invoice_year, invoice.invoice_number)}
                 </a>
               )}
             </div>
