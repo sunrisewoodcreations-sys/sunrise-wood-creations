@@ -1,4 +1,4 @@
-import { getMaterialRequirements, getTodayReadiness } from "@/lib/materialPlanning";
+import { getMaterialRequirements, getTodayReadiness, MaterialPlanningResult } from "@/lib/materialPlanning";
 import MaterialPlanning from "@/components/MaterialPlanning";
 
 function easternDateParts(date: Date) {
@@ -44,18 +44,29 @@ export default async function MaterialPlanningPage({
     startDateStr = searchParams.start; endDateStr = searchParams.end; rangeLabel = `${searchParams.start} to ${searchParams.end}`;
   }
 
+  const isViewingToday = startDateStr === todayStr && endDateStr === todayStr;
+
   const [result, readiness] = await Promise.all([
     getMaterialRequirements(startDateStr, endDateStr, rangeLabel),
-    getTodayReadiness(todayStr)
+    isViewingToday ? Promise.resolve(null) : getTodayReadiness(todayStr)
   ]);
+
+  // When already viewing Today, the result we just computed IS today's
+  // readiness check — reuse it instead of running the same query twice.
+  const derivedReadiness = readiness || deriveReadinessFromResult(result);
 
   return (
     <MaterialPlanning
       result={result}
-      readiness={readiness}
+      readiness={derivedReadiness}
       currentRange={range}
       customStart={searchParams.start || todayStr}
       customEnd={searchParams.end || todayStr}
     />
   );
+}
+
+function deriveReadinessFromResult(result: MaterialPlanningResult) {
+  const shortages = result.requirements.filter(r => r.shortQuantity != null && r.shortQuantity > 0);
+  return { ready: shortages.length === 0, shortages };
 }

@@ -33,6 +33,16 @@ export default function MaterialPlanning({
     }
   }
 
+  // Derived from the result that's already been computed once server-side
+  // — no extra queries, no re-running the optimizer. "Pickets" refers to
+  // your one currently-tracked material (Cedar); the generic per-material
+  // table below still covers everything else.
+  const cedarReq = result.requirements.find(r => r.materialType.trim().toLowerCase() === "cedar");
+  const totalPicketsRequired = cedarReq?.optimization.totalBoards ?? 0;
+  const picketsOnHand = cedarReq?.onHandQuantity ?? null;
+  const picketsShort = cedarReq?.shortQuantity ?? null;
+  const estimatedWaste = cedarReq?.optimization.wastePercent ?? 0;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-1 print:hidden">
@@ -50,24 +60,51 @@ export default function MaterialPlanning({
         What material your scheduled production actually needs, compared against what's on hand.
       </p>
 
-      {/* Always-visible "can I build today" indicator — independent of
-          whatever range filter is selected below. */}
-      <div className={`rounded-xl shadow-sm p-4 mb-6 border-2 print:hidden ${
-        readiness.ready ? "bg-sage/10 border-sage" : "bg-ember/10 border-ember"
-      }`}>
-        <div className="flex items-center gap-3">
-          <span className={`w-4 h-4 rounded-full flex-shrink-0 ${readiness.ready ? "bg-sage" : "bg-ember"}`} />
-          <div>
-            <div className={`text-sm font-bold ${readiness.ready ? "text-sage" : "text-ember"}`}>
-              {readiness.ready ? "Ready to build today — enough material on hand" : "Short on material for today's schedule"}
+      {/* Large, hard-to-miss warning when short — shows the exact
+          picket shortfall, per your requirement. Falls back to the
+          existing compact "ready" banner when everything's fine, so
+          this doesn't take up unnecessary space on a normal day. */}
+      {picketsShort != null && picketsShort > 0 ? (
+        <div className="bg-ember text-white rounded-xl shadow-sm p-5 mb-6 print:hidden">
+          <div className="flex items-center gap-4">
+            <span className="text-4xl font-display leading-none">{picketsShort}</span>
+            <div>
+              <div className="text-base font-bold">Pickets short for {result.rangeLabel.toLowerCase()}</div>
+              <div className="text-sm text-white/80">You need {totalPicketsRequired} but only have {picketsOnHand} on hand — order more before you start building.</div>
             </div>
-            {!readiness.ready && (
-              <div className="text-xs text-[#1E3A5F]/60 mt-0.5">
-                {readiness.shortages.map(s => `${s.materialType}: short ${s.shortQuantity}`).join(" · ")}
-              </div>
-            )}
           </div>
         </div>
+      ) : (
+        <div className={`rounded-xl shadow-sm p-4 mb-6 border-2 print:hidden ${
+          readiness.ready ? "bg-sage/10 border-sage" : "bg-ember/10 border-ember"
+        }`}>
+          <div className="flex items-center gap-3">
+            <span className={`w-4 h-4 rounded-full flex-shrink-0 ${readiness.ready ? "bg-sage" : "bg-ember"}`} />
+            <div>
+              <div className={`text-sm font-bold ${readiness.ready ? "text-sage" : "text-ember"}`}>
+                {readiness.ready ? "Ready to build today — enough material on hand" : "Short on material for today's schedule"}
+              </div>
+              {!readiness.ready && (
+                <div className="text-xs text-[#1E3A5F]/60 mt-0.5">
+                  {readiness.shortages.map(s => `${s.materialType}: short ${s.shortQuantity}`).join(" · ")}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Top summary cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6 print:hidden">
+        <Stat label="Orders Scheduled" value={String(result.ordersInRange)} />
+        <Stat label="Total Pickets Required" value={String(totalPicketsRequired)} />
+        <Stat label="Pickets On Hand" value={picketsOnHand == null ? "—" : String(picketsOnHand)} />
+        <Stat
+          label="Pickets Short"
+          value={picketsShort == null ? "—" : String(picketsShort)}
+          accent={picketsShort != null && picketsShort > 0 ? "ember" : undefined}
+        />
+        <Stat label="Estimated Waste %" value={`${estimatedWaste.toFixed(1)}%`} />
       </div>
 
       {/* Range filters */}
@@ -109,6 +146,50 @@ export default function MaterialPlanning({
           Nothing scheduled for production in this range.
         </div>
       ) : (
+        <>
+        {/* Material Summary — one row per material, for a fast scan
+            across everything before drilling into any one material's
+            detail card below. Same requirement data, just a second view
+            of it — no recalculation. */}
+        <div className="overflow-x-auto bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm mb-6 print:hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+                <th className="text-left px-4 py-3">Material</th>
+                <th className="text-right px-4 py-3">On Hand</th>
+                <th className="text-right px-4 py-3">Required</th>
+                <th className="text-right px-4 py-3">Remaining</th>
+                <th className="text-right px-4 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.requirements.map(req => {
+                const remaining = req.onHandQuantity != null ? req.onHandQuantity - req.optimization.totalBoards : null;
+                const isShort = req.shortQuantity != null && req.shortQuantity > 0;
+                return (
+                  <tr key={req.materialType} className="border-t border-[#1E3A5F]/10">
+                    <td className="px-4 py-3 font-semibold text-[#1E3A5F]">{req.materialType}</td>
+                    <td className="px-4 py-3 text-right text-[#1E3A5F]/70">{req.onHandQuantity == null ? "—" : req.onHandQuantity}</td>
+                    <td className="px-4 py-3 text-right text-[#1E3A5F]/70">{req.optimization.totalBoards}</td>
+                    <td className={`px-4 py-3 text-right font-semibold ${remaining != null && remaining < 0 ? "text-ember" : "text-[#1E3A5F]/70"}`}>
+                      {remaining == null ? "—" : remaining}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {req.onHandQuantity == null ? (
+                        <span className="text-xs text-[#1E3A5F]/40">Not tracked</span>
+                      ) : (
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${isShort ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"}`}>
+                          {isShort ? "Short" : "Enough"}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
         <div className="space-y-4">
           {result.requirements.map(req => {
             const isShort = req.shortQuantity != null && req.shortQuantity > 0;
@@ -187,6 +268,7 @@ export default function MaterialPlanning({
             );
           })}
         </div>
+        </>
       )}
     </div>
   );
