@@ -75,6 +75,19 @@ export async function POST(req: NextRequest) {
   const orderProductType = normalizedItems[0].productType;
   const orderProductId = normalizedItems.length === 1 ? normalizedItems[0].productId : null;
 
+  // Auto-set the production date to one day before pickup (your glue's
+  // 24-hour cure time) — computed directly on the date string itself,
+  // not through a real Date object, to avoid any timezone conversion
+  // risk (the exact same class of bug fixed earlier in due_date
+  // display elsewhere in this app).
+  function oneDayBefore(dateStr: string): string {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const d = new Date(Date.UTC(year, month - 1, day));
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+  }
+  const autoProductionDate = dueDate ? oneDayBefore(dueDate) : null;
+
   const { data: order, error } = await admin
     .from("orders")
     .insert({
@@ -86,7 +99,8 @@ export async function POST(req: NextRequest) {
       quantity: totalQuantity,
       product_id: orderProductId,
       status: initialStatus,
-      due_date: dueDate || null
+      due_date: dueDate || null,
+      production_date: autoProductionDate
     })
     .select()
     .single();
