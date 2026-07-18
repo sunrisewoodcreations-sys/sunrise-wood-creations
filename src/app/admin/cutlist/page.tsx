@@ -63,8 +63,33 @@ export default async function CutListPage() {
   function buildJobs(dateStrToMatch: string): Job[] {
     const jobs: Job[] = [];
 
+    // order_items is the source of truth here — every order created by
+    // the current order form gets an order_items row, even single-item
+    // ones. Scanning orders.product_id AND order_items independently
+    // (as this used to) double-counted every such order. Only orders
+    // with zero order_items rows at all (true legacy orders, if any)
+    // fall back to the direct orders.product_id path below.
+    const orderIdsWithItems = new Set((orderItems || []).map((it: any) => it.order_id));
+
+    (orderItems || []).forEach((it: any) => {
+      if (it.orders?.production_date !== dateStrToMatch || it.orders?.product_type !== "planter" || it.orders?.status === "picked_up") return;
+      if (!it.product_id) return;
+      const product = (products || []).find(p => p.id === it.product_id);
+      const order = (orders || []).find(o => o.id === it.order_id) as any;
+      jobs.push({
+        orderId: it.order_id,
+        orderTitle: order?.profiles?.full_name || product?.name || "Order item",
+        customerName: order?.profiles?.full_name || "",
+        productId: it.product_id,
+        productName: product?.name || null,
+        quantity: it.quantity || 1,
+        hasBOM: productIdsWithParts.has(it.product_id)
+      });
+    });
+
     (orders || []).forEach((o: any) => {
       if (o.production_date !== dateStrToMatch || !o.product_id) return;
+      if (orderIdsWithItems.has(o.id)) return; // already counted above via order_items
       const product = (products || []).find(p => p.id === o.product_id);
       jobs.push({
         orderId: o.id,
@@ -74,21 +99,6 @@ export default async function CutListPage() {
         productName: product?.name || null,
         quantity: o.quantity || 1,
         hasBOM: productIdsWithParts.has(o.product_id)
-      });
-    });
-
-    (orderItems || []).forEach((it: any) => {
-      if (it.orders?.production_date !== dateStrToMatch || it.orders?.product_type !== "planter" || it.orders?.status === "picked_up") return;
-      if (!it.product_id) return;
-      const product = (products || []).find(p => p.id === it.product_id);
-      jobs.push({
-        orderId: it.order_id,
-        orderTitle: product?.name || "Order item",
-        customerName: "",
-        productId: it.product_id,
-        productName: product?.name || null,
-        quantity: it.quantity || 1,
-        hasBOM: productIdsWithParts.has(it.product_id)
       });
     });
 
