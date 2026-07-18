@@ -81,13 +81,36 @@ export async function POST(req: NextRequest) {
   // not through a real Date object, to avoid any timezone conversion
   // risk (the exact same class of bug fixed earlier in due_date
   // display elsewhere in this app).
-  function oneDayBefore(dateStr: string): string {
+  function addDaysToDateStr(dateStr: string, days: number): string {
     const [year, month, day] = dateStr.split("-").map(Number);
     const d = new Date(Date.UTC(year, month - 1, day));
-    d.setUTCDate(d.getUTCDate() - 1);
+    d.setUTCDate(d.getUTCDate() + days);
     return d.toISOString().slice(0, 10);
   }
-  const autoProductionDate = dueDate ? oneDayBefore(dueDate) : null;
+  function oneDayBefore(dateStr: string): string {
+    return addDaysToDateStr(dateStr, -1);
+  }
+  function todayStrEastern(): string {
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "numeric", day: "numeric" }).formatToParts(new Date());
+    const year = parts.find(p => p.type === "year")!.value;
+    const month = parts.find(p => p.type === "month")!.value.padStart(2, "0");
+    const day = parts.find(p => p.type === "day")!.value.padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  // If no pickup date is given at all, default to building tomorrow and
+  // picking up the day after that — same one-day cure-time relationship
+  // as when a real pickup date IS given, just applied going forward from
+  // today instead of backward from a chosen pickup date.
+  let finalDueDate = dueDate || null;
+  let autoProductionDate: string | null;
+  if (dueDate) {
+    autoProductionDate = oneDayBefore(dueDate);
+  } else {
+    const today = todayStrEastern();
+    autoProductionDate = addDaysToDateStr(today, 1);
+    finalDueDate = addDaysToDateStr(today, 2);
+  }
 
   const { data: order, error } = await admin
     .from("orders")
@@ -100,7 +123,7 @@ export async function POST(req: NextRequest) {
       quantity: totalQuantity,
       product_id: orderProductId,
       status: initialStatus,
-      due_date: dueDate || null,
+      due_date: finalDueDate,
       production_date: autoProductionDate
     })
     .select()
