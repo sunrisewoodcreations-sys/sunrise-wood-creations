@@ -39,12 +39,8 @@ const PRODUCT_TYPE_OPTIONS = [
   { value: "cutting_board", label: "Cutting board" }
 ];
 
-export const PRIORITY_STYLES: Record<string, string> = {
-  high: "bg-ember text-white",
-  normal: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60",
-  low: "bg-[#1E3A5F]/5 text-[#1E3A5F]/40"
-};
-export const PRIORITY_LABELS: Record<string, string> = { high: "High", normal: "Normal", low: "Low" };
+import { PRIORITY_STYLES, PRIORITY_LABELS } from "@/lib/priorityStyles";
+export { PRIORITY_STYLES, PRIORITY_LABELS };
 
 export const PRODUCTION_STATUS_STYLES: Record<string, string> = {
   waiting: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60",

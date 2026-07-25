@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { WORKFLOW_LABELS, WORKFLOW_STYLES, WorkflowStage } from "@/lib/workflow";
-import { PRIORITY_STYLES, PRIORITY_LABELS } from "@/components/ProductionSchedule";
+import { PRIORITY_STYLES, PRIORITY_LABELS } from "@/lib/priorityStyles";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 import { formatCalendarDate } from "@/lib/dateDisplay";
 
