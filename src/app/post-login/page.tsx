@@ -16,5 +16,5 @@ export default async function PostLoginPage() {
     .eq("id", user.id)
     .single();
 
-  redirect(profile?.role === "admin" ? "/admin/customers" : "/account");
+  redirect(profile?.role === "admin" ? "/admin" : "/account");
 }

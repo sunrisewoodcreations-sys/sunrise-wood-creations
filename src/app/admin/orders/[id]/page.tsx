@@ -18,6 +18,9 @@ import PicketUsageForm from "@/components/PicketUsageForm";
 import OrderTimeline from "@/components/OrderTimeline";
 import { getOrderTimeline } from "@/lib/orderTimeline";
 import { productLabel, ProductType } from "@/lib/statusSteps";
+import { getWorkflowStage } from "@/lib/workflow";
+import { checkMaterialAvailabilityForOrder } from "@/lib/materialPlanning";
+import WorkflowProgress from "@/components/WorkflowProgress";
 
 export default async function AdminOrderDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -38,6 +41,16 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
     .select("*")
     .eq("order_id", order.id)
     .order("sent_at", { ascending: false });
+
+  const isWaitingOnCustomer = (proofs || []).some((p: any) => p.status === "pending");
+
+  // Only worth checking material availability if it would actually
+  // change anything — an order that's already past the "would this be
+  // ready to build" point doesn't need it.
+  const needsMaterialCheck = order.production_date && order.production_status === "waiting" && !isWaitingOnCustomer && order.status !== "picked_up";
+  const materialCheck = needsMaterialCheck ? await checkMaterialAvailabilityForOrder(order.id) : null;
+
+  const workflowStage = getWorkflowStage(order, isWaitingOnCustomer, materialCheck ? materialCheck.available : null);
 
   const { data: history } = await supabase
     .from("order_status_history")
@@ -157,6 +170,11 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
 
         <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
         <ProgressTracker productType={order.product_type as ProductType} currentStatus={order.status} statusTimestamps={statusTimestamps} />
+
+        <div className="mt-4 pt-4 border-t border-[#1E3A5F]/10">
+          <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Production Workflow</div>
+          <WorkflowProgress stage={workflowStage} />
+        </div>
       </div>
 
       {order.product_type === "cornhole" && (

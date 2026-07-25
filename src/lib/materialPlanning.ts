@@ -21,6 +21,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BOMPart, optimizeCutList, OptimizationResult } from "@/lib/cutlistOptimizer";
+import { consumePicketsFifo } from "@/lib/pickets";
 
 export const BOARD_LENGTH = 71; // your actual stock length, same constant the Cut List Generator uses
 export const KERF = 0.125;
@@ -71,7 +72,7 @@ const MATERIAL_INVENTORY_SOURCES: Record<string, () => Promise<number>> = {
   // plywood: getPlywoodSheetsOnHand,
 };
 
-async function lookupOnHandQuantity(materialType: string): Promise<number | null> {
+export async function lookupOnHandQuantity(materialType: string): Promise<number | null> {
   const lookup = MATERIAL_INVENTORY_SOURCES[materialType.trim().toLowerCase()];
   return lookup ? await lookup() : null;
 }
@@ -198,4 +199,80 @@ export async function getTodayReadiness(todayStr: string): Promise<{ ready: bool
   const result = await getMaterialRequirements(todayStr, todayStr, "Today");
   const shortages = result.requirements.filter(r => r.shortQuantity != null && r.shortQuantity > 0);
   return { ready: shortages.length === 0, shortages };
+}
+
+// Checks material availability for ONE order specifically — the piece
+// "Ready to Build" and the Start Production override both need. Reuses
+// the same optimizer and inventory lookup as the range-based check
+// above; the only new part is gathering just this order's own parts
+// instead of every order's in a date range.
+export async function checkMaterialAvailabilityForOrder(orderId: string): Promise<{ available: boolean; shortages: { materialType: string; needed: number; onHand: number | null; short: number | null }[] }> {
+  const supabase = createClient();
+
+  const { data: items } = await supabase.from("order_items").select("product_id, quantity").eq("order_id", orderId);
+  if (!items || items.length === 0) return { available: true, shortages: [] };
+
+  const productIds = items.map(it => it.product_id).filter(Boolean);
+  const { data: bomParts } = await supabase.from("product_bom_parts").select("*").in("product_id", productIds);
+
+  const byMaterial = new Map<string, BOMPart[]>();
+  for (const item of items) {
+    if (!item.product_id) continue;
+    const parts = (bomParts || []).filter((p: any) => p.product_id === item.product_id);
+    for (const p of parts) {
+      const key = p.material_type || "Unspecified";
+      const list = byMaterial.get(key) || [];
+      list.push({
+        partName: p.part_name,
+        length: p.length_inches,
+        finalLength: p.final_length_inches ?? undefined,
+        quantityPerUnit: (p.quantity_per_unit || 1) * (item.quantity || 1),
+        materialType: key,
+        isTrim: p.is_trim
+      });
+      byMaterial.set(key, list);
+    }
+  }
+
+  const shortages: { materialType: string; needed: number; onHand: number | null; short: number | null }[] = [];
+  for (const [materialType, parts] of byMaterial.entries()) {
+    const optimization = optimizeCutList(parts, materialType, BOARD_LENGTH, KERF);
+    const onHand = await lookupOnHandQuantity(materialType);
+    const short = onHand != null ? Math.max(0, optimization.totalBoards - onHand) : null;
+    if (short != null && short > 0) {
+      shortages.push({ materialType, needed: optimization.totalBoards, onHand, short });
+    }
+  }
+
+  return { available: shortages.length === 0, shortages };
+}
+
+// Deducts the material a completed order actually consumed. Built and
+// ready to use, but deliberately NOT called anywhere yet — your
+// existing pickets_per_unit system already deducts stock at order
+// creation time, so wiring this to also fire on "Completed" today would
+// double-deduct the same physical pickets. When you're ready to retire
+// or reconcile that older path, this is the one function to call —
+// reuses the exact same FIFO consumption logic already proven for
+// picket usage, not a second copy of it.
+export async function deductMaterialForCompletedOrder(orderId: string): Promise<{ ok: boolean; error?: string }> {
+  const admin = createAdminClient();
+
+  const { data: items } = await admin.from("order_items").select("id, product_id, quantity").eq("order_id", orderId);
+  if (!items || items.length === 0) return { ok: true };
+
+  for (const item of items) {
+    if (!item.product_id) continue;
+    const { data: parts } = await admin.from("product_bom_parts").select("*").eq("product_id", item.product_id);
+
+    for (const part of parts || []) {
+      if ((part.material_type || "").trim().toLowerCase() !== "cedar") continue; // only Cedar has a real inventory source today
+      const neededPickets = Math.ceil((part.length_inches * part.quantity_per_unit * (item.quantity || 1)) / BOARD_LENGTH);
+      if (neededPickets <= 0) continue;
+      const result = await consumePicketsFifo(admin, neededPickets, orderId, item.id);
+      if (!result.ok) return { ok: false, error: result.error };
+    }
+  }
+
+  return { ok: true };
 }

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { productLabel, ProductType } from "@/lib/statusSteps";
 import AddProductForm from "@/components/AddProductForm";
 import ProductRow from "@/components/ProductRow";
+import ProductCardMobile from "@/components/ProductCardMobile";
 
 export default async function ProductsPage() {
   const supabase = createClient();
@@ -110,6 +110,7 @@ export default async function ProductsPage() {
             <th className="text-right px-4 py-3">Buildable now</th>
             <th className="text-right px-4 py-3">Reserved (open orders)</th>
             <th className="text-right px-4 py-3">Sold</th>
+            <th className="text-right px-4 py-3">Build time</th>
             <th className="text-right px-4 py-3">Actions</th>
           </tr>
         </thead>
@@ -130,63 +131,29 @@ export default async function ProductsPage() {
             );
           })}
           {products?.length === 0 && (
-            <tr><td colSpan={13} className="px-4 py-6 text-center text-[#1E3A5F]/50">No products saved yet.</td></tr>
+            <tr><td colSpan={14} className="px-4 py-6 text-center text-[#1E3A5F]/50">No products saved yet.</td></tr>
           )}
         </tbody>
       </table>
       </div>
 
-      {/* Mobile card view — same data as the desktop table above, which
-          is untouched aside from being gated behind md:. */}
+      {/* Mobile card view — same data as the desktop table above (which
+          is untouched), now with full editing capability via the same
+          shared logic ProductRow uses, instead of a read-only summary. */}
       <div className="md:hidden space-y-3">
         {products?.map((p: any) => {
-          const margin = (p.price_cents - (p.cost_cents || 0)) / 100;
-          const isLowStock = (p.stock_quantity ?? 0) <= (p.low_stock_threshold ?? 0);
           const buildable = p.product_type === "planter" && p.pickets_per_unit > 0
             ? Math.floor(remainingPickets / p.pickets_per_unit)
             : null;
           return (
-            <div key={p.id} className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <div className="text-base font-bold text-[#1E3A5F]">{p.name}</div>
-                  <div className="text-xs text-[#1E3A5F]/60">{productLabel(p.product_type as ProductType)}{p.size_details ? ` · ${p.size_details}` : ""}</div>
-                </div>
-                <span className={`text-sm font-bold px-2 py-1 rounded-full ${isLowStock ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"}`}>
-                  {p.stock_quantity ?? 0} in stock
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-[#1E3A5F]/10 text-sm">
-                <div>
-                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Price</div>
-                  <div className="text-[#1E3A5F]/70">${(p.price_cents / 100).toFixed(2)}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Margin</div>
-                  <div className={margin >= 0 ? "text-sage font-semibold" : "text-ember font-semibold"}>${margin.toFixed(2)}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Sold</div>
-                  <div className="text-[#1E3A5F]/70">{unitsSoldByProduct[p.id] || 0}</div>
-                </div>
-              </div>
-              {(reservedByProduct[p.id] > 0 || buildable !== null) && (
-                <div className="grid grid-cols-2 gap-2 pt-2 mt-2 border-t border-[#1E3A5F]/10 text-sm">
-                  {reservedByProduct[p.id] > 0 && (
-                    <div>
-                      <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Reserved</div>
-                      <div className="text-amber font-semibold">{reservedByProduct[p.id]} (open orders)</div>
-                    </div>
-                  )}
-                  {buildable !== null && (
-                    <div>
-                      <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Buildable now</div>
-                      <div className="text-[#1E3A5F] font-semibold">{buildable} from pickets on hand</div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <ProductCardMobile
+              key={p.id}
+              product={p}
+              buildableNow={buildable}
+              reservedQty={reservedByProduct[p.id] || 0}
+              unitsSold={unitsSoldByProduct[p.id] || 0}
+              bomParts={bomPartsByProduct[p.id] || []}
+            />
           );
         })}
         {products?.length === 0 && (

@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
 import { formatCalendarDate } from "@/lib/dateDisplay";
 import { formatInvoiceNumber } from "@/lib/invoice";
+import { getWorkflowStage, WORKFLOW_LABELS, WORKFLOW_STYLES, WorkflowStage } from "@/lib/workflow";
+import { checkMaterialAvailabilityForOrder } from "@/lib/materialPlanning";
 import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import SendInvoiceButton from "@/components/SendInvoiceButton";
@@ -220,6 +222,25 @@ export default async function AdminOrdersPage({
     : { data: [] as any[] };
   const waitingOnCustomerOrderIds = new Set((pendingProofs || []).map((p: any) => p.order_id));
 
+  // Workflow stage per order (src/lib/workflow.ts) — material
+  // availability is only checked for orders where it would actually
+  // change the answer (scheduled, not yet started, not waiting on the
+  // customer), run in parallel rather than one at a time.
+  const ordersNeedingMaterialCheck = orders.filter((o: any) =>
+    o.production_date && o.production_status === "waiting" && !waitingOnCustomerOrderIds.has(o.id) && o.status !== "picked_up"
+  );
+  const materialCheckResults = await Promise.all(
+    ordersNeedingMaterialCheck.map((o: any) => checkMaterialAvailabilityForOrder(o.id).then(r => [o.id, r.available] as const))
+  );
+  const materialAvailableByOrderId = new Map(materialCheckResults);
+
+  const workflowStageByOrderId = new Map(
+    orders.map((o: any) => [
+      o.id,
+      getWorkflowStage(o, waitingOnCustomerOrderIds.has(o.id), materialAvailableByOrderId.get(o.id) ?? null)
+    ])
+  );
+
   const { year: ty, month: tm, day: td } = easternDateParts(new Date());
   const todayStr = `${ty}-${String(tm).padStart(2, "0")}-${String(td).padStart(2, "0")}`;
   const weekFromNow = new Date();
@@ -241,6 +262,11 @@ export default async function AdminOrdersPage({
   const waitingOnCustomer = orders.filter((o: any) => waitingOnCustomerOrderIds.has(o.id)).length;
   const waitingOnPayment = orders.filter((o: any) => o.status !== "picked_up" && (o.amount_paid_cents || 0) < (o.price_cents || 0)).length;
   const readyForPickup = orders.filter((o: any) => o.status === "ready_for_pickup").length;
+  const workflowNewCount = orders.filter((o: any) => workflowStageByOrderId.get(o.id) === "new").length;
+  const workflowScheduledCount = orders.filter((o: any) => workflowStageByOrderId.get(o.id) === "scheduled").length;
+  const workflowReadyToBuildCount = orders.filter((o: any) => workflowStageByOrderId.get(o.id) === "ready_to_build").length;
+  const workflowInProductionCount = orders.filter((o: any) => workflowStageByOrderId.get(o.id) === "in_production").length;
+  const workflowCompletedCount = orders.filter((o: any) => workflowStageByOrderId.get(o.id) === "completed").length;
 
   // --- New: which of the fetched (searched) orders match the currently
   // active summary-card filter. Search and everything above stays
@@ -256,6 +282,11 @@ export default async function AdminOrdersPage({
       case "waiting_customer": return waitingOnCustomerOrderIds.has(o.id);
       case "waiting_payment": return o.status !== "picked_up" && (o.amount_paid_cents || 0) < (o.price_cents || 0);
       case "ready_pickup": return o.status === "ready_for_pickup";
+      case "workflow_new": return workflowStageByOrderId.get(o.id) === "new";
+      case "workflow_scheduled": return workflowStageByOrderId.get(o.id) === "scheduled";
+      case "workflow_ready_to_build": return workflowStageByOrderId.get(o.id) === "ready_to_build";
+      case "workflow_in_production": return workflowStageByOrderId.get(o.id) === "in_production";
+      case "workflow_completed": return workflowStageByOrderId.get(o.id) === "completed";
       default: return true;
     }
   });
@@ -317,6 +348,15 @@ export default async function AdminOrdersPage({
         <SummaryCard label="Waiting on customer" value={waitingOnCustomer} color={waitingOnCustomer > 0 ? "text-ember" : undefined} href={filterHref("waiting_customer")} active={activeFilter === "waiting_customer"} />
         <SummaryCard label="Waiting on payment" value={waitingOnPayment} color={waitingOnPayment > 0 ? "text-ember" : undefined} href={filterHref("waiting_payment")} active={activeFilter === "waiting_payment"} />
         <SummaryCard label="Ready for pickup" value={readyForPickup} color="text-sage" href={filterHref("ready_pickup")} active={activeFilter === "ready_pickup"} />
+        <SummaryCard label="Workflow: New" value={workflowNewCount} href={filterHref("workflow_new")} active={activeFilter === "workflow_new"} />
+        <SummaryCard label="Workflow: Scheduled" value={workflowScheduledCount} href={filterHref("workflow_scheduled")} active={activeFilter === "workflow_scheduled"} />
+        <SummaryCard label="Workflow: Ready to Build" value={workflowReadyToBuildCount} color="text-sage" href={filterHref("workflow_ready_to_build")} active={activeFilter === "workflow_ready_to_build"} />
+        <SummaryCard label="Workflow: In Production" value={workflowInProductionCount} color="text-amber" href={filterHref("workflow_in_production")} active={activeFilter === "workflow_in_production"} />
+        {/* Waiting on Customer and Ready for Pickup are deliberately not
+            duplicated here — the existing "waiting_customer" and
+            "ready_pickup" cards just below already filter to exactly
+            these same two workflow stages. */}
+        <SummaryCard label="Workflow: Completed" value={workflowCompletedCount} color="text-sage" href={filterHref("workflow_completed")} active={activeFilter === "workflow_completed"} />
       </div>
 
       {activeFilter ? (
@@ -429,6 +469,9 @@ export default async function AdminOrdersPage({
                     <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#1E3A5F]">
                       {productLabel(order.product_type as ProductType)} — {order.title}
                     </Link>
+                    <span className={`ml-2 inline-block text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${WORKFLOW_STYLES[workflowStageByOrderId.get(order.id) as WorkflowStage]}`}>
+                      {WORKFLOW_LABELS[workflowStageByOrderId.get(order.id) as WorkflowStage]}
+                    </span>
                   </td>
                   <td className="px-4 py-3.5 text-[#1E3A5F]/70">
                     <Link href={`/admin/customers/${order.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
@@ -542,6 +585,9 @@ export default async function AdminOrdersPage({
 
               <span className={`inline-block px-3 py-1.5 rounded-full text-sm font-bold whitespace-nowrap ${statusColor(order.status)}`}>
                 {statusLabel(order.product_type as ProductType, order.status)}
+              </span>
+              <span className={`inline-block ml-1.5 px-3 py-1.5 rounded-full text-sm font-bold whitespace-nowrap ${WORKFLOW_STYLES[workflowStageByOrderId.get(order.id) as WorkflowStage]}`}>
+                {WORKFLOW_LABELS[workflowStageByOrderId.get(order.id) as WorkflowStage]}
               </span>
 
               <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-[#1E3A5F]/10">

@@ -23,6 +23,7 @@ export default function AddProductForm() {
   const [stockQuantity, setStockQuantity] = useState("0");
   const [lowStockThreshold, setLowStockThreshold] = useState("0");
   const [picketsPerUnit, setPicketsPerUnit] = useState("0");
+  const [estimatedBuildMinutes, setEstimatedBuildMinutes] = useState("");
   const [partRows, setPartRows] = useState<BOMPartRow[]>([emptyPartRow()]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,7 +36,7 @@ export default function AddProductForm() {
     const res = await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold, picketsPerUnit })
+      body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold, picketsPerUnit, estimatedBuildMinutes })
     });
     const body = await res.json().catch(() => ({}));
 
@@ -75,7 +76,7 @@ export default function AddProductForm() {
     }
 
     setLoading(false);
-    setName(""); setSizeDetails(""); setPrice(""); setCostPrice(""); setStockQuantity("0"); setLowStockThreshold("0"); setPicketsPerUnit("0");
+    setName(""); setSizeDetails(""); setPrice(""); setCostPrice(""); setStockQuantity("0"); setLowStockThreshold("0"); setPicketsPerUnit("0"); setEstimatedBuildMinutes("");
     setPartRows([emptyPartRow()]);
     setOpen(false);
     router.refresh();
@@ -94,7 +95,15 @@ export default function AddProductForm() {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Product type</label>
-          <select value={productType} onChange={e => setProductType(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm">
+          <select
+            value={productType}
+            onChange={e => {
+              const newType = e.target.value;
+              setProductType(newType);
+              if (newType === "planter" && !estimatedBuildMinutes.trim()) setEstimatedBuildMinutes("60");
+            }}
+            className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+          >
             {PRODUCT_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
           </select>
         </div>
@@ -121,6 +130,11 @@ export default function AddProductForm() {
         <div>
           <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Low stock alert at</label>
           <input value={lowStockThreshold} onChange={e => setLowStockThreshold(e.target.value)} placeholder="2" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Estimated build time (minutes)</label>
+          <input value={estimatedBuildMinutes} onChange={e => setEstimatedBuildMinutes(e.target.value)} placeholder="60" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+          <p className="text-[10px] text-[#1E3A5F]/40 mt-1">Active labor only — don't include glue drying or other curing time.</p>
         </div>
         {productType === "planter" && (
           <div>

@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { productLabel, ProductType } from "@/lib/statusSteps";
-import ProductBOMEditor, { BOMPartRow, bomPartsToRows, withAutoNames } from "@/components/ProductBOMEditor";
+import ProductBOMEditor from "@/components/ProductBOMEditor";
+import { useProductEditor, Product, BOMPartsInput } from "@/hooks/useProductEditor";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -12,148 +11,45 @@ const PRODUCT_TYPES = [
   { value: "cutting_board", label: "Cutting board" }
 ];
 
-type Product = {
-  id: string;
-  product_type: string;
-  name: string;
-  size_details: string | null;
-  price_cents: number;
-  cost_cents: number;
-  stock_quantity: number;
-  low_stock_threshold: number;
-  pickets_per_unit: number;
-};
-
 export default function ProductRow({
   product, buildableNow, reservedQty, unitsSold, bomParts
 }: {
   product: Product; buildableNow?: number | null; reservedQty?: number; unitsSold?: number;
-  bomParts?: { part_name: string; length_inches: number; final_length_inches: number | null; quantity_per_unit: number; material_type: string; is_trim: boolean; grain_direction: string | null }[];
+  bomParts?: BOMPartsInput;
 }) {
-  const router = useRouter();
-  const [editing, setEditing] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [duplicating, setDuplicating] = useState(false);
-  const [error, setError] = useState("");
+  const e = useProductEditor(product, bomParts);
 
-  const [productType, setProductType] = useState(product.product_type);
-  const [name, setName] = useState(product.name);
-  const [sizeDetails, setSizeDetails] = useState(product.size_details || "");
-  const [price, setPrice] = useState((product.price_cents / 100).toString());
-  const [costPrice, setCostPrice] = useState(((product.cost_cents ?? 0) / 100).toString());
-  const [stockQuantity, setStockQuantity] = useState(String(product.stock_quantity ?? 0));
-  const [lowStockThreshold, setLowStockThreshold] = useState(String(product.low_stock_threshold ?? 0));
-  const [picketsPerUnit, setPicketsPerUnit] = useState(String(product.pickets_per_unit ?? 0));
-  const [partRows, setPartRows] = useState<BOMPartRow[]>(() => bomPartsToRows(bomParts || []));
-
-  // Keep the parts rows in sync with the real server data whenever it
-  // actually changes (e.g. after a save completes and this page
-  // refreshes) — not just once on first mount. This is what fixes
-  // parts appearing to "disappear": without this, reopening Edit could
-  // show whatever this component's very first snapshot happened to be.
-  const bomPartsKey = JSON.stringify(bomParts || []);
-  const lastSyncedBomKey = useRef(bomPartsKey);
-  useEffect(() => {
-    if (bomPartsKey !== lastSyncedBomKey.current) {
-      lastSyncedBomKey.current = bomPartsKey;
-      setPartRows(bomPartsToRows(bomParts || []));
-    }
-  }, [bomPartsKey, bomParts]);
-
-  const margin = (product.price_cents - (product.cost_cents || 0)) / 100;
-
-  async function handleSave() {
-    setLoading(true);
-    setError("");
-
-    const validPartRows = withAutoNames(partRows.filter(r => Number(r.length) > 0));
-
-    const [productRes, partsRes] = await Promise.all([
-      fetch(`/api/products/${product.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productType, name, sizeDetails, priceCents: price, costCents: costPrice, stockQuantity, lowStockThreshold, picketsPerUnit })
-      }),
-      fetch(`/api/products/${product.id}/bom-parts`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          parts: validPartRows.map(r => ({
-            partName: r.partName,
-            length: r.length,
-            finalLength: r.finalLength || undefined,
-            quantityPerUnit: r.quantityPerUnit,
-            materialType: r.materialType,
-            isTrim: r.isTrim,
-            grainDirection: r.grainDirection || undefined
-          }))
-        })
-      })
-    ]);
-
-    setLoading(false);
-
-    if (productRes.ok && partsRes.ok) {
-      setEditing(false);
-      router.refresh();
-    } else {
-      const failedRes = !productRes.ok ? productRes : partsRes;
-      const body = await failedRes.json().catch(() => ({}));
-      setError(body.error || "Couldn't save changes. Nothing was closed so you don't lose your edits — fix the issue above and try again.");
-    }
-  }
-
-  async function handleDelete() {
-    setLoading(true);
-    const res = await fetch(`/api/products/${product.id}`, { method: "DELETE" });
-    setLoading(false);
-    if (res.ok) router.refresh();
-  }
-
-  async function handleDuplicate() {
-    setDuplicating(true);
-    const res = await fetch(`/api/products/${product.id}/duplicate`, { method: "POST" });
-    setDuplicating(false);
-    if (res.ok) {
-      router.refresh();
-    } else {
-      const body = await res.json().catch(() => ({}));
-      setError(body.error || "Couldn't duplicate this product.");
-    }
-  }
-
-  if (editing) {
+  if (e.editing) {
     return (
       <>
       <tr className="border-t border-[#1E3A5F]/10 bg-cream/40">
         <td className="px-4 py-3">
-          <input value={name} onChange={e => setName(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm" />
+          <input value={e.name} onChange={ev => e.setName(ev.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm" />
         </td>
         <td className="px-4 py-3">
-          <select value={productType} onChange={e => setProductType(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm">
+          <select value={e.productType} onChange={ev => e.setProductType(ev.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm">
             {PRODUCT_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
           </select>
         </td>
         <td className="px-4 py-3">
-          <input value={sizeDetails} onChange={e => setSizeDetails(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm" />
+          <input value={e.sizeDetails} onChange={ev => e.setSizeDetails(ev.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm" />
         </td>
         <td className="px-4 py-3 text-right">
-          <input value={price} onChange={e => setPrice(e.target.value)} className="w-20 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
+          <input value={e.price} onChange={ev => e.setPrice(ev.target.value)} className="w-20 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
         </td>
         <td className="px-4 py-3 text-right">
-          <input value={costPrice} onChange={e => setCostPrice(e.target.value)} className="w-20 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
+          <input value={e.costPrice} onChange={ev => e.setCostPrice(ev.target.value)} className="w-20 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
         </td>
         <td className="px-4 py-3 text-right text-[#1E3A5F]/40">—</td>
         <td className="px-4 py-3 text-right">
-          <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} className="w-16 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
+          <input value={e.stockQuantity} onChange={ev => e.setStockQuantity(ev.target.value)} className="w-16 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
         </td>
         <td className="px-4 py-3 text-right">
-          <input value={lowStockThreshold} onChange={e => setLowStockThreshold(e.target.value)} className="w-16 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
+          <input value={e.lowStockThreshold} onChange={ev => e.setLowStockThreshold(ev.target.value)} className="w-16 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
         </td>
         <td className="px-4 py-3 text-right">
-          {productType === "planter" ? (
-            <input value={picketsPerUnit} onChange={e => setPicketsPerUnit(e.target.value)} className="w-16 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
+          {e.productType === "planter" ? (
+            <input value={e.picketsPerUnit} onChange={ev => e.setPicketsPerUnit(ev.target.value)} className="w-16 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
           ) : (
             <span className="text-[#1E3A5F]/30">—</span>
           )}
@@ -161,24 +57,30 @@ export default function ProductRow({
         <td className="px-4 py-3 text-right text-[#1E3A5F]/30">—</td>
         <td className="px-4 py-3 text-right text-[#1E3A5F]/30">—</td>
         <td className="px-4 py-3 text-right text-[#1E3A5F]/30">—</td>
+        <td className="px-4 py-3 text-right">
+          <input
+            value={e.estimatedBuildMinutes}
+            onChange={ev => e.setEstimatedBuildMinutes(ev.target.value)}
+            placeholder="min"
+            className="w-16 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right"
+          />
+        </td>
         <td className="px-4 py-3 text-right whitespace-nowrap">
-          <button onClick={handleSave} disabled={loading} className="text-sage font-semibold text-xs mr-3">
-            {loading ? "Saving..." : "Save"}
+          <button onClick={e.handleSave} disabled={e.loading} className="text-sage font-semibold text-xs mr-3">
+            {e.loading ? "Saving..." : "Save"}
           </button>
-          <button onClick={() => setEditing(false)} className="text-[#1E3A5F]/50 text-xs">Cancel</button>
-          {error && <div className="text-ember text-xs mt-1">{error}</div>}
+          <button onClick={() => e.setEditing(false)} className="text-[#1E3A5F]/50 text-xs">Cancel</button>
+          {e.error && <div className="text-ember text-xs mt-1">{e.error}</div>}
         </td>
       </tr>
       <tr className="bg-cream/40">
-        <td colSpan={13} className="px-4 pb-3">
-          <ProductBOMEditor rows={partRows} onChange={setPartRows} />
+        <td colSpan={14} className="px-4 pb-3">
+          <ProductBOMEditor rows={e.partRows} onChange={e.setPartRows} />
         </td>
       </tr>
       </>
     );
   }
-
-  const isLowStock = (product.stock_quantity ?? 0) <= (product.low_stock_threshold ?? 0);
 
   return (
     <>
@@ -188,10 +90,10 @@ export default function ProductRow({
       <td className="px-4 py-3 text-[#1E3A5F]/70">{product.size_details || "—"}</td>
       <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${(product.price_cents / 100).toFixed(2)}</td>
       <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${((product.cost_cents ?? 0) / 100).toFixed(2)}</td>
-      <td className={`px-4 py-3 text-right font-semibold ${margin >= 0 ? "text-sage" : "text-ember"}`}>
-        ${margin.toFixed(2)}
+      <td className={`px-4 py-3 text-right font-semibold ${e.margin >= 0 ? "text-sage" : "text-ember"}`}>
+        ${e.margin.toFixed(2)}
       </td>
-      <td className={`px-4 py-3 text-right font-semibold ${isLowStock ? "text-ember" : "text-sage"}`}>
+      <td className={`px-4 py-3 text-right font-semibold ${e.isLowStock ? "text-ember" : "text-sage"}`}>
         {product.stock_quantity ?? 0}
       </td>
       <td className="px-4 py-3 text-right text-[#1E3A5F]/50">{product.low_stock_threshold ?? 0}</td>
@@ -207,28 +109,39 @@ export default function ProductRow({
       <td className="px-4 py-3 text-right text-[#1E3A5F]/70">
         {unitsSold ?? 0}
       </td>
+      <td className="px-4 py-3 text-right">
+        {product.estimated_build_minutes != null ? (
+          <span className="text-[#1E3A5F]/70">
+            {product.estimated_build_minutes >= 60
+              ? `${(product.estimated_build_minutes / 60).toFixed(product.estimated_build_minutes % 60 === 0 ? 0 : 1)}h`
+              : `${product.estimated_build_minutes}m`}
+          </span>
+        ) : (
+          <span className="text-[#1E3A5F]/30 text-xs italic">Not tracked</span>
+        )}
+      </td>
       <td className="px-4 py-3 text-right whitespace-nowrap">
-        {confirmingDelete ? (
+        {e.confirmingDelete ? (
           <>
-            <button onClick={handleDelete} disabled={loading} className="text-ember font-semibold text-xs mr-2">
-              {loading ? "Deleting..." : "Confirm"}
+            <button onClick={e.handleDelete} disabled={e.loading} className="text-ember font-semibold text-xs mr-2">
+              {e.loading ? "Deleting..." : "Confirm"}
             </button>
-            <button onClick={() => setConfirmingDelete(false)} className="text-[#1E3A5F]/50 text-xs">Cancel</button>
+            <button onClick={() => e.setConfirmingDelete(false)} className="text-[#1E3A5F]/50 text-xs">Cancel</button>
           </>
         ) : (
           <>
-            <button onClick={() => setEditing(true)} className="text-xs text-[#1E3A5F] hover:underline mr-3">Edit</button>
-            <button onClick={handleDuplicate} disabled={duplicating} className="text-xs text-[#1E3A5F] hover:underline mr-3 disabled:opacity-50">
-              {duplicating ? "Duplicating..." : "Duplicate"}
+            <button onClick={() => e.setEditing(true)} className="text-xs text-[#1E3A5F] hover:underline mr-3">Edit</button>
+            <button onClick={e.handleDuplicate} disabled={e.duplicating} className="text-xs text-[#1E3A5F] hover:underline mr-3 disabled:opacity-50">
+              {e.duplicating ? "Duplicating..." : "Duplicate"}
             </button>
-            <button onClick={() => setConfirmingDelete(true)} className="text-xs text-[#1E3A5F] hover:underline">Delete</button>
+            <button onClick={() => e.setConfirmingDelete(true)} className="text-xs text-[#1E3A5F] hover:underline">Delete</button>
           </>
         )}
       </td>
     </tr>
-    {error && !editing && (
+    {e.error && !e.editing && (
       <tr>
-        <td colSpan={13} className="px-4 pb-2 text-xs text-ember">{error}</td>
+        <td colSpan={14} className="px-4 pb-2 text-xs text-ember">{e.error}</td>
       </tr>
     )}
     </>

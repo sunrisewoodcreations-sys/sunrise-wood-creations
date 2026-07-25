@@ -39,14 +39,14 @@ const PRODUCT_TYPE_OPTIONS = [
   { value: "cutting_board", label: "Cutting board" }
 ];
 
-const PRIORITY_STYLES: Record<string, string> = {
+export const PRIORITY_STYLES: Record<string, string> = {
   high: "bg-ember text-white",
   normal: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60",
   low: "bg-[#1E3A5F]/5 text-[#1E3A5F]/40"
 };
-const PRIORITY_LABELS: Record<string, string> = { high: "High", normal: "Normal", low: "Low" };
+export const PRIORITY_LABELS: Record<string, string> = { high: "High", normal: "Normal", low: "Low" };
 
-const PRODUCTION_STATUS_STYLES: Record<string, string> = {
+export const PRODUCTION_STATUS_STYLES: Record<string, string> = {
   waiting: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60",
   building: "bg-amber/25 text-amber",
   assembly: "bg-amber/50 text-white",
@@ -54,7 +54,7 @@ const PRODUCTION_STATUS_STYLES: Record<string, string> = {
   ready_for_pickup: "bg-sage/25 text-sage",
   completed: "bg-sage text-white"
 };
-const PRODUCTION_STATUS_LABELS: Record<string, string> = {
+export const PRODUCTION_STATUS_LABELS: Record<string, string> = {
   waiting: "Waiting", building: "Building", assembly: "Assembly",
   finishing: "Finishing", ready_for_pickup: "Ready for pickup", completed: "Completed"
 };
@@ -62,7 +62,7 @@ const PRODUCTION_STATUS_ORDER = ["waiting", "building", "assembly", "finishing",
 
 type Order = any;
 
-function OrderScheduleCard({
+export function OrderScheduleCard({
   order, compact, todayStr, draggingId, setDraggingId, updateOrder
 }: {
   order: Order; compact?: boolean; todayStr: string;
@@ -71,7 +71,28 @@ function OrderScheduleCard({
 }) {
     const [editingDetails, setEditingDetails] = useState(false);
     const [notesDraft, setNotesDraft] = useState(order.production_notes || "");
+    const [materialWarning, setMaterialWarning] = useState<{ materialType: string; needed: number; onHand: number | null; short: number | null }[] | null>(null);
+    const [checkingMaterial, setCheckingMaterial] = useState(false);
     const isOverdue = order.production_date && order.production_date < todayStr && order.production_status !== "completed";
+
+    async function handleStartProduction() {
+      setCheckingMaterial(true);
+      setMaterialWarning(null);
+      try {
+        const res = await fetch(`/api/orders/${order.id}/material-check`);
+        const data = await res.json();
+        if (res.ok && !data.available) {
+          setCheckingMaterial(false);
+          setMaterialWarning(data.shortages);
+          return; // wait for explicit override below, don't start yet
+        }
+      } catch {
+        // If the check itself fails, don't block production over it —
+        // fall through and start normally.
+      }
+      setCheckingMaterial(false);
+      updateOrder(order.id, { productionStatus: "building" });
+    }
 
     return (
       <div
@@ -143,14 +164,35 @@ function OrderScheduleCard({
           </div>
         )}
 
+        {materialWarning && (
+          <div className="mt-2 bg-ember/10 border border-ember/30 rounded px-2 py-1.5">
+            <div className="text-[10px] font-bold text-ember mb-1">Materials short — start anyway?</div>
+            <div className="text-[10px] text-[#1E3A5F]/60 mb-1.5">
+              {materialWarning.map(s => `${s.materialType}: short ${s.short}`).join(" · ")}
+            </div>
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => { setMaterialWarning(null); updateOrder(order.id, { productionStatus: "building" }); }}
+                className="flex-1 bg-ember text-white rounded px-2 py-1 text-[10px] font-semibold"
+              >
+                Start anyway
+              </button>
+              <button onClick={() => setMaterialWarning(null)} className="flex-1 border border-[#1E3A5F]/20 text-[#1E3A5F] rounded px-2 py-1 text-[10px] font-semibold">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {!compact && (
           <div className="flex gap-1.5 mt-2">
-            {order.production_status !== "building" && order.production_status !== "completed" && (
+            {order.production_status !== "building" && order.production_status !== "completed" && !materialWarning && (
               <button
-                onClick={() => updateOrder(order.id, { productionStatus: "building" })}
-                className="flex-1 bg-[#1E3A5F] text-white rounded px-2 py-1.5 text-[11px] font-semibold"
+                onClick={handleStartProduction}
+                disabled={checkingMaterial}
+                className="flex-1 bg-[#1E3A5F] text-white rounded px-2 py-1.5 text-[11px] font-semibold disabled:opacity-60"
               >
-                Start production
+                {checkingMaterial ? "Checking materials..." : "Start production"}
               </button>
             )}
             {order.production_status !== "completed" && (
