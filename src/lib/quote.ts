@@ -1,5 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendQuoteEmail } from "@/lib/email";
 import { calculateQuoteTotals } from "@/lib/tax";
 import { formatQuoteNumber, formatQuoteNumberWithRevision } from "@/lib/quoteNumber";
 export { formatQuoteNumber, formatQuoteNumberWithRevision, calculateQuoteTotals };
@@ -156,9 +157,69 @@ export async function buildQuotePdf(opts: {
   return Buffer.from(pdfBytes);
 }
 
-// Maps a quote's line items into the shape createOrder() expects —
-// shared by the admin "Convert to Order" button and the customer-facing
-// "Accept Quote" action, so neither has its own copy of this mapping.
+// Sends a quote's email (PDF attached, View/Accept/Decline links) and
+// marks it Sent — the one piece of logic shared between the manual
+// "Email to customer" button and auto-sending right when a fully-priced
+// quote is first created, so neither path has its own copy of it.
+export async function sendQuoteToCustomer(quoteId: string, siteUrl: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const admin = createAdminClient();
+  const { data: quote } = await admin
+    .from("quotes")
+    .select("*, profiles:customer_id(full_name, email)")
+    .eq("id", quoteId)
+    .maybeSingle();
+
+  if (!quote) return { ok: false, error: "Quote not found" };
+
+  const customer = (quote as any).profiles;
+  if (!customer?.email) return { ok: false, error: "This customer has no email on file" };
+
+  const { data: items } = await admin.from("quote_items").select("*").eq("quote_id", quoteId).order("sort_order", { ascending: true });
+
+  const pdfBuffer = await buildQuotePdf({
+    quoteNumber: quote.quote_number,
+    quoteYear: quote.quote_year,
+    revisionNumber: quote.revision_number,
+    issueDate: quote.issue_date,
+    expirationDate: quote.expiration_date,
+    customerName: customer.full_name,
+    lineItems: (items || []).map((it: any) => ({ title: it.title, description: it.description, quantity: it.quantity, unitPriceCents: it.unit_price_cents })),
+    subtotalCents: quote.subtotal_cents,
+    discountCents: quote.discount_cents,
+    taxCents: quote.tax_cents,
+    deliveryCents: quote.delivery_cents,
+    totalCents: quote.total_cents,
+    notes: quote.notes,
+    terms: quote.terms
+  });
+
+  const shareUrl = `${siteUrl}/quote/${quote.share_token}`;
+  const acceptUrl = `${siteUrl}/quote/${quote.share_token}?action=accept`;
+  const declineUrl = `${siteUrl}/quote/${quote.share_token}?action=decline`;
+
+  try {
+    await sendQuoteEmail({
+      toEmail: customer.email,
+      customerName: customer.full_name,
+      quoteNumberDisplay: formatQuoteNumberWithRevision(quote.quote_year, quote.quote_number, quote.revision_number),
+      isRevision: quote.revision_number > 1,
+      totalCents: quote.total_cents,
+      expirationDateDisplay: new Date(quote.expiration_date + "T12:00:00Z").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+      shareUrl,
+      acceptUrl,
+      declineUrl,
+      pdfBuffer
+    });
+  } catch (err: any) {
+    return { ok: false, error: err.message || "Couldn't send the email" };
+  }
+
+  const updatePayload: Record<string, any> = { sent_at: new Date().toISOString() };
+  if (quote.status === "draft") updatePayload.status = "sent";
+  await admin.from("quotes").update(updatePayload).eq("id", quoteId);
+
+  return { ok: true };
+}
 export async function buildOrderItemsFromQuote(admin: ReturnType<typeof createAdminClient>, quoteId: string) {
   const { data: items } = await admin.from("quote_items").select("*").eq("quote_id", quoteId).order("sort_order", { ascending: true });
   if (!items || items.length === 0) return null;

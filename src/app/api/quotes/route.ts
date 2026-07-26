@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { calculateQuoteTotals, getNextQuoteNumber } from "@/lib/quote";
+import { calculateQuoteTotals, getNextQuoteNumber, sendQuoteToCustomer } from "@/lib/quote";
 
 function todayEasternStr(): string {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
@@ -91,5 +91,19 @@ export async function POST(req: NextRequest) {
     await admin.from("quote_requests").update({ converted_quote_id: quote.id }).eq("id", quoteRequestId);
   }
 
-  return NextResponse.json({ ok: true, quote });
+  // Auto-send only from the full New Quote form, where pricing is
+  // already set before clicking Create — never for the $0 placeholder
+  // created from a Quote Request, which still needs to be priced first.
+  // A send failure (e.g. no email on file) doesn't fail quote creation
+  // itself; the quote still exists as a draft, ready to send manually.
+  let sendWarning: string | undefined;
+  if (!quoteRequestId) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.get("host")}`;
+    const sendResult = await sendQuoteToCustomer(quote.id, siteUrl);
+    if (!sendResult.ok) {
+      sendWarning = `Quote created, but couldn't email it automatically: ${sendResult.error}. You can send it manually from the quote page.`;
+    }
+  }
+
+  return NextResponse.json({ ok: true, quote, sendWarning });
 }

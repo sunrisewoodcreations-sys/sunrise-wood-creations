@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import AdminButton from "@/components/AdminButton";
 import { calculateQuoteTotals } from "@/lib/tax";
 import { formatQuoteNumberWithRevision } from "@/lib/quoteNumber";
@@ -60,6 +60,8 @@ export default function QuoteEditor({
   };
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [autoSendNotice] = useState<string | null>(searchParams.get("sendWarning"));
   const isEditMode = !!existingQuote;
 
   const [search, setSearch] = useState(existingQuote?.profiles?.full_name || "");
@@ -235,7 +237,10 @@ export default function QuoteEditor({
         router.refresh();
       }
     } else {
-      router.push(`/admin/quotes/${body.quote.id}`);
+      const url = body.sendWarning
+        ? `/admin/quotes/${body.quote.id}?sendWarning=${encodeURIComponent(body.sendWarning)}`
+        : `/admin/quotes/${body.quote.id}?justCreated=1`;
+      router.push(url);
     }
   }
 
@@ -287,6 +292,15 @@ export default function QuoteEditor({
           </span>
         )}
       </div>
+
+      {autoSendNotice && (
+        <div className="bg-amber/10 border border-amber/30 rounded-md px-3 py-2 mb-4 text-sm text-[#1E3A5F]">{autoSendNotice}</div>
+      )}
+      {!autoSendNotice && isEditMode && existingQuote!.status !== "draft" && searchParams.get("justCreated") === "1" && (
+        <div className="bg-sage/10 border border-sage/30 rounded-md px-3 py-2 mb-4 text-sm text-[#1E3A5F]">
+          Quote automatically emailed to the customer.
+        </div>
+      )}
       <p className="text-sm text-[#1E3A5F]/60 mb-6">
         {isEditMode
           ? existingQuote!.status === "draft"
