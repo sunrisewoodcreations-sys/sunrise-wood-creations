@@ -180,6 +180,12 @@ export function OrderScheduleCard({
           </div>
         )}
 
+        {!compact && order.production_status === "waiting" && (
+          <p className="text-[10px] text-[#1E3A5F]/40 italic mt-2">
+            Not in the Manufacturing Queue yet — start production here or via a cut list.
+          </p>
+        )}
+
         {!compact && (
           <div className="flex gap-1.5 mt-2">
             {order.production_status !== "building" && order.production_status !== "completed" && !materialWarning && (

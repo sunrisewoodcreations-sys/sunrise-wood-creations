@@ -52,7 +52,11 @@ export default function ManufacturingQueue({ orders }: { orders: QueueOrder[] })
 
       {orders.length === 0 ? (
         <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#1E3A5F]/50">
-          Nothing is actively in production right now.
+          <p className="mb-2">Nothing is actively in production right now.</p>
+          <p className="text-xs">
+            Scheduled orders show up here once production actually starts — either generate a cut list for their
+            production date, or click "Start Production" on the Production Schedule.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">

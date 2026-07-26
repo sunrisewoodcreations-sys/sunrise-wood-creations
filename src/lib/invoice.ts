@@ -3,8 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendInvoiceEmail, sendLowStockAlert } from "@/lib/email";
 import { shouldNotify } from "@/lib/notify";
 import { productLabel, ProductType } from "@/lib/statusSteps";
+import { SALES_TAX_RATE } from "@/lib/tax";
 
-const SALES_TAX_RATE = 0.06; // Michigan
 const WALNUT = rgb(0.1176, 0.2275, 0.3725);
 const CREAM = rgb(1, 1, 1);
 const EMBER = rgb(0.85, 0.376, 0.227);

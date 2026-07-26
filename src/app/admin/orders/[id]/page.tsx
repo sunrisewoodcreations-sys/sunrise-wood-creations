@@ -174,6 +174,13 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         <div className="mt-4 pt-4 border-t border-[#1E3A5F]/10">
           <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Production Workflow</div>
           <WorkflowProgress stage={workflowStage} />
+          {(workflowStage === "scheduled" || workflowStage === "ready_to_build") && (
+            <div className="mt-3 bg-amber/10 border border-amber/30 rounded-md px-3 py-2 text-xs text-[#1E3A5F]">
+              <strong>This order won't show in the Manufacturing Queue yet.</strong> Either generate a cut list that
+              covers its production date, or click "Start Production" on the Production Schedule — both move it into
+              production the same way.
+            </div>
+          )}
         </div>
       </div>
 

@@ -164,7 +164,8 @@ export default async function DashboardPage() {
     { data: picketPurchases },
     { data: recentMessages },
     { data: recentQuotes },
-    { data: products }
+    { data: products },
+    { data: quotes }
   ] = await Promise.all([
     supabase.from("orders").select("*, profiles:customer_id(full_name)").order("created_at", { ascending: false }),
     supabase.from("proofs").select("order_id").eq("status", "pending"),
@@ -174,7 +175,8 @@ export default async function DashboardPage() {
     supabase.from("picket_purchases").select("remaining_quantity"),
     supabase.from("order_messages").select("id, order_id, sender_role, body, created_at, orders:order_id(id, title, product_type, customer_id, profiles:customer_id(full_name))").order("created_at", { ascending: false }),
     supabase.from("quote_requests").select("*").order("created_at", { ascending: false }).limit(5),
-    supabase.from("products").select("*")
+    supabase.from("products").select("*"),
+    supabase.from("quotes").select("id, status, expiration_date, total_cents")
   ]);
 
   const allOrders = orders || [];
@@ -217,6 +219,24 @@ export default async function DashboardPage() {
   // already used on the Products page. Easy to make configurable later.
   const PICKET_LOW_STOCK_THRESHOLD = 50;
   const isPicketsLow = remainingPickets <= PICKET_LOW_STOCK_THRESHOLD;
+
+  // --- Quote metrics ---
+  const allQuotes = quotes || [];
+  const quotesAwaitingSend = allQuotes.filter(q => q.status === "draft").length;
+  const quotesAwaitingResponse = allQuotes.filter(q => q.status === "sent" || q.status === "viewed").length;
+  const quotesExpiringSoon = allQuotes.filter(q =>
+    !["accepted", "declined"].includes(q.status) &&
+    q.expiration_date >= todayStr && q.expiration_date <= weekFromNowStr
+  ).length;
+  const quotesWithFinalOutcome = allQuotes.filter(q => q.status === "accepted" || q.status === "declined");
+  const acceptedQuotes = allQuotes.filter(q => q.status === "accepted");
+  const quoteConversionRate = quotesWithFinalOutcome.length > 0
+    ? Math.round((acceptedQuotes.length / quotesWithFinalOutcome.length) * 100)
+    : null;
+  const totalQuotedValueCents = allQuotes
+    .filter(q => q.status !== "declined")
+    .reduce((sum, q) => sum + (q.total_cents || 0), 0);
+  const acceptedQuoteValueCents = acceptedQuotes.reduce((sum, q) => sum + (q.total_cents || 0), 0);
 
   // --- Today's Tasks — six independent checklists, not one combined
   // list. An order can appear in more than one section on purpose (an
@@ -343,6 +363,35 @@ export default async function DashboardPage() {
           </div>
         </div>
       )}
+
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display text-lg text-[#1E3A5F]">Quotes</h2>
+          <a href="/admin/quotes?tab=quotes" className="text-xs font-semibold text-[#1E3A5F] hover:underline">View all quotes →</a>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <SummaryCard label="Awaiting send" value={quotesAwaitingSend} href="/admin/quotes?tab=quotes" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+          <SummaryCard label="Awaiting response" value={quotesAwaitingResponse} href="/admin/quotes?tab=quotes" icon="clock-alert" tint="bg-amber/20 text-amber" />
+          <SummaryCard
+            label="Expiring soon"
+            value={quotesExpiringSoon}
+            color={quotesExpiringSoon > 0 ? "text-ember" : "text-sage"}
+            href="/admin/quotes?tab=quotes"
+            icon="clock-alert"
+            tint={quotesExpiringSoon > 0 ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"}
+          />
+          <SummaryCard
+            label="Conversion rate"
+            value={quoteConversionRate == null ? "—" : `${quoteConversionRate}%`}
+            color="text-sage"
+            href="/admin/quotes?tab=quotes"
+            icon="trending-up"
+            tint="bg-sage/15 text-sage"
+          />
+          <SummaryCard label="Total quoted value" value={`$${(totalQuotedValueCents / 100).toFixed(2)}`} href="/admin/quotes?tab=quotes" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+          <SummaryCard label="Accepted quote value" value={`$${(acceptedQuoteValueCents / 100).toFixed(2)}`} color="text-sage" href="/admin/quotes?tab=quotes" icon="trending-up" tint="bg-sage/15 text-sage" />
+        </div>
+      </div>
 
       <SectionCard title="Recent orders" count={recentOrders.length}>
         {recentOrders.map(o => {

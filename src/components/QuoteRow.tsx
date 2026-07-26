@@ -4,19 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminButton from "@/components/AdminButton";
 
-const PRODUCT_TYPES = [
-  { value: "cornhole", label: "Cornhole boards" },
-  { value: "sign", label: "Wooden sign" },
-  { value: "planter", label: "Planter box" },
-  { value: "cutting_board", label: "Cutting board" }
-];
-
 export default function QuoteRow({ quote }: { quote: any }) {
   const router = useRouter();
-  const [converting, setConverting] = useState(false);
-  const [price, setPrice] = useState("");
-  const [productType, setProductType] = useState(quote.product_type || "sign");
-  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
 
   async function toggleResponded() {
@@ -28,24 +18,16 @@ export default function QuoteRow({ quote }: { quote: any }) {
     router.refresh();
   }
 
-  async function handleConvert(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
+  async function handleCreateQuote() {
+    setCreating(true);
     setError("");
-
-    const res = await fetch(`/api/quote-requests/${quote.id}/convert`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceCents: Math.round((Number(price) || 0) * 100), productType })
-    });
-
+    const res = await fetch(`/api/quote-requests/${quote.id}/create-quote`, { method: "POST" });
     const body = await res.json().catch(() => ({}));
-    setLoading(false);
-
+    setCreating(false);
     if (res.ok) {
-      router.push(`/admin/orders/${body.orderId}`);
+      router.push(`/admin/quotes/${body.quote.id}`);
     } else {
-      setError(body.error || "Couldn't convert this quote.");
+      setError(body.error || "Couldn't create a quote from this request.");
     }
   }
 
@@ -69,6 +51,8 @@ export default function QuoteRow({ quote }: { quote: any }) {
       </div>
       <p className="text-sm text-[#1E3A5F]/80 mb-3">{quote.description}</p>
 
+      {error && <p className="text-xs text-ember mb-2">{error}</p>}
+
       <div className="flex items-center gap-4 flex-wrap">
         <a
           href={`mailto:${quote.email}?subject=${encodeURIComponent("Re: your custom quote request")}`}
@@ -82,38 +66,16 @@ export default function QuoteRow({ quote }: { quote: any }) {
         {quote.responded && (
           <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-sage/20 text-sage">Responded</span>
         )}
-        {quote.converted_order_id ? (
-          <a href={`/admin/orders/${quote.converted_order_id}`} className="text-xs font-semibold text-sage hover:underline">
-            View converted order →
+        {quote.converted_quote_id ? (
+          <a href={`/admin/quotes/${quote.converted_quote_id}`} className="text-xs font-semibold text-sage hover:underline">
+            View quote →
           </a>
         ) : (
-          !converting && (
-            <AdminButton variant="secondary" size="sm" onClick={() => setConverting(true)}>
-              Convert to order
-            </AdminButton>
-          )
+          <AdminButton variant="secondary" size="sm" onClick={handleCreateQuote} disabled={creating}>
+            {creating ? "Creating..." : "Create Quote"}
+          </AdminButton>
         )}
       </div>
-
-      {converting && !quote.converted_order_id && (
-        <form onSubmit={handleConvert} className="mt-3 pt-3 border-t border-[#1E3A5F]/10 flex items-end gap-2 flex-wrap">
-          <div>
-            <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Product type</label>
-            <select value={productType} onChange={e => setProductType(e.target.value)} className="border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm">
-              {PRODUCT_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Price ($)</label>
-            <input required value={price} onChange={e => setPrice(e.target.value)} placeholder="150" className="w-24 border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm" />
-          </div>
-          <AdminButton type="submit" size="sm" disabled={loading}>
-            {loading ? "Creating..." : "Create order"}
-          </AdminButton>
-          <button type="button" onClick={() => setConverting(false)} className="text-xs text-[#1E3A5F]/50 underline">Cancel</button>
-          {error && <p className="text-xs text-ember w-full">{error}</p>}
-        </form>
-      )}
     </div>
   );
 }

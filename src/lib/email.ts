@@ -236,6 +236,47 @@ export async function sendProofApprovedNotice(opts: {
   });
 }
 
+export async function sendQuoteEmail(opts: {
+  toEmail: string;
+  customerName: string;
+  quoteNumberDisplay: string;
+  isRevision: boolean;
+  totalCents: number;
+  expirationDateDisplay: string;
+  shareUrl: string;
+  pdfBuffer: Buffer;
+}) {
+  const total = (opts.totalCents / 100).toFixed(2);
+  const revisedNote = opts.isRevision
+    ? `<p style="margin: 0 0 16px; color: #B35A39; font-weight: 600;">This is a revised version of a quote you previously received — please disregard any earlier version.</p>`
+    : "";
+  const html = shell({
+    preheader: opts.isRevision ? `Revised quote #${opts.quoteNumberDisplay} — $${total}` : `Quote #${opts.quoteNumberDisplay} — $${total}`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
+      ${revisedNote}
+      <p style="margin: 0 0 16px;">
+        Attached is ${opts.isRevision ? "a revised" : ""} quote #${opts.quoteNumberDisplay} for <strong>$${total}</strong>, valid through ${opts.expirationDateDisplay}.
+      </p>
+      <p style="margin: 0 0 16px;">
+        <a href="${opts.shareUrl}" style="color: #1E3A5F; font-weight: 600;">View this quote online</a>
+      </p>
+    `
+  });
+
+  return resend.emails.send({
+    from: FROM_INVOICE,
+    to: opts.toEmail,
+    subject: opts.isRevision
+      ? `Revised Quote #${opts.quoteNumberDisplay} — Sunrise Wood Creations`
+      : `Quote #${opts.quoteNumberDisplay} — Sunrise Wood Creations`,
+    html,
+    attachments: [
+      { filename: `quote-${opts.quoteNumberDisplay}.pdf`, content: opts.pdfBuffer.toString("base64") }
+    ]
+  });
+}
+
 export async function sendInvoiceEmail(opts: {
   toEmail: string;
   customerName: string;

@@ -1,27 +1,35 @@
 import { createClient } from "@/lib/supabase/server";
-import QuoteRow from "@/components/QuoteRow";
+import QuotesPageTabs from "@/components/QuotesPageTabs";
 
-export default async function QuotesPage() {
+export default async function QuotesPage({ searchParams }: { searchParams: { tab?: string } }) {
   const supabase = createClient();
 
-  const { data: quotes } = await supabase
-    .from("quote_requests")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const [{ data: quoteRequests }, { data: allQuotes }] = await Promise.all([
+    supabase.from("quote_requests").select("*").order("created_at", { ascending: false }),
+    supabase.from("quotes").select("*, profiles:customer_id(full_name, email)").order("created_at", { ascending: false })
+  ]);
+
+  // The list shows only the latest revision of each quote (same
+  // quote_number + quote_year) — older revisions are still fully
+  // accessible from that quote's own Revision History, just not
+  // cluttering the main list as separate-looking entries.
+  const latestByLineage = new Map<string, any>();
+  (allQuotes || []).forEach((q: any) => {
+    const key = `${q.quote_year}-${q.quote_number}`;
+    const existing = latestByLineage.get(key);
+    if (!existing || q.revision_number > existing.revision_number) {
+      latestByLineage.set(key, q);
+    }
+  });
+  const quotes = Array.from(latestByLineage.values()).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 
   return (
-    <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Quote requests</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">Submissions from the "Request a custom quote" page on your site.</p>
-
-      <div className="space-y-4">
-        {(!quotes || quotes.length === 0) && (
-          <p className="text-sm text-[#1E3A5F]/50">No quote requests yet.</p>
-        )}
-        {quotes?.map((q: any) => (
-          <QuoteRow key={q.id} quote={q} />
-        ))}
-      </div>
-    </div>
+    <QuotesPageTabs
+      currentTab={searchParams.tab === "quotes" ? "quotes" : "requests"}
+      quoteRequests={quoteRequests || []}
+      quotes={quotes}
+    />
   );
 }
