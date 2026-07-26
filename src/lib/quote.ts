@@ -156,9 +156,27 @@ export async function buildQuotePdf(opts: {
   return Buffer.from(pdfBytes);
 }
 
-// Copies every line item from one quote to another — the one piece of
-// logic genuinely identical between "Duplicate" and "create a new
-// revision", extracted so neither has its own copy of it.
+// Maps a quote's line items into the shape createOrder() expects —
+// shared by the admin "Convert to Order" button and the customer-facing
+// "Accept Quote" action, so neither has its own copy of this mapping.
+export async function buildOrderItemsFromQuote(admin: ReturnType<typeof createAdminClient>, quoteId: string) {
+  const { data: items } = await admin.from("quote_items").select("*").eq("quote_id", quoteId).order("sort_order", { ascending: true });
+  if (!items || items.length === 0) return null;
+
+  const productIds = items.map((it: any) => it.product_id).filter(Boolean);
+  const { data: products } = productIds.length > 0
+    ? await admin.from("products").select("id, product_type").in("id", productIds)
+    : { data: [] as any[] };
+  const productTypeById = new Map((products || []).map((p: any) => [p.id, p.product_type]));
+
+  return items.map((it: any) => ({
+    productType: it.product_id ? (productTypeById.get(it.product_id) || "sign") : "sign",
+    productId: it.product_id,
+    title: it.title,
+    quantity: it.quantity,
+    priceCents: it.unit_price_cents * it.quantity // order items store the line TOTAL, not unit price
+  }));
+}
 export async function copyQuoteItemsTo(admin: ReturnType<typeof createAdminClient>, sourceQuoteId: string, targetQuoteId: string): Promise<void> {
   const { data: sourceItems } = await admin
     .from("quote_items")

@@ -45,6 +45,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.get("host")}`;
   const shareUrl = `${siteUrl}/quote/${quote.share_token}`;
+  const acceptUrl = `${siteUrl}/quote/${quote.share_token}?action=accept`;
+  const declineUrl = `${siteUrl}/quote/${quote.share_token}?action=decline`;
 
   try {
     await sendQuoteEmail({
@@ -55,6 +57,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       totalCents: quote.total_cents,
       expirationDateDisplay: new Date(quote.expiration_date + "T12:00:00Z").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
       shareUrl,
+      acceptUrl,
+      declineUrl,
       pdfBuffer
     });
   } catch (err: any) {

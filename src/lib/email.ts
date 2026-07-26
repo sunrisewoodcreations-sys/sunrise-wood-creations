@@ -16,16 +16,26 @@ function escapeHtml(s: string) {
     .replace(/'/g, "&#x27;");
 }
 
-function shell(opts: { preheader: string; bodyHtml: string; buttonText?: string; buttonUrl?: string }) {
-  const button = opts.buttonUrl && opts.buttonText
+type EmailButton = { text: string; url: string; color?: string };
+
+function shell(opts: { preheader: string; bodyHtml: string; buttonText?: string; buttonUrl?: string; buttons?: EmailButton[] }) {
+  // Multiple buttons (used by the quote email's View/Accept/Decline) is
+  // additive — every existing caller still just passes buttonText/buttonUrl
+  // and gets the exact same single-button output as before.
+  const allButtons: EmailButton[] = opts.buttons && opts.buttons.length > 0
+    ? opts.buttons
+    : (opts.buttonUrl && opts.buttonText ? [{ text: opts.buttonText, url: opts.buttonUrl, color: "#D9603A" }] : []);
+
+  const button = allButtons.length > 0
     ? `
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 24px 0;">
       <tr>
-        <td style="background-color: #D9603A; border-radius: 8px;">
-          <a href="${opts.buttonUrl}" style="display: inline-block; padding: 14px 28px; font-family: Georgia, 'Times New Roman', serif; font-size: 15px; font-weight: bold; color: #ffffff; text-decoration: none; border-radius: 8px;">
-            ${opts.buttonText}
+        ${allButtons.map(b => `
+        <td style="background-color: ${b.color || "#D9603A"}; border-radius: 8px; padding-right: 10px;">
+          <a href="${b.url}" style="display: inline-block; padding: 14px 22px; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; font-weight: bold; color: #ffffff; text-decoration: none; border-radius: 8px;">
+            ${b.text}
           </a>
-        </td>
+        </td>`).join("")}
       </tr>
     </table>`
     : "";
@@ -244,6 +254,8 @@ export async function sendQuoteEmail(opts: {
   totalCents: number;
   expirationDateDisplay: string;
   shareUrl: string;
+  acceptUrl: string;
+  declineUrl: string;
   pdfBuffer: Buffer;
 }) {
   const total = (opts.totalCents / 100).toFixed(2);
@@ -257,11 +269,14 @@ export async function sendQuoteEmail(opts: {
       ${revisedNote}
       <p style="margin: 0 0 16px;">
         Attached is ${opts.isRevision ? "a revised" : ""} quote #${opts.quoteNumberDisplay} for <strong>$${total}</strong>, valid through ${opts.expirationDateDisplay}.
+        Review it online, then accept or decline it directly — no login needed.
       </p>
-      <p style="margin: 0 0 16px;">
-        <a href="${opts.shareUrl}" style="color: #1E3A5F; font-weight: 600;">View this quote online</a>
-      </p>
-    `
+    `,
+    buttons: [
+      { text: "View Quote", url: opts.shareUrl, color: "#1E3A5F" },
+      { text: "Accept Quote", url: opts.acceptUrl, color: "#4F7A55" },
+      { text: "Decline Quote", url: opts.declineUrl, color: "#8a8a8a" }
+    ]
   });
 
   return resend.emails.send({

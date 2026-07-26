@@ -76,6 +76,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
   );
 
   const customerTimeline = await getCustomerTimeline(
+    params.id,
     orderList.map((o: any) => ({ id: o.id, title: o.title, product_type: o.product_type }))
   );
 

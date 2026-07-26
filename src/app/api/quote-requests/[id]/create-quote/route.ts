@@ -62,7 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       customer_id: customer.id,
       status: "draft",
       issue_date: todayStr,
-      expiration_date: addDaysToDateStr(todayStr, 30),
+      expiration_date: addDaysToDateStr(todayStr, 7),
       subtotal_cents: 0,
       tax_cents: 0,
       total_cents: 0,

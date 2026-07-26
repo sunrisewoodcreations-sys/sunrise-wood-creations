@@ -90,7 +90,7 @@ export default function QuoteEditor({
 
   const [discount, setDiscount] = useState(existingQuote ? (existingQuote.discount_cents / 100).toString() : "0");
   const [delivery, setDelivery] = useState(existingQuote ? (existingQuote.delivery_cents / 100).toString() : "0");
-  const [expirationDate, setExpirationDate] = useState(existingQuote?.expiration_date || addDaysToDateStr(todayStr(), 30));
+  const [expirationDate, setExpirationDate] = useState(existingQuote?.expiration_date || addDaysToDateStr(todayStr(), 7));
   const [status, setStatus] = useState(existingQuote?.status || "draft");
   const [notes, setNotes] = useState(existingQuote?.notes || "");
   const [terms, setTerms] = useState(existingQuote?.terms || "");

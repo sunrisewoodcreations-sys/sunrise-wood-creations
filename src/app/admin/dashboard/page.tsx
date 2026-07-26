@@ -228,6 +228,9 @@ export default async function DashboardPage() {
     !["accepted", "declined"].includes(q.status) &&
     q.expiration_date >= todayStr && q.expiration_date <= weekFromNowStr
   ).length;
+  const quotesExpired = allQuotes.filter(q =>
+    !["accepted", "declined"].includes(q.status) && q.expiration_date < todayStr
+  ).length;
   const quotesWithFinalOutcome = allQuotes.filter(q => q.status === "accepted" || q.status === "declined");
   const acceptedQuotes = allQuotes.filter(q => q.status === "accepted");
   const quoteConversionRate = quotesWithFinalOutcome.length > 0
@@ -369,7 +372,7 @@ export default async function DashboardPage() {
           <h2 className="font-display text-lg text-[#1E3A5F]">Quotes</h2>
           <a href="/admin/quotes?tab=quotes" className="text-xs font-semibold text-[#1E3A5F] hover:underline">View all quotes →</a>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
           <SummaryCard label="Awaiting send" value={quotesAwaitingSend} href="/admin/quotes?tab=quotes" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
           <SummaryCard label="Awaiting response" value={quotesAwaitingResponse} href="/admin/quotes?tab=quotes" icon="clock-alert" tint="bg-amber/20 text-amber" />
           <SummaryCard
@@ -379,6 +382,14 @@ export default async function DashboardPage() {
             href="/admin/quotes?tab=quotes"
             icon="clock-alert"
             tint={quotesExpiringSoon > 0 ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"}
+          />
+          <SummaryCard
+            label="Expired"
+            value={quotesExpired}
+            color={quotesExpired > 0 ? "text-ember" : "text-sage"}
+            href="/admin/quotes?tab=quotes"
+            icon="clock-alert"
+            tint={quotesExpired > 0 ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"}
           />
           <SummaryCard
             label="Conversion rate"

@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       customer_id: customerId,
       status: "draft",
       issue_date: todayStr,
-      expiration_date: expirationDate || addDaysToDateStr(todayStr, 30),
+      expiration_date: expirationDate || addDaysToDateStr(todayStr, 7),
       subtotal_cents: totals.subtotalCents,
       discount_cents: discount,
       tax_cents: totals.taxCents,

@@ -124,18 +124,26 @@ export default async function AdminOrdersPage({
 
   let ordersQuery = supabase
     .from("orders")
-    .select("*, profiles:customer_id!inner(full_name, email)")
+    .select("*, profiles:customer_id!inner(full_name, email, phone)")
     .order("created_at", { ascending: false });
 
+  const { data: ordersRaw } = await ordersQuery;
+  let orders = ordersRaw || [];
+
+  // Filtered in JS rather than a single DB-level query — searching
+  // across the joined customer's name/email/phone AND the order's own
+  // title/id together isn't a single clean SQL OR condition, and order
+  // volume here is small enough that this stays fast and simple.
   if (query) {
-    ordersQuery = ordersQuery.or(
-      `full_name.ilike.%${query}%,email.ilike.%${query}%`,
-      { foreignTable: "profiles" }
+    const q = query.toLowerCase();
+    orders = orders.filter((o: any) =>
+      o.profiles?.full_name?.toLowerCase().includes(q) ||
+      o.profiles?.email?.toLowerCase().includes(q) ||
+      o.profiles?.phone?.toLowerCase().includes(q) ||
+      o.title?.toLowerCase().includes(q) ||
+      o.id?.toLowerCase().includes(q)
     );
   }
-
-  const { data: ordersRaw } = await ordersQuery;
-  const orders = ordersRaw || [];
 
   const { data: allCustomers } = await supabase
     .from("profiles")
