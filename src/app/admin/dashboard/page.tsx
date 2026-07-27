@@ -152,6 +152,53 @@ function TaskSection({
   );
 }
 
+function QuoteRequestTaskSection({ requests }: { requests: any[] }) {
+  if (requests.length === 0) return null;
+  return (
+    <div className="mb-6">
+      <h2 className="font-display text-base text-[#1E3A5F] mb-2">📨 New Quote Requests ({requests.length})</h2>
+      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+        {requests.map((q: any) => (
+          <Link
+            key={q.id}
+            href="/admin/quotes?tab=requests"
+            className="flex items-center justify-between gap-2 px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors"
+          >
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-[#1E3A5F] truncate">{q.name}</div>
+              <div className="text-xs text-[#1E3A5F]/60">{q.product_type || "General inquiry"}</div>
+            </div>
+            <span className="text-xs text-[#1E3A5F]/40 flex-shrink-0">
+              {new Date(q.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LowInventoryTaskSection({ products }: { products: any[] }) {
+  if (products.length === 0) return null;
+  return (
+    <div className="mb-6">
+      <h2 className="font-display text-base text-[#1E3A5F] mb-2">📦 Low Inventory ({products.length})</h2>
+      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+        {products.map((p: any) => (
+          <Link
+            key={p.id}
+            href="/admin/products"
+            className="flex items-center justify-between gap-2 px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors"
+          >
+            <span className="text-sm font-semibold text-[#1E3A5F] truncate">{p.name}</span>
+            <span className="text-sm font-bold text-ember flex-shrink-0">{p.stock_quantity ?? 0} left</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default async function DashboardPage() {
   const supabase = createClient();
   const { year, month, day } = easternDateParts(new Date());
@@ -164,6 +211,7 @@ export default async function DashboardPage() {
     { data: picketPurchases },
     { data: recentMessages },
     { data: recentQuotes },
+    { data: unrespondedQuoteRequests },
     { data: products },
     { data: quotes }
   ] = await Promise.all([
@@ -175,6 +223,7 @@ export default async function DashboardPage() {
     supabase.from("picket_purchases").select("remaining_quantity"),
     supabase.from("order_messages").select("id, order_id, sender_role, body, created_at, orders:order_id(id, title, product_type, customer_id, profiles:customer_id(full_name))").order("created_at", { ascending: false }),
     supabase.from("quote_requests").select("*").order("created_at", { ascending: false }).limit(5),
+    supabase.from("quote_requests").select("id, name, email, product_type, created_at").eq("responded", false).order("created_at", { ascending: false }),
     supabase.from("products").select("*"),
     supabase.from("quotes").select("id, status, expiration_date, total_cents")
   ]);
@@ -255,13 +304,17 @@ export default async function DashboardPage() {
   const waitingOnCustomerTaskOrders = allOrders.filter(o => waitingOnCustomerOrderIds.has(o.id));
   const outstandingBalanceTaskOrders = waitingOnPaymentOrders;
 
+  const lowInventoryProducts = (products || []).filter((p: any) => (p.stock_quantity ?? 0) <= (p.low_stock_threshold ?? 0));
+
   const anyTasks =
     overdueOrders.length > 0 ||
     buildTodayOrders.length > 0 ||
     dueTodayOrders.length > 0 ||
     readyForPickupOrders.length > 0 ||
     waitingOnCustomerTaskOrders.length > 0 ||
-    outstandingBalanceTaskOrders.length > 0;
+    outstandingBalanceTaskOrders.length > 0 ||
+    (unrespondedQuoteRequests || []).length > 0 ||
+    lowInventoryProducts.length > 0;
 
   // --- Status mix — a lightweight visual indicator built entirely from
   // data already fetched above, no charting library, no new data. ---
@@ -278,7 +331,6 @@ export default async function DashboardPage() {
   });
   const recentConversations = Array.from(latestMessageByOrder.values()).slice(0, 5);
 
-  const lowInventoryProducts = (products || []).filter((p: any) => (p.stock_quantity ?? 0) <= (p.low_stock_threshold ?? 0));
 
   return (
     <div className="bg-cream/40 -m-8 p-8 min-h-full">
@@ -312,6 +364,8 @@ export default async function DashboardPage() {
         <TaskSection emoji="🚚" title="Ready for Pickup" orders={readyForPickupOrders} />
         <TaskSection emoji="💬" title="Waiting on Customer" orders={waitingOnCustomerTaskOrders} />
         <TaskSection emoji="💰" title="Outstanding Balance" orders={outstandingBalanceTaskOrders} showBalance />
+        <QuoteRequestTaskSection requests={unrespondedQuoteRequests || []} />
+        <LowInventoryTaskSection products={lowInventoryProducts} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sm:mb-4">

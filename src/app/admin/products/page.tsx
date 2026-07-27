@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import AddProductForm from "@/components/AddProductForm";
 import ProductRow from "@/components/ProductRow";
 import ProductCardMobile from "@/components/ProductCardMobile";
+import { stockStatus } from "@/components/StockStatusBadge";
 
 export default async function ProductsPage() {
   const supabase = createClient();
@@ -67,6 +68,10 @@ export default async function ProductsPage() {
     .sort((a, b) => b.unitsSold - a.unitsSold)
     .slice(0, 5);
 
+  const inStockCount = (products || []).filter((p: any) => stockStatus(p.stock_quantity ?? 0, p.low_stock_threshold ?? 0) === "in_stock").length;
+  const lowStockCount = (products || []).filter((p: any) => stockStatus(p.stock_quantity ?? 0, p.low_stock_threshold ?? 0) === "low").length;
+  const outOfStockCount = (products || []).filter((p: any) => stockStatus(p.stock_quantity ?? 0, p.low_stock_threshold ?? 0) === "out").length;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
@@ -75,9 +80,24 @@ export default async function ProductsPage() {
           View production queue →
         </Link>
       </div>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">
+      <p className="text-sm text-[#1E3A5F]/60 mb-4">
         Save products you make often so you can pick them instantly when creating an order.
       </p>
+
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center">
+          <div className="text-xl font-display text-sage">{inStockCount}</div>
+          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">In Stock</div>
+        </div>
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center">
+          <div className="text-xl font-display text-amber">{lowStockCount}</div>
+          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Low Stock</div>
+        </div>
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center">
+          <div className="text-xl font-display text-ember">{outOfStockCount}</div>
+          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Out of Stock</div>
+        </div>
+      </div>
 
       {mostPopular.length > 0 && (
         <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-6">

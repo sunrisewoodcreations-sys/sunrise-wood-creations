@@ -3,6 +3,7 @@
 import { productLabel, ProductType } from "@/lib/statusSteps";
 import ProductBOMEditor from "@/components/ProductBOMEditor";
 import { useProductEditor, Product, BOMPartsInput } from "@/hooks/useProductEditor";
+import StockStatusBadge from "@/components/StockStatusBadge";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -107,9 +108,10 @@ export default function ProductCardMobile({
             {productLabel(product.product_type as ProductType)}{product.size_details ? ` · ${product.size_details}` : ""}
           </div>
         </div>
-        <span className={`text-sm font-bold px-2 py-1 rounded-full whitespace-nowrap ${e.isLowStock ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"}`}>
-          {product.stock_quantity ?? 0} in stock
-        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-sm font-bold text-[#1E3A5F]">{product.stock_quantity ?? 0} in stock</span>
+          <StockStatusBadge quantity={product.stock_quantity ?? 0} threshold={product.low_stock_threshold ?? 0} compact />
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2 pt-3 border-t border-[#1E3A5F]/10 text-sm">

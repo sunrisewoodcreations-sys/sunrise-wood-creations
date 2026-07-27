@@ -3,6 +3,7 @@
 import { productLabel, ProductType } from "@/lib/statusSteps";
 import ProductBOMEditor from "@/components/ProductBOMEditor";
 import { useProductEditor, Product, BOMPartsInput } from "@/hooks/useProductEditor";
+import StockStatusBadge from "@/components/StockStatusBadge";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -93,8 +94,11 @@ export default function ProductRow({
       <td className={`px-4 py-3 text-right font-semibold ${e.margin >= 0 ? "text-sage" : "text-ember"}`}>
         ${e.margin.toFixed(2)}
       </td>
-      <td className={`px-4 py-3 text-right font-semibold ${e.isLowStock ? "text-ember" : "text-sage"}`}>
-        {product.stock_quantity ?? 0}
+      <td className="px-4 py-3 text-right">
+        <div className="flex items-center justify-end gap-2">
+          <span className="font-semibold text-[#1E3A5F]">{product.stock_quantity ?? 0}</span>
+          <StockStatusBadge quantity={product.stock_quantity ?? 0} threshold={product.low_stock_threshold ?? 0} compact />
+        </div>
       </td>
       <td className="px-4 py-3 text-right text-[#1E3A5F]/50">{product.low_stock_threshold ?? 0}</td>
       <td className="px-4 py-3 text-right text-[#1E3A5F]/50">

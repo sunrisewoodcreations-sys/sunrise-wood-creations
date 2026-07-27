@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import AddPicketPurchaseForm from "@/components/AddPicketPurchaseForm";
 import PicketPurchaseRow from "@/components/PicketPurchaseRow";
+import StockStatusBadge, { stockStatus } from "@/components/StockStatusBadge";
 
 export default async function PicketsPage() {
   const supabase = createClient();
@@ -22,6 +23,19 @@ export default async function PicketsPage() {
   const totalRemaining = (purchases || []).reduce((s: number, p: any) => s + p.remaining_quantity, 0);
   const totalValueRemainingCents = (purchases || []).reduce((s: number, p: any) => s + p.remaining_quantity * p.cost_per_picket_cents, 0);
 
+  // Same 50-picket warning line already used on the Dashboard — reused
+  // here rather than a second, different threshold, so "low" means the
+  // same thing everywhere it's shown. There's no per-material
+  // configurable threshold in the database (unlike products), so this
+  // stays a shared constant rather than a stored setting.
+  const PICKET_LOW_STOCK_THRESHOLD = 50;
+  const picketStatus = stockStatus(totalRemaining, PICKET_LOW_STOCK_THRESHOLD);
+  const CARD_BORDER: Record<string, string> = {
+    out: "border-ember/40",
+    low: "border-amber/40",
+    in_stock: "border-[#1E3A5F]/10"
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
@@ -35,8 +49,11 @@ export default async function PicketsPage() {
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5">
-          <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1">Pickets remaining</div>
+        <div className={`bg-white border-2 rounded-xl shadow-sm p-5 ${CARD_BORDER[picketStatus]}`}>
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide">Pickets remaining</div>
+            <StockStatusBadge quantity={totalRemaining} threshold={PICKET_LOW_STOCK_THRESHOLD} compact />
+          </div>
           <div className="text-2xl font-display text-[#1E3A5F]">{totalRemaining}</div>
         </div>
         <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5">
