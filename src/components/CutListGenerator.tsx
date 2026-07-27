@@ -8,7 +8,7 @@ import AdminButton from "@/components/AdminButton";
 
 type Mode = "today" | "tomorrow" | "manual" | "saved";
 
-type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; hasBOM: boolean; productionStatus: string };
+type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; hasBOM: boolean; productionStatus: string; orderStatus: string };
 type BOMPartRow = { part_name: string; length_inches: number; final_length_inches: number | null; quantity_per_unit: number; material_type: string; is_trim: boolean };
 
 function toBOMPart(row: BOMPartRow): BOMPart {
@@ -83,6 +83,30 @@ export default function CutListGenerator({
         }).catch(() => null)
       )
     );
+
+    // Also advance the customer-facing status (what shows on the
+    // order's own status dropdown, and what the customer sees/gets
+    // emailed about) — production_status above is purely an internal
+    // tracking field and was never meant to be the only thing that
+    // changes. Every job here is a planter (Cut List Generator is
+    // planter-only), which uses the simple order_placed -> being_built
+    // -> ready_for_pickup -> picked_up sequence, so it's always safe to
+    // advance from order_placed specifically. Reuses the existing
+    // status route directly, so the same customer-notification email
+    // that route already sends fires here too.
+    const orderIdsToAdvanceStatus = [...new Set(
+      jobs.filter(j => j.orderStatus === "order_placed").map(j => j.orderId)
+    )];
+    await Promise.all(
+      orderIdsToAdvanceStatus.map(orderId =>
+        fetch(`/api/orders/${orderId}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "being_built" })
+        }).catch(() => null)
+      )
+    );
+
     router.refresh();
   }
 

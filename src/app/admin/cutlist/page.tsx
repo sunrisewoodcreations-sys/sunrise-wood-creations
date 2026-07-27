@@ -58,7 +58,7 @@ export default async function CutListPage() {
   // legacy single-item orders (orders.product_id) and multi-item orders
   // (order_items.product_id), matching how the rest of the app already
   // handles this split.
-  type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; hasBOM: boolean; productionStatus: string };
+  type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; hasBOM: boolean; productionStatus: string; orderStatus: string };
 
   function buildJobs(dateStrToMatch: string): Job[] {
     const jobs: Job[] = [];
@@ -84,7 +84,8 @@ export default async function CutListPage() {
         productName: product?.name || null,
         quantity: it.quantity || 1,
         hasBOM: productIdsWithParts.has(it.product_id),
-        productionStatus: it.orders?.production_status || "waiting"
+        productionStatus: it.orders?.production_status || "waiting",
+        orderStatus: it.orders?.status || "order_placed"
       });
     });
 
@@ -100,7 +101,8 @@ export default async function CutListPage() {
         productName: product?.name || null,
         quantity: o.quantity || 1,
         hasBOM: productIdsWithParts.has(o.product_id),
-        productionStatus: o.production_status || "waiting"
+        productionStatus: o.production_status || "waiting",
+        orderStatus: o.status || "order_placed"
       });
     });
 
