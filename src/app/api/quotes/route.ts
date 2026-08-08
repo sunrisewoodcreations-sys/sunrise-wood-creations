@@ -17,7 +17,7 @@ function addDaysToDateStr(ds: string, days: number): string {
 export async function POST(req: NextRequest) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: adminProfile } = await supabase.from("profiles").select("role").eq("id", user?.id).single();
+  const { data: adminProfile } = await supabase.from("profiles").select("role, is_demo_account").eq("id", user?.id).single();
   if (adminProfile?.role !== "admin") {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
@@ -61,7 +61,8 @@ export async function POST(req: NextRequest) {
       total_cents: totals.totalCents,
       notes: notes || null,
       terms: terms || null,
-      quote_request_id: quoteRequestId || null
+      quote_request_id: quoteRequestId || null,
+      is_demo: !!adminProfile?.is_demo_account
     })
     .select()
     .single();
