@@ -14,15 +14,23 @@ export default async function ProductsPage() {
     { data: legacyOrders },
     { data: picketPurchases },
     { data: recentAdjustments },
-    { data: bomParts }
+    { data: bomParts },
+    { data: checklistItems }
   ] = await Promise.all([
     supabase.from("products").select("*").order("created_at", { ascending: false }),
     supabase.from("order_items").select("product_id, quantity, orders:order_id(status)"),
     supabase.from("orders").select("product_id, quantity, status"),
     supabase.from("picket_purchases").select("remaining_quantity"),
     supabase.from("product_stock_adjustments").select("*, products:product_id(name)").order("created_at", { ascending: false }).limit(15),
-    supabase.from("product_bom_parts").select("*").order("sort_order", { ascending: true })
+    supabase.from("product_bom_parts").select("*").order("sort_order", { ascending: true }),
+    supabase.from("product_checklist_items").select("*").order("sort_order", { ascending: true })
   ]);
+
+  const checklistStepsByProduct: Record<string, string[]> = {};
+  (checklistItems || []).forEach((item: any) => {
+    if (!checklistStepsByProduct[item.product_id]) checklistStepsByProduct[item.product_id] = [];
+    checklistStepsByProduct[item.product_id].push(item.step_text);
+  });
 
   const bomPartsByProduct: Record<string, any[]> = {};
   (bomParts || []).forEach((part: any) => {
@@ -173,6 +181,7 @@ export default async function ProductsPage() {
               reservedQty={reservedByProduct[p.id] || 0}
               unitsSold={unitsSoldByProduct[p.id] || 0}
               bomParts={bomPartsByProduct[p.id] || []}
+              checklistSteps={checklistStepsByProduct[p.id] || []}
             />
           );
         })}

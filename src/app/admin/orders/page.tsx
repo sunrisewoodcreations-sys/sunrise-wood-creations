@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { isDemoAccountRequest } from "@/lib/demoMode";
 import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
 import { formatCalendarDate } from "@/lib/dateDisplay";
 import { formatInvoiceNumber } from "@/lib/invoice";
 import { getWorkflowStage, WORKFLOW_LABELS, WORKFLOW_STYLES, WorkflowStage } from "@/lib/workflow";
+import { getPickupBadgeState, PICKUP_BADGE_LABELS, PICKUP_BADGE_STYLES } from "@/lib/pickupScheduling";
 import { checkMaterialAvailabilityForOrder } from "@/lib/materialPlanning";
 import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
@@ -122,9 +124,12 @@ export default async function AdminOrdersPage({
   const sortDir = searchParams.dir === "asc" ? "asc" : "desc";
   const activeFilter = searchParams.filter || "";
 
+  const isDemoAccount = await isDemoAccountRequest();
+
   let ordersQuery = supabase
     .from("orders")
     .select("*, profiles:customer_id!inner(full_name, email, phone)")
+    .eq("is_demo", isDemoAccount)
     .order("created_at", { ascending: false });
 
   const { data: ordersRaw } = await ordersQuery;
@@ -153,7 +158,7 @@ export default async function AdminOrdersPage({
 
   const { data: savedProducts } = await supabase
     .from("products")
-    .select("id, product_type, name, size_details, price_cents")
+    .select("id, product_type, name, size_details, price_cents, estimated_build_minutes")
     .order("name");
 
   const orderIds = orders.map((o: any) => o.id);
@@ -246,6 +251,27 @@ export default async function AdminOrdersPage({
     orders.map((o: any) => [
       o.id,
       getWorkflowStage(o, waitingOnCustomerOrderIds.has(o.id), materialAvailableByOrderId.get(o.id) ?? null)
+    ])
+  );
+
+  // Pickup scheduling badge per order — reuses getPickupBadgeState
+  // directly (already built and tested for the pickup scheduling
+  // system), not a second status calculation. Only meaningful for
+  // pickup orders that are actually ready, but cheap enough to compute
+  // for everyone since the function itself already short-circuits.
+  const readyPickupOrderIds = orders.filter((o: any) => o.status === "ready_for_pickup" && o.fulfillment_method === "pickup").map((o: any) => o.id);
+  const { data: pickupAppointments } = readyPickupOrderIds.length > 0
+    ? await supabase.from("pickup_appointments").select("order_id, status, appointment_date, appointment_time, rescheduled_by").in("order_id", readyPickupOrderIds).order("created_at", { ascending: false })
+    : { data: [] as any[] };
+  const latestAppointmentByOrderId = new Map<string, any>();
+  (pickupAppointments || []).forEach((a: any) => {
+    if (!latestAppointmentByOrderId.has(a.order_id)) latestAppointmentByOrderId.set(a.order_id, a);
+  });
+  const todayStrForPickup = new Date().toISOString().slice(0, 10);
+  const pickupBadgeByOrderId = new Map(
+    orders.map((o: any) => [
+      o.id,
+      getPickupBadgeState(o.status, o.fulfillment_method, o.pickup_scheduling_email_sent_at, latestAppointmentByOrderId.get(o.id) || null, todayStrForPickup)
     ])
   );
 
@@ -480,6 +506,11 @@ export default async function AdminOrdersPage({
                     <span className={`ml-2 inline-block text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${WORKFLOW_STYLES[workflowStageByOrderId.get(order.id) as WorkflowStage]}`}>
                       {WORKFLOW_LABELS[workflowStageByOrderId.get(order.id) as WorkflowStage]}
                     </span>
+                    {pickupBadgeByOrderId.get(order.id) !== "not_applicable" && (
+                      <Link href={`/admin/orders/${order.id}`} className={`ml-1.5 inline-block text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap hover:opacity-80 ${PICKUP_BADGE_STYLES[pickupBadgeByOrderId.get(order.id)!]}`}>
+                        {PICKUP_BADGE_LABELS[pickupBadgeByOrderId.get(order.id)!]}
+                      </Link>
+                    )}
                   </td>
                   <td className="px-4 py-3.5 text-[#1E3A5F]/70">
                     <Link href={`/admin/customers/${order.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
@@ -490,7 +521,7 @@ export default async function AdminOrdersPage({
                     {new Date(order.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3.5">
-                    <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
+                    <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} fulfillmentMethod={order.fulfillment_method} />
                   </td>
                   <td className="px-4 py-3.5 font-mono">
                     {order.due_date ? (
@@ -597,6 +628,11 @@ export default async function AdminOrdersPage({
               <span className={`inline-block ml-1.5 px-3 py-1.5 rounded-full text-sm font-bold whitespace-nowrap ${WORKFLOW_STYLES[workflowStageByOrderId.get(order.id) as WorkflowStage]}`}>
                 {WORKFLOW_LABELS[workflowStageByOrderId.get(order.id) as WorkflowStage]}
               </span>
+              {pickupBadgeByOrderId.get(order.id) !== "not_applicable" && (
+                <Link href={`/admin/orders/${order.id}`} className={`inline-block ml-1.5 px-3 py-1.5 rounded-full text-sm font-bold whitespace-nowrap ${PICKUP_BADGE_STYLES[pickupBadgeByOrderId.get(order.id)!]}`}>
+                  {PICKUP_BADGE_LABELS[pickupBadgeByOrderId.get(order.id)!]}
+                </Link>
+              )}
 
               <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-[#1E3A5F]/10">
                 <div>
@@ -624,7 +660,7 @@ export default async function AdminOrdersPage({
 
               <div className="mt-3 pt-3 border-t border-[#1E3A5F]/10">
                 <div className="mb-2">
-                  <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
+                  <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} fulfillmentMethod={order.fulfillment_method} />
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Link
