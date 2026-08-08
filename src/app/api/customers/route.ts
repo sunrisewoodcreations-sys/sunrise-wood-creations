@@ -53,11 +53,22 @@ export async function POST(req: NextRequest) {
         full_name: fullName.trim(),
         email: placeholderEmail,
         role: "customer",
-        has_real_email: false,
-        notify_order_updates: false,
-        notify_invoices: false,
-        notify_proofs: false,
-        notify_messages: false,
+        // For demo customers specifically: has_real_email is set true
+        // and notifications stay on, even though the address itself
+        // is a fake placeholder. That flag is what other parts of the
+        // app check before attempting to send a notification email at
+        // all — leaving it false silently blocked every send before
+        // it ever reached the safe interception system, so no demo
+        // email ever got attempted or logged. The actual safety
+        // guarantee here doesn't come from this flag anyway — it
+        // comes from the demo account being forced down this whole
+        // placeholder-email path in the first place, which already
+        // fully prevents a real Supabase invite from ever going out.
+        has_real_email: isDemo ? true : false,
+        notify_order_updates: isDemo ? true : false,
+        notify_invoices: isDemo ? true : false,
+        notify_proofs: isDemo ? true : false,
+        notify_messages: isDemo ? true : false,
         is_demo: isDemo
       }, { onConflict: "id" });
 
@@ -67,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      demoNote: isDemo ? "Demo customers never receive a real invite email, even if you enter one — this test customer has no working login, matching every other demo record." : undefined
+      demoNote: isDemo ? "Demo customers never receive a real invite email, even if you enter one — this test customer has no working login, matching every other demo record. Regular notification emails (order updates, etc.) will still be safely intercepted and logged." : undefined
     });
   }
 
