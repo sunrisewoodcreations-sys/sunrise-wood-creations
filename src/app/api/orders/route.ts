@@ -5,7 +5,7 @@ import { createOrder, IncomingOrderItem } from "@/lib/orders";
 export async function POST(req: NextRequest) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: adminProfile } = await supabase.from("profiles").select("role").eq("id", user?.id).single();
+  const { data: adminProfile } = await supabase.from("profiles").select("role, is_demo_account").eq("id", user?.id).single();
 
   if (adminProfile?.role !== "admin") {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Every item needs a product type and title" }, { status: 400 });
   }
 
-  const result = await createOrder({ customerId, dueDate, items });
+  const result = await createOrder({ customerId, dueDate, items, isDemo: !!adminProfile?.is_demo_account });
 
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });

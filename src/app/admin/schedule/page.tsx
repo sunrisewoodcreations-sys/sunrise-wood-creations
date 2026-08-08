@@ -4,13 +4,19 @@ import ProductionSchedule from "@/components/ProductionSchedule";
 export default async function SchedulePage() {
   const supabase = createClient();
 
-  const [{ data: orders }, { data: pendingProofs }] = await Promise.all([
+  const [{ data: orders }, { data: pendingProofs }, { data: pickupAppointments }] = await Promise.all([
     supabase
       .from("orders")
       .select("*, profiles:customer_id(full_name)")
       .neq("status", "picked_up")
       .order("production_date", { ascending: true, nullsFirst: false }),
-    supabase.from("proofs").select("order_id").eq("status", "pending")
+    supabase.from("proofs").select("order_id").eq("status", "pending"),
+    // Safe even before the pickup scheduling migration has been run —
+    // Supabase returns a null-data error rather than throwing.
+    supabase
+      .from("pickup_appointments")
+      .select("id, order_id, appointment_date, appointment_time, status, orders:order_id(title, profiles:customer_id(full_name))")
+      .eq("status", "scheduled")
   ]);
 
   // Recently completed (production_status = completed), shown in their
@@ -29,6 +35,7 @@ export default async function SchedulePage() {
       orders={orders || []}
       completedOrders={completedOrders || []}
       waitingOnCustomerOrderIds={(pendingProofs || []).map((p: any) => p.order_id)}
+      pickupAppointments={pickupAppointments || []}
     />
   );
 }
