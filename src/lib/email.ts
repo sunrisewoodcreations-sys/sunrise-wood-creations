@@ -1,11 +1,76 @@
 import { Resend } from "resend";
 import { productLabel, statusLabel, ProductType } from "./statusSteps";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM || "Sunrise Wood Creations <orders@sunrisewoodcreations.com>";
 const FROM_INVOICE = process.env.EMAIL_FROM_INVOICE || "Sunrise Wood Creations <invoice@sunrisewoodcreations.com>";
 const FROM_ADMIN_REPORT = process.env.EMAIL_FROM_ADMIN_REPORT || "Sunrise Wood Creations <reports@sunrisewoodcreations.com>";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com";
+const DEMO_TEST_EMAIL = process.env.DEMO_TEST_EMAIL || "";
+
+// The single, central choke point every email in this app sends
+// through — no exceptions, no second path. Determines demo status
+// itself, by checking the currently authenticated request's own
+// session (cookies() is request-scoped in Next.js and safely callable
+// from anywhere in the same request's call stack) — nothing calling
+// this function needs to know or pass whether it's a demo action.
+// Cron jobs have no logged-in user at all, so they always fall through
+// to sending normally, which is correct: they're never demo actions.
+async function sendViaResend(
+  payload: { from: string; to: string; subject: string; html: string; replyTo?: string; attachments?: { filename: string; content: string }[]; emailType: string; orderId?: string }
+) {
+  const { emailType, orderId, ...resendPayload } = payload;
+
+  let isDemoSender = false;
+  try {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase.from("profiles").select("is_demo_account").eq("id", user.id).maybeSingle();
+      isDemoSender = !!profile?.is_demo_account;
+    }
+  } catch {
+    // No request context available (e.g. called outside a real request) — never demo in that case.
+    isDemoSender = false;
+  }
+
+  if (!isDemoSender) {
+    return resend.emails.send(resendPayload);
+  }
+
+  // Demo path: never contact the real recipient. Redirect to the
+  // configured test address (or simply never send, if none is
+  // configured) and log the attempt either way, so every "Send Email"
+  // action is verifiable from the Demo Mode admin page.
+  const admin = createAdminClient();
+  let success = false;
+  let errorMessage: string | null = null;
+
+  if (DEMO_TEST_EMAIL) {
+    try {
+      await resend.emails.send({ ...resendPayload, to: DEMO_TEST_EMAIL, subject: `[DEMO] ${resendPayload.subject}` });
+      success = true;
+    } catch (err: any) {
+      errorMessage = err?.message || "Unknown error";
+    }
+  } else {
+    errorMessage = "No DEMO_TEST_EMAIL configured — email captured but not delivered anywhere.";
+  }
+
+  await admin.from("demo_email_log").insert({
+    email_type: emailType,
+    intended_recipient: resendPayload.to,
+    redirected_to: DEMO_TEST_EMAIL || "(not delivered — no test address configured)",
+    subject: resendPayload.subject,
+    success,
+    error_message: errorMessage,
+    order_id: orderId || null
+  });
+
+  return { data: { id: "demo-intercepted" } };
+}
 
 function escapeHtml(s: string) {
   return String(s)
@@ -137,7 +202,9 @@ export async function sendOrderStatusEmail(opts: {
     ? [{ filename: `invoice-${opts.invoiceYear}-${opts.invoiceNumber}.pdf`, content: opts.invoicePdfBuffer.toString("base64") }]
     : undefined;
 
-  return resend.emails.send({
+  return sendViaResend({
+    emailType: "sendOrderStatusEmail",
+    orderId: (opts as any).orderId,
     from: FROM,
     to: opts.toEmail,
     subject: `Your order is now: ${label}`,
@@ -180,7 +247,9 @@ export async function sendProofReadyEmail(opts: {
     buttonUrl: reviewUrl
   });
 
-  return resend.emails.send({
+  return sendViaResend({
+    emailType: "sendProofReadyEmail",
+    orderId: (opts as any).orderId,
     from: FROM,
     to: opts.toEmail,
     subject: "Your cornhole design proof is ready to review",
@@ -213,7 +282,9 @@ export async function sendProofDeclinedNotice(opts: {
     buttonUrl: `${SITE_URL}/admin/orders/${opts.orderId}`
   });
 
-  return resend.emails.send({
+  return sendViaResend({
+    emailType: "sendProofDeclinedNotice",
+    orderId: (opts as any).orderId,
     from: FROM,
     to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
     subject: `Changes requested: ${opts.orderTitle}`,
@@ -238,7 +309,9 @@ export async function sendProofApprovedNotice(opts: {
     buttonUrl: `${SITE_URL}/admin/orders/${opts.orderId}`
   });
 
-  return resend.emails.send({
+  return sendViaResend({
+    emailType: "sendProofApprovedNotice",
+    orderId: (opts as any).orderId,
     from: FROM,
     to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
     subject: `Design approved: ${opts.orderTitle}`,
@@ -279,7 +352,9 @@ export async function sendQuoteEmail(opts: {
     ]
   });
 
-  return resend.emails.send({
+  return sendViaResend({
+    emailType: "sendQuoteEmail",
+    orderId: (opts as any).orderId,
     from: FROM_INVOICE,
     to: opts.toEmail,
     subject: opts.isRevision
@@ -314,7 +389,9 @@ export async function sendInvoiceEmail(opts: {
     `
   });
 
-  return resend.emails.send({
+  return sendViaResend({
+    emailType: "sendInvoiceEmail",
+    orderId: (opts as any).orderId,
     from: FROM_INVOICE,
     to: opts.toEmail,
     subject: opts.paidInFull
@@ -351,7 +428,9 @@ export async function sendNewMessageNotice(opts: {
     buttonUrl: `${SITE_URL}/admin/orders/${opts.orderId}`
   });
 
-  return resend.emails.send({
+  return sendViaResend({
+    emailType: "sendNewMessageNotice",
+    orderId: (opts as any).orderId,
     from: FROM,
     to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
     subject: `New message: ${opts.orderTitle}`,
@@ -385,7 +464,9 @@ export async function sendCustomerNewMessageNotice(opts: {
     buttonUrl: `${SITE_URL}/account/orders/${opts.orderId}`
   });
 
-  return resend.emails.send({
+  return sendViaResend({
+    emailType: "sendCustomerNewMessageNotice",
+    orderId: (opts as any).orderId,
     from: FROM,
     to: opts.toEmail,
     subject: `New message about your order: ${opts.orderTitle}`,
@@ -420,7 +501,9 @@ export async function sendGuestMessageNotice(opts: {
     `
   });
 
-  return resend.emails.send({
+  return sendViaResend({
+    emailType: "sendGuestMessageNotice",
+    orderId: (opts as any).orderId,
     from: FROM,
     replyTo: opts.email,
     to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
@@ -447,7 +530,9 @@ export async function sendLowStockAlert(opts: {
     buttonUrl: `${SITE_URL}/admin/products`
   });
 
-  return resend.emails.send({
+  return sendViaResend({
+    emailType: "sendLowStockAlert",
+    orderId: (opts as any).orderId,
     from: FROM,
     to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
     subject: `Low stock: ${opts.productName}`,
@@ -494,7 +579,9 @@ export async function sendQuoteRequestNotice(opts: {
     `
   });
 
-  return resend.emails.send({
+  return sendViaResend({
+    emailType: "sendQuoteRequestNotice",
+    orderId: (opts as any).orderId,
     from: FROM,
     replyTo: opts.email,
     to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
@@ -535,7 +622,9 @@ export async function sendFinancialReportEmail(opts: {
     `
   });
 
-  return resend.emails.send({
+  return sendViaResend({
+    emailType: "sendFinancialReportEmail",
+    orderId: (opts as any).orderId,
     from: FROM_ADMIN_REPORT,
     to: opts.toEmail,
     subject: `Financial summary: ${opts.periodLabel}`,
@@ -543,5 +632,146 @@ export async function sendFinancialReportEmail(opts: {
     attachments: [
       { filename: `financial-summary-${opts.periodLabel.replace(/\s+/g, "-")}.pdf`, content: opts.pdfBuffer.toString("base64") }
     ]
+  });
+}
+
+// --- Pickup scheduling emails -------------------------------------------
+// All three reuse the same shell() wrapper and FROM sender as the
+// existing order status emails, since these are conceptually the same
+// kind of message (an update about this specific order), just with
+// scheduling-specific content and a link to the token-based scheduling
+// page instead of the account page.
+
+export async function sendPickupSchedulingEmail(opts: {
+  toEmail: string;
+  customerName: string;
+  orderTitle: string;
+  schedulingUrl: string;
+}) {
+  const html = shell({
+    preheader: `${opts.orderTitle} is ready — schedule your pickup`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
+      <p style="margin: 0 0 16px;">
+        Great news — <strong>${opts.orderTitle}</strong> is ready for pickup! Pick a day and time that works for
+        you, right from your phone, no login needed.
+      </p>
+    `,
+    buttonText: "Schedule My Pickup",
+    buttonUrl: opts.schedulingUrl
+  });
+
+  return sendViaResend({
+    emailType: "sendPickupSchedulingEmail",
+    orderId: (opts as any).orderId,
+    from: FROM,
+    to: opts.toEmail,
+    subject: `${opts.orderTitle} is ready — schedule your pickup`,
+    html
+  });
+}
+
+export async function sendPickupConfirmationEmail(opts: {
+  toEmail: string;
+  customerName: string;
+  orderTitle: string;
+  appointmentDateDisplay: string;
+  appointmentTimeDisplay: string;
+  businessAddress: string;
+  pickupInstructions: string;
+  contactPhone: string;
+  rescheduleUrl: string;
+  googleCalendarUrl: string;
+  outlookCalendarUrl: string;
+  appleCalendarUrl: string;
+  isReschedule: boolean;
+}) {
+  const html = shell({
+    preheader: `Pickup confirmed: ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
+      <p style="margin: 0 0 16px;">
+        ${opts.isReschedule ? "Your pickup has been rescheduled." : "Your pickup is confirmed."} for
+        <strong>${opts.orderTitle}</strong>:
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
+        <tr>
+          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 16px;">
+            <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">
+              ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}
+            </div>
+            <div style="margin-top: 10px; color: #6b5d4f; font-size: 14px;">${opts.businessAddress}</div>
+            <div style="margin-top: 6px; color: #6b5d4f; font-size: 14px;">${opts.pickupInstructions}</div>
+            <div style="margin-top: 6px; color: #6b5d4f; font-size: 14px;">Questions? Call ${opts.contactPhone}</div>
+          </td>
+        </tr>
+      </table>
+      <p style="margin: 0 0 8px; font-size: 13px; color: #8a7a6b;">Add to your calendar:</p>
+      <p style="margin: 0 0 16px; font-size: 13px;">
+        <a href="${opts.googleCalendarUrl}" style="color: #1E3A5F; font-weight: 600;">Google</a> &nbsp;·&nbsp;
+        <a href="${opts.outlookCalendarUrl}" style="color: #1E3A5F; font-weight: 600;">Outlook</a> &nbsp;·&nbsp;
+        <a href="${opts.appleCalendarUrl}" style="color: #1E3A5F; font-weight: 600;">Apple Calendar</a>
+      </p>
+      <p style="margin: 0; font-size: 13px; color: #8a7a6b;">Need a different time? Use the button below.</p>
+    `,
+    buttonText: "Reschedule Pickup",
+    buttonUrl: opts.rescheduleUrl
+  });
+
+  return sendViaResend({
+    emailType: "sendPickupConfirmationEmail",
+    orderId: (opts as any).orderId,
+    from: FROM,
+    to: opts.toEmail,
+    subject: opts.isReschedule
+      ? `Pickup rescheduled: ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`
+      : `Pickup confirmed: ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
+    html
+  });
+}
+
+export async function sendPickupReminderEmail(opts: {
+  toEmail: string;
+  customerName: string;
+  orderTitle: string;
+  appointmentDateDisplay: string;
+  appointmentTimeDisplay: string;
+  businessAddress: string;
+  pickupInstructions: string;
+  hoursUntil: 24 | 2;
+  rescheduleUrl: string;
+}) {
+  const timeframe = opts.hoursUntil === 24 ? "tomorrow" : "in about 2 hours";
+  const html = shell({
+    preheader: `Reminder: pickup ${timeframe}`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
+      <p style="margin: 0 0 16px;">
+        Just a reminder — your pickup for <strong>${opts.orderTitle}</strong> is ${timeframe}:
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
+        <tr>
+          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 16px;">
+            <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">
+              ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}
+            </div>
+            <div style="margin-top: 10px; color: #6b5d4f; font-size: 14px;">${opts.businessAddress}</div>
+            <div style="margin-top: 6px; color: #6b5d4f; font-size: 14px;">${opts.pickupInstructions}</div>
+          </td>
+        </tr>
+      </table>
+      <p style="margin: 0; font-size: 13px; color: #8a7a6b;">Can't make it? Use the button below to pick a new time.</p>
+    `,
+    buttonText: "Reschedule Pickup",
+    buttonUrl: opts.rescheduleUrl
+  });
+
+  return sendViaResend({
+    emailType: "sendPickupReminderEmail",
+    orderId: (opts as any).orderId,
+    from: FROM,
+    to: opts.toEmail,
+    subject: `Reminder: pickup ${timeframe} for ${opts.orderTitle}`,
+    html
   });
 }

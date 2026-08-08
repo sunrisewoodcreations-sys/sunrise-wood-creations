@@ -12,7 +12,7 @@ import { createOrder } from "@/lib/orders";
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: adminProfile } = await supabase.from("profiles").select("role").eq("id", user?.id).single();
+  const { data: adminProfile } = await supabase.from("profiles").select("role, is_demo_account").eq("id", user?.id).single();
   if (adminProfile?.role !== "admin") {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const orderItems = await buildOrderItemsFromQuote(admin, params.id);
   if (!orderItems) return NextResponse.json({ error: "This quote has no line items to convert" }, { status: 400 });
 
-  const result = await createOrder({ customerId: quote.customer_id, items: orderItems });
+  const result = await createOrder({ customerId: quote.customer_id, items: orderItems, isDemo: !!adminProfile?.is_demo_account || !!quote.is_demo });
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }

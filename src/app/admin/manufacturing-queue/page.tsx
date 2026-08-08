@@ -1,22 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
 import { getWorkflowStage } from "@/lib/workflow";
 import { checkMaterialAvailabilityForOrder } from "@/lib/materialPlanning";
+import { sortProductionQueue } from "@/lib/productionQueue";
 import ManufacturingQueue from "@/components/ManufacturingQueue";
 
 export default async function ManufacturingQueuePage() {
   const supabase = createClient();
 
-  const [{ data: orders }, { data: orderItems }, { data: proofs }] = await Promise.all([
+  const [{ data: orders }, { data: orderItems }, { data: proofs }, { data: scheduledPickups }] = await Promise.all([
     supabase
       .from("orders")
-      .select("id, title, product_type, status, production_status, priority, production_date, due_date, customer_id, profiles:customer_id(full_name)")
+      .select("id, title, product_type, status, production_status, priority, production_date, due_date, customer_id, manual_queue_position, profiles:customer_id(full_name, is_priority_customer)")
       .in("production_status", ["building", "assembly", "finishing"])
       .neq("status", "picked_up"),
-    supabase.from("order_items").select("order_id, product_id, quantity, title, products:product_id(name, estimated_build_minutes)"),
-    supabase.from("proofs").select("order_id").eq("status", "pending")
+    supabase.from("order_items").select("order_id, product_id, quantity, title, products:product_id(name, size_details, estimated_build_minutes, image_url)"),
+    supabase.from("proofs").select("order_id").eq("status", "pending"),
+    // Safe even before the pickup scheduling migration has been run —
+    // Supabase returns a null-data error rather than throwing.
+    supabase.from("pickup_appointments").select("order_id, appointment_date, appointment_time").eq("status", "scheduled")
   ]);
 
   const waitingOnCustomerOrderIds = new Set((proofs || []).map((p: any) => p.order_id));
+  const scheduledPickupByOrderId = new Map((scheduledPickups || []).map((p: any) => [p.order_id, p]));
 
   const itemsByOrder: Record<string, any[]> = {};
   (orderItems || []).forEach((it: any) => {
@@ -36,6 +41,7 @@ export default async function ManufacturingQueuePage() {
   const queueOrders = (orders || []).map((o: any) => {
     const items = itemsByOrder[o.id] || [];
     const workflowStage = getWorkflowStage(o, waitingOnCustomerOrderIds.has(o.id), materialCheckByOrderId.get(o.id)?.available ?? null);
+    const scheduledPickup = scheduledPickupByOrderId.get(o.id) || null;
 
     // Sum whatever build-time estimates exist across this order's items;
     // note honestly if any item's product has no estimate set, rather
@@ -52,31 +58,47 @@ export default async function ManufacturingQueuePage() {
       anyMissing = true; // legacy single-item order with no linked product to check
     }
 
+    const materialCheck = materialCheckByOrderId.get(o.id) || { available: true, shortages: [] };
+
     return {
       id: o.id,
       customerName: o.profiles?.full_name || "Unknown",
+      isPriorityCustomer: !!o.profiles?.is_priority_customer,
       productType: o.product_type,
       title: o.title,
       products: items.length > 0 ? items.map((it: any) => it.products?.name || it.title) : [o.title],
+      productPhotoUrl: items.length > 0 ? (items[0].products?.image_url || null) : null,
+      sizeDetails: items.length > 0 ? items[0].products?.size_details || null : null,
       quantity: items.length > 0 ? items.reduce((sum: number, it: any) => sum + (it.quantity || 1), 0) : 1,
       productionDate: o.production_date,
+      dueDate: o.due_date,
       priority: o.priority,
+      manualQueuePosition: o.manual_queue_position,
       workflowStage,
-      materialCheck: materialCheckByOrderId.get(o.id) || { available: true, shortages: [] },
+      materialCheck,
       estimatedBuildMinutes: totalBuildMinutes > 0 ? totalBuildMinutes : null,
-      buildTimePartiallyTracked: anyMissing && totalBuildMinutes > 0
+      buildTimePartiallyTracked: anyMissing && totalBuildMinutes > 0,
+      scheduledPickupDate: scheduledPickup?.appointment_date || null,
+      scheduledPickupTime: scheduledPickup?.appointment_time || null,
+      productionStatus: o.production_status
     };
   });
 
-  // "In production order" — highest priority first, then earliest
-  // production date, matching the sequencing already established
-  // elsewhere (Production Schedule sorts the same way conceptually).
-  const priorityRank: Record<string, number> = { high: 0, normal: 1, low: 2 };
-  queueOrders.sort((a, b) => {
-    const pDiff = (priorityRank[a.priority || "normal"] ?? 1) - (priorityRank[b.priority || "normal"] ?? 1);
-    if (pDiff !== 0) return pDiff;
-    return (a.productionDate || "9999-99-99").localeCompare(b.productionDate || "9999-99-99");
-  });
+  // Automatic multi-factor priority: rush first, then earliest promised
+  // date, then whether pickup is already on the books, then customer
+  // priority, then material readiness — with any manually dragged
+  // orders floating to the top in their exact chosen order. See
+  // sortProductionQueue for the full, independently-tested logic.
+  const sortedQueueOrders = sortProductionQueue(
+    queueOrders.map(o => ({
+      ...o,
+      dueDate: o.dueDate,
+      hasScheduledPickup: !!o.scheduledPickupDate,
+      isPriorityCustomer: o.isPriorityCustomer,
+      materialsAvailable: o.materialCheck.available,
+      manualQueuePosition: o.manualQueuePosition
+    }))
+  );
 
-  return <ManufacturingQueue orders={queueOrders} />;
+  return <ManufacturingQueue orders={sortedQueueOrders} />;
 }
