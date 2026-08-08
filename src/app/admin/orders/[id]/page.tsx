@@ -33,15 +33,6 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
     .single();
 
   if (!order) notFound();
-
-  // The demo account can only ever open orders flagged as its own demo
-  // data — list pages already filter this way, but a real order's UUID
-  // is effectively unguessable regardless; this guard exists so the
-  // detail page itself refuses too, rather than relying only on the
-  // tester never typing a URL directly.
-  const { data: currentProfile } = await supabase.from("profiles").select("is_demo_account").eq("id", user?.id).maybeSingle();
-  if (currentProfile?.is_demo_account && !order.is_demo) notFound();
-
   const customer = (order as any).profiles;
   const timelineEvents = await getOrderTimeline(order.id);
 
@@ -177,7 +168,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           <SendInvoiceButton orderId={order.id} />
         </div>
 
-        <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} fulfillmentMethod={order.fulfillment_method} />
+        <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
         <ProgressTracker productType={order.product_type as ProductType} currentStatus={order.status} statusTimestamps={statusTimestamps} />
 
         <div className="mt-4 pt-4 border-t border-[#1E3A5F]/10">

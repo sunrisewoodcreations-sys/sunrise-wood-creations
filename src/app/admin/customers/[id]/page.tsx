@@ -21,18 +21,12 @@ function StatCard({ label, value, color }: { label: string; value: string; color
 
 export default async function CustomerDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
 
   // Look up the existing customer by id — this page only ever reads and
   // edits an existing profile, it never creates a new one, so there's no
   // way for this to produce a duplicate customer record.
   const { data: customer } = await supabase.from("profiles").select("*").eq("id", params.id).single();
   if (!customer) notFound();
-
-  // Same demo isolation as the order detail page — the demo account
-  // can only ever open a customer profile flagged as its own demo data.
-  const { data: currentProfile } = await supabase.from("profiles").select("is_demo_account").eq("id", user?.id).maybeSingle();
-  if (currentProfile?.is_demo_account && !customer.is_demo) notFound();
 
   const { data: orders } = await supabase
     .from("orders")
@@ -42,7 +36,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
   const { data: savedProducts } = await supabase
     .from("products")
-    .select("id, product_type, name, size_details, price_cents, estimated_build_minutes")
+    .select("id, product_type, name, size_details, price_cents")
     .order("name");
 
   const orderList = orders || [];

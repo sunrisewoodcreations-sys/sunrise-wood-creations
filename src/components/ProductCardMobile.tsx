@@ -4,7 +4,6 @@ import { productLabel, ProductType } from "@/lib/statusSteps";
 import ProductBOMEditor from "@/components/ProductBOMEditor";
 import { useProductEditor, Product, BOMPartsInput } from "@/hooks/useProductEditor";
 import StockStatusBadge from "@/components/StockStatusBadge";
-import ProductChecklistEditor from "@/components/ProductChecklistEditor";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -19,10 +18,10 @@ const PRODUCT_TYPES = [
 // targets instead of a table row, since a table row can't reasonably
 // fit or be tapped accurately on a phone screen.
 export default function ProductCardMobile({
-  product, buildableNow, reservedQty, unitsSold, bomParts, checklistSteps = []
+  product, buildableNow, reservedQty, unitsSold, bomParts
 }: {
   product: Product; buildableNow?: number | null; reservedQty?: number; unitsSold?: number;
-  bomParts?: BOMPartsInput; checklistSteps?: string[];
+  bomParts?: BOMPartsInput;
 }) {
   const e = useProductEditor(product, bomParts);
 
@@ -78,7 +77,6 @@ export default function ProductCardMobile({
         </div>
 
         <ProductBOMEditor rows={e.partRows} onChange={e.setPartRows} />
-        <ProductChecklistEditor productId={product.id} initialSteps={checklistSteps} />
 
         {e.error && <div className="text-ember text-sm mt-3">{e.error}</div>}
 
