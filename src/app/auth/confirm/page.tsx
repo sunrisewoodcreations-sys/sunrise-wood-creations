@@ -2,16 +2,20 @@
 
 // Supabase sends the login token back as a URL *fragment*
 // (#access_token=...), not a query parameter — fragments are
-// browser-only and never reach a server, which is why the previous
+// browser-only and never reach a server, which is why an earlier
 // server-side version of this page could never actually see the
 // token. This version runs in the browser instead, reads the
 // fragment directly, and establishes the session from it.
+//
+// Wrapped in Suspense because useSearchParams() requires it during
+// Next.js's build-time static generation, or the build fails outright
+// (confirmed by the actual build error) — this isn't optional.
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 
-export default function AuthConfirmPage() {
+function AuthConfirmInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
@@ -48,5 +52,13 @@ export default function AuthConfirmPage() {
         {error ? `${error} — redirecting to login...` : "Signing you in..."}
       </p>
     </div>
+  );
+}
+
+export default function AuthConfirmPage() {
+  return (
+    <Suspense fallback={<div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}><p>Loading...</p></div>}>
+      <AuthConfirmInner />
+    </Suspense>
   );
 }
