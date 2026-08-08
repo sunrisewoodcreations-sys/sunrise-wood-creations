@@ -104,10 +104,6 @@ async function buildInvoicePdf(opts: {
   page.drawLine({ start: { x: 40, y }, end: { x: width - 40, y }, thickness: 1, color: LIGHT_LINE });
   y -= 20;
 
-  function formatCurrency(cents: number): string {
-    return cents < 0 ? `-$${Math.abs(cents / 100).toFixed(2)}` : `$${(cents / 100).toFixed(2)}`;
-  }
-
   let subtotal = 0;
   for (const item of opts.lineItems) {
     const qty = Math.max(1, item.quantity || 1);
@@ -117,8 +113,8 @@ async function buildInvoicePdf(opts: {
 
     page.drawText(item.description.slice(0, 48), { x: col.desc, y, size: 10, font, color: WALNUT });
     page.drawText(String(qty), { x: col.qty, y, size: 10, font, color: WALNUT });
-    page.drawText(formatCurrency(unitSubtotal * 100), { x: col.price, y, size: 10, font, color: WALNUT });
-    page.drawText(formatCurrency(lineSubtotal * 100), { x: col.amount, y, size: 10, font, color: WALNUT });
+    page.drawText(`$${unitSubtotal.toFixed(2)}`, { x: col.price, y, size: 10, font, color: WALNUT });
+    page.drawText(`$${lineSubtotal.toFixed(2)}`, { x: col.amount, y, size: 10, font, color: WALNUT });
     y -= 18;
     if (y < 140) break; // simple single-page cap for very long item lists
   }
