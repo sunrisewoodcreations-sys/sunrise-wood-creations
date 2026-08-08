@@ -221,7 +221,6 @@ export async function sendQuoteToCustomer(quoteId: string, siteUrl: string): Pro
   return { ok: true };
 }
 export async function buildOrderItemsFromQuote(admin: ReturnType<typeof createAdminClient>, quoteId: string) {
-  const { data: quote } = await admin.from("quotes").select("discount_cents, delivery_cents").eq("id", quoteId).maybeSingle();
   const { data: items } = await admin.from("quote_items").select("*").eq("quote_id", quoteId).order("sort_order", { ascending: true });
   if (!items || items.length === 0) return null;
 
@@ -231,29 +230,13 @@ export async function buildOrderItemsFromQuote(admin: ReturnType<typeof createAd
     : { data: [] as any[] };
   const productTypeById = new Map((products || []).map((p: any) => [p.id, p.product_type]));
 
-  const orderItems = items.map((it: any) => ({
+  return items.map((it: any) => ({
     productType: it.product_id ? (productTypeById.get(it.product_id) || "sign") : "sign",
     productId: it.product_id,
     title: it.title,
     quantity: it.quantity,
     priceCents: it.unit_price_cents * it.quantity // order items store the line TOTAL, not unit price
   }));
-
-  // A quote's discount and delivery fee are real amounts the customer
-  // saw and agreed to — without these, a converted order (and its
-  // invoice) would silently charge the full, undiscounted price and
-  // drop the delivery fee entirely. Added as their own visible line
-  // items rather than folded invisibly into an existing one, so the
-  // resulting order and invoice show exactly the same breakdown the
-  // quote did.
-  if (quote?.discount_cents && quote.discount_cents > 0) {
-    orderItems.push({ productType: "sign", productId: null, title: "Discount", quantity: 1, priceCents: -quote.discount_cents });
-  }
-  if (quote?.delivery_cents && quote.delivery_cents > 0) {
-    orderItems.push({ productType: "sign", productId: null, title: "Delivery fee", quantity: 1, priceCents: quote.delivery_cents });
-  }
-
-  return orderItems;
 }
 export async function copyQuoteItemsTo(admin: ReturnType<typeof createAdminClient>, sourceQuoteId: string, targetQuoteId: string): Promise<void> {
   const { data: sourceItems } = await admin

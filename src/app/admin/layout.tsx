@@ -42,7 +42,7 @@ function Badge({ count }: { count: number }) {
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from("profiles").select("full_name, is_demo_account").eq("id", user!.id).single();
+  const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user!.id).single();
   const badges = await getBadgeCounts(supabase);
 
   async function signOut() {
@@ -61,22 +61,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/orders", label: "Orders" },
     { href: "/admin/queue", label: "Queue" },
     { href: "/admin/manufacturing-queue", label: "Manufacturing Queue" },
-    { href: "/admin/shop-floor", label: "Shop Floor Mode" },
     { href: "/admin/schedule", label: "Production Schedule" },
     { href: "/admin/calendar", label: "Calendar" },
     { href: "/admin/messages", label: "Messages", badge: badges.messages },
     { href: "/admin/quotes", label: "Quotes", badge: badges.quotes },
     { href: "/admin/pickets", label: "Picket Inventory" },
-    { href: "/admin/pickup-settings", label: "Pickup Settings" },
-    { href: "/admin/pickup-appointments", label: "Pickup Appointments" },
-    { href: "/admin/production-capacity", label: "Production Capacity" },
     { href: "/admin/products", label: "Products" },
     { href: "/admin/cutlist", label: "Cut List Generator" },
     { href: "/admin/material-planning", label: "Material Planning" },
     { href: "/admin/production-analytics", label: "Production Analytics" },
     { href: "/admin/designs", label: "Designs" },
-    { href: "/admin/reports", label: "Reports" },
-    ...(profile?.is_demo_account ? [] : [{ href: "/admin/demo-mode", label: "Demo / Test Mode" }])
+    { href: "/admin/reports", label: "Reports" }
   ];
 
   return (
@@ -101,7 +96,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/orders" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Orders</Link>
           <Link href="/admin/queue" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Queue</Link>
           <Link href="/admin/manufacturing-queue" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Manufacturing Queue</Link>
-          <Link href="/admin/shop-floor" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Shop Floor Mode</Link>
           <Link href="/admin/schedule" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Production Schedule</Link>
           <Link href="/admin/calendar" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Calendar</Link>
           <Link href="/admin/messages" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">
@@ -111,32 +105,19 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             Quotes<Badge count={badges.quotes} />
           </Link>
           <Link href="/admin/pickets" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Picket Inventory</Link>
-          <Link href="/admin/pickup-settings" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Pickup Settings</Link>
-          <Link href="/admin/pickup-appointments" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Pickup Appointments</Link>
-          <Link href="/admin/production-capacity" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Production Capacity</Link>
           <Link href="/admin/products" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Products</Link>
           <Link href="/admin/cutlist" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Cut List Generator</Link>
           <Link href="/admin/material-planning" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Material Planning</Link>
           <Link href="/admin/production-analytics" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Production Analytics</Link>
           <Link href="/admin/designs" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Designs</Link>
           <Link href="/admin/reports" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Reports</Link>
-          {!profile?.is_demo_account && (
-            <Link href="/admin/demo-mode" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Demo / Test Mode</Link>
-          )}
         </nav>
         <form action={signOut} className="mt-10">
           <button className="text-xs text-white/50 hover:text-white">Log out</button>
         </form>
       </div>
 
-      <div className="flex-1 p-4 md:p-8">
-        {profile?.is_demo_account && (
-          <div className="sticky top-0 z-50 -mx-4 -mt-4 mb-4 md:-mx-8 md:-mt-8 md:mb-6 bg-ember text-white px-4 py-2.5 text-center text-sm font-bold shadow-md">
-            🧪 DEMO / TEST MODE — You're using a test account. Nothing here is a real customer or order. Emails never leave this system.
-          </div>
-        )}
-        {children}
-      </div>
+      <div className="flex-1 p-4 md:p-8">{children}</div>
     </div>
   );
 }

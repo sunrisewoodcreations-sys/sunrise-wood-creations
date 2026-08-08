@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { isDemoAccountRequest } from "@/lib/demoMode";
 import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
 import SendInvoiceButton from "@/components/SendInvoiceButton";
 import SendStatusEmailButton from "@/components/SendStatusEmailButton";
 import { formatCalendarDate } from "@/lib/dateDisplay";
-import { getMaterialRequirements } from "@/lib/materialPlanning";
 
 // Same Eastern-time helpers already duplicated across the other report
 // pages in this app — kept local here too, rather than touching any
@@ -35,12 +33,6 @@ function easternDateParts(date: Date) {
     month: Number(parts.find(p => p.type === "month")?.value),
     day: Number(parts.find(p => p.type === "day")?.value)
   };
-}
-function addDaysToDateStr(dateStr: string, days: number): string {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  dt.setUTCDate(dt.getUTCDate() + days);
-  return dt.toISOString().slice(0, 10);
 }
 
 // Small hand-written inline icons — no icon library added. Each uses
@@ -209,7 +201,6 @@ function LowInventoryTaskSection({ products }: { products: any[] }) {
 
 export default async function DashboardPage() {
   const supabase = createClient();
-  const isDemoAccount = await isDemoAccountRequest();
   const { year, month, day } = easternDateParts(new Date());
   const todayStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
@@ -222,11 +213,9 @@ export default async function DashboardPage() {
     { data: recentQuotes },
     { data: unrespondedQuoteRequests },
     { data: products },
-    { data: quotes },
-    materialsNeeded,
-    { data: pickupAppointmentsThisWeek }
+    { data: quotes }
   ] = await Promise.all([
-    supabase.from("orders").select("*, profiles:customer_id(full_name)").eq("is_demo", isDemoAccount).order("created_at", { ascending: false }),
+    supabase.from("orders").select("*, profiles:customer_id(full_name)").order("created_at", { ascending: false }),
     supabase.from("proofs").select("order_id").eq("status", "pending"),
     supabase.from("order_status_history").select("order_id, created_at").eq("status", "picked_up")
       .gte("created_at", easternMidnightUtc(year, month, 1).toISOString())
@@ -236,21 +225,7 @@ export default async function DashboardPage() {
     supabase.from("quote_requests").select("*").order("created_at", { ascending: false }).limit(5),
     supabase.from("quote_requests").select("id, name, email, product_type, created_at").eq("responded", false).order("created_at", { ascending: false }),
     supabase.from("products").select("*"),
-    supabase.from("quotes").select("id, status, expiration_date, total_cents"),
-    // Wide window (not just today) so this reflects "all active orders",
-    // reusing Material Planning's own function rather than a second
-    // shortage calculation — if it ever needs a smarter definition of
-    // "active," that only has to change in one place.
-    getMaterialRequirements(todayStr, addDaysToDateStr(todayStr, 60), "Active orders"),
-    // Safe even before the pickup scheduling migration has been run —
-    // Supabase returns a null-data error rather than throwing, so this
-    // never crashes the Dashboard if that table doesn't exist yet.
-    supabase.from("pickup_appointments")
-      .select("id, appointment_date, appointment_time, status, orders:order_id(id, title, profiles:customer_id(full_name))")
-      .eq("status", "scheduled")
-      .gte("appointment_date", todayStr)
-      .lte("appointment_date", addDaysToDateStr(todayStr, 7))
-      .order("appointment_date", { ascending: true })
+    supabase.from("quotes").select("id, status, expiration_date, total_cents")
   ]);
 
   const allOrders = orders || [];
@@ -331,16 +306,6 @@ export default async function DashboardPage() {
 
   const lowInventoryProducts = (products || []).filter((p: any) => (p.stock_quantity ?? 0) <= (p.low_stock_threshold ?? 0));
 
-  // Revenue summary — reuses the same order lists already computed
-  // above for Today's Tasks (ready-for-pickup, outstanding balance)
-  // rather than a second pass over allOrders for the same thing.
-  const revenueWaitingForPickupCents = readyForPickupOrders.reduce((sum, o: any) => sum + Math.max(0, (o.price_cents || 0) - (o.amount_paid_cents || 0)), 0);
-  const revenueOverdueCents = overdueOrders.reduce((sum, o: any) => sum + Math.max(0, (o.price_cents || 0) - (o.amount_paid_cents || 0)), 0);
-  const weekFromNowForRevenueStr = addDaysToDateStr(todayStr, 7);
-  const revenueScheduledThisWeekCents = allOrders
-    .filter(o => o.status !== "picked_up" && o.due_date && o.due_date >= todayStr && o.due_date <= weekFromNowForRevenueStr)
-    .reduce((sum: number, o: any) => sum + Math.max(0, (o.price_cents || 0) - (o.amount_paid_cents || 0)), 0);
-
   const anyTasks =
     overdueOrders.length > 0 ||
     buildTodayOrders.length > 0 ||
@@ -371,79 +336,6 @@ export default async function DashboardPage() {
     <div className="bg-cream/40 -m-8 p-8 min-h-full">
       <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Dashboard</h1>
       <p className="text-sm text-[#1E3A5F]/60 mb-6">Your daily command center — today's priorities first.</p>
-
-      {/* Today's Priorities — a quick-glance, all-clickable rollup of
-          the counts already computed for Today's Tasks below, so the
-          most urgent numbers are visible without reading every
-          checklist. Every card link reuses an existing Orders page
-          filter — no new filtered views needed for this. */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <Link href="/admin/orders?filter=overdue" className="bg-white border-2 border-ember/30 rounded-xl shadow-sm p-3 text-center hover:border-ember/60 transition-colors">
-          <div className="text-xl font-display text-ember">{overdueOrders.length}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Late Orders</div>
-        </Link>
-        <Link href="/admin/orders?filter=due_today" className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#1E3A5F]/30 transition-colors">
-          <div className="text-xl font-display text-[#1E3A5F]">{dueTodayOrders.length}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Due Today</div>
-        </Link>
-        <Link href="/admin/orders?filter=waiting_payment" className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#1E3A5F]/30 transition-colors">
-          <div className="text-xl font-display text-amber">{outstandingBalanceTaskOrders.length}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Payments Waiting</div>
-        </Link>
-        <Link href="/admin/orders?filter=ready_pickup" className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#1E3A5F]/30 transition-colors">
-          <div className="text-xl font-display text-sage">{readyForPickupOrders.length}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Ready for Pickup</div>
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-        <Link href="/admin/material-planning" className={`bg-white border-2 rounded-xl shadow-sm p-4 hover:opacity-90 transition-opacity ${materialsNeeded.requirements.some(r => (r.shortQuantity ?? 0) > 0) ? "border-ember/40" : "border-sage/30"}`}>
-          <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-1">Materials Needed</div>
-          {materialsNeeded.requirements.filter(r => (r.shortQuantity ?? 0) > 0).length === 0 ? (
-            <div className="text-sm font-semibold text-sage">Enough on hand for all active orders</div>
-          ) : (
-            <div className="space-y-1">
-              {materialsNeeded.requirements.filter(r => (r.shortQuantity ?? 0) > 0).slice(0, 3).map((r: any) => (
-                <div key={r.materialType} className="text-sm font-semibold text-ember">Need {r.shortQuantity} more {r.materialType}</div>
-              ))}
-            </div>
-          )}
-        </Link>
-
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
-          <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Revenue</div>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <Link href="/admin/orders?filter=ready_pickup" className="hover:opacity-70">
-              <div className="text-base font-display text-sage">${(revenueWaitingForPickupCents / 100).toFixed(0)}</div>
-              <div className="text-[9px] text-[#1E3A5F]/50 uppercase">Waiting Pickup</div>
-            </Link>
-            <Link href="/admin/orders?filter=due_week" className="hover:opacity-70">
-              <div className="text-base font-display text-[#1E3A5F]">${(revenueScheduledThisWeekCents / 100).toFixed(0)}</div>
-              <div className="text-[9px] text-[#1E3A5F]/50 uppercase">This Week</div>
-            </Link>
-            <Link href="/admin/orders?filter=overdue" className="hover:opacity-70">
-              <div className="text-base font-display text-ember">${(revenueOverdueCents / 100).toFixed(0)}</div>
-              <div className="text-[9px] text-[#1E3A5F]/50 uppercase">Overdue</div>
-            </Link>
-          </div>
-        </div>
-
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
-          <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Pickup This Week</div>
-          {(pickupAppointmentsThisWeek || []).length === 0 ? (
-            <p className="text-xs text-[#1E3A5F]/40 italic">No pickups scheduled in the next 7 days yet.</p>
-          ) : (
-            <div className="space-y-1 max-h-24 overflow-y-auto">
-              {(pickupAppointmentsThisWeek || []).slice(0, 5).map((a: any) => (
-                <Link key={a.id} href={`/admin/orders/${a.orders?.id}`} className="flex justify-between text-xs hover:underline">
-                  <span className="text-[#1E3A5F]">{a.orders?.profiles?.full_name || "Unknown"}</span>
-                  <span className="text-[#1E3A5F]/50">{new Date(a.appointment_date + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "short" })} {a.appointment_time}</span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Today's Tasks — six independent checklists reflecting how the
           shop actually runs (including the 24-hour glue cure time), not
