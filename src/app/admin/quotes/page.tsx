@@ -1,15 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
-import { isDemoAccountRequest } from "@/lib/demoMode";
 import { formatQuoteNumberWithRevision } from "@/lib/quote";
 import QuotesPageTabs from "@/components/QuotesPageTabs";
 
 export default async function QuotesPage({ searchParams }: { searchParams: { tab?: string; q?: string } }) {
   const supabase = createClient();
-  const isDemoAccount = await isDemoAccountRequest();
 
   const [{ data: quoteRequests }, { data: allQuotes }] = await Promise.all([
     supabase.from("quote_requests").select("*").order("created_at", { ascending: false }),
-    supabase.from("quotes").select("*, profiles:customer_id(full_name, email, phone)").eq("is_demo", isDemoAccount).order("created_at", { ascending: false })
+    supabase.from("quotes").select("*, profiles:customer_id(full_name, email, phone)").order("created_at", { ascending: false })
   ]);
 
   // The list shows only the latest revision of each quote (same

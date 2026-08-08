@@ -1,19 +1,15 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { isDemoAccountRequest } from "@/lib/demoMode";
 import AddCustomerForm from "@/components/AddCustomerForm";
 
 export default async function CustomersPage({ searchParams }: { searchParams: { q?: string } }) {
   const supabase = createClient();
   const query = searchParams.q?.trim() || "";
 
-  const isDemoAccount = await isDemoAccountRequest();
-
   let customersQuery = supabase
     .from("profiles")
     .select("id, full_name, email, phone, has_real_email, orders:orders(price_cents, amount_paid_cents)")
     .eq("role", "customer")
-    .eq("is_demo", isDemoAccount)
     .order("full_name");
 
   if (query) {
