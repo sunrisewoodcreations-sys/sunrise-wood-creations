@@ -12,7 +12,7 @@ const PRODUCT_TYPES = [
 ];
 
 type Customer = { id: string; full_name: string; email: string };
-type SavedProduct = { id: string; product_type: string; name: string; size_details: string | null; price_cents: number };
+type SavedProduct = { id: string; product_type: string; name: string; size_details: string | null; price_cents: number; estimated_build_minutes: number | null };
 
 type LineItem = {
   productType: string;
@@ -70,6 +70,42 @@ export default function AddOrderWithCustomerPicker({
   const [dueDate, setDueDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [capacityWarning, setCapacityWarning] = useState<{ suggestedDate: string | null } | null>(null);
+
+  // Checks realistic capacity for the implied production date (one day
+  // before the chosen pickup date, same rule already used when an
+  // order is actually created) — reuses the same capacity functions
+  // already built for the Production Capacity settings page, not a
+  // second calculation of "is this day full".
+  useEffect(() => {
+    if (!dueDate) { setCapacityWarning(null); return; }
+
+    const neededMinutes = items.reduce((sum, it) => {
+      if (!it.selectedProductId) return sum;
+      const product = products.find(p => p.id === it.selectedProductId);
+      const perUnit = product?.estimated_build_minutes;
+      return perUnit != null ? sum + perUnit * (Math.max(1, Math.round(Number(it.quantity)) || 1)) : sum;
+    }, 0);
+    if (neededMinutes === 0) { setCapacityWarning(null); return; }
+
+    const [y, m, d] = dueDate.split("-").map(Number);
+    const productionDt = new Date(Date.UTC(y, m - 1, d));
+    productionDt.setUTCDate(productionDt.getUTCDate() - 1);
+    const productionDateStr = productionDt.toISOString().slice(0, 10);
+
+    const controller = new AbortController();
+    fetch("/api/production-capacity-check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productionDateStr, neededMinutes }),
+      signal: controller.signal
+    })
+      .then(res => res.json())
+      .then(body => setCapacityWarning(body.fits === false ? { suggestedDate: body.suggestedDate } : null))
+      .catch(() => {}); // silent — this is an advisory check, never blocks order creation
+
+    return () => controller.abort();
+  }, [dueDate, items, products]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -406,6 +442,12 @@ export default function AddOrderWithCustomerPicker({
                 onChange={e => setDueDate(e.target.value)}
                 className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
               />
+              {capacityWarning && (
+                <p className="text-xs text-ember font-semibold mt-1 max-w-xs">
+                  This date is already fully booked for production.
+                  {capacityWarning.suggestedDate && ` Next realistic date: ${capacityWarning.suggestedDate}.`}
+                </p>
+              )}
             </div>
             <div className="text-sm font-semibold text-[#1E3A5F] text-right">
               Order total: ${grandTotal.toFixed(2)}

@@ -117,6 +117,23 @@ export function OrderScheduleCard({
         {!compact && order.due_date && (
           <div className="text-[10px] text-[#1E3A5F]/50 mt-1">Pickup: {formatCalendarDate(order.due_date)}</div>
         )}
+        {!order.production_date && order.due_date && (
+          <button
+            onClick={() => {
+              // Same "one day before pickup" logic already used when an
+              // order is first created, applied here on demand for
+              // orders that ended up unscheduled — computed directly on
+              // the date string to avoid any timezone conversion risk.
+              const [y, m, d] = order.due_date.split("-").map(Number);
+              const dt = new Date(Date.UTC(y, m - 1, d));
+              dt.setUTCDate(dt.getUTCDate() - 1);
+              updateOrder(order.id, { productionDate: dt.toISOString().slice(0, 10) });
+            }}
+            className="mt-1.5 w-full bg-sage/15 text-sage rounded px-2 py-1 text-[10px] font-semibold hover:bg-sage/25"
+          >
+            Suggest date (1 day before pickup)
+          </button>
+        )}
         {!compact && !editingDetails && order.production_notes && (
           <button onClick={() => setEditingDetails(true)} className="block text-[10px] text-[#1E3A5F]/60 mt-1 italic truncate text-left w-full" title={order.production_notes}>
             “{order.production_notes}”
@@ -214,18 +231,20 @@ export function OrderScheduleCard({
 export default function ProductionSchedule({
   orders,
   completedOrders,
-  waitingOnCustomerOrderIds
+  waitingOnCustomerOrderIds,
+  pickupAppointments = []
 }: {
   orders: Order[];
   completedOrders: Order[];
   waitingOnCustomerOrderIds: string[];
+  pickupAppointments?: any[];
 }) {
   const router = useRouter();
   const today = useMemo(() => easternDateParts(new Date()), []);
   const todayStr = dateStr(today.year, today.month, today.day);
   const tomorrowStr = addDays(todayStr, 1);
 
-  const [viewMode, setViewMode] = useState<"month" | "week" | "day">("month");
+  const [viewMode, setViewMode] = useState<"month" | "week" | "day">("day");
   const [productTypeFilter, setProductTypeFilter] = useState("");
   const [mobileDay, setMobileDay] = useState(todayStr);
   const [desktopDay, setDesktopDay] = useState(todayStr);
@@ -261,6 +280,20 @@ export default function ProductionSchedule({
     return map;
   }, [filteredOrders]);
 
+  // Same grouping approach as production orders above — pickup
+  // appointments are a separate data source (their own table, their
+  // own date field) shown alongside production jobs on the same
+  // calendar rather than a second calendar.
+  const pickupsByDate = useMemo(() => {
+    const map = new Map<string, typeof pickupAppointments>();
+    pickupAppointments.forEach(a => {
+      const list = map.get(a.appointment_date) || [];
+      list.push(a);
+      map.set(a.appointment_date, list);
+    });
+    return map;
+  }, [pickupAppointments]);
+
   const unscheduled = filteredOrders.filter(o => !o.production_date);
 
   async function updateOrder(orderId: string, patch: Record<string, any>) {
@@ -276,6 +309,31 @@ export default function ProductionSchedule({
       const body = await res.json().catch(() => ({}));
       setError(body.error || "Couldn't save that change.");
     }
+  }
+
+  // Bulk version of the same suggest-date action on each unscheduled
+  // card — same one-day-before-pickup computation, just applied to
+  // every unscheduled order with a due date at once, and refreshing
+  // only after all of them finish rather than once per order.
+  async function handleSuggestAllDates() {
+    setError("");
+    const eligible = unscheduled.filter(o => o.due_date);
+    const results = await Promise.all(
+      eligible.map(o => {
+        const [y, m, d] = o.due_date.split("-").map(Number);
+        const dt = new Date(Date.UTC(y, m - 1, d));
+        dt.setUTCDate(dt.getUTCDate() - 1);
+        return fetch(`/api/orders/${o.id}/production`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productionDate: dt.toISOString().slice(0, 10) })
+        });
+      })
+    );
+    if (results.some(r => !r.ok)) {
+      setError("Some orders couldn't be scheduled automatically — you may need to set those dates manually.");
+    }
+    router.refresh();
   }
 
   function handleDrop(e: React.DragEvent, targetDate: string) {
@@ -424,6 +482,7 @@ export default function ProductionSchedule({
                 {monthGridDays.map((d, i) => {
                   const ds = dateStr(d.year, d.month, d.day);
                   const dayOrders = ordersByDate.get(ds) || [];
+                  const dayPickups = pickupsByDate.get(ds) || [];
                   const isToday = ds === todayStr;
                   return (
                     <div
@@ -438,10 +497,22 @@ export default function ProductionSchedule({
                         <span className={`text-xs font-semibold ${isToday ? "inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#1E3A5F] text-white" : d.inCurrentMonth ? "text-[#1E3A5F]/70" : "text-[#1E3A5F]/30"}`}>
                           {d.day}
                         </span>
-                        {dayOrders.length > 0 && <CapacityDot count={dayOrders.length} />}
+                        <div className="flex items-center gap-1">
+                          {dayOrders.length > 0 && <CapacityDot count={dayOrders.length} />}
+                          {dayPickups.length > 0 && (
+                            <span className="w-4 h-4 rounded-full bg-sage text-white text-[9px] font-bold flex items-center justify-center" title={`${dayPickups.length} pickup(s) scheduled`}>
+                              {dayPickups.length}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="overflow-y-auto max-h-24">
                         {dayOrders.map(o => <OrderScheduleCard key={o.id} order={o} compact todayStr={todayStr} draggingId={draggingId} setDraggingId={setDraggingId} updateOrder={updateOrder} />)}
+                        {dayPickups.map(p => (
+                          <div key={p.id} className="bg-sage/10 border border-sage/30 rounded px-1.5 py-1 mb-1 text-[10px] text-sage font-semibold truncate" title={`Pickup: ${p.orders?.profiles?.full_name || "Unknown"} at ${p.appointment_time}`}>
+                            🟢 {p.appointment_time} {p.orders?.profiles?.full_name || "Unknown"}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   );
@@ -461,6 +532,7 @@ export default function ProductionSchedule({
             <div className="grid grid-cols-7 gap-2">
               {weekGridDays.map(d => {
                 const dayOrders = ordersByDate.get(d.ds) || [];
+                const dayPickups = pickupsByDate.get(d.ds) || [];
                 const isToday = d.ds === todayStr;
                 return (
                   <div
@@ -471,9 +543,21 @@ export default function ProductionSchedule({
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="text-xs font-semibold text-[#1E3A5F]">{WEEKDAYS[new Date(`${d.ds}T12:00:00Z`).getUTCDay()]} {d.month}/{d.day}</div>
-                      {dayOrders.length > 0 && <CapacityDot count={dayOrders.length} />}
+                      <div className="flex items-center gap-1">
+                        {dayOrders.length > 0 && <CapacityDot count={dayOrders.length} />}
+                        {dayPickups.length > 0 && (
+                          <span className="w-4 h-4 rounded-full bg-sage text-white text-[9px] font-bold flex items-center justify-center" title={`${dayPickups.length} pickup(s) scheduled`}>
+                            {dayPickups.length}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {dayOrders.map(o => <OrderScheduleCard key={o.id} order={o} todayStr={todayStr} draggingId={draggingId} setDraggingId={setDraggingId} updateOrder={updateOrder} />)}
+                    {dayPickups.map(p => (
+                      <div key={p.id} className="bg-sage/10 border border-sage/30 rounded px-1.5 py-1 mb-1 text-[10px] text-sage font-semibold truncate">
+                        🟢 {p.appointment_time} {p.orders?.profiles?.full_name || "Unknown"}
+                      </div>
+                    ))}
                   </div>
                 );
               })}
@@ -493,10 +577,21 @@ export default function ProductionSchedule({
               onDrop={e => handleDrop(e, desktopDay)}
               className={`bg-white border rounded-xl shadow-sm p-4 max-w-2xl ${dragOverDate === desktopDay ? "bg-sage/10 ring-2 ring-inset ring-sage/40" : "border-[#1E3A5F]/10"}`}
             >
-              {(ordersByDate.get(desktopDay) || []).length === 0 && (
+              {(ordersByDate.get(desktopDay) || []).length === 0 && (pickupsByDate.get(desktopDay) || []).length === 0 && (
                 <p className="text-sm text-[#1E3A5F]/50 text-center py-8">Nothing scheduled for this day. Drag an order here.</p>
               )}
               {(ordersByDate.get(desktopDay) || []).map(o => <OrderScheduleCard key={o.id} order={o} todayStr={todayStr} draggingId={draggingId} setDraggingId={setDraggingId} updateOrder={updateOrder} />)}
+              {(pickupsByDate.get(desktopDay) || []).length > 0 && (
+                <div className="mt-3 pt-3 border-t border-[#1E3A5F]/10">
+                  <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">🟢 Pickups today</div>
+                  {(pickupsByDate.get(desktopDay) || []).map(p => (
+                    <div key={p.id} className="bg-sage/10 border border-sage/30 rounded-lg px-3 py-2 mb-1.5 text-sm">
+                      <span className="font-semibold text-sage">{p.appointment_time}</span>
+                      <span className="text-[#1E3A5F] ml-2">{p.orders?.profiles?.full_name || "Unknown"} — {p.orders?.title}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}
@@ -506,8 +601,15 @@ export default function ProductionSchedule({
             onDragOver={e => e.preventDefault()}
             className="mt-4 bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3"
           >
-            <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">
-              Unscheduled ({unscheduled.length}) — drag onto a day to assign a production date
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide">
+                Unscheduled ({unscheduled.length}) — drag onto a day to assign a production date
+              </div>
+              {unscheduled.some(o => o.due_date) && (
+                <button onClick={handleSuggestAllDates} className="flex-shrink-0 bg-sage/15 text-sage rounded-md px-3 py-1.5 text-xs font-semibold hover:bg-sage/25">
+                  Suggest dates for all
+                </button>
+              )}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {unscheduled.map(o => <OrderScheduleCard key={o.id} order={o} todayStr={todayStr} draggingId={draggingId} setDraggingId={setDraggingId} updateOrder={updateOrder} />)}
@@ -579,7 +681,14 @@ export default function ProductionSchedule({
             </div>
           ) : (
             <div>
-              <p className="text-xs text-[#1E3A5F]/50 mb-2">Tap "Save" after picking a date on the order page, or use the desktop view to drag onto a day.</p>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <p className="text-xs text-[#1E3A5F]/50">Tap "Save" after picking a date on the order page, or use the desktop view to drag onto a day.</p>
+                {unscheduled.some(o => o.due_date) && (
+                  <button onClick={handleSuggestAllDates} className="flex-shrink-0 bg-sage/15 text-sage rounded-md px-3 py-1.5 text-xs font-semibold hover:bg-sage/25">
+                    Suggest all
+                  </button>
+                )}
+              </div>
               {unscheduled.map(o => (
                 <OrderScheduleCard key={o.id} order={o} todayStr={todayStr} draggingId={draggingId} setDraggingId={setDraggingId} updateOrder={updateOrder} />
               ))}

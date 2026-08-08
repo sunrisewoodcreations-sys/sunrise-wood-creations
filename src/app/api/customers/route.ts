@@ -10,11 +10,12 @@ function randomPassword() {
 export async function POST(req: NextRequest) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user?.id).single();
+  const { data: profile } = await supabase.from("profiles").select("role, is_demo_account").eq("id", user?.id).single();
 
   if (profile?.role !== "admin") {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
+  const isDemo = !!profile?.is_demo_account;
 
   const { fullName, email } = await req.json();
 
@@ -24,11 +25,14 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // --- No email given: create a record with no real account at all. ---
-  // The database requires every profile to have a real, unique email, so
-  // we generate a private placeholder that's never shown or emailed —
-  // this customer simply never gets an invite and can never log in.
-  if (!email?.trim()) {
+  // The demo account is never allowed down the real-invite path below,
+  // no matter what email it enters — Supabase's invite system sends a
+  // real email through a completely separate mechanism from the rest
+  // of this app's email sending, one that the demo-mode safety wrapper
+  // has no visibility into. Forcing every demo customer through the
+  // no-account placeholder path is the only way to guarantee a demo
+  // action can never actually invite a real address.
+  if (!email?.trim() || isDemo) {
     const placeholderEmail = `no-email-${randomUUID()}@no-account.sunrisewoodcreations.internal`;
 
     const { data: created, error: createError } = await admin.auth.admin.createUser({
@@ -53,14 +57,18 @@ export async function POST(req: NextRequest) {
         notify_order_updates: false,
         notify_invoices: false,
         notify_proofs: false,
-        notify_messages: false
+        notify_messages: false,
+        is_demo: isDemo
       }, { onConflict: "id" });
 
     if (profileError) {
       return NextResponse.json({ error: profileError.message }, { status: 400 });
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      demoNote: isDemo ? "Demo customers never receive a real invite email, even if you enter one — this test customer has no working login, matching every other demo record." : undefined
+    });
   }
 
   // --- Real email given: normal invite flow, plus notification prefs. ---

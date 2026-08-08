@@ -27,6 +27,7 @@ export async function createOrder(opts: {
   customerId: string;
   dueDate?: string | null;
   items: IncomingOrderItem[];
+  isDemo?: boolean;
 }): Promise<{ ok: true; order: any } | { ok: false; error: string; status: number }> {
   const admin = createAdminClient();
   const initialStatus = "order_placed";
@@ -99,7 +100,8 @@ export async function createOrder(opts: {
       product_id: orderProductId,
       status: initialStatus,
       due_date: finalDueDate,
-      production_date: autoProductionDate
+      production_date: autoProductionDate,
+      is_demo: !!opts.isDemo
     })
     .select()
     .single();
