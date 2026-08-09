@@ -154,6 +154,7 @@ export default async function AdminOrdersPage({
     .from("profiles")
     .select("id, full_name, email")
     .eq("role", "customer")
+    .eq("is_demo", isDemoAccount)
     .order("full_name");
 
   const { data: savedProducts } = await supabase
