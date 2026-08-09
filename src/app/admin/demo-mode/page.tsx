@@ -3,14 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import DemoModeControlPanel from "@/components/DemoModeControlPanel";
 
-// Forces this page to always fetch fresh data on every visit, never a
-// cached version.
 export const dynamic = "force-dynamic";
 
 export default async function DemoModePage() {
-  // The identity check stays on the regular client — it needs to read
-  // THIS session's own logged-in user correctly, which is exactly
-  // what that client is for.
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: currentProfile } = await supabase.from("profiles").select("is_demo_account").eq("id", user!.id).single();
@@ -18,27 +13,35 @@ export default async function DemoModePage() {
     redirect("/admin");
   }
 
-  // Everything actually displayed on the page uses the admin client
-  // instead — same elevated-access pattern already used on other
-  // admin-only pages throughout this app, and it sidesteps any RLS
-  // policy silently filtering out rows it shouldn't (which returns
-  // quietly empty rather than a visible error, which is exactly what
-  // was happening here — this page already independently verified the
-  // viewer is a real admin above, so this is safe).
   const admin = createAdminClient();
   const { data: demoProfile } = await admin.from("profiles").select("id, email, is_demo_account").eq("is_demo_account", true).maybeSingle();
-  const { data: emailLog } = await admin.from("demo_email_log").select("*").order("attempted_at", { ascending: false }).limit(50);
+
+  // Capturing the error this time, not just the data — if this query
+  // is failing for any reason, it's been failing completely silently
+  // until now, which is exactly why nothing showed up with no visible
+  // indication of a problem anywhere.
+  const { data: emailLog, error: emailLogError } = await admin.from("demo_email_log").select("*").order("attempted_at", { ascending: false }).limit(50);
+
   const { count: demoOrdersCount } = await admin.from("orders").select("id", { count: "exact", head: true }).eq("is_demo", true);
   const { count: demoCustomersCount } = await admin.from("profiles").select("id", { count: "exact", head: true }).eq("is_demo", true);
   const { count: demoQuotesCount } = await admin.from("quotes").select("id", { count: "exact", head: true }).eq("is_demo", true);
 
   return (
-    <DemoModeControlPanel
-      demoAccountExists={!!demoProfile}
-      emailLog={emailLog || []}
-      demoOrdersCount={demoOrdersCount || 0}
-      demoCustomersCount={demoCustomersCount || 0}
-      demoQuotesCount={demoQuotesCount || 0}
-    />
+    <div>
+      {emailLogError && (
+        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", padding: "12px", borderRadius: "8px", marginBottom: "16px", fontFamily: "monospace", fontSize: "13px" }}>
+          <strong>DEBUG — the email log query is actually failing:</strong>
+          <br />
+          {JSON.stringify(emailLogError, null, 2)}
+        </div>
+      )}
+      <DemoModeControlPanel
+        demoAccountExists={!!demoProfile}
+        emailLog={emailLog || []}
+        demoOrdersCount={demoOrdersCount || 0}
+        demoCustomersCount={demoCustomersCount || 0}
+        demoQuotesCount={demoQuotesCount || 0}
+      />
+    </div>
   );
 }
