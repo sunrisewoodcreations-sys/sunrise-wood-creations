@@ -10,6 +10,7 @@ type EmailLogEntry = {
   intended_recipient: string;
   redirected_to: string;
   subject: string | null;
+  html_body: string | null;
   success: boolean;
   error_message: string | null;
 };
@@ -33,6 +34,8 @@ export default function DemoModeControlPanel({
   const [generatedLink, setGeneratedLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
+  // Which email's content is currently open in the viewer, if any.
+  const [viewingEmail, setViewingEmail] = useState<EmailLogEntry | null>(null);
 
   async function handleSetupAccount() {
     setBusy(true);
@@ -107,7 +110,7 @@ export default function DemoModeControlPanel({
                     {linkCopied ? "Copied!" : "Copy"}
                   </button>
                 </div>
-                <p className="text-[10px] text-[#1E3A5F]/40 mt-2">A fresh link is generated each time — old links still work until the account itself is disabled below.</p>
+                <p className="text-[10px] text-[#1E3A5F]/40 mt-2">A fresh link is generated each time — use it right away, since it expires after a while and can only be used once.</p>
               </div>
             )}
           </>
@@ -138,18 +141,25 @@ export default function DemoModeControlPanel({
 
       <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5">
         <h2 className="font-display text-base text-[#1E3A5F] mb-3">3. Intercepted emails ({emailLog.length})</h2>
-        <p className="text-xs text-[#1E3A5F]/50 mb-3">Every email a "Send" button would have sent while the demo account was active — none of these reached the real recipient.</p>
+        <p className="text-xs text-[#1E3A5F]/50 mb-3">Every email a "Send" button would have sent while the demo account was active — none of these reached the real recipient. Click "View" to see exactly what it looked like.</p>
         {emailLog.length === 0 ? (
           <p className="text-sm text-[#1E3A5F]/50">No demo emails attempted yet.</p>
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {emailLog.map(e => (
               <div key={e.id} className="border border-[#1E3A5F]/10 rounded-lg p-3 text-xs">
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1 gap-2">
                   <span className="font-semibold text-[#1E3A5F]">{e.email_type}</span>
-                  <span className={`font-bold px-2 py-0.5 rounded-full ${e.success ? "bg-sage/15 text-sage" : "bg-ember/15 text-ember"}`}>
-                    {e.success ? "Intercepted OK" : "Failed"}
-                  </span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`font-bold px-2 py-0.5 rounded-full ${e.success ? "bg-sage/15 text-sage" : "bg-ember/15 text-ember"}`}>
+                      {e.success ? "Intercepted OK" : "Failed"}
+                    </span>
+                    {e.html_body && (
+                      <button onClick={() => setViewingEmail(e)} className="bg-[#1E3A5F] text-white rounded-full px-2.5 py-0.5 font-semibold">
+                        View
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="text-[#1E3A5F]/60">Would have gone to: <span className="font-mono">{e.intended_recipient}</span></div>
                 <div className="text-[#1E3A5F]/60">Redirected to: <span className="font-mono">{e.redirected_to}</span></div>
@@ -169,6 +179,30 @@ export default function DemoModeControlPanel({
           This instantly invalidates every login link that's ever been generated — no app deploy or code change needed.
         </p>
       </div>
+
+      {/* Email content viewer — an iframe with srcDoc renders the saved
+          HTML safely sandboxed from the rest of the admin panel, the
+          same way a browser would show any other email preview,
+          rather than injecting untrusted HTML directly into this page. */}
+      {viewingEmail && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setViewingEmail(null)}>
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[#1E3A5F]/10">
+              <div>
+                <div className="font-semibold text-[#1E3A5F]">{viewingEmail.subject}</div>
+                <div className="text-xs text-[#1E3A5F]/50">To: {viewingEmail.intended_recipient} (intended) — redirected to {viewingEmail.redirected_to}</div>
+              </div>
+              <button onClick={() => setViewingEmail(null)} className="text-[#1E3A5F]/50 hover:text-[#1E3A5F] text-xl leading-none px-2">✕</button>
+            </div>
+            <iframe
+              srcDoc={viewingEmail.html_body || ""}
+              sandbox=""
+              className="flex-1 w-full border-0"
+              title="Email preview"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

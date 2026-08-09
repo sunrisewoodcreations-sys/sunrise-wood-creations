@@ -64,6 +64,7 @@ async function sendViaResend(
     intended_recipient: resendPayload.to,
     redirected_to: DEMO_TEST_EMAIL || "(not delivered — no test address configured)",
     subject: resendPayload.subject,
+    html_body: resendPayload.html,
     success,
     error_message: errorMessage,
     order_id: orderId || null
