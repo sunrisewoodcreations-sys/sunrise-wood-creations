@@ -207,6 +207,14 @@ function LowInventoryTaskSection({ products }: { products: any[] }) {
   );
 }
 
+// Precaution, not a fix for a known bug here — this page already uses
+// createClient() (which reads cookies()), so Next.js should already
+// treat it as dynamic automatically. Making it explicit removes any
+// doubt, especially given a similar-looking admin page recently turned
+// out to have a real staleness issue (root cause was different, but
+// this costs nothing and rules the same class of problem out here).
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const supabase = createClient();
   const isDemoAccount = await isDemoAccountRequest();
