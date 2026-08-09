@@ -2,6 +2,11 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import DemoModeControlPanel from "@/components/DemoModeControlPanel";
 
+// Forces this page to always fetch fresh data on every visit, never a
+// cached version — the email log and demo data counts need to be
+// current every time, not just on the first load after a deploy.
+export const dynamic = "force-dynamic";
+
 export default async function DemoModePage() {
   const supabase = createClient();
 
