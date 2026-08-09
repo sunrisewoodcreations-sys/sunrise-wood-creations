@@ -23,14 +23,9 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Look up the existing customer by id — this page only ever reads and
-  // edits an existing profile, it never creates a new one, so there's no
-  // way for this to produce a duplicate customer record.
   const { data: customer } = await supabase.from("profiles").select("*").eq("id", params.id).single();
   if (!customer) notFound();
 
-  // Same demo isolation as the order detail page — the demo account
-  // can only ever open a customer profile flagged as its own demo data.
   const { data: currentProfile } = await supabase.from("profiles").select("is_demo_account").eq("id", user?.id).maybeSingle();
   if (currentProfile?.is_demo_account && !customer.is_demo) notFound();
 
@@ -56,8 +51,6 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         .order("created_at", { ascending: false })
     : { data: [] as any[] };
 
-  // Keep only the most recent invoice per order, since that's the one
-  // worth linking to from this list view.
   const latestInvoiceByOrder: Record<string, any> = {};
   (invoices || []).forEach((inv: any) => {
     if (!latestInvoiceByOrder[inv.order_id]) {
@@ -65,13 +58,9 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
     }
   });
 
-  // --- CRM-style summary stats, computed from every order this customer
-  // has ever placed (this is a relationship overview, not a tax report —
-  // deliberately not restricted to "picked up" orders the way Reports is). ---
   const totalOrders = orderList.length;
   const lifetimeRevenueCents = orderList.reduce((sum: number, o: any) => sum + (o.price_cents || 0), 0);
   const avgOrderValueCents = totalOrders > 0 ? Math.round(lifetimeRevenueCents / totalOrders) : 0;
-  // orderList is sorted newest-first, so the last entry is the earliest order.
   const firstOrderDate = totalOrders > 0 ? orderList[totalOrders - 1].created_at : null;
   const lastOrderDate = totalOrders > 0 ? orderList[0].created_at : null;
   const completedOrders = orderList.filter((o: any) => o.status === "picked_up").length;
@@ -98,6 +87,9 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
           </p>
           <EditCustomerContactForm
             customerId={customer.id}
+            initialFullName={customer.full_name}
+            initialEmail={customer.email}
+            hasRealEmail={customer.has_real_email !== false}
             initialPhone={customer.phone}
             initialAddress={customer.address}
           />
@@ -224,8 +216,6 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         </table>
       </div>
 
-      {/* Mobile card view — separate from the desktop table above (which
-          is untouched), same data, same invoice links. */}
       <div className="md:hidden space-y-3">
         {orderList.map((order: any) => {
           const invoice = latestInvoiceByOrder[order.id];

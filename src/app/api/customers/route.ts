@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   }
   const isDemo = !!profile?.is_demo_account;
 
-  const { fullName, email } = await req.json();
+  const { fullName, email, phone, confirmDuplicate } = await req.json();
 
   if (!fullName?.trim()) {
     return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -25,14 +25,36 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // The demo account is never allowed down the real-invite path below,
-  // no matter what email it enters — Supabase's invite system sends a
-  // real email through a completely separate mechanism from the rest
-  // of this app's email sending, one that the demo-mode safety wrapper
-  // has no visibility into. Forcing every demo customer through the
-  // no-account placeholder path is the only way to guarantee a demo
-  // action can never actually invite a real address.
   if (!email?.trim() || isDemo) {
+    // Duplicate check only applies to no-email customers — a real
+    // email is already naturally protected, since Supabase itself
+    // rejects a second account with the same address. Deliberately
+    // NOT name-alone: two different real people can easily share a
+    // name. Name + phone together is a much stronger signal of an
+    // actual duplicate, and only fires when both are present and both
+    // match an existing no-email customer — never blocks creation
+    // outright, just asks for confirmation first.
+    if (!confirmDuplicate && phone?.trim()) {
+      const normalizedPhone = phone.trim();
+      const normalizedName = fullName.trim().toLowerCase();
+      const { data: possibleDuplicates } = await admin
+        .from("profiles")
+        .select("id, full_name, phone")
+        .eq("role", "customer")
+        .eq("is_demo", isDemo)
+        .eq("has_real_email", false)
+        .eq("phone", normalizedPhone);
+
+      const match = (possibleDuplicates || []).find((c: any) => (c.full_name || "").trim().toLowerCase() === normalizedName);
+      if (match) {
+        return NextResponse.json({
+          possibleDuplicate: true,
+          existingCustomerId: match.id,
+          existingCustomerName: match.full_name
+        });
+      }
+    }
+
     const placeholderEmail = `no-email-${randomUUID()}@no-account.sunrisewoodcreations.internal`;
 
     const { data: created, error: createError } = await admin.auth.admin.createUser({
@@ -52,18 +74,8 @@ export async function POST(req: NextRequest) {
         id: created.user.id,
         full_name: fullName.trim(),
         email: placeholderEmail,
+        phone: phone?.trim() || null,
         role: "customer",
-        // For demo customers specifically: has_real_email is set true
-        // and notifications stay on, even though the address itself
-        // is a fake placeholder. That flag is what other parts of the
-        // app check before attempting to send a notification email at
-        // all — leaving it false silently blocked every send before
-        // it ever reached the safe interception system, so no demo
-        // email ever got attempted or logged. The actual safety
-        // guarantee here doesn't come from this flag anyway — it
-        // comes from the demo account being forced down this whole
-        // placeholder-email path in the first place, which already
-        // fully prevents a real Supabase invite from ever going out.
         has_real_email: isDemo ? true : false,
         notify_order_updates: isDemo ? true : false,
         notify_invoices: isDemo ? true : false,
@@ -99,14 +111,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: inviteError.message }, { status: 400 });
   }
 
-  // The invite creates the auth user (and, via our handle_new_user()
-  // trigger, their profile). Mark that this is a real, working email —
-  // notification preferences stay at their defaults (all on) until the
-  // customer sets their own from their account.
   const { data: matchedUsers } = await admin.auth.admin.listUsers();
   const match = matchedUsers?.users.find(u => u.email?.toLowerCase() === email.trim().toLowerCase());
   if (match) {
-    await admin.from("profiles").update({ has_real_email: true }).eq("id", match.id);
+    const updatePayload: Record<string, any> = { has_real_email: true };
+    if (phone?.trim()) updatePayload.phone = phone.trim();
+    await admin.from("profiles").update(updatePayload).eq("id", match.id);
   }
 
   return NextResponse.json({ ok: true });

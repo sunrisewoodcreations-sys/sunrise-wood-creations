@@ -7,18 +7,21 @@ export default function AddCustomerForm() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "done">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  // Holds a detected possible duplicate so the confirmation UI can show
+  // it, without having created anything yet.
+  const [duplicateWarning, setDuplicateWarning] = useState<{ name: string } | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submitCustomer(confirmDuplicate: boolean) {
     setStatus("loading");
     setErrorMsg("");
 
     const res = await fetch("/api/customers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email })
+      body: JSON.stringify({ fullName, email, phone, confirmDuplicate })
     });
     const body = await res.json();
 
@@ -28,11 +31,24 @@ export default function AddCustomerForm() {
       return;
     }
 
+    if (body.possibleDuplicate) {
+      setStatus("idle");
+      setDuplicateWarning({ name: body.existingCustomerName });
+      return;
+    }
+
     setStatus("done");
     setFullName("");
     setEmail("");
+    setPhone("");
+    setDuplicateWarning(null);
     router.refresh();
     setTimeout(() => setStatus("idle"), 3000);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await submitCustomer(false);
   }
 
   const hasEmail = !!email.trim();
@@ -40,7 +56,7 @@ export default function AddCustomerForm() {
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-[#1E3A5F]/10 rounded-xl p-6 mb-7">
       <h2 className="font-display text-lg text-[#1E3A5F] mb-4">Add a new customer</h2>
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Full name</label>
           <input
@@ -61,7 +77,43 @@ export default function AddCustomerForm() {
             className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
           />
         </div>
+        <div>
+          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Phone (optional)</label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
+            placeholder="(269) 555-0123"
+            className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
+          />
+        </div>
       </div>
+
+      {duplicateWarning && (
+        <div className="bg-amber/10 border border-amber/30 rounded-md px-3 py-2.5 mb-4">
+          <p className="text-sm text-[#1E3A5F]">
+            A customer named <strong>{duplicateWarning.name}</strong> with this same phone number already exists.
+            This might be the same person.
+          </p>
+          <div className="flex gap-2 mt-2">
+            <button
+              type="button"
+              onClick={() => submitCustomer(true)}
+              disabled={status === "loading"}
+              className="bg-[#1E3A5F] text-white px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
+            >
+              Create anyway — it's a different person
+            </button>
+            <button
+              type="button"
+              onClick={() => setDuplicateWarning(null)}
+              className="text-xs text-[#1E3A5F]/60 font-semibold"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       <button
         type="submit"
