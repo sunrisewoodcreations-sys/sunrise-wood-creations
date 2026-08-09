@@ -34,8 +34,10 @@ export default function DemoModeControlPanel({
   const [generatedLink, setGeneratedLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
-  // Which email's content is currently open in the viewer, if any.
   const [viewingEmail, setViewingEmail] = useState<EmailLogEntry | null>(null);
+  // Holds the freshly-issued demo password so it can be shown once —
+  // never stored anywhere, never re-displayed after a page refresh.
+  const [demoPassword, setDemoPassword] = useState<{ email: string; password: string } | null>(null);
 
   async function handleSetupAccount() {
     setBusy(true);
@@ -64,6 +66,17 @@ export default function DemoModeControlPanel({
     setTimeout(() => setLinkCopied(false), 2000);
   }
 
+  async function handleSetPassword() {
+    setBusy(true);
+    setError("");
+    setDemoPassword(null);
+    const res = await fetch("/api/demo-mode/set-password", { method: "POST" });
+    const body = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) { setError(body.error || "Couldn't set a password."); return; }
+    setDemoPassword({ email: body.email, password: body.password });
+  }
+
   async function handleResetData() {
     if (!confirm(`This will permanently delete ${demoOrdersCount} demo order(s), ${demoQuotesCount} demo quote(s), and ${demoCustomersCount} demo customer(s). Continue?`)) return;
     setBusy(true);
@@ -90,7 +103,7 @@ export default function DemoModeControlPanel({
         <h2 className="font-display text-base text-[#1E3A5F] mb-3">1. Demo account</h2>
         {!demoAccountExists ? (
           <>
-            <p className="text-sm text-[#1E3A5F]/60 mb-3">No demo account exists yet — set one up once, then generate login links from it any time.</p>
+            <p className="text-sm text-[#1E3A5F]/60 mb-3">No demo account exists yet — set one up once, then generate login links or a password from it any time.</p>
             <button onClick={handleSetupAccount} disabled={busy} className="bg-[#1E3A5F] text-white rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-60">
               {busy ? "Setting up..." : "Set up demo account"}
             </button>
@@ -98,12 +111,13 @@ export default function DemoModeControlPanel({
         ) : (
           <>
             <p className="text-sm text-sage font-semibold mb-3">✓ Demo account exists and is ready.</p>
+
             <button onClick={handleGenerateLink} disabled={busy} className="bg-[#1E3A5F] text-white rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-60">
               {busy ? "Generating..." : "Generate a new login link"}
             </button>
             {generatedLink && (
               <div className="mt-3 bg-cream rounded-lg p-3">
-                <p className="text-xs text-[#1E3A5F]/60 mb-2">Send this link to your tester however you like (text, email, chat). It logs them straight into the demo account — no password needed.</p>
+                <p className="text-xs text-[#1E3A5F]/60 mb-2">Send this link to your tester however you like. It logs them straight into the demo account — no password needed.</p>
                 <div className="flex gap-2">
                   <input readOnly value={generatedLink} className="flex-1 border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-xs font-mono" onClick={e => (e.target as HTMLInputElement).select()} />
                   <button onClick={handleCopyLink} className="bg-sage text-white rounded-md px-3 py-1.5 text-xs font-semibold whitespace-nowrap">
@@ -113,6 +127,23 @@ export default function DemoModeControlPanel({
                 <p className="text-[10px] text-[#1E3A5F]/40 mt-2">A fresh link is generated each time — use it right away, since it expires after a while and can only be used once.</p>
               </div>
             )}
+
+            <div className="mt-4 pt-4 border-t border-[#1E3A5F]/10">
+              <p className="text-xs text-[#1E3A5F]/60 mb-2">
+                Prefer a normal email/password login instead of a link? Set one here — works through the regular login page, no magic link needed.
+              </p>
+              <button onClick={handleSetPassword} disabled={busy} className="border border-[#1E3A5F]/20 text-[#1E3A5F] rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-60">
+                {busy ? "Setting..." : "Set / reset demo password"}
+              </button>
+              {demoPassword && (
+                <div className="mt-3 bg-cream rounded-lg p-3">
+                  <p className="text-xs font-bold text-ember mb-2">DEMO TEST credentials — shown once, save them now:</p>
+                  <div className="text-sm font-mono text-[#1E3A5F] mb-1">Email: {demoPassword.email}</div>
+                  <div className="text-sm font-mono text-[#1E3A5F]">Password: {demoPassword.password}</div>
+                  <p className="text-[10px] text-[#1E3A5F]/40 mt-2">Give these to your tester — they log in at the normal /login page. Setting a new password here invalidates the previous one.</p>
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -176,14 +207,10 @@ export default function DemoModeControlPanel({
         <h2 className="font-display text-sm text-[#1E3A5F] mb-2">To disable Demo Mode entirely</h2>
         <p className="text-xs text-[#1E3A5F]/60">
           In your Supabase dashboard, go to Authentication → Users, find the demo account, and either delete it or disable it.
-          This instantly invalidates every login link that's ever been generated — no app deploy or code change needed.
+          This instantly invalidates any password AND any login link that's ever been generated — no app deploy or code change needed.
         </p>
       </div>
 
-      {/* Email content viewer — an iframe with srcDoc renders the saved
-          HTML safely sandboxed from the rest of the admin panel, the
-          same way a browser would show any other email preview,
-          rather than injecting untrusted HTML directly into this page. */}
       {viewingEmail && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setViewingEmail(null)}>
           <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
