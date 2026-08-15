@@ -7,6 +7,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import GuestChatWidget from "@/components/GuestChatWidget";
 import ProductCard from "@/components/ProductCard";
+import HeroCarousel from "@/components/HeroCarousel";
 
 export const metadata: Metadata = {
   title: "Custom cornhole boards, wooden signs, planters & cutting boards",
@@ -46,6 +47,7 @@ export default async function HomePage() {
           immediately instead of scrolling past a screen-dominating
           logo first. */}
       <section className="text-center px-6 pt-10 pb-12 sm:py-16 md:py-20 bg-gradient-to-b from-amber/10 to-cream">
+        <HeroCarousel slides={content.hero.carouselSlides} />
         <Image
           src="/logo-full.png"
           alt="Sunrise Wood Creations — Handcrafted. Built to last."
