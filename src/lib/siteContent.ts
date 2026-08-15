@@ -21,6 +21,10 @@ export interface SiteContent {
     subheading: string;
     ctaText: string;
     secondaryCtaText: string;
+    // Same null-until-real pattern as ProductContent.imageUrl above —
+    // shows an honest placeholder per slide until a real photo is set,
+    // never a stock or invented image.
+    carouselSlides: { src: string | null; alt: string }[];
   };
   contact: {
     phone: string;
@@ -45,7 +49,17 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     heading: "Built by hand.\nMade to last.",
     subheading: "Custom cornhole boards, wooden signs, planter boxes, and cutting boards — crafted to order, one piece at a time.",
     ctaText: "Request a Custom Order",
-    secondaryCtaText: "View Our Work"
+    secondaryCtaText: "View Our Work",
+    // 5 slides matching the 4 product categories plus one general
+    // finished-project shot — replace each src with a real photo when
+    // available; alt text is a hint for which photo goes where.
+    carouselSlides: [
+      { src: null, alt: "Custom cornhole boards built by Sunrise Wood Creations" },
+      { src: null, alt: "Personalized wooden sign built by Sunrise Wood Creations" },
+      { src: null, alt: "Cedar planter box built by Sunrise Wood Creations" },
+      { src: null, alt: "Custom cutting board built by Sunrise Wood Creations" },
+      { src: null, alt: "A finished Sunrise Wood Creations project" }
+    ]
   },
   contact: {
     phone: "(269) 762-1460",
