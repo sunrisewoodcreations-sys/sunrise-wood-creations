@@ -28,24 +28,24 @@ export default function ProductCard({
   // Real photos always get the taller, proportional treatment (unchanged
   // from before) — the placeholder-only case gets a short, fixed height
   // on mobile specifically, growing back to the original proportional
-  // size from `sm:` up, since the "too tall for an empty box" complaint
-  // was about phone width, not tablet/desktop. Featured and non-featured
-  // placeholders use nearly the same mobile height (112px vs 128px) so
-  // all four cards feel like one consistent set on a phone, rather than
-  // the much larger gap the original aspect-ratio-only approach produced.
+  // size from `sm:` up. Featured now uses a wide, cinematic ratio at
+  // sm:/lg: (matching its full-width band shape) instead of the old
+  // tall min-height stretch, which was tuned for a 2x2 corner block
+  // that no longer exists. Mobile behavior (h-32/h-28) is completely
+  // unchanged from the already-approved mobile fix.
   const imageAreaClass = imageUrl
     ? featured
-      ? "aspect-[16/10] lg:aspect-auto lg:flex-1 lg:min-h-[260px]"
+      ? "aspect-[21/9]"
       : "aspect-[4/3]"
     : featured
-      ? "h-32 sm:aspect-[16/10] lg:aspect-auto lg:flex-1 lg:min-h-[260px]"
+      ? "h-32 sm:aspect-[21/9]"
       : "h-28 sm:aspect-[4/3]";
 
   return (
     <Link
       href={`/products/${slug}`}
       className={`group flex flex-col bg-white border border-walnut/10 rounded-xl overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all ${
-        featured ? "sm:col-span-2 lg:col-span-2 lg:row-span-2" : ""
+        featured ? "sm:col-span-2 lg:col-span-3" : ""
       }`}
     >
       <div className={`relative bg-sawdust ${imageAreaClass}`}>

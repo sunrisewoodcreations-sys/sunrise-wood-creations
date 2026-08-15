@@ -76,15 +76,17 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Products — Planter Boxes gets a visually larger, featured
-          treatment (spans two columns / extra height) via the
-          `featured` flag on ProductCard, while the other three keep
-          their own full, clear presentation rather than being
-          shrunk down to make room. */}
+      {/* Products — Planter Boxes gets a full-width featured band at
+          desktop (not a corner block) specifically because a 2x2 block
+          with exactly 4 items always leaves one empty cell — verified by
+          tracing the actual grid auto-placement math, confirmed as a
+          real gap, and fixed by switching to a shape that tiles evenly:
+          one full-width row for the featured card, one perfectly even
+          3-across row for the other three. */}
       <section id="products" className="max-w-5xl mx-auto px-6 py-14 md:py-20 scroll-mt-16">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">What we build</h2>
         <p className="text-center text-walnut/60 mb-10">Every piece is made to order.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-5 lg:auto-rows-fr">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {visibleProducts.map(p => (
             <ProductCard
               key={p.slug}
