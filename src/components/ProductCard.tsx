@@ -25,6 +25,22 @@ export default function ProductCard({
   imageUrl: string | null;
   featured?: boolean;
 }) {
+  // Real photos always get the taller, proportional treatment (unchanged
+  // from before) — the placeholder-only case gets a short, fixed height
+  // on mobile specifically, growing back to the original proportional
+  // size from `sm:` up, since the "too tall for an empty box" complaint
+  // was about phone width, not tablet/desktop. Featured and non-featured
+  // placeholders use nearly the same mobile height (112px vs 128px) so
+  // all four cards feel like one consistent set on a phone, rather than
+  // the much larger gap the original aspect-ratio-only approach produced.
+  const imageAreaClass = imageUrl
+    ? featured
+      ? "aspect-[16/10] lg:aspect-auto lg:flex-1 lg:min-h-[260px]"
+      : "aspect-[4/3]"
+    : featured
+      ? "h-32 sm:aspect-[16/10] lg:aspect-auto lg:flex-1 lg:min-h-[260px]"
+      : "h-28 sm:aspect-[4/3]";
+
   return (
     <Link
       href={`/products/${slug}`}
@@ -32,7 +48,7 @@ export default function ProductCard({
         featured ? "sm:col-span-2 lg:col-span-2 lg:row-span-2" : ""
       }`}
     >
-      <div className={`relative bg-sawdust ${featured ? "aspect-[16/10] lg:aspect-auto lg:flex-1 lg:min-h-[260px]" : "aspect-[4/3]"}`}>
+      <div className={`relative bg-sawdust ${imageAreaClass}`}>
         {imageUrl ? (
           <Image src={imageUrl} alt={name} fill className="object-cover" />
         ) : (
@@ -47,8 +63,8 @@ export default function ProductCard({
         )}
       </div>
       <div className={`p-5 flex flex-col flex-1 ${featured ? "sm:p-6" : ""}`}>
-        <h3 className={`font-display text-walnut mb-1.5 ${featured ? "text-2xl" : "text-lg"}`}>{name}</h3>
-        <p className={`text-walnut/60 mb-4 flex-1 ${featured ? "text-base" : "text-sm"}`}>{shortDesc}</p>
+        <h3 className={`font-display text-walnut mb-1.5 break-words ${featured ? "text-2xl" : "text-lg"}`}>{name}</h3>
+        <p className={`text-walnut/60 mb-4 flex-1 break-words ${featured ? "text-base" : "text-sm"}`}>{shortDesc}</p>
         <span className={`inline-flex items-center gap-1.5 font-semibold text-ember group-hover:gap-2.5 transition-all ${featured ? "text-base" : "text-sm"}`}>
           See options
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
