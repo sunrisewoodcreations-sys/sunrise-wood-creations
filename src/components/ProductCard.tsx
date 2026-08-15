@@ -45,7 +45,16 @@ export default function ProductCard({
     <Link
       href={`/products/${slug}`}
       className={`group flex flex-col bg-white border border-walnut/10 rounded-xl overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all ${
-        featured ? "sm:col-span-2 lg:col-span-3" : ""
+        // lg:order-first moves this card to the front ONLY at the
+        // desktop breakpoint — Cornhole and Wooden Signs come before
+        // Planter Boxes in the underlying product list (which mobile
+        // relies on for its top-to-bottom stacking, unchanged here),
+        // so without this, a full-width item can't fit in row 1 once
+        // those two have already claimed 2 of 3 columns — it gets
+        // pushed to row 2 instead, which is exactly the bug reported.
+        // order affects grid auto-placement itself, not just paint
+        // order, so this also fixes which row the OTHER three land in.
+        featured ? "sm:col-span-2 lg:col-span-3 lg:order-first" : ""
       }`}
     >
       <div className={`relative bg-sawdust ${imageAreaClass}`}>
