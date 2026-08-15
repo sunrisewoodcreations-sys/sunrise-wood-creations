@@ -6,6 +6,7 @@ import { DEFAULT_SITE_CONTENT, SiteContent, PRODUCT_ORDER } from "@/lib/siteCont
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import GuestChatWidget from "@/components/GuestChatWidget";
+import ProductCard from "@/components/ProductCard";
 
 export const metadata: Metadata = {
   title: "Custom cornhole boards, wooden signs, planters & cutting boards",
@@ -17,53 +18,119 @@ export default async function HomePage() {
   const supabase = createClient();
 
   const { data: settingsRow } = await supabase.from("site_settings").select("data").eq("id", 1).single();
-  const content: SiteContent = (settingsRow?.data as SiteContent) || DEFAULT_SITE_CONTENT;
+  // Falls back field-by-field to the defaults, not just row-by-row —
+  // a site_settings row saved before whyUs/customCta/secondaryCtaText
+  // existed would otherwise render those sections with undefined
+  // instead of the real, intended copy.
+  const savedContent = (settingsRow?.data as Partial<SiteContent>) || {};
+  const content: SiteContent = {
+    ...DEFAULT_SITE_CONTENT,
+    ...savedContent,
+    hero: { ...DEFAULT_SITE_CONTENT.hero, ...savedContent.hero },
+    contact: { ...DEFAULT_SITE_CONTENT.contact, ...savedContent.contact },
+    whyUs: { ...DEFAULT_SITE_CONTENT.whyUs, ...savedContent.whyUs },
+    customCta: { ...DEFAULT_SITE_CONTENT.customCta, ...savedContent.customCta }
+  };
   const visibleProducts = PRODUCT_ORDER
-    .map(key => ({ slug: key, ...content.products[key] }))
+    .map(key => ({ slug: key, ...DEFAULT_SITE_CONTENT.products[key], ...content.products?.[key] }))
     .filter(p => p.enabled);
 
   return (
     <div>
       <SiteHeader />
-      <section className="text-center px-6 py-16 md:py-24 bg-gradient-to-b from-amber/10 to-cream">
+
+      {/* Hero — logo sized down substantially on the smallest screens
+          specifically (was w-64/256px, now w-28/112px at the base
+          size), with far less vertical padding before the fold, so a
+          375px-wide phone reaches the actual headline and CTAs almost
+          immediately instead of scrolling past a screen-dominating
+          logo first. */}
+      <section className="text-center px-6 pt-10 pb-12 sm:py-16 md:py-20 bg-gradient-to-b from-amber/10 to-cream">
         <Image
           src="/logo-full.png"
           alt="Sunrise Wood Creations — Handcrafted. Built to last."
           width={1000}
           height={1000}
           priority
-          className="w-64 sm:w-80 md:w-96 h-auto mx-auto mb-6"
+          className="w-28 sm:w-56 md:w-72 h-auto mx-auto mb-5 sm:mb-6"
         />
-        <h1 className="font-display text-4xl md:text-5xl text-walnut font-semibold mb-4 whitespace-pre-line">
+        <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-walnut font-semibold mb-3 sm:mb-4 whitespace-pre-line">
           {content.hero.heading}
         </h1>
-        <p className="text-walnut/70 max-w-lg mx-auto mb-7">
+        <p className="text-walnut/70 max-w-lg mx-auto mb-7 text-[15px] sm:text-base">
           {content.hero.subheading}
         </p>
-        <a href={`tel:${content.contact.phone.replace(/\D/g, "")}`} className="inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold mr-3">
-          {content.hero.ctaText}
-        </a>
-        <a href="/request-quote" className="inline-block border border-walnut text-walnut px-7 py-3.5 rounded-md font-semibold">
-          Request a custom quote
-        </a>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xs sm:max-w-none mx-auto">
+          <Link
+            href="/request-quote"
+            className="w-full sm:w-auto inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
+          >
+            {content.hero.ctaText}
+          </Link>
+          <a
+            href="#products"
+            className="w-full sm:w-auto inline-block border border-walnut text-walnut px-7 py-3.5 rounded-md font-semibold hover:bg-walnut/5 transition-colors"
+          >
+            {content.hero.secondaryCtaText}
+          </a>
+        </div>
       </section>
-      <section className="max-w-5xl mx-auto px-6 py-14 md:py-20">
+
+      {/* Products — Planter Boxes gets a visually larger, featured
+          treatment (spans two columns / extra height) via the
+          `featured` flag on ProductCard, while the other three keep
+          their own full, clear presentation rather than being
+          shrunk down to make room. */}
+      <section id="products" className="max-w-5xl mx-auto px-6 py-14 md:py-20 scroll-mt-16">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">What we build</h2>
         <p className="text-center text-walnut/60 mb-10">Every piece is made to order.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-5 lg:auto-rows-fr">
           {visibleProducts.map(p => (
-            <Link
+            <ProductCard
               key={p.slug}
-              href={`/products/${p.slug}`}
-              className="bg-sawdust border border-walnut/10 rounded-xl p-6 hover:-translate-y-1 transition-transform"
-            >
-              <h3 className="font-display text-lg text-walnut mb-2">{p.name}</h3>
-              <p className="text-sm text-walnut/60 mb-3">{p.shortDesc}</p>
-              <span className="text-ember text-sm font-semibold">View options →</span>
-            </Link>
+              slug={p.slug}
+              name={p.name}
+              shortDesc={p.shortDesc}
+              imageUrl={p.imageUrl}
+              featured={p.slug === "planter-boxes"}
+            />
           ))}
         </div>
       </section>
+
+      {/* Why Sunrise Wood Creations — short, concrete, no exaggerated
+          claims. */}
+      <section className="bg-sawdust/60 px-6 py-14 md:py-20">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-10">{content.whyUs.heading}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
+            {content.whyUs.items.map(item => (
+              <div key={item.title} className="flex gap-3">
+                <span className="flex-shrink-0 w-2 h-2 rounded-full bg-ember mt-2.5" aria-hidden="true" />
+                <div>
+                  <h3 className="font-display text-lg text-walnut mb-1">{item.title}</h3>
+                  <p className="text-sm text-walnut/60">{item.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Custom order CTA — for anyone who didn't see exactly what
+          they want in the categories above. Points at the same
+          existing /request-quote flow as the hero, not a new one. */}
+      <section className="px-6 py-14 md:py-20 text-center bg-walnut">
+        <h2 className="font-display text-2xl md:text-3xl text-cream mb-3">{content.customCta.heading}</h2>
+        <p className="text-cream/70 max-w-md mx-auto mb-7">{content.customCta.subheading}</p>
+        <Link
+          href="/request-quote"
+          className="inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
+        >
+          {content.customCta.ctaText}
+        </Link>
+      </section>
+
       <SiteFooter />
       <GuestChatWidget />
     </div>
