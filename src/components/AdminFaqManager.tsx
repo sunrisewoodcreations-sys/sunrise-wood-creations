@@ -119,7 +119,7 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
                       disabled={busy}
                       className="bg-[#1E3A5F] text-white px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50"
                     >
-                      {busy ? "Saving..." : "Save & Send Email"}
+                      {busy ? "Saving..." : q.status === "answered" ? "Save (no email sent)" : "Save & Send Email"}
                     </button>
                     <button onClick={() => setOpenId(null)} className="text-xs text-[#1E3A5F]/50 font-semibold">Cancel</button>
                   </div>

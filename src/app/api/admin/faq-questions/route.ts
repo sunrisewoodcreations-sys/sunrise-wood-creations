@@ -24,8 +24,15 @@ export async function PATCH(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  const { data: question } = await admin.from("faq_questions").select("name, email, question").eq("id", id).maybeSingle();
+  // status is fetched BEFORE the update specifically to capture whether
+  // this question was already answered prior to this save — that's
+  // what distinguishes "answering for the first time" (should email)
+  // from "editing an already-answered question, or just flipping
+  // public/private" (should NOT email again).
+  const { data: question } = await admin.from("faq_questions").select("name, email, question, status").eq("id", id).maybeSingle();
   if (!question) return NextResponse.json({ error: "Question not found" }, { status: 404 });
+
+  const isFirstAnswer = question.status !== "answered";
 
   const { data: updated, error } = await admin
     .from("faq_questions")
@@ -41,17 +48,19 @@ export async function PATCH(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  // The email always goes to the person who asked, regardless of
-  // public/private — the private/public choice only controls whether
-  // it ALSO appears on the website, never whether they get their answer.
-  await sendFaqAnswerEmail({
-    name: question.name,
-    email: question.email,
-    question: question.question,
-    answer: answer.trim()
-  });
+  // Only sent the very first time this question is answered — editing
+  // the answer text later, or just toggling public/private, saves
+  // normally but never re-triggers the email.
+  if (isFirstAnswer) {
+    await sendFaqAnswerEmail({
+      name: question.name,
+      email: question.email,
+      question: question.question,
+      answer: answer.trim()
+    });
+  }
 
-  return NextResponse.json({ ok: true, question: updated });
+  return NextResponse.json({ ok: true, question: updated, emailSent: isFirstAnswer });
 }
 
 export async function DELETE(req: NextRequest) {
