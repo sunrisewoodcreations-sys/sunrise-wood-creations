@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type FaqItem = { id: string; question: string; answer: string; name: string };
+type FaqItem = { id: string; question: string; answer: string };
 
 export default function FaqAccordion({ items }: { items: FaqItem[] }) {
   const [openId, setOpenId] = useState<string | null>(null);
@@ -31,7 +31,6 @@ export default function FaqAccordion({ items }: { items: FaqItem[] }) {
             {isOpen && (
               <div className="px-5 pb-4 text-sm text-walnut/70">
                 <p>{item.answer}</p>
-                <p className="text-xs text-walnut/40 mt-2">— {item.name}</p>
               </div>
             )}
           </div>

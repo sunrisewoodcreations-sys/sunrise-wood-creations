@@ -5,12 +5,14 @@ import { redirect } from "next/navigation";
 import AdminMobileNav from "@/components/AdminMobileNav";
 
 async function getBadgeCounts(supabase: ReturnType<typeof createClient>) {
-  const [{ count: unrespondedQuotes }, { count: unrespondedGuestChats }, { data: orders }, { data: customerMessages }] =
+  const [{ count: unrespondedQuotes }, { count: unrespondedGuestChats }, { data: orders }, { data: customerMessages }, { count: pendingReviews }, { count: pendingFaq }] =
     await Promise.all([
       supabase.from("quote_requests").select("id", { count: "exact", head: true }).eq("responded", false),
       supabase.from("guest_messages").select("id", { count: "exact", head: true }).eq("responded", false),
       supabase.from("orders").select("id, admin_last_read_at"),
-      supabase.from("order_messages").select("order_id, created_at").eq("sender_role", "customer")
+      supabase.from("order_messages").select("order_id, created_at").eq("sender_role", "customer"),
+      supabase.from("product_reviews").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      supabase.from("faq_questions").select("id", { count: "exact", head: true }).eq("status", "pending")
     ]);
 
   const lastReadByOrder: Record<string, string | null> = {};
@@ -26,7 +28,9 @@ async function getBadgeCounts(supabase: ReturnType<typeof createClient>) {
 
   return {
     quotes: unrespondedQuotes || 0,
-    messages: unreadOrderIds.size + (unrespondedGuestChats || 0)
+    messages: unreadOrderIds.size + (unrespondedGuestChats || 0),
+    reviews: pendingReviews || 0,
+    faq: pendingFaq || 0
   };
 }
 
@@ -38,6 +42,8 @@ function Badge({ count }: { count: number }) {
     </span>
   );
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
@@ -77,8 +83,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/reports", label: "Reports" },
     { href: "/admin/homepage-carousel", label: "Homepage Carousel" },
     { href: "/admin/gallery", label: "Our Work Gallery" },
-    { href: "/admin/reviews", label: "Customer Reviews" },
-    { href: "/admin/faq", label: "FAQ Questions" },
+    { href: "/admin/reviews", label: "Customer Reviews", badge: badges.reviews },
+    { href: "/admin/faq", label: "FAQ Questions", badge: badges.faq },
     ...(profile?.is_demo_account ? [] : [{ href: "/admin/demo-mode", label: "Demo / Test Mode" }])
   ];
 
@@ -124,8 +130,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/reports" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Reports</Link>
           <Link href="/admin/homepage-carousel" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Homepage Carousel</Link>
           <Link href="/admin/gallery" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Our Work Gallery</Link>
-          <Link href="/admin/reviews" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Customer Reviews</Link>
-          <Link href="/admin/faq" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">FAQ Questions</Link>
+          <Link href="/admin/reviews" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">
+            Customer Reviews<Badge count={badges.reviews} />
+          </Link>
+          <Link href="/admin/faq" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">
+            FAQ Questions<Badge count={badges.faq} />
+          </Link>
           {!profile?.is_demo_account && (
             <Link href="/admin/demo-mode" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Demo / Test Mode</Link>
           )}

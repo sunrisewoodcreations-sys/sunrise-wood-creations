@@ -70,12 +70,14 @@ export default async function HomePage() {
     customerFirstName: (reviewCustomerNameById[r.customer_id] || "A customer").split(" ")[0]
   }));
 
-  // Public FAQ — explicitly selects only these four columns. The
-  // email column is never part of this query at all, regardless of
-  // what the row-security policy would otherwise allow through.
+  // Public FAQ — explicitly selects only these three columns. Name
+  // was previously included here (matching an earlier version of the
+  // spec that wanted "— John" style attribution); the current
+  // requirement is that no customer identifying info appears publicly
+  // at all, so name is now excluded from this query too, not just email.
   const { data: publicFaqRows } = await supabase
     .from("faq_questions")
-    .select("id, question, answer, name")
+    .select("id, question, answer")
     .eq("status", "answered")
     .eq("is_public", true)
     .order("answered_at", { ascending: false });
