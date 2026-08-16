@@ -31,6 +31,10 @@ export interface SiteContent {
     email: string;
   };
   products: Record<ProductKey, ProductContent>;
+  howItWorks: {
+    heading: string;
+    steps: { title: string; description: string }[];
+  };
   whyUs: {
     heading: string;
     items: { title: string; description: string }[];
@@ -98,6 +102,14 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       shortDesc: "End-grain and edge-grain boards, engraved names and dates.",
       imageUrl: null
     }
+  },
+  howItWorks: {
+    heading: "How It Works",
+    steps: [
+      { title: "Tell Us What You Want", description: "Reach out with what you're picturing — size, style, and any customization." },
+      { title: "We Build It", description: "Every piece is built to order, by hand, one at a time." },
+      { title: "Pickup or Delivery", description: "We'll let you know as soon as it's ready to pick up." }
+    ]
   },
   whyUs: {
     heading: "Why Sunrise Wood Creations?",

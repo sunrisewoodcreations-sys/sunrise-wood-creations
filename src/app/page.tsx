@@ -8,6 +8,7 @@ import SiteFooter from "@/components/SiteFooter";
 import GuestChatWidget from "@/components/GuestChatWidget";
 import ProductCard from "@/components/ProductCard";
 import HeroCarousel from "@/components/HeroCarousel";
+import OurWorkSection from "@/components/OurWorkSection";
 
 export const metadata: Metadata = {
   title: "Custom cornhole boards, wooden signs, planters & cutting boards",
@@ -20,21 +21,24 @@ export default async function HomePage() {
 
   const { data: settingsRow } = await supabase.from("site_settings").select("data").eq("id", 1).single();
   // Falls back field-by-field to the defaults, not just row-by-row —
-  // a site_settings row saved before whyUs/customCta/secondaryCtaText
-  // existed would otherwise render those sections with undefined
-  // instead of the real, intended copy.
+  // a site_settings row saved before whyUs/customCta/secondaryCtaText/
+  // howItWorks existed would otherwise render those sections with
+  // undefined instead of the real, intended copy.
   const savedContent = (settingsRow?.data as Partial<SiteContent>) || {};
   const content: SiteContent = {
     ...DEFAULT_SITE_CONTENT,
     ...savedContent,
     hero: { ...DEFAULT_SITE_CONTENT.hero, ...savedContent.hero },
     contact: { ...DEFAULT_SITE_CONTENT.contact, ...savedContent.contact },
+    howItWorks: { ...DEFAULT_SITE_CONTENT.howItWorks, ...savedContent.howItWorks },
     whyUs: { ...DEFAULT_SITE_CONTENT.whyUs, ...savedContent.whyUs },
     customCta: { ...DEFAULT_SITE_CONTENT.customCta, ...savedContent.customCta }
   };
   const visibleProducts = PRODUCT_ORDER
     .map(key => ({ slug: key, ...DEFAULT_SITE_CONTENT.products[key], ...content.products?.[key] }))
     .filter(p => p.enabled);
+
+  const { data: galleryPhotos } = await supabase.from("gallery_photos").select("*").order("sort_order", { ascending: true });
 
   return (
     <div>
@@ -101,6 +105,25 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* How It Works — simple 3-step process explanation, same
+          data-driven pattern as Why Us for future editability. */}
+      <section className="max-w-4xl mx-auto px-6 py-14 md:py-20">
+        <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-10">{content.howItWorks.heading}</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+          {content.howItWorks.steps.map((step, i) => (
+            <div key={step.title} className="text-center">
+              <div className="w-10 h-10 rounded-full bg-ember text-white font-display text-lg flex items-center justify-center mx-auto mb-3">
+                {i + 1}
+              </div>
+              <h3 className="font-display text-lg text-walnut mb-1">{step.title}</h3>
+              <p className="text-sm text-walnut/60">{step.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <OurWorkSection photos={galleryPhotos || []} />
 
       {/* Why Sunrise Wood Creations — short, concrete, no exaggerated
           claims. */}
