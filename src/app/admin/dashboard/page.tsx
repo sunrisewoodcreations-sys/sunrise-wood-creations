@@ -186,6 +186,36 @@ function QuoteRequestTaskSection({ requests }: { requests: any[] }) {
   );
 }
 
+function PendingReviewsTaskSection({ count }: { count: number }) {
+  if (count === 0) return null;
+  return (
+    <div className="mb-6">
+      <h2 className="font-display text-base text-[#1E3A5F] mb-2">⭐ Pending Reviews ({count})</h2>
+      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+        <Link href="/admin/reviews" className="flex items-center justify-between gap-2 px-4 py-3 hover:bg-cream/60 transition-colors">
+          <span className="text-sm text-[#1E3A5F]">Customer reviews waiting for approval</span>
+          <span className="text-xs text-ember font-semibold">Review →</span>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function PendingFaqTaskSection({ count }: { count: number }) {
+  if (count === 0) return null;
+  return (
+    <div className="mb-6">
+      <h2 className="font-display text-base text-[#1E3A5F] mb-2">❓ New Questions ({count})</h2>
+      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+        <Link href="/admin/faq" className="flex items-center justify-between gap-2 px-4 py-3 hover:bg-cream/60 transition-colors">
+          <span className="text-sm text-[#1E3A5F]">Customer questions waiting for an answer</span>
+          <span className="text-xs text-ember font-semibold">Answer →</span>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function LowInventoryTaskSection({ products }: { products: any[] }) {
   if (products.length === 0) return null;
   return (
@@ -259,6 +289,15 @@ export default async function DashboardPage() {
       .gte("appointment_date", todayStr)
       .lte("appointment_date", addDaysToDateStr(todayStr, 7))
       .order("appointment_date", { ascending: true })
+  ]);
+
+  // Separate, independent fetch — reviews and FAQ questions aren't
+  // demo-scoped data (no is_demo column on either table, since these
+  // are site-wide content, not per-customer records), so this
+  // deliberately isn't threaded into the demo-filtered Promise.all above.
+  const [{ count: pendingReviewsCount }, { count: pendingFaqCount }] = await Promise.all([
+    supabase.from("product_reviews").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("faq_questions").select("id", { count: "exact", head: true }).eq("status", "pending")
   ]);
 
   const allOrders = orders || [];
@@ -481,6 +520,8 @@ export default async function DashboardPage() {
         <TaskSection emoji="💬" title="Waiting on Customer" orders={waitingOnCustomerTaskOrders} />
         <TaskSection emoji="💰" title="Outstanding Balance" orders={outstandingBalanceTaskOrders} showBalance />
         <QuoteRequestTaskSection requests={unrespondedQuoteRequests || []} />
+        <PendingReviewsTaskSection count={pendingReviewsCount || 0} />
+        <PendingFaqTaskSection count={pendingFaqCount || 0} />
         <LowInventoryTaskSection products={lowInventoryProducts} />
       </div>
 

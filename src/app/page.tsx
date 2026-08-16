@@ -9,6 +9,9 @@ import GuestChatWidget from "@/components/GuestChatWidget";
 import ProductCard from "@/components/ProductCard";
 import HeroCarousel from "@/components/HeroCarousel";
 import OurWorkSection from "@/components/OurWorkSection";
+import PublicReviewsSection from "@/components/PublicReviewsSection";
+import FaqAccordion from "@/components/FaqAccordion";
+import AskQuestionForm from "@/components/AskQuestionForm";
 
 export const metadata: Metadata = {
   title: "Custom cornhole boards, wooden signs, planters & cutting boards",
@@ -39,6 +42,43 @@ export default async function HomePage() {
     .filter(p => p.enabled);
 
   const { data: galleryPhotos } = await supabase.from("gallery_photos").select("*").order("sort_order", { ascending: true });
+
+  // Approved reviews only — joined via the same lookup-map pattern
+  // used everywhere else in this app (fetch related rows separately,
+  // merge by id in JS) rather than a nested query.
+  const { data: approvedReviews } = await supabase.from("product_reviews").select("*").eq("status", "approved").order("created_at", { ascending: false });
+  const reviewList = approvedReviews || [];
+  const reviewItemIds = [...new Set(reviewList.map((r: any) => r.order_item_id))];
+  const reviewCustomerIds = [...new Set(reviewList.map((r: any) => r.customer_id))];
+  const { data: reviewOrderItems } = reviewItemIds.length > 0
+    ? await supabase.from("order_items").select("id, title").in("id", reviewItemIds)
+    : { data: [] as any[] };
+  const { data: reviewCustomers } = reviewCustomerIds.length > 0
+    ? await supabase.from("profiles").select("id, full_name").in("id", reviewCustomerIds)
+    : { data: [] as any[] };
+  const reviewItemTitleById: Record<string, string> = {};
+  (reviewOrderItems || []).forEach((i: any) => { reviewItemTitleById[i.id] = i.title; });
+  const reviewCustomerNameById: Record<string, string> = {};
+  (reviewCustomers || []).forEach((c: any) => { reviewCustomerNameById[c.id] = c.full_name; });
+  const publicReviews = reviewList.map((r: any) => ({
+    id: r.id,
+    rating: r.rating,
+    review_text: r.review_text,
+    productTitle: reviewItemTitleById[r.order_item_id] || "a custom piece",
+    // Same first-name-only convention already used on the account
+    // welcome message.
+    customerFirstName: (reviewCustomerNameById[r.customer_id] || "A customer").split(" ")[0]
+  }));
+
+  // Public FAQ — explicitly selects only these four columns. The
+  // email column is never part of this query at all, regardless of
+  // what the row-security policy would otherwise allow through.
+  const { data: publicFaqRows } = await supabase
+    .from("faq_questions")
+    .select("id, question, answer, name")
+    .eq("status", "answered")
+    .eq("is_public", true)
+    .order("answered_at", { ascending: false });
 
   return (
     <div>
@@ -142,6 +182,17 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
+      </section>
+
+      <PublicReviewsSection reviews={publicReviews} />
+
+      {/* FAQ — accordion of admin-approved public Q&A, plus the Ask a
+          Question form for anyone, no account needed. */}
+      <section className="px-6 py-14 md:py-20">
+        <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">Frequently Asked Questions</h2>
+        <p className="text-center text-walnut/60 mb-10">Common questions about ordering, customization, and pickup.</p>
+        <FaqAccordion items={publicFaqRows || []} />
+        <AskQuestionForm />
       </section>
 
       {/* Custom order CTA — for anyone who didn't see exactly what

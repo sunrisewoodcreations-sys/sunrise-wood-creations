@@ -475,6 +475,45 @@ export async function sendCustomerNewMessageNotice(opts: {
   });
 }
 
+export async function sendFaqAnswerEmail(opts: {
+  name: string;
+  email: string;
+  question: string;
+  answer: string;
+  orderId?: string;
+}) {
+  const safeName = escapeHtml(opts.name);
+  const safeQuestion = escapeHtml(opts.question);
+  const safeAnswer = escapeHtml(opts.answer);
+
+  const html = shell({
+    preheader: `An answer to your question from Sunrise Wood Creations`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">Hi ${safeName}, thanks for reaching out — here's an answer to your question.</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
+        <tr>
+          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
+            "${safeQuestion}"
+          </td>
+        </tr>
+      </table>
+      <p style="margin: 0 0 16px; white-space: pre-line;">${safeAnswer}</p>
+      <p style="margin: 16px 0 0; font-size: 13px; color: #8a7a6b;">
+        — Sunrise Wood Creations
+      </p>
+    `
+  });
+
+  return sendViaResend({
+    emailType: "sendFaqAnswerEmail",
+    orderId: opts.orderId,
+    from: FROM,
+    to: opts.email,
+    subject: "An answer to your question — Sunrise Wood Creations",
+    html
+  });
+}
+
 export async function sendGuestMessageNotice(opts: {
   name: string;
   email: string;

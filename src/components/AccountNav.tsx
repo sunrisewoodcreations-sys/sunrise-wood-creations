@@ -5,6 +5,7 @@ const LINKS = [
   { href: "/account/quotes", label: "Quotes" },
   { href: "/account/orders", label: "Orders" },
   { href: "/account/purchases", label: "Previous Purchases" },
+  { href: "/account/reviews", label: "My Reviews" },
   { href: "/account/settings", label: "Profile" }
 ];
 

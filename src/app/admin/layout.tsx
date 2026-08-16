@@ -77,6 +77,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/reports", label: "Reports" },
     { href: "/admin/homepage-carousel", label: "Homepage Carousel" },
     { href: "/admin/gallery", label: "Our Work Gallery" },
+    { href: "/admin/reviews", label: "Customer Reviews" },
+    { href: "/admin/faq", label: "FAQ Questions" },
     ...(profile?.is_demo_account ? [] : [{ href: "/admin/demo-mode", label: "Demo / Test Mode" }])
   ];
 
@@ -122,6 +124,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/reports" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Reports</Link>
           <Link href="/admin/homepage-carousel" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Homepage Carousel</Link>
           <Link href="/admin/gallery" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Our Work Gallery</Link>
+          <Link href="/admin/reviews" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Customer Reviews</Link>
+          <Link href="/admin/faq" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">FAQ Questions</Link>
           {!profile?.is_demo_account && (
             <Link href="/admin/demo-mode" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Demo / Test Mode</Link>
           )}
