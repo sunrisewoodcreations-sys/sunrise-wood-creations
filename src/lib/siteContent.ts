@@ -1,5 +1,20 @@
 export type ProductKey = "cornhole-boards" | "wooden-signs" | "planter-boxes" | "cutting-boards";
 
+// FAQ categories deliberately reuse the exact same slug values as
+// ProductKey, plus "general" — this makes mapping a category to its
+// matching product page a direct, trivial lookup, not a separate
+// translation table that could drift out of sync.
+export type FaqCategory = "general" | ProductKey;
+export const FAQ_CATEGORY_ORDER: FaqCategory[] = ["general", "cornhole-boards", "wooden-signs", "planter-boxes", "cutting-boards"];
+export const FAQ_CATEGORY_LABELS: Record<FaqCategory, string> = {
+  "general": "General",
+  "cornhole-boards": "Cornhole Boards",
+  "wooden-signs": "Wooden Signs",
+  "planter-boxes": "Planter Boxes",
+  "cutting-boards": "Cutting Boards"
+};
+
+
 export interface ProductContent {
   enabled: boolean;
   name: string;

@@ -70,17 +70,17 @@ export default async function HomePage() {
     customerFirstName: (reviewCustomerNameById[r.customer_id] || "A customer").split(" ")[0]
   }));
 
-  // Public FAQ — explicitly selects only these three columns. Name
-  // was previously included here (matching an earlier version of the
-  // spec that wanted "— John" style attribution); the current
-  // requirement is that no customer identifying info appears publicly
-  // at all, so name is now excluded from this query too, not just email.
+  // Public FAQ — explicitly selects only these four columns (category
+  // added for the new grouping requirement). Name and email are still
+  // never part of this query at all — no customer identifying info
+  // appears publicly, matching the current requirement precisely.
   const { data: publicFaqRows } = await supabase
     .from("faq_questions")
-    .select("id, question, answer")
+    .select("id, question, answer, category")
     .eq("status", "answered")
     .eq("is_public", true)
-    .order("answered_at", { ascending: false });
+    .order("category", { ascending: true })
+    .order("sort_order", { ascending: true });
 
   return (
     <div>
