@@ -85,6 +85,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/gallery", label: "Our Work Gallery" },
     { href: "/admin/reviews", label: "Customer Reviews", badge: badges.reviews },
     { href: "/admin/faq", label: "FAQ Questions", badge: badges.faq },
+    { href: "/admin/website-status", label: "Website Status" },
     ...(profile?.is_demo_account ? [] : [{ href: "/admin/demo-mode", label: "Demo / Test Mode" }])
   ];
 
@@ -136,6 +137,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/faq" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">
             FAQ Questions<Badge count={badges.faq} />
           </Link>
+          <Link href="/admin/website-status" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Website Status</Link>
           {!profile?.is_demo_account && (
             <Link href="/admin/demo-mode" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Demo / Test Mode</Link>
           )}

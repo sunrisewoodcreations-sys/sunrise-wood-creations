@@ -31,6 +31,10 @@ export interface ProductContent {
 }
 
 export interface SiteContent {
+  // "live" if unset — matches middleware's fail-open default, so a
+  // brand new site_settings row (or one saved before this field
+  // existed) never accidentally locks visitors out.
+  websiteStatus?: "coming_soon" | "live";
   hero: {
     heading: string;
     subheading: string;
@@ -64,6 +68,7 @@ export interface SiteContent {
 export const PRODUCT_ORDER: ProductKey[] = ["cornhole-boards", "wooden-signs", "planter-boxes", "cutting-boards"];
 
 export const DEFAULT_SITE_CONTENT: SiteContent = {
+  websiteStatus: "live",
   hero: {
     heading: "Built by hand.\nMade to last.",
     subheading: "Custom cornhole boards, wooden signs, planter boxes, and cutting boards — crafted to order, one piece at a time.",
