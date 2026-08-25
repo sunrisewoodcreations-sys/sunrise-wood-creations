@@ -23,8 +23,35 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  const [addingFaq, setAddingFaq] = useState(false);
+  const [newQuestion, setNewQuestion] = useState("");
+  const [newAnswer, setNewAnswer] = useState("");
+  const [addError, setAddError] = useState("");
+
   const filtered = questions.filter(q => q.status === filter);
   const pendingCount = questions.filter(q => q.status === "pending").length;
+
+  async function handleAddFaq() {
+    if (!newQuestion.trim() || !newAnswer.trim()) {
+      setAddError("Both a question and an answer are required.");
+      return;
+    }
+    setBusy(true);
+    setAddError("");
+    const res = await fetch("/api/admin/faq-questions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: newQuestion, answer: newAnswer })
+    });
+    const body = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) { setAddError(body.error || "Couldn't add this FAQ."); return; }
+    setNewQuestion("");
+    setNewAnswer("");
+    setAddingFaq(false);
+    setFilter("answered");
+    router.refresh();
+  }
 
   function openAnswerForm(q: Question) {
     setOpenId(q.id);
@@ -61,6 +88,52 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
 
   return (
     <div>
+      <div className="mb-5">
+        {!addingFaq ? (
+          <button
+            onClick={() => setAddingFaq(true)}
+            className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold"
+          >
+            + Add FAQ manually
+          </button>
+        ) : (
+          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
+            <p className="text-xs text-[#1E3A5F]/50 mb-3">
+              No customer needed — this goes straight to public on the FAQ page, with no email sent (there's no one to send it to).
+            </p>
+            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Question</label>
+            <input
+              value={newQuestion}
+              onChange={e => setNewQuestion(e.target.value)}
+              className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm mb-3"
+            />
+            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Answer</label>
+            <textarea
+              value={newAnswer}
+              onChange={e => setNewAnswer(e.target.value)}
+              rows={3}
+              className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm mb-2"
+            />
+            {addError && <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-2 py-1.5 mb-2">{addError}</p>}
+            <div className="flex gap-2">
+              <button
+                onClick={handleAddFaq}
+                disabled={busy}
+                className="bg-[#1E3A5F] text-white px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50"
+              >
+                {busy ? "Adding..." : "Add to public FAQ"}
+              </button>
+              <button
+                onClick={() => { setAddingFaq(false); setAddError(""); setNewQuestion(""); setNewAnswer(""); }}
+                className="text-xs text-[#1E3A5F]/50 font-semibold"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="flex gap-2 mb-5">
         <button
           onClick={() => setFilter("pending")}
