@@ -17,7 +17,7 @@ async function requireAdmin() {
 export async function POST(req: NextRequest) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
 
-  const { question, answer } = await req.json();
+  const { question, answer, category } = await req.json();
   if (!question?.trim()) return NextResponse.json({ error: "Question text is required" }, { status: 400 });
   if (!answer?.trim()) return NextResponse.json({ error: "Answer text is required" }, { status: 400 });
 
@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
       email: "admin@sunrisewoodcreations.com",
       question: question.trim(),
       answer: answer.trim(),
+      category: category || "general",
       status: "answered",
       is_public: true,
       answered_at: new Date().toISOString()
@@ -44,15 +45,38 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, question: inserted });
 }
 
-// Saves an answer and sends the notification email — this is the ONLY
-// place in the whole FAQ system that sends an email. Submitting a
-// question (the public route) never does; this route only runs when
-// an admin explicitly writes and saves an answer, matching the
-// requirement precisely.
+// Saves an answer (with category) and sends the notification email —
+// this is the ONLY place in the whole FAQ system that sends an email.
+// Submitting a question (the public route) never does; this route
+// only runs when an admin explicitly writes and saves an answer,
+// matching the requirement precisely.
+//
+// Also handles reordering, via an explicit { action: "reorder" } body
+// rather than a separate endpoint — same swap-two-sort_order-values
+// approach already proven for the gallery, kept in this file since
+// it's a small, closely related admin-only FAQ operation, not a
+// reason to add a whole new route.
 export async function PATCH(req: NextRequest) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
 
-  const { id, answer, isPublic } = await req.json();
+  const body = await req.json();
+
+  if (body.action === "reorder") {
+    const { idA, idB } = body;
+    if (!idA || !idB) return NextResponse.json({ error: "Missing idA/idB" }, { status: 400 });
+
+    const admin = createAdminClient();
+    const { data: rows } = await admin.from("faq_questions").select("id, sort_order").in("id", [idA, idB]);
+    if (!rows || rows.length !== 2) return NextResponse.json({ error: "Both FAQs must exist" }, { status: 404 });
+
+    const rowA = rows.find(r => r.id === idA)!;
+    const rowB = rows.find(r => r.id === idB)!;
+    await admin.from("faq_questions").update({ sort_order: rowB.sort_order }).eq("id", idA);
+    await admin.from("faq_questions").update({ sort_order: rowA.sort_order }).eq("id", idB);
+    return NextResponse.json({ ok: true });
+  }
+
+  const { id, answer, isPublic, category } = body;
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
   if (!answer?.trim()) return NextResponse.json({ error: "Answer text is required" }, { status: 400 });
 
@@ -73,6 +97,7 @@ export async function PATCH(req: NextRequest) {
     .update({
       answer: answer.trim(),
       is_public: !!isPublic,
+      category: category || "general",
       status: "answered",
       answered_at: new Date().toISOString()
     })
