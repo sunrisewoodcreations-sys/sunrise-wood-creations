@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 export default function AskQuestionForm() {
   const [open, setOpen] = useState(false);
@@ -21,6 +22,7 @@ export default function AskQuestionForm() {
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) { setStatus("error"); setError(body.error || "Couldn't submit your question."); return; }
+    trackEvent("ask_question_submit");
     setStatus("done");
     setName(""); setEmail(""); setQuestion("");
   }
@@ -29,7 +31,7 @@ export default function AskQuestionForm() {
     <>
       <div className="text-center mt-8">
         <button
-          onClick={() => setOpen(true)}
+          onClick={() => { trackEvent("ask_question_click"); setOpen(true); }}
           className="inline-block border border-walnut text-walnut px-6 py-3 rounded-md font-semibold hover:bg-walnut/5 transition-colors"
         >
           Ask a Question

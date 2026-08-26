@@ -6,6 +6,7 @@ import { DEFAULT_SITE_CONTENT, SiteContent, ProductKey, PRODUCT_ORDER } from "@/
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import GuestChatWidget from "@/components/GuestChatWidget";
+import TrackedLink from "@/components/TrackedLink";
 import FaqAccordion from "@/components/FaqAccordion";
 import AskQuestionForm from "@/components/AskQuestionForm";
 
@@ -51,9 +52,14 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <h1 className="font-display text-3xl md:text-4xl text-walnut mb-2">{product.name}</h1>
         <p className="text-lg text-ember font-medium mb-6">{product.tagline}</p>
         <p className="text-walnut/70 mb-8 leading-relaxed">{product.description}</p>
-        <a href={`tel:${content.contact.phone.replace(/\D/g, "")}`} className="inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold">
+        <TrackedLink
+          href={`tel:${content.contact.phone.replace(/\D/g, "")}`}
+          className="inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold"
+          eventName="phone_click"
+          eventParams={{ location: "product_page", category: params.slug }}
+        >
           Call to get a quote: {content.contact.phone}
-        </a>
+        </TrackedLink>
 
         <div className="mt-14">
           <h2 className="font-display text-xl text-walnut mb-4">Frequently Asked Questions</h2>

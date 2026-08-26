@@ -1,5 +1,5 @@
-import Link from "next/link";
 import Image from "next/image";
+import TrackedLink from "@/components/TrackedLink";
 
 // Shared by every category card on the homepage, including the
 // featured Planter Boxes treatment — one card design, sized
@@ -42,8 +42,10 @@ export default function ProductCard({
       : "h-28 sm:aspect-[4/3]";
 
   return (
-    <Link
+    <TrackedLink
       href={`/products/${slug}`}
+      eventName="product_category_click"
+      eventParams={{ category: slug }}
       className={`group flex flex-col bg-white border border-walnut/10 rounded-xl overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all ${
         // lg:order-first moves this card to the front ONLY at the
         // desktop breakpoint — Cornhole and Wooden Signs come before
@@ -81,6 +83,6 @@ export default function ProductCard({
           </svg>
         </span>
       </div>
-    </Link>
+    </TrackedLink>
   );
 }

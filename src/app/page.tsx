@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
@@ -7,6 +6,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import GuestChatWidget from "@/components/GuestChatWidget";
 import ProductCard from "@/components/ProductCard";
+import TrackedLink from "@/components/TrackedLink";
 import HeroCarousel from "@/components/HeroCarousel";
 import OurWorkSection from "@/components/OurWorkSection";
 import PublicReviewsSection from "@/components/PublicReviewsSection";
@@ -23,10 +23,6 @@ export default async function HomePage() {
   const supabase = createClient();
 
   const { data: settingsRow } = await supabase.from("site_settings").select("data").eq("id", 1).single();
-  // Falls back field-by-field to the defaults, not just row-by-row —
-  // a site_settings row saved before whyUs/customCta/secondaryCtaText/
-  // howItWorks existed would otherwise render those sections with
-  // undefined instead of the real, intended copy.
   const savedContent = (settingsRow?.data as Partial<SiteContent>) || {};
   const content: SiteContent = {
     ...DEFAULT_SITE_CONTENT,
@@ -43,9 +39,6 @@ export default async function HomePage() {
 
   const { data: galleryPhotos } = await supabase.from("gallery_photos").select("*").order("sort_order", { ascending: true });
 
-  // Approved reviews only — joined via the same lookup-map pattern
-  // used everywhere else in this app (fetch related rows separately,
-  // merge by id in JS) rather than a nested query.
   const { data: approvedReviews } = await supabase.from("product_reviews").select("*").eq("status", "approved").order("created_at", { ascending: false });
   const reviewList = approvedReviews || [];
   const reviewItemIds = [...new Set(reviewList.map((r: any) => r.order_item_id))];
@@ -65,15 +58,9 @@ export default async function HomePage() {
     rating: r.rating,
     review_text: r.review_text,
     productTitle: reviewItemTitleById[r.order_item_id] || "a custom piece",
-    // Same first-name-only convention already used on the account
-    // welcome message.
     customerFirstName: (reviewCustomerNameById[r.customer_id] || "A customer").split(" ")[0]
   }));
 
-  // Public FAQ — explicitly selects only these four columns (category
-  // added for the new grouping requirement). Name and email are still
-  // never part of this query at all — no customer identifying info
-  // appears publicly, matching the current requirement precisely.
   const { data: publicFaqRows } = await supabase
     .from("faq_questions")
     .select("id, question, answer, category")
@@ -86,12 +73,6 @@ export default async function HomePage() {
     <div>
       <SiteHeader />
 
-      {/* Hero — logo sized down substantially on the smallest screens
-          specifically (was w-64/256px, now w-28/112px at the base
-          size), with far less vertical padding before the fold, so a
-          375px-wide phone reaches the actual headline and CTAs almost
-          immediately instead of scrolling past a screen-dominating
-          logo first. */}
       <section className="text-center px-6 pt-10 pb-12 sm:py-16 md:py-20 bg-gradient-to-b from-amber/10 to-cream">
         <HeroCarousel slides={content.hero.carouselSlides} />
         <Image
@@ -109,28 +90,24 @@ export default async function HomePage() {
           {content.hero.subheading}
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xs sm:max-w-none mx-auto">
-          <Link
+          <TrackedLink
             href="/request-quote"
             className="w-full sm:w-auto inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
+            eventName="request_quote_click"
+            eventParams={{ location: "hero" }}
           >
             {content.hero.ctaText}
-          </Link>
-          <a
+          </TrackedLink>
+          <TrackedLink
             href="#products"
             className="w-full sm:w-auto inline-block border border-walnut text-walnut px-7 py-3.5 rounded-md font-semibold hover:bg-walnut/5 transition-colors"
+            eventName="view_work_click"
           >
             {content.hero.secondaryCtaText}
-          </a>
+          </TrackedLink>
         </div>
       </section>
 
-      {/* Products — Planter Boxes gets a full-width featured band at
-          desktop (not a corner block) specifically because a 2x2 block
-          with exactly 4 items always leaves one empty cell — verified by
-          tracing the actual grid auto-placement math, confirmed as a
-          real gap, and fixed by switching to a shape that tiles evenly:
-          one full-width row for the featured card, one perfectly even
-          3-across row for the other three. */}
       <section id="products" className="max-w-5xl mx-auto px-6 py-14 md:py-20 scroll-mt-16">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">What we build</h2>
         <p className="text-center text-walnut/60 mb-10">Every piece is made to order.</p>
@@ -148,8 +125,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* How It Works — simple 3-step process explanation, same
-          data-driven pattern as Why Us for future editability. */}
       <section className="max-w-4xl mx-auto px-6 py-14 md:py-20">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-10">{content.howItWorks.heading}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
@@ -167,8 +142,6 @@ export default async function HomePage() {
 
       <OurWorkSection photos={galleryPhotos || []} />
 
-      {/* Why Sunrise Wood Creations — short, concrete, no exaggerated
-          claims. */}
       <section className="bg-sawdust/60 px-6 py-14 md:py-20">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-10">{content.whyUs.heading}</h2>
@@ -188,8 +161,6 @@ export default async function HomePage() {
 
       <PublicReviewsSection reviews={publicReviews} />
 
-      {/* FAQ — accordion of admin-approved public Q&A, plus the Ask a
-          Question form for anyone, no account needed. */}
       <section className="px-6 py-14 md:py-20">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">Frequently Asked Questions</h2>
         <p className="text-center text-walnut/60 mb-10">Common questions about ordering, customization, and pickup.</p>
@@ -197,18 +168,17 @@ export default async function HomePage() {
         <AskQuestionForm />
       </section>
 
-      {/* Custom order CTA — for anyone who didn't see exactly what
-          they want in the categories above. Points at the same
-          existing /request-quote flow as the hero, not a new one. */}
       <section className="px-6 py-14 md:py-20 text-center bg-walnut">
         <h2 className="font-display text-2xl md:text-3xl text-cream mb-3">{content.customCta.heading}</h2>
         <p className="text-cream/70 max-w-md mx-auto mb-7">{content.customCta.subheading}</p>
-        <Link
+        <TrackedLink
           href="/request-quote"
           className="inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
+          eventName="request_quote_click"
+          eventParams={{ location: "bottom_cta" }}
         >
           {content.customCta.ctaText}
-        </Link>
+        </TrackedLink>
       </section>
 
       <SiteFooter />

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_SITE_CONTENT, SiteContent } from "@/lib/siteContent";
+import TrackedLink from "@/components/TrackedLink";
 
 // Same footer as the homepage, shared so it stays in sync everywhere.
 export default async function SiteFooter() {
@@ -18,13 +19,23 @@ export default async function SiteFooter() {
     <footer className="bg-walnut text-cream text-center pt-9 pb-20 px-6 text-sm">
       <div>Sunrise Wood Creations</div>
       <div className="opacity-80 mt-1.5 flex items-center justify-center gap-2 flex-wrap px-2">
-        <a href={`tel:${content.contact.phone.replace(/\D/g, "")}`} className="hover:text-cream hover:opacity-100 transition-opacity">
+        <TrackedLink
+          href={`tel:${content.contact.phone.replace(/\D/g, "")}`}
+          className="hover:text-cream hover:opacity-100 transition-opacity"
+          eventName="phone_click"
+          eventParams={{ location: "footer" }}
+        >
           {content.contact.phone}
-        </a>
+        </TrackedLink>
         <span aria-hidden="true">·</span>
-        <a href={`mailto:${content.contact.email}`} className="hover:text-cream hover:opacity-100 transition-opacity break-all">
+        <TrackedLink
+          href={`mailto:${content.contact.email}`}
+          className="hover:text-cream hover:opacity-100 transition-opacity break-all"
+          eventName="email_click"
+          eventParams={{ location: "footer" }}
+        >
           {content.contact.email}
-        </a>
+        </TrackedLink>
       </div>
     </footer>
   );
