@@ -39,8 +39,8 @@ export default async function SiteFooter() {
       </div>
       {/* Hours match the OpeningHoursSpecification in layout.tsx's JSON-LD.
           Update both places if hours ever change. */}
-      <div className="opacity-80 mt-1.5">Mon–Fri: 10:00 AM – 7:00 PM
-      Appointment Only Saterday-Sunday</div>
+      <div className="opacity-80 mt-1.5">Mon–Fri: 10:00 AM – 7:00 PM</div>\
+      <div className="opacity-80 mt-1.5">Appointment Only Saterday-Sunday</div>
     </footer>
   );
 }
