@@ -37,6 +37,9 @@ export default async function SiteFooter() {
           {content.contact.email}
         </TrackedLink>
       </div>
+      {/* Hours match the OpeningHoursSpecification in layout.tsx's JSON-LD.
+          Update both places if hours ever change. */}
+      <div className="opacity-80 mt-1.5">Mon–Fri: 10:00 AM – 7:00 PM</div>
     </footer>
   );
 }
