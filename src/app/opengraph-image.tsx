@@ -45,22 +45,24 @@ export default async function OpengraphImage() {
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logoBase64} width={340} height={172} alt="" style={{ objectFit: "contain", marginBottom: 28 }} />
+        <img src={logoBase64} width={620} height={314} alt="" style={{ objectFit: "contain", marginBottom: 20 }} />
         <div
           style={{
-            fontSize: 40,
+            fontSize: 62,
             fontWeight: 600,
             color: "#3D2B1F", // walnut
-            marginBottom: 12
+            marginBottom: 14,
+            textAlign: "center"
           }}
         >
           Built by hand. Made to last.
         </div>
         <div
           style={{
-            fontSize: 24,
+            fontSize: 34,
             color: "#3D2B1F",
-            opacity: 0.7
+            opacity: 0.75,
+            textAlign: "center"
           }}
         >
           Custom cornhole boards · signs · planters · cutting boards
