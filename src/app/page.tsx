@@ -16,7 +16,8 @@ import AskQuestionForm from "@/components/AskQuestionForm";
 export const metadata: Metadata = {
   title: "Custom cornhole boards, wooden signs, planters & cutting boards",
   description:
-    "Sunrise Wood Creations builds handcrafted, made-to-order cornhole boards, wooden signs, planter boxes, and cutting boards in Michigan. Request a custom order today."
+    "Sunrise Wood Creations builds handcrafted, made-to-order cornhole boards, wooden signs, planter boxes, and cutting boards in Michigan. Request a custom order today.",
+  alternates: { canonical: "/" }
 };
 
 export default async function HomePage() {
