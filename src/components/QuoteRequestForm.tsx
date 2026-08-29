@@ -11,11 +11,11 @@ const PRODUCT_TYPES = [
   { value: "other", label: "Something else" }
 ];
 
-export default function QuoteRequestForm() {
+export default function QuoteRequestForm({ initialProductType = "" }: { initialProductType?: string }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [productType, setProductType] = useState("");
+  const [productType, setProductType] = useState(initialProductType);
   const [dimensions, setDimensions] = useState("");
   const [woodType, setWoodType] = useState("");
   const [budget, setBudget] = useState("");
