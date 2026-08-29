@@ -9,7 +9,7 @@ export const metadata = {
   alternates: { canonical: "/request-quote" }
 };
 
-export default function RequestQuotePage() {
+export default function RequestQuotePage({ searchParams }: { searchParams: { type?: string } }) {
   return (
     <div>
       <SiteHeader />
@@ -18,7 +18,7 @@ export default function RequestQuotePage() {
         <p className="text-walnut/70 mb-8">
           Tell us what you're picturing — size, wood type, timeline, anything that helps — and we'll get back to you with pricing.
         </p>
-        <QuoteRequestForm />
+        <QuoteRequestForm initialProductType={searchParams.type} />
       </section>
       <SiteFooter />
       <GuestChatWidget />
