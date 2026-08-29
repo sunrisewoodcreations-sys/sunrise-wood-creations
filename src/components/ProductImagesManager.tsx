@@ -3,102 +3,144 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Product = { name: string; imageUrl: string | null };
+type Slide = { src: string | null; alt: string };
+type ProductGallery = { key: string; name: string; images: Slide[] };
 
 export default function ProductImagesManager({
   initialProducts
 }: {
-  initialProducts: { key: string; name: string; imageUrl: string | null }[];
+  initialProducts: ProductGallery[];
 }) {
   const router = useRouter();
   const [products, setProducts] = useState(initialProducts);
-  const [busyKey, setBusyKey] = useState<string | null>(null);
+  // Tracks which single slot is mid-upload, identified by both the
+  // product and the slot index — otherwise uploading a photo for one
+  // product's slot 0 would also show "Uploading..." on every other
+  // product's slot 0 at the same time.
+  const [busy, setBusy] = useState<{ key: string; index: number } | null>(null);
   const [error, setError] = useState("");
 
-  function applyUpdatedImageUrls(updated: Record<string, Product>) {
-    setProducts(prev => prev.map(p => ({ ...p, imageUrl: updated[p.key]?.imageUrl ?? p.imageUrl })));
+  function updateProductImages(key: string, images: Slide[]) {
+    setProducts(prev => prev.map(p => (p.key === key ? { ...p, images } : p)));
   }
 
-  async function uploadFile(key: string, file: File) {
-    setBusyKey(key);
+  async function uploadFile(key: string, index: number, file: File) {
+    setBusy({ key, index });
     setError("");
     const formData = new FormData();
     formData.append("productKey", key);
+    formData.append("slotIndex", String(index));
     formData.append("file", file);
+    const current = products.find(p => p.key === key);
+    formData.append("alt", current?.images[index]?.alt || "");
 
     const res = await fetch("/api/product-images", { method: "POST", body: formData });
     const body = await res.json().catch(() => ({}));
-    setBusyKey(null);
+    setBusy(null);
     if (!res.ok) { setError(body.error || "Upload failed."); return; }
-    applyUpdatedImageUrls(body.products);
+    updateProductImages(key, body.images);
     router.refresh();
   }
 
-  async function removeImage(key: string) {
-    if (!confirm("Remove this photo? The product page will show \"Photo coming soon\" until you upload a new one.")) return;
-    setBusyKey(key);
+  async function saveAltText(key: string, index: number, alt: string) {
+    setBusy({ key, index });
     setError("");
     const formData = new FormData();
     formData.append("productKey", key);
+    formData.append("slotIndex", String(index));
+    formData.append("alt", alt);
+
+    const res = await fetch("/api/product-images", { method: "POST", body: formData });
+    const body = await res.json().catch(() => ({}));
+    setBusy(null);
+    if (!res.ok) { setError(body.error || "Couldn't save."); return; }
+    updateProductImages(key, body.images);
+  }
+
+  async function removeImage(key: string, index: number) {
+    if (!confirm("Remove this photo? The slide will show \"Photo coming soon\" until you upload a new one.")) return;
+    setBusy({ key, index });
+    setError("");
+    const formData = new FormData();
+    formData.append("productKey", key);
+    formData.append("slotIndex", String(index));
     formData.append("remove", "true");
 
     const res = await fetch("/api/product-images", { method: "POST", body: formData });
     const body = await res.json().catch(() => ({}));
-    setBusyKey(null);
+    setBusy(null);
     if (!res.ok) { setError(body.error || "Couldn't remove."); return; }
-    applyUpdatedImageUrls(body.products);
+    updateProductImages(key, body.images);
     router.refresh();
   }
 
   return (
     <div>
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-4">{error}</p>}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="space-y-10">
         {products.map(product => (
-          <div key={product.key} className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
-            <div className="relative aspect-[16/9] bg-cream">
-              {product.imageUrl ? (
-                // Plain <img>, not next/image — this is an admin
-                // management thumbnail rendering a dynamic Storage URL,
-                // not the actual product page carousel (which already
-                // uses next/image correctly and is untouched by this).
-                <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" />
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-[#1E3A5F]/30 gap-1">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="5" width="18" height="14" rx="2" />
-                    <circle cx="9" cy="10" r="2" />
-                    <path d="M21 15l-4.5-4.5a2 2 0 0 0-2.8 0L5 19" />
-                  </svg>
-                  <span className="text-xs font-medium">Photo coming soon</span>
-                </div>
-              )}
-            </div>
-            <div className="p-4">
-              <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">{product.name}</div>
+          <div key={product.key}>
+            <h2 className="font-display text-lg text-[#1E3A5F] mb-3">{product.name}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {product.images.map((slide, i) => {
+                const isBusy = busy?.key === product.key && busy.index === i;
+                return (
+                  <div key={i} className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+                    <div className="relative aspect-[16/9] bg-cream">
+                      {slide.src ? (
+                        // Plain <img>, not next/image — this is an
+                        // admin management thumbnail rendering a
+                        // dynamic Storage URL, not the actual product
+                        // page carousel (which already uses
+                        // next/image correctly and is untouched by this).
+                        <img src={slide.src} alt={slide.alt} className="absolute inset-0 w-full h-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-[#1E3A5F]/30 gap-1">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="5" width="18" height="14" rx="2" />
+                            <circle cx="9" cy="10" r="2" />
+                            <path d="M21 15l-4.5-4.5a2 2 0 0 0-2.8 0L5 19" />
+                          </svg>
+                          <span className="text-xs font-medium">Photo coming soon</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Slide {i + 1}</div>
 
-              <label className="block">
-                <span className="inline-block bg-[#1E3A5F] text-white rounded-md px-3 py-2 text-xs font-semibold cursor-pointer hover:opacity-90">
-                  {busyKey === product.key ? "Uploading..." : product.imageUrl ? "Replace photo" : "Upload photo"}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  disabled={busyKey === product.key}
-                  className="hidden"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(product.key, f); e.target.value = ""; }}
-                />
-              </label>
+                      <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Alt text</label>
+                      <input
+                        defaultValue={slide.alt}
+                        onBlur={e => { if (e.target.value !== slide.alt) saveAltText(product.key, i, e.target.value); }}
+                        className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm mb-3"
+                      />
 
-              {product.imageUrl && (
-                <button
-                  onClick={() => removeImage(product.key)}
-                  disabled={busyKey === product.key}
-                  className="ml-2 text-xs text-ember font-semibold hover:underline disabled:opacity-50"
-                >
-                  Remove
-                </button>
-              )}
+                      <label className="block">
+                        <span className="inline-block bg-[#1E3A5F] text-white rounded-md px-3 py-2 text-xs font-semibold cursor-pointer hover:opacity-90">
+                          {isBusy ? "Uploading..." : slide.src ? "Replace photo" : "Upload photo"}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={isBusy}
+                          className="hidden"
+                          onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(product.key, i, f); e.target.value = ""; }}
+                        />
+                      </label>
+
+                      {slide.src && (
+                        <button
+                          onClick={() => removeImage(product.key, i)}
+                          disabled={isBusy}
+                          className="ml-2 text-xs text-ember font-semibold hover:underline disabled:opacity-50"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}
