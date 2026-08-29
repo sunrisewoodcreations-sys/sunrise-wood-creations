@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatQuoteNumberWithRevision } from "@/lib/quote";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PublicQuoteView from "@/components/PublicQuoteView";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false }
+};
 
 export default async function PublicQuotePage({
   params,
