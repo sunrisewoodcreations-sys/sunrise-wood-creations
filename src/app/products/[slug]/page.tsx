@@ -7,7 +7,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import GuestChatWidget from "@/components/GuestChatWidget";
 import TrackedLink from "@/components/TrackedLink";
-import ProductImage from "@/components/ProductImage";
+import HeroCarousel from "@/components/HeroCarousel";
 import FaqAccordion from "@/components/FaqAccordion";
 import AskQuestionForm from "@/components/AskQuestionForm";
 
@@ -74,12 +74,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
       <SiteHeader />
       <section className="max-w-5xl mx-auto px-6 py-16">
         <Link href="/" className="text-sm text-walnut/60 mb-4 inline-block">← All products</Link>
-        <ProductImage
-          imageUrl={product.imageUrl}
-          name={product.name}
-          areaClassName="aspect-[4/3] rounded-xl overflow-hidden mb-6"
-          iconSize={32}
-        />
+        <HeroCarousel slides={[{ src: product.imageUrl, alt: product.name }]} />
         <h1 className="font-display text-3xl md:text-4xl text-walnut mb-2">{product.name}</h1>
         <p className="text-lg text-ember font-medium mb-6">{product.tagline}</p>
         <p className="text-walnut/70 mb-8 leading-relaxed">{product.description}</p>
