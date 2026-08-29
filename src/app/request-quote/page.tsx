@@ -5,7 +5,8 @@ import GuestChatWidget from "@/components/GuestChatWidget";
 
 export const metadata = {
   title: "Request a custom quote",
-  description: "Tell us what you're picturing and we'll send you a custom quote."
+  description: "Tell us what you're picturing and we'll send you a custom quote.",
+  alternates: { canonical: "/request-quote" }
 };
 
 export default function RequestQuotePage() {
