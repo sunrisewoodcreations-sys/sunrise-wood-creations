@@ -2,11 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_SITE_CONTENT, SiteContent, ProductKey, PRODUCT_ORDER } from "@/lib/siteContent";
+import { DEFAULT_SITE_CONTENT, SiteContent, ProductKey, PRODUCT_ORDER, PRODUCT_KEY_TO_ORDER_TYPE } from "@/lib/siteContent";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import GuestChatWidget from "@/components/GuestChatWidget";
 import TrackedLink from "@/components/TrackedLink";
+import ProductImage from "@/components/ProductImage";
 import FaqAccordion from "@/components/FaqAccordion";
 import AskQuestionForm from "@/components/AskQuestionForm";
 
@@ -73,17 +74,34 @@ export default async function ProductPage({ params }: { params: { slug: string }
       <SiteHeader />
       <section className="max-w-2xl mx-auto px-6 py-16">
         <Link href="/" className="text-sm text-walnut/60 mb-4 inline-block">← All products</Link>
+        <ProductImage
+          imageUrl={product.imageUrl}
+          name={product.name}
+          areaClassName="aspect-[4/3] rounded-xl overflow-hidden mb-6"
+          iconSize={32}
+        />
         <h1 className="font-display text-3xl md:text-4xl text-walnut mb-2">{product.name}</h1>
         <p className="text-lg text-ember font-medium mb-6">{product.tagline}</p>
         <p className="text-walnut/70 mb-8 leading-relaxed">{product.description}</p>
-        <TrackedLink
-          href={`tel:${content.contact.phone.replace(/\D/g, "")}`}
-          className="inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold"
-          eventName="phone_click"
-          eventParams={{ location: "product_page", category: params.slug }}
-        >
-          Call to get a quote: {content.contact.phone}
-        </TrackedLink>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <TrackedLink
+            href={`/request-quote?type=${PRODUCT_KEY_TO_ORDER_TYPE[params.slug as ProductKey]}`}
+            className="w-full sm:w-auto text-center inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
+            eventName="request_quote_click"
+            eventParams={{ location: "product_page", category: params.slug }}
+          >
+            Request a Custom Quote
+          </TrackedLink>
+          <TrackedLink
+            href={`tel:${content.contact.phone.replace(/\D/g, "")}`}
+            className="w-full sm:w-auto text-center inline-block border border-walnut text-walnut px-7 py-3.5 rounded-md font-semibold hover:bg-walnut/5 transition-colors"
+            eventName="phone_click"
+            eventParams={{ location: "product_page", category: params.slug }}
+          >
+            Call to get a quote: {content.contact.phone}
+          </TrackedLink>
+        </div>
+        <p className="text-sm text-walnut/50 mt-4">📍 Local pickup only — Lawrence, MI</p>
 
         <div className="mt-14">
           <h2 className="font-display text-xl text-walnut mb-4">Frequently Asked Questions</h2>
