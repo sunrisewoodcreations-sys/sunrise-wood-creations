@@ -14,6 +14,18 @@ export const FAQ_CATEGORY_LABELS: Record<FaqCategory, string> = {
   "cutting-boards": "Cutting Boards"
 };
 
+// Bridges the public site's product slugs to the internal ProductType
+// values already used by the order system and QuoteRequestForm's
+// dropdown (see statusSteps.ts) — lets a product page pre-select the
+// right category on the quote form without either side needing to
+// know about the other's naming.
+export const PRODUCT_KEY_TO_ORDER_TYPE: Record<ProductKey, string> = {
+  "cornhole-boards": "cornhole",
+  "wooden-signs": "sign",
+  "planter-boxes": "planter",
+  "cutting-boards": "cutting_board"
+};
+
 
 export interface ProductContent {
   enabled: boolean;
