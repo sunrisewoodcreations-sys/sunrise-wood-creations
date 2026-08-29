@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAvailableSlots } from "@/lib/pickupScheduling";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PickupSchedulingView from "@/components/PickupSchedulingView";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false }
+};
 
 export default async function PickupSchedulePage({ params }: { params: { token: string } }) {
   const admin = createAdminClient();
