@@ -82,6 +82,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/designs", label: "Designs" },
     { href: "/admin/reports", label: "Reports" },
     { href: "/admin/homepage-carousel", label: "Homepage Carousel" },
+    { href: "/admin/product-images", label: "Product Photos" },
     { href: "/admin/gallery", label: "Our Work Gallery" },
     { href: "/admin/reviews", label: "Customer Reviews", badge: badges.reviews },
     { href: "/admin/faq", label: "FAQ Questions", badge: badges.faq },
@@ -130,6 +131,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/designs" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Designs</Link>
           <Link href="/admin/reports" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Reports</Link>
           <Link href="/admin/homepage-carousel" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Homepage Carousel</Link>
+          <Link href="/admin/product-images" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Product Photos</Link>
           <Link href="/admin/gallery" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Our Work Gallery</Link>
           <Link href="/admin/reviews" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">
             Customer Reviews<Badge count={badges.reviews} />
