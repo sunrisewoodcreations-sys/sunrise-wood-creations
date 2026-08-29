@@ -48,8 +48,28 @@ export default async function ProductPage({ params }: { params: { slug: string }
     .eq("category", params.slug)
     .order("sort_order", { ascending: true });
 
+  // Mirrors the visible "← All products" trail above with no other
+  // purpose than giving Google the same two-step path in structured
+  // form — home, then this product — so search results can render a
+  // breadcrumb instead of a raw URL. Same site-URL fallback pattern
+  // already used for LocalBusiness in layout.tsx, kept consistent
+  // rather than introducing a new convention for one page.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com";
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: product.name, item: `${siteUrl}/products/${params.slug}` }
+    ]
+  };
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <SiteHeader />
       <section className="max-w-2xl mx-auto px-6 py-16">
         <Link href="/" className="text-sm text-walnut/60 mb-4 inline-block">← All products</Link>
