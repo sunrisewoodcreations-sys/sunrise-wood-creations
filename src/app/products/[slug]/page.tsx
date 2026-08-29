@@ -23,8 +23,12 @@ async function getContent(): Promise<SiteContent> {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const content = await getContent();
   const product = content.products[params.slug as ProductKey];
-  if (!product || !product.enabled) return {};
-  return { title: product.name, description: product.description };
+   if (!product || !product.enabled) return {};
+  return {
+    title: product.name,
+    description: product.description,
+    alternates: { canonical: `/products/${params.slug}` }
+  };
 }
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
