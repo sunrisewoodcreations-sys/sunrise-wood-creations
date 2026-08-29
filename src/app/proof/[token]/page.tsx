@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ProofPublicResponse from "@/components/ProofPublicResponse";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false }
+};
 
 export default async function PublicProofPage({ params }: { params: { token: string } }) {
   const supabase = createAdminClient();
