@@ -72,7 +72,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <SiteHeader />
-      <section className="max-w-4xl mx-auto px-6 py-16">
+      <section className="max-w-5xl mx-auto px-6 py-16">
         <Link href="/" className="text-sm text-walnut/60 mb-4 inline-block">← All products</Link>
         <ProductImage
           imageUrl={product.imageUrl}
