@@ -39,7 +39,15 @@ export interface ProductContent {
   // placeholder rather than ever inventing or guessing at an image.
   // Once a real URL is set here, the card automatically shows the
   // real photo — nothing else about the section needs to change.
+  // Used only for the small homepage grid card thumbnail — the
+  // product detail page's carousel uses `images` below instead.
   imageUrl: string | null;
+  // A real multi-photo gallery for this product's own detail page,
+  // same shape as hero.carouselSlides so the exact same HeroCarousel
+  // component can be reused unmodified — swipe, autoplay, dots, and
+  // arrows all appear automatically once more than one slide has a
+  // real photo, exactly like the homepage carousel already does.
+  images: { src: string | null; alt: string }[];
 }
 
 export interface SiteContent {
@@ -108,7 +116,13 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       tagline: "Regulation-size sets, built and painted to order.",
       description: "Every set is built from scratch and finished with your custom design.",
       shortDesc: "Regulation-size sets, custom painted tops, your logo or design.",
-      imageUrl: null
+      imageUrl: null,
+      images: [
+        { src: null, alt: "Cornhole boards built by Sunrise Wood Creations" },
+        { src: null, alt: "Cornhole boards built by Sunrise Wood Creations" },
+        { src: null, alt: "Cornhole boards built by Sunrise Wood Creations" },
+        { src: null, alt: "Cornhole boards built by Sunrise Wood Creations" }
+      ]
     },
     "wooden-signs": {
       enabled: true,
@@ -116,7 +130,13 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       tagline: "Personalized signs for your home or business.",
       description: "From farmhouse-style family name signs to business signage, each piece is cut, sanded, and finished by hand.",
       shortDesc: "Personalized family names, farmhouse decor, business signage.",
-      imageUrl: null
+      imageUrl: null,
+      images: [
+        { src: null, alt: "Wooden signs built by Sunrise Wood Creations" },
+        { src: null, alt: "Wooden signs built by Sunrise Wood Creations" },
+        { src: null, alt: "Wooden signs built by Sunrise Wood Creations" },
+        { src: null, alt: "Wooden signs built by Sunrise Wood Creations" }
+      ]
     },
     "planter-boxes": {
       enabled: true,
@@ -124,7 +144,13 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       tagline: "Cedar and pine planters built to last outdoors.",
       description: "Built with weather-resistant wood and finished to hold up season after season.",
       shortDesc: "Cedar and pine planters built for porches, gardens, and patios.",
-      imageUrl: null
+      imageUrl: null,
+      images: [
+        { src: null, alt: "Planter boxes built by Sunrise Wood Creations" },
+        { src: null, alt: "Planter boxes built by Sunrise Wood Creations" },
+        { src: null, alt: "Planter boxes built by Sunrise Wood Creations" },
+        { src: null, alt: "Planter boxes built by Sunrise Wood Creations" }
+      ]
     },
     "cutting-boards": {
       enabled: true,
@@ -132,7 +158,13 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       tagline: "End-grain and edge-grain boards, personalized.",
       description: "A functional piece and a keepsake — great for everyday use or as a gift.",
       shortDesc: "End-grain and edge-grain boards, engraved names and dates.",
-      imageUrl: null
+      imageUrl: null,
+      images: [
+        { src: null, alt: "Cutting boards built by Sunrise Wood Creations" },
+        { src: null, alt: "Cutting boards built by Sunrise Wood Creations" },
+        { src: null, alt: "Cutting boards built by Sunrise Wood Creations" },
+        { src: null, alt: "Cutting boards built by Sunrise Wood Creations" }
+      ]
     }
   },
   howItWorks: {
