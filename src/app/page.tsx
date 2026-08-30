@@ -126,23 +126,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="max-w-4xl mx-auto px-6 py-14 md:py-20">
-        <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-10">{content.howItWorks.heading}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-          {content.howItWorks.steps.map((step, i) => (
-            <div key={step.title} className="text-center">
-              <div className="w-10 h-10 rounded-full bg-ember text-white font-display text-lg flex items-center justify-center mx-auto mb-3">
-                {i + 1}
-              </div>
-              <h3 className="font-display text-lg text-walnut mb-1">{step.title}</h3>
-              <p className="text-sm text-walnut/60">{step.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <OurWorkSection photos={galleryPhotos || []} />
-
       <section className="bg-sawdust/60 px-6 py-14 md:py-20">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-10">{content.whyUs.heading}</h2>
@@ -157,6 +140,23 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <OurWorkSection photos={galleryPhotos || []} />
+
+      <section className="max-w-4xl mx-auto px-6 py-14 md:py-20">
+        <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-10">{content.howItWorks.heading}</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {content.howItWorks.steps.map((step, i) => (
+            <div key={step.title} className="text-center">
+              <div className="w-10 h-10 rounded-full bg-ember text-white font-display text-lg flex items-center justify-center mx-auto mb-3">
+                {i + 1}
+              </div>
+              <h3 className="font-display text-lg text-walnut mb-1">{step.title}</h3>
+              <p className="text-sm text-walnut/60">{step.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 
