@@ -113,7 +113,7 @@ const PRODUCT_LANDING_CONTENT: Record<ProductKey, {
     ],
     howItWorksHeading: "How Your Custom Cutting Board Comes Together",
     howItWorks: [
-      { title: "Tell Us What You Want", description: "Share your size, wood preference, and any personalization." },
+      { title: "Tell Us What You Want", description: "Share your size and any personalization." },
       { title: "We Work Out the Details", description: "We'll go over design and personalization before anything gets built." },
       { title: "We Build It", description: "Every board is built and finished by hand." },
       { title: "Pick It Up", description: "We'll let you know as soon as it's ready." }
