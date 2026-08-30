@@ -122,7 +122,7 @@ export default async function HomePage() {
               slug={p.slug}
               name={p.name}
               shortDesc={p.shortDesc}
-              imageUrl={p.imageUrl}
+              imageUrl={p.images?.[0]?.src ?? null}
               featured={p.slug === "planter-boxes"}
             />
           ))}
