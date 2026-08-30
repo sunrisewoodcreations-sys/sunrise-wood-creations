@@ -85,7 +85,7 @@ const PRODUCT_LANDING_CONTENT: Record<ProductKey, {
     ],
     makeItYours: [
       { title: "Custom Dimensions", description: "Built to fit the exact space you have in mind." },
-      { title: "Cedar or Other Wood", description: "Selected for outdoor durability." },
+      { title: "Cedar Construction", description: "Cedar is our most popular choice for outdoor planters." },
       { title: "Color & Finish", description: "Tell us the look you're going for when requesting your quote." },
       { title: "Built for Your Space", description: "Porch, patio, deck, or garden — made to fit." }
     ],
