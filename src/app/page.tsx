@@ -109,6 +109,7 @@ export default async function HomePage() {
             {content.hero.secondaryCtaText}
           </TrackedLink>
         </div>
+        <p className="text-xs text-walnut/50 mt-5">Handmade in Michigan • Built to order • Local pickup</p>
       </section>
 
       <section id="products" className="max-w-5xl mx-auto px-6 py-14 md:py-20 scroll-mt-16">
@@ -147,7 +148,7 @@ export default async function HomePage() {
 
       <OurWorkSection photos={galleryPhotos || []} />
 
-      <section className="max-w-4xl mx-auto px-6 py-14 md:py-20">
+      <section className="max-w-4xl mx-auto px-6 py-14 md:py-20 border-t border-walnut/10">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-10">{content.howItWorks.heading}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {content.howItWorks.steps.map((step, i) => (
