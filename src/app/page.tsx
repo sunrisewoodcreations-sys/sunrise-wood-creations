@@ -67,8 +67,10 @@ export default async function HomePage() {
     .select("id, question, answer, category")
     .eq("status", "answered")
     .eq("is_public", true)
+    .eq("show_on_homepage", true)
     .order("category", { ascending: true })
-    .order("sort_order", { ascending: true });
+    .order("sort_order", { ascending: true })
+    .limit(6);
 
   return (
     <div>
