@@ -108,7 +108,7 @@ const PRODUCT_LANDING_CONTENT: Record<ProductKey, {
     makeItYours: [
       { title: "Names & Dates", description: "A personalized touch for weddings, anniversaries, and gifts." },
       { title: "A Short Message", description: "Add a meaningful word or phrase." },
-      { title: "Gift-Ready", description: "A popular choice for weddings, housewarmings, and birthdays." },
+      { title: "Gift-Ready", description: "A great gift for weddings, anniversaries, housewarmings, birthdays, and more." },
       { title: "Your Own Design Idea", description: "Tell us what you have in mind." }
     ],
     howItWorksHeading: "How Your Custom Cutting Board Comes Together",
