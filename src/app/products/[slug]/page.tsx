@@ -274,7 +274,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
             <div className="bg-white border border-walnut/10 rounded-xl p-5">
               <h2 className="font-display text-lg text-walnut mb-1">Standard Sizes</h2>
               <p className="text-xs text-walnut/50 mb-3">All dimensions in inches, listed as Length × Width × Height.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
                 <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">18 × 18 × 18</div>
                 <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">36 × 18 × 18</div>
                 <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">36 × 18 × 24</div>
