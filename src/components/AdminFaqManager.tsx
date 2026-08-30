@@ -12,6 +12,7 @@ type Question = {
   answer: string | null;
   status: string;
   is_public: boolean;
+  show_on_homepage: boolean;
   category: FaqCategory;
   sort_order: number;
   created_at: string;
@@ -39,6 +40,7 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
   const [openId, setOpenId] = useState<string | null>(null);
   const [answerText, setAnswerText] = useState("");
   const [makePublic, setMakePublic] = useState(true);
+  const [showOnHomepage, setShowOnHomepage] = useState(false);
   const [answerCategory, setAnswerCategory] = useState<FaqCategory>("general");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -91,6 +93,7 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
     setOpenId(q.id);
     setAnswerText(q.answer || "");
     setMakePublic(q.is_public);
+    setShowOnHomepage(q.show_on_homepage);
     setAnswerCategory(q.category || "general");
     setError("");
   }
@@ -102,7 +105,7 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
     const res = await fetch("/api/admin/faq-questions", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, answer: answerText, isPublic: makePublic, category: answerCategory })
+      body: JSON.stringify({ id, answer: answerText, isPublic: makePublic, showOnHomepage, category: answerCategory })
     });
     const body = await res.json().catch(() => ({}));
     setBusy(false);
@@ -242,6 +245,11 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
                       {q.is_public ? "Public" : "Private"}
                     </span>
                   )}
+                  {q.status === "answered" && q.show_on_homepage && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-ember/15 text-ember">
+                      Homepage
+                    </span>
+                  )}
                 </div>
               </div>
               <p className="text-sm text-[#1E3A5F]/70 mb-2">{q.question}</p>
@@ -266,6 +274,10 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
                   <label className="flex items-center gap-2 text-sm text-[#1E3A5F] mb-2">
                     <input type="checkbox" checked={makePublic} onChange={e => setMakePublic(e.target.checked)} />
                     Show this question and answer publicly on the FAQ page
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-[#1E3A5F] mb-2">
+                    <input type="checkbox" checked={showOnHomepage} onChange={e => setShowOnHomepage(e.target.checked)} />
+                    Show on Homepage
                   </label>
                   {error && <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-2 py-1.5 mb-2">{error}</p>}
                   <div className="flex gap-2">
