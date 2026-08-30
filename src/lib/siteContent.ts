@@ -171,8 +171,9 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     heading: "How It Works",
     steps: [
       { title: "Tell Us What You Want", description: "Reach out with what you're picturing — size, style, and any customization." },
-      { title: "We Build It", description: "Every piece is built to order, by hand, one at a time." },
-      { title: "Pickup or Delivery", description: "We'll let you know as soon as it's ready to pick up." }
+      { title: "We Work Out the Details", description: "We'll go over sizing, wood type, and design before anything gets built." },
+      { title: "We Build Your Order", description: "Every piece is built to order, by hand, one at a time." },
+      { title: "Pick It Up", description: "We'll let you know as soon as it's ready to pick up." }
     ]
   },
   whyUs: {
@@ -185,7 +186,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     ]
   },
   customCta: {
-    heading: "Have something else in mind?",
+    heading: "Have an idea? Let's build it.",
     subheading: "Tell us what you're looking for and we'll work with you to create it.",
     ctaText: "Request a Custom Order"
   }
