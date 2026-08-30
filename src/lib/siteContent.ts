@@ -113,7 +113,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     "cornhole-boards": {
       enabled: true,
       name: "Cornhole boards",
-      tagline: "Regulation-size sets, built and painted to order.",
+      tagline: "Regulation-size sets, custom-built and printed to order.",
       description: "Every set is built from scratch and finished with your custom design.",
       shortDesc: "Regulation-size sets, custom painted tops, your logo or design.",
       imageUrl: null,
@@ -160,34 +160,4 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       shortDesc: "End-grain and edge-grain boards, engraved names and dates.",
       imageUrl: null,
       images: [
-        { src: null, alt: "Cutting boards built by Sunrise Wood Creations" },
-        { src: null, alt: "Cutting boards built by Sunrise Wood Creations" },
-        { src: null, alt: "Cutting boards built by Sunrise Wood Creations" },
-        { src: null, alt: "Cutting boards built by Sunrise Wood Creations" }
-      ]
-    }
-  },
-  howItWorks: {
-    heading: "How It Works",
-    steps: [
-      { title: "Tell Us What You Want", description: "Reach out with what you're picturing — size, style, and any customization." },
-      { title: "We Work Out the Details", description: "We'll go over sizing, wood type, and design before anything gets built." },
-      { title: "We Build Your Order", description: "Every piece is built to order, by hand, one at a time." },
-      { title: "Pick It Up", description: "We'll let you know as soon as it's ready to pick up." }
-    ]
-  },
-  whyUs: {
-    heading: "Why Sunrise Wood Creations?",
-    items: [
-      { title: "Handmade, locally", description: "Every piece is built right here in Michigan, not mass-produced." },
-      { title: "Built to order", description: "Nothing sits on a shelf — your piece is made specifically for you." },
-      { title: "Custom designs", description: "Sizes, colors, and personalization worked out with you directly." },
-      { title: "Quality materials", description: "Real wood, finished to hold up to actual daily use." }
-    ]
-  },
-  customCta: {
-    heading: "Have an idea? Let's build it.",
-    subheading: "Tell us what you're looking for and we'll work with you to create it.",
-    ctaText: "Request a Custom Order"
-  }
-};
+        { src: null, alt: "Cutting boards built by
