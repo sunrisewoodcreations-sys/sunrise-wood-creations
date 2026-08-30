@@ -263,27 +263,34 @@ export default async function ProductPage({ params }: { params: { slug: string }
       )}
 
       {isPlanter && (
-        // Named "Sizing" rather than "Available Sizes" deliberately —
-        // there is no fixed size chart anywhere in the site's data.
-        // Every planter FAQ confirms the opposite: dimensions are
-        // fully custom to the space the customer provides. This
-        // section states that plainly, plus the one confirmed depth
-        // detail, rather than implying a menu of preset options that
-        // doesn't exist. Same compact-card treatment as Cornhole's
-        // spec block above, reused for visual consistency rather than
-        // inventing a new pattern.
+        // Standard sizes and the ~9" planting depth figure were provided
+        // directly as confirmed business facts — not inferred from FAQ
+        // text like the rest of this page. Custom Sizes is kept as its
+        // own separate card so it's clear standard sizes are a starting
+        // point, not the only option. Same compact-card treatment as
+        // Cornhole's spec block above, reused for visual consistency.
         <section className="max-w-4xl mx-auto px-6 pb-14">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="bg-white border border-walnut/10 rounded-xl p-5">
-              <h2 className="font-display text-lg text-walnut mb-2">Custom Dimensions</h2>
-              <p className="text-sm text-walnut/70">
-                There's no fixed size chart — every planter is built to the space you give us. Include your dimensions when requesting a quote.
+              <h2 className="font-display text-lg text-walnut mb-1">Standard Sizes</h2>
+              <p className="text-xs text-walnut/50 mb-3">All dimensions in inches, listed as Length × Width × Height.</p>
+              <ul className="space-y-1.5 text-sm text-walnut mb-3">
+                <li>18 × 18 × 18</li>
+                <li>36 × 18 × 18</li>
+                <li>36 × 18 × 24</li>
+                <li>36 × 18 × 30</li>
+                <li>48 × 18 × 18</li>
+                <li>48 × 18 × 24</li>
+                <li>48 × 18 × 30</li>
+              </ul>
+              <p className="text-xs text-walnut/60">
+                Standard planters have approximately 9" of planting depth. Exact depth can vary slightly by design.
               </p>
             </div>
             <div className="bg-white border border-walnut/10 rounded-xl p-5">
-              <h2 className="font-display text-lg text-walnut mb-2">Planting Depth</h2>
+              <h2 className="font-display text-lg text-walnut mb-2">Custom Sizes</h2>
               <p className="text-sm text-walnut/70">
-                Designed with practical planting depth, while leaving room for the structure and drainage. Exact depth can vary by design.
+                Need something different? Custom dimensions are available — just let us know what you're looking for when requesting your quote.
               </p>
             </div>
           </div>
