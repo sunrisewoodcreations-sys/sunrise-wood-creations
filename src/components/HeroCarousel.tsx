@@ -57,7 +57,7 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
 
   return (
     <div
-      className="relative w-full max-w-3xl mx-auto mb-8 sm:mb-10 rounded-xl overflow-hidden shadow-md"
+      className="relative w-full max-w-[88%] sm:max-w-xl mx-auto mb-8 sm:mb-10 rounded-xl overflow-hidden shadow-md"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={handleTouchStart}
