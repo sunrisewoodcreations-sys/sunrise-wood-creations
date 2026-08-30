@@ -27,7 +27,7 @@ export default async function SiteHeader() {
     .filter(p => p.enabled);
 
   return (
-    <header className="relative flex items-center justify-between px-6 md:px-10 py-4 border-b border-walnut/10 bg-cream">
+    <header className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-10 py-4 border-b border-walnut/10 bg-cream shadow-sm">
       <Link href="/" className="flex-shrink-0">
         <Image
           src="/logo-header.png"
