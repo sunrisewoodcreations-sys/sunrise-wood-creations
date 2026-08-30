@@ -80,7 +80,7 @@ const PRODUCT_LANDING_CONTENT: Record<ProductKey, {
     whatYouGet: [
       { title: "Weather-resistant wood", description: "Cedar is a common choice, built to hold up outdoors season after season." },
       { title: "Built-in drainage", description: "Designed with proper drainage for healthy plants." },
-      { title: "Sized to fit your space", description: "Give us your available space and we'll work out the dimensions." },
+      { title: "Standard or Custom Sizes", description: "Choose from our standard sizes or tell us the space you have and we'll work with you on custom dimensions." },
       { title: "Finished for outdoor use", description: "Made for porches, patios, decks, and gardens." }
     ],
     makeItYours: [
@@ -89,9 +89,9 @@ const PRODUCT_LANDING_CONTENT: Record<ProductKey, {
       { title: "Color & Finish", description: "Tell us the look you're going for when requesting your quote." },
       { title: "Built for Your Space", description: "Porch, patio, deck, or garden — made to fit." }
     ],
-    howItWorksHeading: "How Your Custom Planter Comes Together",
+    howItWorksHeading: "How Your Planter Comes Together",
     howItWorks: [
-      { title: "Tell Us What You Want", description: "Share your space, size, and style." },
+      { title: "Tell Us What You Want", description: "Choose a standard size or share your space, size, and style." },
       { title: "We Work Out the Details", description: "We'll go over dimensions, wood, and finish before anything gets built." },
       { title: "We Build It", description: "Every planter is built and finished by hand for outdoor use." },
       { title: "Pick It Up", description: "We'll let you know as soon as it's ready." }
