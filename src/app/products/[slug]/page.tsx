@@ -160,6 +160,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   const { data: galleryPhotos } = await supabase.from("gallery_photos").select("*").order("sort_order", { ascending: true });
 
   const landing = PRODUCT_LANDING_CONTENT[params.slug as ProductKey];
+  const isCornhole = params.slug === "cornhole-boards";
 
   // Mirrors the visible "← All products" trail above with no other
   // purpose than giving Google the same two-step path in structured
@@ -210,6 +211,55 @@ export default async function ProductPage({ params }: { params: { slug: string }
         </div>
         <p className="text-sm text-walnut/50 mt-4">📍 Local pickup only — Lawrence, MI</p>
       </section>
+
+      {isCornhole && (
+        // Small, compact block — deliberately not a full py-14/py-20
+        // section like the others, since this is meant to read as a
+        // quick spec-sheet + order-contents reference, not another
+        // full marketing section. Every fact here is one already
+        // confirmed elsewhere on the site (product description, the
+        // real published cornhole FAQs) — no measurements, hardware,
+        // or finish details are stated because none are confirmed
+        // anywhere in the existing data.
+        <section className="max-w-4xl mx-auto px-6 pb-14">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="bg-white border border-walnut/10 rounded-xl p-5">
+              <h2 className="font-display text-lg text-walnut mb-3">Board Specifications</h2>
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-walnut/60">Size</dt>
+                  <dd className="text-walnut font-medium text-right">Regulation size</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-walnut/60">Material</dt>
+                  <dd className="text-walnut font-medium text-right">Baltic birch plywood (tops &amp; frames)</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-walnut/60">Graphics</dt>
+                  <dd className="text-walnut font-medium text-right">UV-printed (not vinyl)</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-walnut/60">Construction</dt>
+                  <dd className="text-walnut font-medium text-right">Built by hand</dd>
+                </div>
+              </dl>
+            </div>
+            <div className="bg-white border border-walnut/10 rounded-xl p-5">
+              <h2 className="font-display text-lg text-walnut mb-3">What's Included</h2>
+              <ul className="space-y-2 text-sm">
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0 w-2 h-2 rounded-full bg-ember mt-1.5" aria-hidden="true" />
+                  <span className="text-walnut/70">Your custom-built cornhole board set, built to your design</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0 w-2 h-2 rounded-full bg-ember mt-1.5" aria-hidden="true" />
+                  <span className="text-walnut/70">A design proof to review and approve before we print</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* What You Get — sourced from this product's own confirmed FAQ
           answers and description; content differs per product via the
