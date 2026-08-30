@@ -50,7 +50,7 @@ export default function MobileNavToggle({
             <Link
               href={ctaHref}
               onClick={() => setOpen(false)}
-              className="my-3 text-center bg-ember text-white px-4 py-3 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
+              className="my-2 text-center bg-ember text-white px-4 py-2.5 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
             >
               Request a Quote
             </Link>
