@@ -18,6 +18,12 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  // Each real photo's own width/height ratio, captured once it loads —
+  // lets the box size itself to match whichever slide is showing,
+  // instead of forcing every photo into one fixed shape. Falls back to
+  // 16:9 for the placeholder state and for the brief moment before a
+  // photo has finished loading.
+  const [ratios, setRatios] = useState<Record<number, number>>({});
 
   const goTo = useCallback((i: number) => {
     setIndex(((i % slides.length) + slides.length) % slides.length);
@@ -57,12 +63,12 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Fixed aspect ratio + object-contain on every slide — shows the
-          entire photo within the frame, never crops or zooms into it.
-          Any leftover space (when a photo's own proportions don't
-          exactly match 16:9) is filled by this same bg-sawdust behind
-          it, rather than cutting off part of the picture. */}
-      <div className="relative aspect-[16/9] bg-sawdust">
+      {/* The box's own shape now matches whichever photo is showing
+          (via the ratios captured on load below) — so there's no
+          leftover strip of background around any photo. It resizes
+          as you move between photos of different shapes, the same
+          way many real photo carousels already behave. */}
+      <div className="relative bg-sawdust" style={{ aspectRatio: ratios[index] ?? 16 / 9 }}>
         <div
           className="flex h-full transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${index * 100}%)` }}
@@ -77,6 +83,12 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
                   sizes="(max-width: 768px) 100vw, 768px"
                   className="object-contain"
                   priority={i === 0}
+                  onLoad={e => {
+                    const img = e.currentTarget;
+                    if (img.naturalWidth && img.naturalHeight) {
+                      setRatios(r => ({ ...r, [i]: img.naturalWidth / img.naturalHeight }));
+                    }
+                  }}
                 />
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-walnut/30 gap-2">
