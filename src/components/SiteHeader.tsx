@@ -4,10 +4,26 @@ import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_SITE_CONTENT, SiteContent, PRODUCT_ORDER } from "@/lib/siteContent";
 import AccountMenu from "@/components/AccountMenu";
 import MobileNavToggle from "@/components/MobileNavToggle";
+import ProductsDropdown from "@/components/ProductsDropdown";
+import TrackedLink from "@/components/TrackedLink";
 
 // Same header as the homepage, pulled into one shared component so the
 // public site and account pages always match — no copy-pasting the nav
 // or login logic into every page.
+//
+// Gallery / About Us / FAQ / Contact don't exist as separate pages —
+// their content already lives on the homepage (Our Work, Why Us, the
+// FAQ section) and in the footer (contact info). Rather than build
+// duplicate pages, these link to those existing sections via anchors,
+// the same way the hero's own "View Our Work" link already does for
+// #products.
+const SECONDARY_LINKS = [
+  { href: "/#gallery", label: "Gallery" },
+  { href: "/#about", label: "About Us" },
+  { href: "/#faq", label: "FAQ" },
+  { href: "/#contact", label: "Contact" }
+];
+
 export default async function SiteHeader() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -38,15 +54,36 @@ export default async function SiteHeader() {
           className="h-12 md:h-16 w-auto"
         />
       </Link>
-      <nav className="hidden md:flex gap-7 text-sm font-medium">
-        {visibleProducts.map(p => (
-          <Link key={p.slug} href={`/products/${p.slug}`} className="text-walnut/80 hover:text-walnut">
-            {p.name}
+
+      {/* Full nav only from lg: up — with 6 items plus a dropdown and a
+          CTA, this needed more room than the old 4-link nav did, so
+          tablet widths now use the mobile menu instead of a cramped
+          inline row. */}
+      <nav className="hidden lg:flex items-center gap-5 text-sm font-medium">
+        <Link href="/" className="text-walnut/80 hover:text-walnut">Home</Link>
+        <ProductsDropdown products={visibleProducts.map(p => ({ slug: p.slug, name: p.name }))} />
+        {SECONDARY_LINKS.map(link => (
+          <Link key={link.href} href={link.href} className="text-walnut/80 hover:text-walnut">
+            {link.label}
           </Link>
         ))}
       </nav>
+
       <div className="flex items-center gap-3">
-        <MobileNavToggle links={visibleProducts} />
+        <TrackedLink
+          href="/request-quote"
+          className="hidden sm:inline-block bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
+          eventName="request_quote_click"
+          eventParams={{ location: "header" }}
+        >
+          Request a Quote
+        </TrackedLink>
+        <MobileNavToggle
+          primaryLinks={[{ href: "/", label: "Home" }]}
+          products={visibleProducts.map(p => ({ slug: p.slug, name: p.name }))}
+          secondaryLinks={SECONDARY_LINKS}
+          ctaHref="/request-quote"
+        />
         {role ? (
           <AccountMenu role={role} name={fullName} />
         ) : (
