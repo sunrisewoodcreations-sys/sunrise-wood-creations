@@ -36,6 +36,10 @@ export async function POST(req: NextRequest) {
       category: category || "general",
       status: "answered",
       is_public: true,
+      // General questions default to showing on the homepage — any
+      // other category still requires an explicit opt-in via the
+      // "Show on Homepage" checkbox in the answer form.
+      show_on_homepage: (category || "general") === "general",
       answered_at: new Date().toISOString()
     })
     .select()
