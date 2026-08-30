@@ -34,13 +34,15 @@ export default function AdminMobileNav({
           single screen and eats into usable space otherwise. */}
       <div className="flex items-center justify-between bg-[#1E3A5F] text-white px-4 py-2 sticky top-0 z-40">
         <div className="flex items-center gap-2 min-w-0">
-          <Image
-            src="/logo-header.png"
-            alt="Sunrise Wood Creations"
-            width={900}
-            height={455}
-            className="h-6 w-auto flex-shrink-0"
-          />
+          <Link href="/" className="flex-shrink-0">
+            <Image
+              src="/logo-header.png"
+              alt="Sunrise Wood Creations"
+              width={900}
+              height={455}
+              className="h-6 w-auto"
+            />
+          </Link>
           <span className="font-display text-sm truncate">Hello, {firstName}</span>
         </div>
         <button
