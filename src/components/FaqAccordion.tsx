@@ -23,11 +23,14 @@ function AccordionRow({ item, isOpen, onToggle }: { item: FaqItem; isOpen: boole
 
 // Groups by category automatically ONLY when more than one distinct
 // category is actually present in the given items — the homepage
-// passes FAQs spanning every category (grouped, with headers), while
-// a product page already filters to exactly one category before this
-// component ever sees the data, so it renders flat there with zero
-// extra configuration needed from the caller.
-export default function FaqAccordion({ items }: { items: FaqItem[] }) {
+// passes FAQs spanning every category (default), while a product
+// page already filters to exactly one category before this component
+// ever sees the data, so it renders flat there with zero extra
+// configuration needed from the caller. forceFlat overrides this
+// entirely, for the homepage's own preference to always list its
+// questions flat, with no per-category headers, regardless of how
+// many distinct categories happen to be marked for the homepage.
+export default function FaqAccordion({ items, forceFlat = false }: { items: FaqItem[]; forceFlat?: boolean }) {
   const [openId, setOpenId] = useState<string | null>(null);
 
   if (items.length === 0) {
@@ -40,7 +43,7 @@ export default function FaqAccordion({ items }: { items: FaqItem[] }) {
 
   const distinctCategories = new Set(items.map(i => i.category || "general"));
 
-  if (distinctCategories.size <= 1) {
+  if (forceFlat || distinctCategories.size <= 1) {
     return (
       <div className="space-y-2 max-w-2xl mx-auto">
         {items.map(item => (
