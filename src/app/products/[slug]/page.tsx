@@ -274,15 +274,15 @@ export default async function ProductPage({ params }: { params: { slug: string }
             <div className="bg-white border border-walnut/10 rounded-xl p-5">
               <h2 className="font-display text-lg text-walnut mb-1">Standard Sizes</h2>
               <p className="text-xs text-walnut/50 mb-3">All dimensions in inches, listed as Length × Width × Height.</p>
-              <ul className="space-y-1.5 text-sm text-walnut mb-3">
-                <li>18 × 18 × 18</li>
-                <li>36 × 18 × 18</li>
-                <li>36 × 18 × 24</li>
-                <li>36 × 18 × 30</li>
-                <li>48 × 18 × 18</li>
-                <li>48 × 18 × 24</li>
-                <li>48 × 18 × 30</li>
-              </ul>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">18 × 18 × 18</div>
+                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">36 × 18 × 18</div>
+                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">36 × 18 × 24</div>
+                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">36 × 18 × 30</div>
+                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">48 × 18 × 18</div>
+                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">48 × 18 × 24</div>
+                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">48 × 18 × 30</div>
+              </div>
               <p className="text-xs text-walnut/60">
                 Standard planters have approximately 9" of planting depth. Exact depth can vary slightly by design.
               </p>
