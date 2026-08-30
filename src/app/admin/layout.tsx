@@ -97,13 +97,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {/* Desktop sidebar — completely unchanged, just now hidden below md
           and shown as a flex item at md and up, instead of always-on. */}
       <div className="hidden md:block w-60 bg-[#1E3A5F] text-white/80 p-6 flex-shrink-0">
-        <Image
-          src="/logo-header.png"
-          alt="Sunrise Wood Creations"
-          width={900}
-          height={455}
-          className="h-10 w-auto mb-4"
-        />
+        <Link href="/" className="block">
+          <Image
+            src="/logo-header.png"
+            alt="Sunrise Wood Creations"
+            width={900}
+            height={455}
+            className="h-10 w-auto mb-4"
+          />
+        </Link>
         <div className="text-white font-display text-base mb-8 break-words leading-snug">Hello, {firstName}</div>
         <nav className="flex flex-col gap-1 text-sm">
           <Link href="/admin/dashboard" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Dashboard</Link>
