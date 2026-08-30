@@ -155,9 +155,9 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     "cutting-boards": {
       enabled: true,
       name: "Cutting boards",
-      tagline: "End-grain and edge-grain boards, personalized.",
-      description: "A functional piece and a keepsake — great for everyday use or as a gift.",
-      shortDesc: "End-grain and edge-grain boards, engraved names and dates.",
+      tagline: "Handcrafted end-grain and edge-grain cutting boards, personalized just for you.",
+      description: "Each board is handcrafted from quality wood and available in end-grain or edge-grain construction. Personalize yours with names, dates, or a short message — a functional piece that doubles as a keepsake.",
+      shortDesc: "End-grain and edge-grain boards, personalized with names and dates.",
       imageUrl: null,
       images: [
         { src: null, alt: "Cutting boards built by Sunrise Wood Creations" },
