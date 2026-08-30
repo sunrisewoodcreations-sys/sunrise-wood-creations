@@ -129,7 +129,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-sawdust/60 px-6 py-14 md:py-20">
+      <section id="about" className="bg-sawdust/60 px-6 py-14 md:py-20 scroll-mt-16">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-10">{content.whyUs.heading}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
@@ -165,7 +165,7 @@ export default async function HomePage() {
 
       <PublicReviewsSection reviews={publicReviews} />
 
-      <section className="px-6 py-14 md:py-20">
+      <section id="faq" className="px-6 py-14 md:py-20 scroll-mt-16">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">Frequently Asked Questions</h2>
         <p className="text-center text-walnut/60 mb-10">Common questions about ordering, customization, and pickup.</p>
         <FaqAccordion items={publicFaqRows || []} forceFlat />
