@@ -161,6 +161,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   const landing = PRODUCT_LANDING_CONTENT[params.slug as ProductKey];
   const isCornhole = params.slug === "cornhole-boards";
+  const isPlanter = params.slug === "planter-boxes";
 
   // Mirrors the visible "← All products" trail above with no other
   // purpose than giving Google the same two-step path in structured
@@ -256,6 +257,34 @@ export default async function ProductPage({ params }: { params: { slug: string }
                   <span className="text-walnut/70">A design proof to review and approve before we print</span>
                 </li>
               </ul>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {isPlanter && (
+        // Named "Sizing" rather than "Available Sizes" deliberately —
+        // there is no fixed size chart anywhere in the site's data.
+        // Every planter FAQ confirms the opposite: dimensions are
+        // fully custom to the space the customer provides. This
+        // section states that plainly, plus the one confirmed depth
+        // detail, rather than implying a menu of preset options that
+        // doesn't exist. Same compact-card treatment as Cornhole's
+        // spec block above, reused for visual consistency rather than
+        // inventing a new pattern.
+        <section className="max-w-4xl mx-auto px-6 pb-14">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="bg-white border border-walnut/10 rounded-xl p-5">
+              <h2 className="font-display text-lg text-walnut mb-2">Custom Dimensions</h2>
+              <p className="text-sm text-walnut/70">
+                There's no fixed size chart — every planter is built to the space you give us. Include your dimensions when requesting a quote.
+              </p>
+            </div>
+            <div className="bg-white border border-walnut/10 rounded-xl p-5">
+              <h2 className="font-display text-lg text-walnut mb-2">Planting Depth</h2>
+              <p className="text-sm text-walnut/70">
+                Designed with practical planting depth, while leaving room for the structure and drainage. Exact depth can vary by design.
+              </p>
             </div>
           </div>
         </section>
