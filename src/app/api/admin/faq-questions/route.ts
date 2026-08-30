@@ -76,7 +76,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const { id, answer, isPublic, category } = body;
+  const { id, answer, isPublic, showOnHomepage, category } = body;
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
   if (!answer?.trim()) return NextResponse.json({ error: "Answer text is required" }, { status: 400 });
 
@@ -97,6 +97,7 @@ export async function PATCH(req: NextRequest) {
     .update({
       answer: answer.trim(),
       is_public: !!isPublic,
+      show_on_homepage: !!showOnHomepage,
       category: category || "general",
       status: "answered",
       answered_at: new Date().toISOString()
