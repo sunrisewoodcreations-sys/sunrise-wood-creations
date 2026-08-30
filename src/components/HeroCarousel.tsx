@@ -57,9 +57,11 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Fixed aspect ratio + object-cover on every slide — crops
-          gracefully to fill the frame, never stretches or distorts,
-          regardless of each photo's original dimensions. */}
+      {/* Fixed aspect ratio + object-contain on every slide — shows the
+          entire photo within the frame, never crops or zooms into it.
+          Any leftover space (when a photo's own proportions don't
+          exactly match 16:9) is filled by this same bg-sawdust behind
+          it, rather than cutting off part of the picture. */}
       <div className="relative aspect-[16/9] bg-sawdust">
         <div
           className="flex h-full transition-transform duration-500 ease-in-out"
@@ -73,7 +75,7 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
                   alt={slide.alt}
                   fill
                   sizes="(max-width: 768px) 100vw, 768px"
-                  className="object-cover"
+                  className="object-contain"
                   priority={i === 0}
                 />
               ) : (
