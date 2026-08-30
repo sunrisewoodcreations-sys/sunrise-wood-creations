@@ -141,9 +141,9 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     "planter-boxes": {
       enabled: true,
       name: "Planter boxes",
-      tagline: "Cedar and pine planters built to last outdoors.",
+      tagline: "Cedar planters built to last outdoors.",
       description: "Built with weather-resistant wood and finished to hold up season after season.",
-      shortDesc: "Cedar and pine planters built for porches, gardens, and patios.",
+      shortDesc: "Cedar planters built for porches, gardens, and patios.",
       imageUrl: null,
       images: [
         { src: null, alt: "Planter boxes built by Sunrise Wood Creations" },
