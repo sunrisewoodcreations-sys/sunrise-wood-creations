@@ -167,7 +167,7 @@ export default async function HomePage() {
       <section className="px-6 py-14 md:py-20">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">Frequently Asked Questions</h2>
         <p className="text-center text-walnut/60 mb-10">Common questions about ordering, customization, and pickup.</p>
-        <FaqAccordion items={publicFaqRows || []} />
+        <FaqAccordion items={publicFaqRows || []} forceFlat />
         <AskQuestionForm />
       </section>
 
