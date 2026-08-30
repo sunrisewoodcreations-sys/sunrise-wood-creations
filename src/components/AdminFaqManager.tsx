@@ -93,7 +93,11 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
     setOpenId(q.id);
     setAnswerText(q.answer || "");
     setMakePublic(q.is_public);
-    setShowOnHomepage(q.show_on_homepage);
+    // Only apply the "general defaults to homepage" convenience the
+    // first time a question is answered — once it's been answered
+    // before, whatever was explicitly chosen last time wins, so
+    // re-editing an answer never silently flips this back on.
+    setShowOnHomepage(q.status === "answered" ? q.show_on_homepage : (q.category || "general") === "general");
     setAnswerCategory(q.category || "general");
     setError("");
   }
