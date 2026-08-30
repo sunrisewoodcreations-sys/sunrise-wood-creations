@@ -142,7 +142,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       enabled: true,
       name: "Planter boxes",
       tagline: "Cedar planters built to last outdoors.",
-      description: "Built with weather-resistant wood and finished to hold up season after season.",
+      description: "Built with cedar and finished for outdoor use. Perfect for porches, patios, and gardens, in the size that fits your space.",
       shortDesc: "Cedar planters built for porches, gardens, and patios.",
       imageUrl: null,
       images: [
