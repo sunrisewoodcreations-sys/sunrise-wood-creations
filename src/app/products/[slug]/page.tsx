@@ -78,7 +78,7 @@ const PRODUCT_LANDING_CONTENT: Record<ProductKey, {
   "planter-boxes": {
     ctaNoun: "your planter",
     whatYouGet: [
-      { title: "Weather-resistant wood", description: "Cedar is a common choice, built to hold up outdoors season after season." },
+      { title: "Cedar Construction", description: "Cedar is our most popular choice for outdoor planters." },
       { title: "Built-in drainage", description: "Designed with proper drainage for healthy plants." },
       { title: "Standard or Custom Sizes", description: "Choose from our standard sizes or tell us the space you have and we'll work with you on custom dimensions." },
       { title: "Finished for outdoor use", description: "Made for porches, patios, decks, and gardens." }
