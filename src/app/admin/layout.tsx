@@ -3,6 +3,7 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import AdminMobileNav from "@/components/AdminMobileNav";
+import AdminSidebarNav from "@/components/AdminSidebarNav";
 
 async function getBadgeCounts(supabase: ReturnType<typeof createClient>) {
   const [{ count: unrespondedQuotes }, { count: unrespondedGuestChats }, { data: orders }, { data: customerMessages }, { count: pendingReviews }, { count: pendingFaq }] =
@@ -34,15 +35,6 @@ async function getBadgeCounts(supabase: ReturnType<typeof createClient>) {
   };
 }
 
-function Badge({ count }: { count: number }) {
-  if (!count) return null;
-  return (
-    <span className="ml-2 bg-ember text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-      {count}
-    </span>
-  );
-}
-
 export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -60,42 +52,83 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const firstName = profile?.full_name?.split(" ")[0] || "there";
 
-  const navLinks = [
-    { href: "/admin/dashboard", label: "Dashboard" },
-    { href: "/admin/customers", label: "Customers" },
-    { href: "/admin/orders", label: "Orders" },
-    { href: "/admin/queue", label: "Queue" },
-    { href: "/admin/manufacturing-queue", label: "Manufacturing Queue" },
-    { href: "/admin/shop-floor", label: "Shop Floor Mode" },
-    { href: "/admin/schedule", label: "Production Schedule" },
-    { href: "/admin/calendar", label: "Calendar" },
-    { href: "/admin/messages", label: "Messages", badge: badges.messages },
-    { href: "/admin/quotes", label: "Quotes", badge: badges.quotes },
-    { href: "/admin/pickets", label: "Picket Inventory" },
-    { href: "/admin/pickup-settings", label: "Pickup Settings" },
-    { href: "/admin/pickup-appointments", label: "Pickup Appointments" },
-    { href: "/admin/production-capacity", label: "Production Capacity" },
-    { href: "/admin/products", label: "Products" },
-    { href: "/admin/cutlist", label: "Cut List Generator" },
-    { href: "/admin/material-planning", label: "Material Planning" },
-    { href: "/admin/production-analytics", label: "Production Analytics" },
-    { href: "/admin/designs", label: "Designs" },
-    { href: "/admin/reports", label: "Reports" },
-    { href: "/admin/homepage-carousel", label: "Homepage Carousel" },
-    { href: "/admin/product-images", label: "Product Photos" },
-    { href: "/admin/gallery", label: "Our Work Gallery" },
-    { href: "/admin/reviews", label: "Customer Reviews", badge: badges.reviews },
-    { href: "/admin/faq", label: "FAQ Questions", badge: badges.faq },
-    { href: "/admin/website-status", label: "Website Status" },
-    ...(profile?.is_demo_account ? [] : [{ href: "/admin/demo-mode", label: "Demo / Test Mode" }])
-  ];
+  // Every route below is completely unchanged from before — this is a
+  // pure reorganization into collapsible categories, not a rewrite of
+  // any page or functionality. Dashboard stays a standalone top-level
+  // link (not nested in a category) since it's the default landing
+  // page and the most frequently used single destination.
+  const dashboardLink = { href: "/admin/dashboard", label: "Dashboard" };
+
+  const categories = [
+    {
+      label: "Business",
+      links: [
+        { href: "/admin/orders", label: "Orders" },
+        { href: "/admin/customers", label: "Customers" },
+        { href: "/admin/quotes", label: "Quotes", badge: badges.quotes },
+        { href: "/admin/messages", label: "Messages", badge: badges.messages },
+        { href: "/admin/calendar", label: "Calendar" },
+        { href: "/admin/pickup-appointments", label: "Pickup Appointments" }
+      ]
+    },
+    {
+      label: "Production",
+      links: [
+        { href: "/admin/queue", label: "Production Queue" },
+        { href: "/admin/manufacturing-queue", label: "Manufacturing Queue" },
+        { href: "/admin/shop-floor", label: "Shop Floor Mode" },
+        { href: "/admin/schedule", label: "Production Schedule" },
+        { href: "/admin/production-capacity", label: "Production Capacity" },
+        { href: "/admin/cutlist", label: "Cut List Generator" },
+        { href: "/admin/material-planning", label: "Material Planning" },
+        { href: "/admin/production-analytics", label: "Production Analytics" },
+        { href: "/admin/designs", label: "Designs" }
+      ]
+    },
+    {
+      label: "Inventory & Products",
+      links: [
+        { href: "/admin/products", label: "Products" },
+        { href: "/admin/pickets", label: "Picket Inventory" }
+      ]
+    },
+    {
+      label: "Website Content",
+      links: [
+        { href: "/admin/homepage-carousel", label: "Homepage Carousel" },
+        { href: "/admin/product-images", label: "Product Photos" },
+        { href: "/admin/gallery", label: "Our Work Gallery" },
+        { href: "/admin/reviews", label: "Customer Reviews", badge: badges.reviews },
+        { href: "/admin/faq", label: "FAQ Questions", badge: badges.faq }
+      ]
+    },
+    {
+      label: "Reports",
+      links: [
+        { href: "/admin/reports", label: "Reports" }
+      ]
+    },
+    {
+      label: "Settings",
+      links: [
+        { href: "/admin/pickup-settings", label: "Pickup Settings" },
+        { href: "/admin/website-status", label: "Website Status" }
+      ]
+    },
+    {
+      label: "Tools",
+      links: [
+        ...(profile?.is_demo_account ? [] : [{ href: "/admin/demo-mode", label: "Demo / Test Mode" }])
+      ]
+    }
+    // Empty categories (Tools, for a demo account) are filtered out below
+    // so a collapsible section never appears with nothing inside it.
+  ].filter(category => category.links.length > 0);
 
   return (
     <div className="min-h-screen md:flex bg-white">
-      <AdminMobileNav links={navLinks} firstName={firstName} onSignOut={signOut} />
+      <AdminMobileNav dashboardLink={dashboardLink} categories={categories} firstName={firstName} onSignOut={signOut} />
 
-      {/* Desktop sidebar — completely unchanged, just now hidden below md
-          and shown as a flex item at md and up, instead of always-on. */}
       <div className="hidden md:block w-60 bg-[#1E3A5F] text-white/80 p-6 flex-shrink-0">
         <Link href="/" className="block">
           <Image
@@ -107,46 +140,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           />
         </Link>
         <div className="text-white font-display text-base mb-8 break-words leading-snug">Hello, {firstName}</div>
-        <nav className="flex flex-col gap-1 text-sm">
-          <Link href="/admin/dashboard" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Dashboard</Link>
-          <Link href="/admin/customers" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Customers</Link>
-          <Link href="/admin/orders" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Orders</Link>
-          <Link href="/admin/queue" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Queue</Link>
-          <Link href="/admin/manufacturing-queue" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Manufacturing Queue</Link>
-          <Link href="/admin/shop-floor" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Shop Floor Mode</Link>
-          <Link href="/admin/schedule" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Production Schedule</Link>
-          <Link href="/admin/calendar" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Calendar</Link>
-          <Link href="/admin/messages" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">
-            Messages<Badge count={badges.messages} />
-          </Link>
-          <Link href="/admin/quotes" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">
-            Quotes<Badge count={badges.quotes} />
-          </Link>
-          <Link href="/admin/pickets" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Picket Inventory</Link>
-          <Link href="/admin/pickup-settings" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Pickup Settings</Link>
-          <Link href="/admin/pickup-appointments" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Pickup Appointments</Link>
-          <Link href="/admin/production-capacity" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Production Capacity</Link>
-          <Link href="/admin/products" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Products</Link>
-          <Link href="/admin/cutlist" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Cut List Generator</Link>
-          <Link href="/admin/material-planning" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Material Planning</Link>
-          <Link href="/admin/production-analytics" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Production Analytics</Link>
-          <Link href="/admin/designs" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Designs</Link>
-          <Link href="/admin/reports" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Reports</Link>
-          <Link href="/admin/homepage-carousel" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Homepage Carousel</Link>
-          <Link href="/admin/product-images" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Product Photos</Link>
-          <Link href="/admin/gallery" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Our Work Gallery</Link>
-          <Link href="/admin/reviews" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">
-            Customer Reviews<Badge count={badges.reviews} />
-          </Link>
-          <Link href="/admin/faq" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">
-            FAQ Questions<Badge count={badges.faq} />
-          </Link>
-          <Link href="/admin/website-status" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Website Status</Link>
-          {!profile?.is_demo_account && (
-            <Link href="/admin/demo-mode" className="px-3 py-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white flex items-center">Demo / Test Mode</Link>
-          )}
-        </nav>
-        <form action={signOut} className="mt-10">
+        <Link href={dashboardLink.href} className="block px-3 py-2 mb-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white font-semibold">
+          {dashboardLink.label}
+        </Link>
+        <AdminSidebarNav categories={categories} />
+        <form action={signOut} className="mt-6">
           <button className="text-xs text-white/50 hover:text-white">Log out</button>
         </form>
       </div>
