@@ -29,8 +29,20 @@ export default function AccountMenu({ role, name }: { role: "admin" | "customer"
 
   const links = role === "admin"
     ? [
+        { href: "/admin/dashboard", label: "Dashboard" },
+        { href: "/admin/orders", label: "Orders" },
         { href: "/admin/customers", label: "Customers" },
-        { href: "/admin/orders", label: "Order Manager" }
+        // "Production", "Inventory", and "Settings" aren't single
+        // pages — they're category names. These point at the most
+        // representative existing page in each: the day-to-day
+        // production queue, the picket inventory page, and pickup
+        // settings, respectively.
+        { href: "/admin/queue", label: "Production" },
+        { href: "/admin/calendar", label: "Calendar" },
+        { href: "/admin/messages", label: "Messages" },
+        { href: "/admin/quotes", label: "Quotes" },
+        { href: "/admin/pickets", label: "Inventory" },
+        { href: "/admin/pickup-settings", label: "Settings" }
       ]
     : [
         { href: "/account", label: "My Orders" },
