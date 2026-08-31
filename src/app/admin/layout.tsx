@@ -62,7 +62,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   // The 4 pages used every day, promoted to one-click access above the
   // collapsible categories — same routes as their entries inside
-  // Business/Production below, not a separate or different page.
+  // Business/Production Tools below, not a separate or different page.
   // "Production" links to the Production Queue, the day-to-day
   // operational view, matching the same choice already made for the
   // account dropdown's own "Production" shortcut.
@@ -86,7 +86,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       ]
     },
     {
-      label: "Production",
+      label: "Production Tools",
       links: [
         { href: "/admin/queue", label: "Production Queue" },
         { href: "/admin/manufacturing-queue", label: "Manufacturing Queue" },
@@ -160,7 +160,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </Link>
         {/* Quick access — reachable in one click, same routes as their
             entries in the categories below (Orders/Business,
-            Customers/Business, Production/Production, Calendar/Business) —
+            Customers/Business, Production/Production Tools, Calendar/Business) —
             not a separate or duplicate page, just a shortcut to it. */}
         <div className="flex flex-col gap-0.5 mb-3 pb-3 border-b border-white/10">
           {quickLinks.map(link => (
