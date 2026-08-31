@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import NavIcon from "@/components/AdminNavIcons";
 
 type NavLink = { href: string; label: string; badge?: number };
 type NavCategory = { label: string; links: NavLink[] };
@@ -22,11 +23,13 @@ function Badge({ count }: { count: number }) {
 // not a separate mobile-only navigation design.
 export default function AdminMobileNav({
   dashboardLink,
+  quickLinks,
   categories,
   firstName,
   onSignOut
 }: {
   dashboardLink: NavLink;
+  quickLinks: NavLink[];
   categories: NavCategory[];
   firstName: string;
   onSignOut: () => void;
@@ -84,10 +87,29 @@ export default function AdminMobileNav({
             <Link
               href={dashboardLink.href}
               onClick={() => setOpen(false)}
-              className="flex items-center px-3 py-4 rounded-lg text-white active:bg-white/10 text-base font-semibold border-b border-white/10 mb-1"
+              className="flex items-center gap-2.5 px-3 py-4 rounded-lg text-white active:bg-white/10 text-base font-semibold"
             >
+              <NavIcon name={dashboardLink.label} />
               {dashboardLink.label}
             </Link>
+
+            {/* Quick access — the handful of pages used every day, one
+                tap away, same as the desktop sidebar's equivalent row.
+                Everything else stays in the collapsible categories below. */}
+            {quickLinks.map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-3.5 rounded-lg text-white/90 active:bg-white/10 text-sm font-medium"
+              >
+                <NavIcon name={link.label} />
+                {link.label}
+                <Badge count={link.badge || 0} />
+              </Link>
+            ))}
+
+            <div className="border-b border-white/10 my-1" />
 
             {categories.map(category => {
               const isOpen = openCategory === category.label;
@@ -98,7 +120,10 @@ export default function AdminMobileNav({
                     aria-expanded={isOpen}
                     className="w-full flex items-center justify-between px-3 py-4 rounded-lg text-white/85 active:bg-white/10 text-base border-b border-white/5"
                   >
-                    {category.label}
+                    <span className="flex items-center gap-2.5">
+                      <NavIcon name={category.label} />
+                      {category.label}
+                    </span>
                     <svg
                       width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                       strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
