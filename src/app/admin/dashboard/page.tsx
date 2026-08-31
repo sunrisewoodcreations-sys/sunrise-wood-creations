@@ -70,17 +70,17 @@ function Icon({ name, className }: { name: string; className?: string }) {
 }
 
 function SummaryCard({
-  label, value, subValue, color, href, icon, tint
-}: { label: string; value: string | number; subValue?: string; color?: string; href?: string; icon: string; tint: string }) {
+  label, value, subValue, color, href, icon, tint, compact
+}: { label: string; value: string | number; subValue?: string; color?: string; href?: string; icon: string; tint: string; compact?: boolean }) {
   const content = (
-    <div className={`bg-white border border-[#1E3A5F]/10 rounded-xl p-5 shadow-sm transition-all ${href ? "hover:shadow-lg hover:border-[#1E3A5F]/30 hover:-translate-y-0.5 cursor-pointer" : ""}`}>
-      <div className="flex items-center justify-between mb-3">
+    <div className={`bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm transition-all ${compact ? "p-3 sm:p-5" : "p-5"} ${href ? "hover:shadow-lg hover:border-[#1E3A5F]/30 hover:-translate-y-0.5 cursor-pointer" : ""}`}>
+      <div className={`flex items-center justify-between ${compact ? "mb-1.5 sm:mb-3" : "mb-3"}`}>
         <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide font-semibold">{label}</div>
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${tint}`}>
+        <div className={`rounded-lg flex items-center justify-center flex-shrink-0 ${compact ? "w-6 h-6 sm:w-8 sm:h-8" : "w-8 h-8"} ${tint}`}>
           <Icon name={icon} className="w-4 h-4" />
         </div>
       </div>
-      <div className={`text-3xl font-display font-semibold ${color || "text-[#1E3A5F]"}`}>{value}</div>
+      <div className={`font-display font-semibold ${compact ? "text-lg sm:text-3xl" : "text-3xl"} ${color || "text-[#1E3A5F]"}`}>{value}</div>
       {subValue && <div className="text-xs text-[#1E3A5F]/50 mt-1">{subValue}</div>}
     </div>
   );
@@ -423,6 +423,19 @@ export default async function DashboardPage() {
   const lowStockProducts = lowInventoryProducts.filter((p: any) => (p.stock_quantity ?? 0) > 0);
   const inventoryAlertCount = lowInventoryProducts.length + (isPicketsLow ? 1 : 0);
 
+  // Sum of exactly the 7 values shown in the Needs Attention strip
+  // below — nothing new calculated here, just a total of numbers
+  // already computed above, so this can never disagree with the
+  // cards it's labeling.
+  const needsAttentionCount =
+    overdueOrders.length +
+    outstandingBalanceTaskOrders.length +
+    waitingOnCustomerTaskOrders.length +
+    (unrespondedQuoteRequests || []).length +
+    (pendingFaqCount || 0) +
+    (pendingReviewsCount || 0) +
+    inventoryAlertCount;
+
   return (
     <div className="bg-cream/40 -m-8 p-8 min-h-full">
       <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Dashboard</h1>
@@ -437,7 +450,12 @@ export default async function DashboardPage() {
           a waiting customer is a genuine action item — its count is
           also shown once more in Today's Business as a KPI snapshot,
           not a duplicate display of the same list. ============ */}
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-3">Needs Attention</h2>
+      <div className="flex items-center gap-2 mb-3">
+        <h2 className="font-display text-lg text-[#1E3A5F]">Needs Attention</h2>
+        {needsAttentionCount > 0 && (
+          <span className="text-xs font-semibold text-white bg-ember px-2 py-0.5 rounded-full">{needsAttentionCount}</span>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
         <Link href="/admin/orders?filter=overdue" className="bg-white border-2 border-ember/30 rounded-xl shadow-sm p-3 text-center hover:border-ember/60 transition-colors">
@@ -666,10 +684,11 @@ export default async function DashboardPage() {
           <h2 className="font-display text-lg text-[#1E3A5F]">Quotes</h2>
           <a href="/admin/quotes?tab=quotes" className="text-xs font-semibold text-[#1E3A5F] hover:underline">View all quotes →</a>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
-          <SummaryCard label="Awaiting send" value={quotesAwaitingSend} href="/admin/quotes?tab=quotes" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
-          <SummaryCard label="Awaiting response" value={quotesAwaitingResponse} href="/admin/quotes?tab=quotes" icon="clock-alert" tint="bg-amber/20 text-amber" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 sm:gap-3">
+          <SummaryCard compact label="Awaiting send" value={quotesAwaitingSend} href="/admin/quotes?tab=quotes" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+          <SummaryCard compact label="Awaiting response" value={quotesAwaitingResponse} href="/admin/quotes?tab=quotes" icon="clock-alert" tint="bg-amber/20 text-amber" />
           <SummaryCard
+            compact
             label="Expiring soon"
             value={quotesExpiringSoon}
             color={quotesExpiringSoon > 0 ? "text-ember" : "text-sage"}
@@ -678,6 +697,7 @@ export default async function DashboardPage() {
             tint={quotesExpiringSoon > 0 ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"}
           />
           <SummaryCard
+            compact
             label="Expired"
             value={quotesExpired}
             color={quotesExpired > 0 ? "text-ember" : "text-sage"}
@@ -686,6 +706,7 @@ export default async function DashboardPage() {
             tint={quotesExpired > 0 ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"}
           />
           <SummaryCard
+            compact
             label="Conversion rate"
             value={quoteConversionRate == null ? "—" : `${quoteConversionRate}%`}
             color="text-sage"
@@ -693,8 +714,8 @@ export default async function DashboardPage() {
             icon="trending-up"
             tint="bg-sage/15 text-sage"
           />
-          <SummaryCard label="Total quoted value" value={`$${(totalQuotedValueCents / 100).toFixed(2)}`} href="/admin/quotes?tab=quotes" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
-          <SummaryCard label="Accepted quote value" value={`$${(acceptedQuoteValueCents / 100).toFixed(2)}`} color="text-sage" href="/admin/quotes?tab=quotes" icon="trending-up" tint="bg-sage/15 text-sage" />
+          <SummaryCard compact label="Total quoted value" value={`$${(totalQuotedValueCents / 100).toFixed(2)}`} href="/admin/quotes?tab=quotes" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+          <SummaryCard compact label="Accepted quote value" value={`$${(acceptedQuoteValueCents / 100).toFixed(2)}`} color="text-sage" href="/admin/quotes?tab=quotes" icon="trending-up" tint="bg-sage/15 text-sage" />
         </div>
       </div>
 
@@ -709,7 +730,7 @@ export default async function DashboardPage() {
         {recentOrders.map(o => {
           const balanceCents = (o.price_cents || 0) - (o.amount_paid_cents || 0);
           return (
-            <div key={o.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 px-4 py-3.5 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/40 transition-colors">
+            <div key={o.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 sm:gap-3 px-4 py-2.5 sm:py-3.5 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/40 transition-colors">
               <div className="min-w-0 flex-1">
                 <Link href={`/admin/orders/${o.id}`} className="text-sm font-semibold text-[#1E3A5F] hover:underline">
                   {productLabel(o.product_type as ProductType)} — {o.title}
@@ -752,7 +773,7 @@ export default async function DashboardPage() {
           {recentConversations.map((m: any) => {
             const order = m.orders;
             return (
-              <Link key={m.order_id} href={`/admin/orders/${m.order_id}`} className="flex items-center justify-between px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors">
+              <Link key={m.order_id} href={`/admin/orders/${m.order_id}`} className="flex items-center justify-between px-4 py-2 sm:py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors">
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-[#1E3A5F] truncate">
                     {order?.profiles?.full_name || "Unknown"} — {order ? order.title : "Order"}
@@ -771,7 +792,7 @@ export default async function DashboardPage() {
 
         <SectionCard title="Recent quote requests" emptyText="No quote requests yet." emptyIcon="message">
           {(recentQuotes || []).map((q: any) => (
-            <Link key={q.id} href="/admin/quotes" className="flex items-center justify-between px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors">
+            <Link key={q.id} href="/admin/quotes" className="flex items-center justify-between px-4 py-2 sm:py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors">
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-[#1E3A5F] truncate">{q.name}</div>
                 <div className="text-xs text-[#1E3A5F]/60 truncate">{q.description}</div>
