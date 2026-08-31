@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import NavIcon from "@/components/AdminNavIcons";
 
 type NavLink = { href: string; label: string; badge?: number };
 type NavCategory = { label: string; links: NavLink[] };
@@ -42,7 +43,10 @@ export default function AdminSidebarNav({ categories }: { categories: NavCategor
                 hasActive ? "text-white" : "text-white/70"
               } hover:bg-white/10 hover:text-white`}
             >
-              {category.label}
+              <span className="flex items-center gap-2.5">
+                <NavIcon name={category.label} className={hasActive ? "text-white" : "text-white/50"} />
+                {category.label}
+              </span>
               <svg
                 width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
