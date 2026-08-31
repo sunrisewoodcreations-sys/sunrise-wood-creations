@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import AdminMobileNav from "@/components/AdminMobileNav";
 import AdminSidebarNav from "@/components/AdminSidebarNav";
+import NavIcon from "@/components/AdminNavIcons";
 
 async function getBadgeCounts(supabase: ReturnType<typeof createClient>) {
   const [{ count: unrespondedQuotes }, { count: unrespondedGuestChats }, { data: orders }, { data: customerMessages }, { count: pendingReviews }, { count: pendingFaq }] =
@@ -58,6 +59,19 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // link (not nested in a category) since it's the default landing
   // page and the most frequently used single destination.
   const dashboardLink = { href: "/admin/dashboard", label: "Dashboard" };
+
+  // The 4 pages used every day, promoted to one-click access above the
+  // collapsible categories — same routes as their entries inside
+  // Business/Production below, not a separate or different page.
+  // "Production" links to the Production Queue, the day-to-day
+  // operational view, matching the same choice already made for the
+  // account dropdown's own "Production" shortcut.
+  const quickLinks = [
+    { href: "/admin/orders", label: "Orders" },
+    { href: "/admin/customers", label: "Customers" },
+    { href: "/admin/queue", label: "Production" },
+    { href: "/admin/calendar", label: "Calendar" }
+  ];
 
   const categories = [
     {
@@ -127,7 +141,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen md:flex bg-white">
-      <AdminMobileNav dashboardLink={dashboardLink} categories={categories} firstName={firstName} onSignOut={signOut} />
+      <AdminMobileNav dashboardLink={dashboardLink} quickLinks={quickLinks} categories={categories} firstName={firstName} onSignOut={signOut} />
 
       <div className="hidden md:block w-60 bg-[#1E3A5F] text-white/80 p-6 flex-shrink-0">
         <Link href="/" className="block">
@@ -140,9 +154,26 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           />
         </Link>
         <div className="text-white font-display text-base mb-8 break-words leading-snug">Hello, {firstName}</div>
-        <Link href={dashboardLink.href} className="block px-3 py-2 mb-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white font-semibold">
+        <Link href={dashboardLink.href} className="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-white/10 text-white hover:text-white font-semibold">
+          <NavIcon name={dashboardLink.label} />
           {dashboardLink.label}
         </Link>
+        {/* Quick access — reachable in one click, same routes as their
+            entries in the categories below (Orders/Business,
+            Customers/Business, Production/Production, Calendar/Business) —
+            not a separate or duplicate page, just a shortcut to it. */}
+        <div className="flex flex-col gap-0.5 mb-3 pb-3 border-b border-white/10">
+          {quickLinks.map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="flex items-center gap-2.5 px-3 py-1.5 rounded-md hover:bg-white/10 text-white/80 hover:text-white text-sm"
+            >
+              <NavIcon name={link.label} />
+              {link.label}
+            </Link>
+          ))}
+        </div>
         <AdminSidebarNav categories={categories} />
         <form action={signOut} className="mt-6">
           <button className="text-xs text-white/50 hover:text-white">Log out</button>
