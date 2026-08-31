@@ -4,6 +4,14 @@
 // than competing with the text labels. Both AdminSidebarNav (desktop)
 // and AdminMobileNav (mobile) import this same map, so the icons are
 // guaranteed to match between the two rather than drifting apart.
+const productionIcon = (
+  <>
+    <path d="M12 2 2 7l10 5 10-5-10-5z" />
+    <path d="M2 17l10 5 10-5" />
+    <path d="M2 12l10 5 10-5" />
+  </>
+);
+
 const PATHS: Record<string, JSX.Element> = {
   Dashboard: (
     <>
@@ -26,13 +34,12 @@ const PATHS: Record<string, JSX.Element> = {
       <circle cx="12" cy="7" r="4" />
     </>
   ),
-  Production: (
-    <>
-      <path d="M12 2 2 7l10 5 10-5-10-5z" />
-      <path d="M2 17l10 5 10-5" />
-      <path d="M2 12l10 5 10-5" />
-    </>
-  ),
+  // Same icon under both keys — the quick-access "Production" shortcut
+  // and the renamed "Production Tools" category are two different nav
+  // entries now, but visually related, so they intentionally share
+  // this one icon shape rather than needing two different ones.
+  Production: productionIcon,
+  "Production Tools": productionIcon,
   Calendar: (
     <>
       <rect x="3" y="4" width="18" height="18" rx="2" />
