@@ -271,11 +271,14 @@ function progressBarHtml(productType: ProductType, currentStatus: string): strin
     const isDone = currentIndex >= 0 && i < currentIndex;
     const isCurrent = i === currentIndex;
 
+    // Done and current both get a checkmark now — the only visual
+    // difference between them is color (sage vs ember). Only stages
+    // that haven't been reached yet stay as empty outlined circles.
     let circleTd: string;
     if (isDone) {
       circleTd = `<td style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#4F7A55;color:#fff;font-size:${fontSize}px;font-weight:bold;text-align:center;line-height:${circleSize}px;font-family:Arial,sans-serif;">&#10003;</td>`;
     } else if (isCurrent) {
-      circleTd = `<td style="width:${circleSize + 2}px;height:${circleSize + 2}px;border-radius:50%;background:#ffffff;border:3px solid #D9603A;font-size:0;">&nbsp;</td>`;
+      circleTd = `<td style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#D9603A;color:#fff;font-size:${fontSize}px;font-weight:bold;text-align:center;line-height:${circleSize}px;font-family:Arial,sans-serif;">&#10003;</td>`;
     } else {
       circleTd = `<td style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#ffffff;border:2px solid #e5d9c3;font-size:0;">&nbsp;</td>`;
     }
@@ -290,7 +293,11 @@ function progressBarHtml(productType: ProductType, currentStatus: string): strin
       // Connector after step i: sage if fully between two done steps,
       // ember if it's the one leading into the current step, muted otherwise.
       const connectorColor = i < currentIndex - 1 ? "#4F7A55" : i === currentIndex - 1 ? "#D9603A" : "#e5d9c3";
-      circleRow += `<td width="${connectorWidthPct}%" style="height:3px;background:${connectorColor};font-size:0;line-height:0;">&nbsp;</td>`;
+      // Bulletproof thin line: a nested single-cell table forces this
+      // exact pixel height in Gmail/Outlook — a bare <td style="height:2px">
+      // on its own is silently ignored by several email clients, which
+      // stretch it to fill the row instead, rendering as a solid block.
+      circleRow += `<td width="${connectorWidthPct}%" valign="middle" style="font-size:0;line-height:0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="height:2px;line-height:2px;font-size:1px;background-color:${connectorColor};">&nbsp;</td></tr></table></td>`;
       labelRow += `<td></td>`;
     }
   });
