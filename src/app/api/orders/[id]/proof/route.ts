@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendProofReadyEmail } from "@/lib/email";
 import { shouldNotify } from "@/lib/notify";
+import { ProductType } from "@/lib/statusSteps";
 
 // Vercel's servers have no fonts installed, so sharp's SVG text rendering
 // (which uses fontconfig under the hood) can't find anything to draw with
@@ -127,6 +128,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     await sendProofReadyEmail({
       toEmail: customer.email,
       customerName: customer.full_name,
+      productType: order.product_type as ProductType,
       orderTitle: order.title,
       orderId: order.id,
       imageUrl: watermarkedUrl,
