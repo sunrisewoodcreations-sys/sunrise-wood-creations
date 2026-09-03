@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { productLabel, statusLabel, ProductType } from "./statusSteps";
+import { productLabel, statusLabel, stepsFor, ProductType } from "./statusSteps";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -84,7 +84,21 @@ function escapeHtml(s: string) {
 
 type EmailButton = { text: string; url: string; color?: string };
 
-function shell(opts: { preheader: string; bodyHtml: string; buttonText?: string; buttonUrl?: string; buttons?: EmailButton[] }) {
+// Defaults match exactly what every email already used before this
+// redesign — any caller that doesn't pass contactPhone/contactEmail
+// gets identical footer text to before, so this is purely additive.
+const DEFAULT_CONTACT_PHONE = "(269) 762-1460";
+const DEFAULT_CONTACT_EMAIL = "sunrisewoodcreations@gmail.com";
+
+function shell(opts: {
+  preheader: string;
+  bodyHtml: string;
+  buttonText?: string;
+  buttonUrl?: string;
+  buttons?: EmailButton[];
+  contactPhone?: string;
+  contactEmail?: string;
+}) {
   // Multiple buttons (used by the quote email's View/Accept/Decline) is
   // additive — every existing caller still just passes buttonText/buttonUrl
   // and gets the exact same single-button output as before.
@@ -106,6 +120,10 @@ function shell(opts: { preheader: string; bodyHtml: string; buttonText?: string;
     </table>`
     : "";
 
+  const phone = opts.contactPhone || DEFAULT_CONTACT_PHONE;
+  const email = opts.contactEmail || DEFAULT_CONTACT_EMAIL;
+  const phoneTelHref = phone.replace(/\D/g, "");
+
   return `
 <!DOCTYPE html>
 <html>
@@ -120,27 +138,33 @@ function shell(opts: { preheader: string; bodyHtml: string; buttonText?: string;
       <td align="center">
         <table role="presentation" width="100%" style="max-width: 480px; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e5d9c3;" cellpadding="0" cellspacing="0">
           <tr>
-            <td style="background-color: #3D2B1F; padding: 24px 32px;">
-              <span style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: bold; color: #F7F1E6;">
-                Sunrise Wood Creations
-              </span>
+            <td style="background-color: #F7F1E6; padding: 20px 32px; text-align: center; border-bottom: 1px solid #e5d9c3;">
+              <img
+                src="${process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com"}/logo-header.png"
+                alt="Sunrise Wood Creations"
+                width="150"
+                height="40"
+                style="height: 40px; width: auto; max-width: 150px; border: 0; display: inline-block;"
+              >
             </td>
           </tr>
           <tr>
-            <td style="padding: 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #2A211C;">
+            <td style="padding: 28px 32px 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #2A211C;">
               ${opts.bodyHtml}
               ${button}
             </td>
           </tr>
           <tr>
-            <td style="padding: 20px 32px; background-color: #F7F1E6; border-top: 1px solid #e5d9c3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 13px; color: #8a7a6b;">
-              <p style="margin: 0 0 8px;">
-                This inbox is not monitored — we don't receive replies sent here.
+            <td style="padding: 20px 32px; background-color: #F7F1E6; border-top: 1px solid #e5d9c3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;">
+              <p style="margin: 0 0 10px; font-size: 13px; color: #6b5d4f;">
+                Questions? Call <a href="tel:${phoneTelHref}" style="color: #1E3A5F; font-weight: 600; text-decoration: none;">${phone}</a> or email
+                <a href="mailto:${email}" style="color: #1E3A5F; font-weight: 600; text-decoration: none;">${email}</a>
               </p>
-              <p style="margin: 0;">
-                Questions? Call <a href="tel:2697621460" style="color: #8a7a6b;">(269) 762-1460</a> or email
-                <a href="mailto:sunrisewoodcreations@gmail.com" style="color: #8a7a6b;">sunrisewoodcreations@gmail.com</a>.
+              <p style="margin: 0 0 14px; font-size: 11px; color: #a89684;">
+                This inbox is not monitored — replies here won't be seen.
               </p>
+              <p style="margin: 0; font-size: 12px; color: #8a7a6b; font-weight: bold;">Sunrise Wood Creations</p>
+              <p style="margin: 2px 0 0; font-size: 11px; color: #a89684;">Handmade in Michigan &bull; Built to order &bull; Local pickup</p>
             </td>
           </tr>
         </table>
@@ -149,6 +173,133 @@ function shell(opts: { preheader: string; bodyHtml: string; buttonText?: string;
   </table>
 </body>
 </html>`;
+}
+
+// The one line that needs to differ by product, per the approved
+// design — every other status uses identical wording regardless of
+// product type. Each line reuses phrasing already established on that
+// product's own page (e.g. signs are already described site-wide as
+// "cut, sanded, and finished by hand").
+const PRODUCT_BUILD_LINES: Record<ProductType, string> = {
+  cornhole: "Your cornhole boards are now being built and finished by hand.",
+  sign: "Your wooden sign is now being cut, sanded, and finished by hand.",
+  planter: "Your planter box is now being built and finished by hand.",
+  cutting_board: "Your cutting board is now being built and finished by hand."
+};
+
+// Heading + body per status key. "being_built"/"being_assembled" have
+// no fixed heading here — it's built from the existing statusLabel()
+// function instead ("Being Built" vs "Being Made"), so the headline
+// can never say something the site's own step list doesn't already say.
+const STATUS_COPY: Record<string, { heading?: string; body: (productType: ProductType) => string }> = {
+  order_placed: {
+    heading: "Your Order Has Been Placed",
+    body: () => "Thanks for your order! We've got it queued up and will keep you posted as it moves through the shop."
+  },
+  deposit_received: {
+    heading: "Deposit Received",
+    body: () => "We've received your deposit and your order is officially underway. Next, we'll put together a design proof for you to review."
+  },
+  design_proof_sent: {
+    heading: "Design Proof Sent",
+    body: () => "We've sent your design proof for review. Check your order for details."
+  },
+  design_approved: {
+    heading: "Design Approved",
+    body: () => "Your design is approved and we're getting ready to start building your boards."
+  },
+  being_built: {
+    body: (productType) => PRODUCT_BUILD_LINES[productType]
+  },
+  being_assembled: {
+    body: (productType) => PRODUCT_BUILD_LINES[productType]
+  },
+  ready_for_pickup: {
+    heading: "Ready for Pickup!",
+    body: () => "Your order is finished and ready to be picked up."
+  },
+  picked_up: {
+    heading: "Order Complete — Thank You!",
+    body: () => "Thanks so much for picking up your order — we hope you enjoy it for years to come."
+  }
+};
+
+// Same phone/email already used in the site footer (site_settings.contact)
+// — read live here so the email never drifts out of sync with whatever
+// the business has configured, instead of a second hardcoded copy.
+// Falls back to shell()'s own defaults (identical to what every email
+// already showed before this change) if the read fails for any reason,
+// so a hiccup here can never block an order-status email from sending.
+async function getContactInfo(): Promise<{ phone?: string; email?: string }> {
+  try {
+    const supabase = createClient();
+    const { data } = await supabase.from("site_settings").select("data").eq("id", 1).single();
+    const contact = (data?.data as any)?.contact;
+    if (contact?.phone && contact?.email) {
+      return { phone: contact.phone, email: contact.email };
+    }
+  } catch {
+    // Fall through to shell()'s defaults.
+  }
+  return {};
+}
+
+// Table-based, email-safe progress indicator — mirrors the exact same
+// color language as the real ProgressTracker.tsx shown on the account
+// page (sage = done, ember = current, muted = upcoming), just built
+// from <table> cells instead of flexbox, since Gmail and Outlook don't
+// reliably support flexbox. Fully driven by stepsFor(productType), the
+// same function that already defines the account page's own progress
+// bar — so it automatically shows 4 steps for standard products or 7
+// for cornhole, and never shows a step that product doesn't have.
+function progressBarHtml(productType: ProductType, currentStatus: string): string {
+  const steps = stepsFor(productType);
+  const currentIndex = steps.findIndex(s => s.key === currentStatus);
+  const n = steps.length;
+  // 80% of the row's width is split evenly across the circles, 20% across
+  // the connecting bars between them — same ratio at any step count.
+  const circleWidthPct = (80 / n).toFixed(2);
+  const connectorWidthPct = n > 1 ? (20 / (n - 1)).toFixed(2) : "0";
+  const circleSize = n > 5 ? 20 : 22;
+  const fontSize = n > 5 ? 11 : 12;
+  const labelFontSize = n > 5 ? 8 : 9;
+
+  let circleRow = "";
+  let labelRow = "";
+
+  steps.forEach((step, i) => {
+    const isDone = currentIndex >= 0 && i < currentIndex;
+    const isCurrent = i === currentIndex;
+
+    let circleTd: string;
+    if (isDone) {
+      circleTd = `<td style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#4F7A55;color:#fff;font-size:${fontSize}px;font-weight:bold;text-align:center;line-height:${circleSize}px;font-family:Arial,sans-serif;">&#10003;</td>`;
+    } else if (isCurrent) {
+      circleTd = `<td style="width:${circleSize + 2}px;height:${circleSize + 2}px;border-radius:50%;background:#ffffff;border:3px solid #D9603A;font-size:0;">&nbsp;</td>`;
+    } else {
+      circleTd = `<td style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#ffffff;border:2px solid #e5d9c3;font-size:0;">&nbsp;</td>`;
+    }
+
+    circleRow += `<td width="${circleWidthPct}%" align="center" style="font-size:0;"><table cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>${circleTd}</tr></table></td>`;
+
+    const labelColor = isDone ? "#4F7A55" : isCurrent ? "#D9603A" : "#a89684";
+    const labelWeight = isCurrent ? "font-weight:bold;" : "";
+    labelRow += `<td align="center" style="font-size:${labelFontSize}px;color:${labelColor};${labelWeight}padding-top:6px;">${escapeHtml(step.label)}</td>`;
+
+    if (i < n - 1) {
+      // Connector after step i: sage if fully between two done steps,
+      // ember if it's the one leading into the current step, muted otherwise.
+      const connectorColor = i < currentIndex - 1 ? "#4F7A55" : i === currentIndex - 1 ? "#D9603A" : "#e5d9c3";
+      circleRow += `<td width="${connectorWidthPct}%" style="height:3px;background:${connectorColor};font-size:0;line-height:0;">&nbsp;</td>`;
+      labelRow += `<td></td>`;
+    }
+  });
+
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 4px 0 6px;">
+      <tr>${circleRow}</tr>
+      <tr>${labelRow}</tr>
+    </table>`;
 }
 
 export async function sendOrderStatusEmail(opts: {
@@ -163,7 +314,17 @@ export async function sendOrderStatusEmail(opts: {
   invoiceNumber?: number;
   invoiceYear?: number;
 }) {
-  const label = statusLabel(opts.productType, opts.newStatus);
+  const copy = STATUS_COPY[opts.newStatus];
+  // statusLabel() correctly returns sentence case ("Being built") for its
+  // other uses (status badges, the admin dropdown) — title-cased here only,
+  // just for this heading, rather than changing that shared function.
+  const titleCasedLabel = statusLabel(opts.productType, opts.newStatus)
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+  const heading = copy?.heading || `Your Order Is ${titleCasedLabel}`;
+  const bodyLine = copy ? copy.body(opts.productType) : "";
+
   const balanceHtml = typeof opts.balanceDueCents === "number"
     ? opts.balanceDueCents > 0
       ? `
@@ -183,19 +344,28 @@ export async function sendOrderStatusEmail(opts: {
         </p>`
     : "";
 
+  const { phone: contactPhone, email: contactEmail } = await getContactInfo();
+
   const html = shell({
-    preheader: `Your order has moved to: ${label}`,
+    preheader: heading,
+    contactPhone,
+    contactEmail,
     bodyHtml: `
-      <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
-      <p style="margin: 0 0 16px;">
-        Your order — <strong>${productLabel(opts.productType)}: ${opts.orderTitle}</strong> — has moved to:
-      </p>
-      <p style="margin: 0; font-size: 20px; font-weight: bold; color: #D9603A; font-family: Georgia, serif;">
-        ${label}
-      </p>
+      <h1 style="margin: 0 0 6px; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #1E3A5F;">${escapeHtml(heading)}</h1>
+      <p style="margin: 0 0 20px; color: #6b5d4f; font-size: 14px;">Hi ${escapeHtml(opts.customerName)},</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 22px;">
+        <tr>
+          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px;">
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a7a6b; margin-bottom: 2px;">Your Order</div>
+            <div style="font-size: 16px; font-weight: bold; color: #3D2B1F;">${escapeHtml(productLabel(opts.productType))} — ${escapeHtml(opts.orderTitle)}</div>
+          </td>
+        </tr>
+      </table>
+      ${progressBarHtml(opts.productType, opts.newStatus)}
+      <p style="margin: 20px 0 0;">${escapeHtml(bodyLine)}</p>
       ${balanceHtml}
     `,
-    buttonText: "View your order",
+    buttonText: "View Your Order",
     buttonUrl: `${SITE_URL}/account/orders/${opts.orderId}`
   });
 
@@ -208,11 +378,12 @@ export async function sendOrderStatusEmail(opts: {
     orderId: (opts as any).orderId,
     from: FROM,
     to: opts.toEmail,
-    subject: `Your order is now: ${label}`,
+    subject: heading,
     html,
     ...(attachments ? { attachments } : {})
   });
 }
+
 
 export async function sendProofReadyEmail(opts: {
   toEmail: string;
