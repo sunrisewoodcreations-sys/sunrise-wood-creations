@@ -399,6 +399,7 @@ export async function sendOrderStatusEmail(opts: {
 export async function sendProofReadyEmail(opts: {
   toEmail: string;
   customerName: string;
+  productType: ProductType;
   orderTitle: string;
   orderId: string;
   imageUrl: string;
@@ -423,7 +424,7 @@ export async function sendProofReadyEmail(opts: {
     bodyHtml: `
       <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
       <p style="margin: 0 0 16px;">
-        We've attached the design proof for your cornhole boards — <strong>${opts.orderTitle}</strong>. Take a look, then approve it or let us know what to change — right from this email, no login needed.
+        We've attached the design proof for your ${productLabel(opts.productType)}. Take a look, then approve it or let us know what you'd like changed — right from this email. No login needed.
       </p>
     `,
     buttonText: "Approve or request changes",
