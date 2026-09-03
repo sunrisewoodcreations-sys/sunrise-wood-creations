@@ -271,14 +271,18 @@ function progressBarHtml(productType: ProductType, currentStatus: string): strin
     const isDone = currentIndex >= 0 && i < currentIndex;
     const isCurrent = i === currentIndex;
 
-    // Done and current both get a checkmark now — the only visual
-    // difference between them is color (sage vs ember). Only stages
-    // that haven't been reached yet stay as empty outlined circles.
+    // Mirrors the real ProgressTracker.tsx exactly (the same component
+    // used on the account page and admin panel): done = solid sage
+    // circle with a checkmark; current = white circle with a 3px ember
+    // border and a small solid ember dot inside, no checkmark — a
+    // checkmark means "completed," and the current stage isn't done
+    // yet; future = white circle with a muted border, empty.
     let circleTd: string;
     if (isDone) {
       circleTd = `<td style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#4F7A55;color:#fff;font-size:${fontSize}px;font-weight:bold;text-align:center;line-height:${circleSize}px;font-family:Arial,sans-serif;">&#10003;</td>`;
     } else if (isCurrent) {
-      circleTd = `<td style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#D9603A;color:#fff;font-size:${fontSize}px;font-weight:bold;text-align:center;line-height:${circleSize}px;font-family:Arial,sans-serif;">&#10003;</td>`;
+      const dotSize = Math.max(6, Math.round(circleSize * 0.4));
+      circleTd = `<td align="center" valign="middle" style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#ffffff;border:3px solid #D9603A;"><table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="width:${dotSize}px;height:${dotSize}px;border-radius:50%;background:#D9603A;font-size:0;line-height:0;">&nbsp;</td></tr></table></td>`;
     } else {
       circleTd = `<td style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#ffffff;border:2px solid #e5d9c3;font-size:0;">&nbsp;</td>`;
     }
