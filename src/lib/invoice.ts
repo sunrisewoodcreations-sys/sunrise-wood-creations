@@ -53,6 +53,11 @@ type InvoiceLineItem = {
   description: string;
   quantity: number;
   lineTotalCents: number; // this item's share of the tax-inclusive total
+  // The real, exact per-unit tax-inclusive price, when it's already known
+  // (from order_items.unit_price_cents) — lets the invoice compute the
+  // displayed unit price directly instead of dividing lineTotalCents back
+  // down by quantity, which only recovers what this value already was.
+  unitPriceCentsInclusive?: number;
 };
 
 // Checks one product's stock against its own threshold, and sends a
@@ -84,6 +89,7 @@ async function buildInvoicePdf(opts: {
   invoiceNumber: number;
   invoiceYear: number;
   invoiceDate: Date;
+  dueDate?: string | null;
   customerName: string;
   customerEmail?: string;
   lineItems: InvoiceLineItem[];
@@ -187,6 +193,18 @@ async function buildInvoicePdf(opts: {
     opts.invoiceDate.toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric", month: "long", day: "numeric" }),
     metaY
   ); metaY -= 17;
+  // Only shown when the order actually has one set — this is the
+  // order's own due date (orders.due_date, the same field already
+  // used everywhere else in the app for "due this week," "overdue,"
+  // etc.), not a separate invented payment-terms date. Since this is a
+  // pay-at-pickup business with no net-terms invoicing, this date
+  // already represents when final payment is expected.
+  if (opts.dueDate) {
+    const [dy, dm, dd] = opts.dueDate.split("-").map(Number);
+    const dueDateObj = new Date(Date.UTC(dy, dm - 1, dd, 12));
+    metaRow("Due Date", dueDateObj.toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric", month: "long", day: "numeric" }), metaY);
+    metaY -= 17;
+  }
   metaRow("Status", isPaidInFull ? "Paid in Full" : "Balance Due", metaY, isPaidInFull ? SAGE : EMBER, true);
 
   // ===== BILL TO =====
@@ -218,7 +236,15 @@ async function buildInvoicePdf(opts: {
     return formatCurrency(cents);
   }
 
-  let subtotal = 0;
+  // Every line's Amount is DERIVED from its (rounded) unit Price by
+  // multiplying by quantity — never independently rounded from a
+  // separate division — so "Qty x Price = Amount" holds exactly on
+  // every row, by construction. Subtotal is the sum of these already-
+  // consistent line amounts; tax is computed as whatever's left over
+  // to reach the total (Total - Subtotal), the same way it already
+  // absorbs rounding in the shared backOutTax() used elsewhere in the
+  // app — so "Subtotal + Tax = Total" also holds exactly, always.
+  let subtotalCents = 0;
   const descMaxWidth = col.descRight - (marginX + 8) - 10;
   // Reserves enough room below for the totals box + notes card + footer
   // (roughly 300pt) so a long item list can never run into them. The
@@ -227,17 +253,27 @@ async function buildInvoicePdf(opts: {
   // recalibrated for the new, taller totals/notes sections.
   const minYForItems = 350;
   let itemsShown = 0;
+
+  function unitAndLineCents(item: InvoiceLineItem, qty: number): { unitPriceCents: number; lineAmountCents: number } {
+    // Prefer the real, exact per-unit price when it's already known
+    // (order_items.unit_price_cents) rather than recovering it by
+    // dividing a combined total back down — this is exact, no rounding
+    // needed at all, for the common case of a real stored unit price.
+    const unitInclusiveCents = item.unitPriceCentsInclusive ?? Math.round(item.lineTotalCents / qty);
+    const unitPriceCents = Math.round(unitInclusiveCents / (1 + SALES_TAX_RATE));
+    return { unitPriceCents, lineAmountCents: unitPriceCents * qty };
+  }
+
   for (const item of opts.lineItems) {
     const qty = Math.max(1, item.quantity || 1);
-    const lineSubtotal = (item.lineTotalCents / 100) / (1 + SALES_TAX_RATE);
-    const unitSubtotal = lineSubtotal / qty;
+    const { unitPriceCents, lineAmountCents } = unitAndLineCents(item, qty);
 
     const wrapped = wrapText(item.description, descMaxWidth, font, bodySize);
     const rowHeight = Math.max(1, wrapped.length) * lineHeight + rowPaddingV;
 
     if (y - rowHeight < minYForItems && itemsShown > 0) break;
 
-    subtotal += lineSubtotal;
+    subtotalCents += lineAmountCents;
 
     if (itemsShown % 2 === 1) {
       page.drawRectangle({ x: marginX, y: y - rowHeight + rowPaddingV - 4, width: rightEdge - marginX, height: rowHeight, color: ROW_SHADE });
@@ -248,8 +284,8 @@ async function buildInvoicePdf(opts: {
       page.drawText(line, { x: marginX + 8, y: firstLineY - i * lineHeight, size: bodySize, font, color: WALNUT });
     });
     rightAlignedText(String(qty), col.qtyRight, firstLineY, bodySize, font, WALNUT);
-    rightAlignedText(formatCurrencyLocal(unitSubtotal * 100), col.priceRight, firstLineY, bodySize, font, WALNUT);
-    rightAlignedText(formatCurrencyLocal(lineSubtotal * 100), col.amountRight - 8, firstLineY, bodySize, font, WALNUT);
+    rightAlignedText(formatCurrencyLocal(unitPriceCents), col.priceRight, firstLineY, bodySize, font, WALNUT);
+    rightAlignedText(formatCurrencyLocal(lineAmountCents), col.amountRight - 8, firstLineY, bodySize, font, WALNUT);
 
     y -= rowHeight;
     itemsShown++;
@@ -259,18 +295,22 @@ async function buildInvoicePdf(opts: {
     const remaining = opts.lineItems.length - itemsShown;
     // Recompute the true subtotal from every item, not just the ones
     // shown, so the totals below are always correct even if the list
-    // had to be cut short — the same principle as the original's
-    // calculation, just guarded against this edge case.
-    subtotal = opts.lineItems.reduce((sum, it) => sum + (it.lineTotalCents / 100) / (1 + SALES_TAX_RATE), 0);
+    // had to be cut short — same integer-cents method as above, just
+    // applied across every item rather than only the visible ones.
+    subtotalCents = opts.lineItems.reduce((sum, it) => {
+      const qty = Math.max(1, it.quantity || 1);
+      return sum + unitAndLineCents(it, qty).lineAmountCents;
+    }, 0);
     page.drawText(`+ ${remaining} more item${remaining === 1 ? "" : "s"} — see full order details`, {
       x: marginX + 8, y: y - 8, size: 9, font, color: GRAY
     });
     y -= 20;
   }
 
+
   page.drawLine({ start: { x: marginX, y: y + 4 }, end: { x: rightEdge, y: y + 4 }, thickness: 1, color: LIGHT_LINE });
 
-  const tax = total - subtotal;
+  const taxCents = opts.totalCents - subtotalCents;
 
   // ===== TOTALS BOX =====
   // Taller rows than before, both for the "much more visually prominent"
@@ -295,8 +335,8 @@ async function buildInvoicePdf(opts: {
     rightAlignedText(value, rightEdge - 14, ty, big ? 13 : 10.5, big ? bold : font, c);
     ty -= totalsRowH;
   }
-  totalsRow("Subtotal", `$${subtotal.toFixed(2)}`);
-  totalsRow(`Sales Tax (${(SALES_TAX_RATE * 100).toFixed(0)}%)`, `$${tax.toFixed(2)}`);
+  totalsRow("Subtotal", formatCurrencyLocal(subtotalCents));
+  totalsRow(`Sales Tax (${(SALES_TAX_RATE * 100).toFixed(0)}%)`, formatCurrencyLocal(taxCents));
   page.drawLine({ start: { x: totalsBoxX + 14, y: ty + 14 }, end: { x: rightEdge - 14, y: ty + 14 }, thickness: 1, color: WALNUT });
   totalsRow("Total", `$${total.toFixed(2)}`, true, WALNUT);
   totalsRow("Amount Paid", `$${paid.toFixed(2)}`);
@@ -468,7 +508,8 @@ export async function generateInvoicePdfForOrder(
     ? orderItems!.map((it: any) => ({
         description: it.title,
         quantity: it.quantity || 1,
-        lineTotalCents: (it.unit_price_cents || 0) * (it.quantity || 1)
+        lineTotalCents: (it.unit_price_cents || 0) * (it.quantity || 1),
+        unitPriceCentsInclusive: it.unit_price_cents || 0
       }))
     : [{
         description: `${productLabel(order.product_type as ProductType)} — ${order.title}`,
@@ -482,6 +523,7 @@ export async function generateInvoicePdfForOrder(
     invoiceNumber,
     invoiceYear,
     invoiceDate: new Date(order.created_at),
+    dueDate: order.due_date,
     customerName: customer.full_name,
     customerEmail: customer.email,
     lineItems,
