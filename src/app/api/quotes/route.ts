@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  const { customerId, items, discountCents, deliveryCents, expirationDate, notes, terms, quoteRequestId } = await req.json();
+  const { customerId, items, discountCents, deliveryCents, expirationDate, notes, terms, quoteRequestId, couponId, couponDiscountCents } = await req.json();
 
   if (!customerId) return NextResponse.json({ error: "Select a customer" }, { status: 400 });
   if (!Array.isArray(items) || items.length === 0) return NextResponse.json({ error: "Add at least one line item" }, { status: 400 });
@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
 
   const discount = Math.max(0, Math.round(Number(discountCents)) || 0);
   const delivery = Math.max(0, Math.round(Number(deliveryCents)) || 0);
-  const totals = calculateQuoteTotals(normalizedItems, discount, delivery);
+  const couponDiscount = Math.max(0, Math.round(Number(couponDiscountCents)) || 0);
+  const totals = calculateQuoteTotals(normalizedItems, discount, delivery, couponDiscount);
 
   const admin = createAdminClient();
   const todayStr = todayEasternStr();
@@ -62,6 +63,8 @@ export async function POST(req: NextRequest) {
       notes: notes || null,
       terms: terms || null,
       quote_request_id: quoteRequestId || null,
+      coupon_id: couponId || null,
+      coupon_discount_cents: couponId ? couponDiscount : null,
       is_demo: !!adminProfile?.is_demo_account
     })
     .select()
