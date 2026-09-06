@@ -49,6 +49,9 @@ export default function QuoteEditor({
     expiration_date: string;
     discount_cents: number;
     delivery_cents: number;
+    coupon_id: string | null;
+    coupon_discount_cents: number | null;
+    coupons: { code: string } | null;
     notes: string | null;
     terms: string | null;
     share_token: string;
@@ -96,6 +99,18 @@ export default function QuoteEditor({
   const [status, setStatus] = useState(existingQuote?.status || "draft");
   const [notes, setNotes] = useState(existingQuote?.notes || "");
   const [terms, setTerms] = useState(existingQuote?.terms || "");
+
+  // Coupon — a customer mentions a code by phone/email, the admin
+  // enters it here, and the server validates and calculates the
+  // discount using the exact same engine the campaign feature uses.
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ couponId: string; code: string; discountCents: number } | null>(
+    existingQuote?.coupon_id && existingQuote.coupons
+      ? { couponId: existingQuote.coupon_id, code: existingQuote.coupons.code, discountCents: existingQuote.coupon_discount_cents || 0 }
+      : null
+  );
+  const [couponError, setCouponError] = useState("");
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
 
   const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -183,7 +198,48 @@ export default function QuoteEditor({
   }));
   const discountCents = Math.max(0, Math.round((Number(discount) || 0) * 100));
   const deliveryCents = Math.max(0, Math.round((Number(delivery) || 0) * 100));
-  const totals = calculateQuoteTotals(totalsInput, discountCents, deliveryCents);
+  const couponDiscountCents = appliedCoupon?.discountCents || 0;
+  const totals = calculateQuoteTotals(totalsInput, discountCents, deliveryCents, couponDiscountCents);
+
+  function productTypeForItem(it: LineItem): string {
+    if (!it.selectedProductId) return "";
+    return products.find(p => p.id === it.selectedProductId)?.product_type || "";
+  }
+
+  async function handleApplyCoupon() {
+    setCouponError("");
+    if (!selectedCustomer) { setCouponError("Select a customer first."); return; }
+    if (!couponCode.trim()) return;
+    setCheckingCoupon(true);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: couponCode,
+          customerId: selectedCustomer.id,
+          existingManualDiscountCents: discountCents,
+          items: items.map(it => ({
+            productType: productTypeForItem(it),
+            productId: it.selectedProductId || null,
+            quantity: Math.max(1, Math.round(Number(it.quantity)) || 1),
+            unitPriceCentsInclusive: Math.round((Number(it.unitPrice) || 0) * 100)
+          }))
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) { setCouponError(data.error || "Couldn't apply that coupon."); return; }
+      setAppliedCoupon({ couponId: data.couponId, code: data.code, discountCents: data.discountCents });
+    } finally {
+      setCheckingCoupon(false);
+    }
+  }
+
+  function handleRemoveCoupon() {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+  }
 
   const isExpired = new Date(expirationDate + "T23:59:59Z") < new Date() && !["accepted", "declined"].includes(status);
   const displayNumber = existingQuote ? formatQuoteNumberWithRevision(existingQuote.quote_year, existingQuote.quote_number, existingQuote.revision_number) : null;
@@ -201,6 +257,8 @@ export default function QuoteEditor({
       })),
       discountCents,
       deliveryCents,
+      couponId: appliedCoupon?.couponId || null,
+      couponDiscountCents: appliedCoupon?.discountCents || 0,
       expirationDate,
       notes,
       terms,
@@ -370,6 +428,7 @@ export default function QuoteEditor({
           <div className="space-y-1 text-sm">
             <div className="flex justify-between text-[#1E3A5F]/70"><span>Subtotal</span><span>${(totals.subtotalCents / 100).toFixed(2)}</span></div>
             {discountCents > 0 && <div className="flex justify-between text-ember"><span>Discount</span><span>-${(discountCents / 100).toFixed(2)}</span></div>}
+            {appliedCoupon && <div className="flex justify-between text-ember"><span>Coupon ({appliedCoupon.code})</span><span>-${(appliedCoupon.discountCents / 100).toFixed(2)}</span></div>}
             <div className="flex justify-between text-[#1E3A5F]/70"><span>Tax</span><span>${(totals.taxCents / 100).toFixed(2)}</span></div>
             {deliveryCents > 0 && <div className="flex justify-between text-[#1E3A5F]/70"><span>Delivery</span><span>${(deliveryCents / 100).toFixed(2)}</span></div>}
             <div className="flex justify-between text-lg font-bold text-[#1E3A5F] pt-2 border-t border-[#1E3A5F]/10"><span>Total</span><span>${(totals.totalCents / 100).toFixed(2)}</span></div>
@@ -493,9 +552,45 @@ export default function QuoteEditor({
           )}
         </div>
 
+        {/* Coupon — the customer mentions a code by phone/email, the
+            admin enters and validates it here; every rule (dates,
+            eligibility, min purchase, redemption limits, per-customer
+            history) is checked server-side by the same engine the
+            campaign feature uses. */}
+        <div>
+          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Coupon Code</label>
+          {appliedCoupon ? (
+            <div className="flex items-center justify-between bg-sage/10 border border-sage/30 rounded-md px-3 py-2">
+              <span className="text-sm text-sage font-semibold">
+                {appliedCoupon.code} applied — -${(appliedCoupon.discountCents / 100).toFixed(2)}
+              </span>
+              <button type="button" onClick={handleRemoveCoupon} className="text-xs text-[#1E3A5F]/50 hover:text-ember font-semibold">Remove</button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                value={couponCode}
+                onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                placeholder="e.g. PLANTER15"
+                className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm font-mono"
+              />
+              <button
+                type="button"
+                onClick={handleApplyCoupon}
+                disabled={checkingCoupon || !couponCode.trim()}
+                className="border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap disabled:opacity-40"
+              >
+                {checkingCoupon ? "Checking…" : "Apply"}
+              </button>
+            </div>
+          )}
+          {couponError && <p className="text-xs text-ember mt-1">{couponError}</p>}
+        </div>
+
         {/* Live totals */}
         <div className="bg-cream/40 border border-[#1E3A5F]/10 rounded-lg p-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
           <div><span className="text-[#1E3A5F]/50">Subtotal:</span> <span className="font-semibold text-[#1E3A5F]">${(totals.subtotalCents / 100).toFixed(2)}</span></div>
+          {appliedCoupon && <div><span className="text-[#1E3A5F]/50">Coupon:</span> <span className="font-semibold text-ember">-${(appliedCoupon.discountCents / 100).toFixed(2)}</span></div>}
           <div><span className="text-[#1E3A5F]/50">Tax (6%):</span> <span className="font-semibold text-[#1E3A5F]">${(totals.taxCents / 100).toFixed(2)}</span></div>
           <div><span className="text-[#1E3A5F]/50">Delivery:</span> <span className="font-semibold text-[#1E3A5F]">${(deliveryCents / 100).toFixed(2)}</span></div>
           <div><span className="text-[#1E3A5F]/50">Total:</span> <span className="font-bold text-sage">${(totals.totalCents / 100).toFixed(2)}</span></div>
