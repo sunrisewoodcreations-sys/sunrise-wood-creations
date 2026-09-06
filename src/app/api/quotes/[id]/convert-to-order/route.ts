@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildOrderItemsFromQuote } from "@/lib/quote";
 import { createOrder } from "@/lib/orders";
+import { recordCouponRedemption } from "@/lib/coupons";
 
 // Converts a quote into a real order by calling the exact same shared
 // createOrder() function the order-creation endpoint itself uses —
@@ -32,6 +33,20 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   await admin.from("quotes").update({ status: "accepted", converted_order_id: result.order.id }).eq("id", params.id);
   await admin.from("orders").update({ quote_id: params.id }).eq("id", result.order.id);
+
+  // If a coupon was applied on the quote, the resulting order inherits
+  // it and the redemption is recorded against this exact real order —
+  // never a duplicate order record, just the existing one this quote
+  // already produced.
+  if (quote.coupon_id) {
+    await admin.from("orders").update({ coupon_id: quote.coupon_id, coupon_discount_cents: quote.coupon_discount_cents }).eq("id", result.order.id);
+    await recordCouponRedemption({
+      couponId: quote.coupon_id,
+      customerId: quote.customer_id,
+      orderId: result.order.id,
+      discountAppliedCents: quote.coupon_discount_cents || 0
+    });
+  }
 
   return NextResponse.json({ ok: true, order: result.order });
 }
