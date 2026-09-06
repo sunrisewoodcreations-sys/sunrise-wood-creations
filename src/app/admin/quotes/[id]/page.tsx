@@ -6,7 +6,7 @@ export default async function EditQuotePage({ params }: { params: { id: string }
   const supabase = createClient();
 
   const [{ data: quote }, { data: customers }, { data: products }] = await Promise.all([
-    supabase.from("quotes").select("*, profiles:customer_id(full_name, email)").eq("id", params.id).maybeSingle(),
+    supabase.from("quotes").select("*, profiles:customer_id(full_name, email), coupons:coupon_id(code)").eq("id", params.id).maybeSingle(),
     supabase.from("profiles").select("id, full_name, email").eq("role", "customer").order("full_name", { ascending: true }),
     supabase.from("products").select("id, product_type, name, size_details, price_cents").order("name", { ascending: true })
   ]);
@@ -48,6 +48,9 @@ export default async function EditQuotePage({ params }: { params: { id: string }
         converted_order_id: quote.converted_order_id,
         customer_id: quote.customer_id,
         profiles: (quote as any).profiles,
+        coupon_id: quote.coupon_id,
+        coupon_discount_cents: quote.coupon_discount_cents,
+        coupons: Array.isArray((quote as any).coupons) ? (quote as any).coupons[0] || null : (quote as any).coupons,
         items: items || [],
         revisions: revisions || []
       }}
