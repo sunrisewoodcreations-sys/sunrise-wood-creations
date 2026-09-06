@@ -29,6 +29,14 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
   const { data: currentProfile } = await supabase.from("profiles").select("is_demo_account").eq("id", user?.id).maybeSingle();
   if (currentProfile?.is_demo_account && !customer.is_demo) notFound();
 
+  // Coupons received (via any campaign) and redeemed (via any real order)
+  // — both read from the actual campaign/coupon tables, not duplicated
+  // or estimated data.
+  const [{ data: received }, { data: redeemed }] = await Promise.all([
+    supabase.from("campaign_recipients").select("id, campaign_id, email_sent_at, campaigns:campaign_id(name)").eq("customer_id", params.id),
+    supabase.from("coupon_redemptions").select("id, discount_applied_cents, redeemed_at, coupons:coupon_id(code)").eq("customer_id", params.id).order("redeemed_at", { ascending: false })
+  ]);
+
   const { data: orders } = await supabase
     .from("orders")
     .select("*")
@@ -118,6 +126,37 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         <StatCard label="First order" value={firstOrderDate ? new Date(firstOrderDate).toLocaleDateString() : "—"} />
         <StatCard label="Last order" value={lastOrderDate ? new Date(lastOrderDate).toLocaleDateString() : "—"} />
       </div>
+
+      {((received && received.length > 0) || (redeemed && redeemed.length > 0)) && (
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 shadow-sm mb-8">
+          <h2 className="font-display text-base text-[#1E3A5F] mb-3">Coupons</h2>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div>
+              <div className="text-xl font-display text-[#1E3A5F]">{received?.length || 0}</div>
+              <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide">Received</div>
+            </div>
+            <div>
+              <div className="text-xl font-display text-sage">{redeemed?.length || 0}</div>
+              <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide">Redeemed</div>
+            </div>
+            <div>
+              <div className="text-xl font-display text-[#1E3A5F]">{(received?.length || 0) - (redeemed?.length || 0)}</div>
+              <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide">Available</div>
+            </div>
+          </div>
+          {redeemed && redeemed.length > 0 && (
+            <div className="border-t border-[#1E3A5F]/10 pt-3">
+              <p className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Redemption History</p>
+              {redeemed.map((r: any) => (
+                <div key={r.id} className="flex justify-between text-sm py-1">
+                  <span className="font-mono text-[#1E3A5F]">{r.coupons?.code}</span>
+                  <span className="text-[#1E3A5F]/60">${(r.discount_applied_cents / 100).toFixed(2)} · {new Date(r.redeemed_at).toLocaleDateString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {customer.has_real_email !== false && (
         <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5 mb-6">
