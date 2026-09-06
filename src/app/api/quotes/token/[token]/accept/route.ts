@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildOrderItemsFromQuote } from "@/lib/quote";
 import { createOrder } from "@/lib/orders";
+import { recordCouponRedemption } from "@/lib/coupons";
 
 // Public on purpose — no login required, same principle as the
 // existing proof-response token routes. The token itself (a random,
