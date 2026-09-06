@@ -123,6 +123,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       ]
     },
     {
+      label: "Coupons & Campaigns",
+      links: [
+        { href: "/admin/coupons", label: "Coupons & Campaigns" }
+      ]
+    },
+    {
       label: "Settings",
       links: [
         { href: "/admin/pickup-settings", label: "Pickup Settings" },
