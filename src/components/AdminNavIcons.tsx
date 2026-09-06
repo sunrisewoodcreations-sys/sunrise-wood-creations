@@ -89,6 +89,12 @@ const PATHS: Record<string, JSX.Element> = {
       <line x1="17" y1="16" x2="23" y2="16" />
     </>
   ),
+  "Coupons & Campaigns": (
+    <>
+      <path d="M20.59 13.41L11 3.83A2 2 0 0 0 9.59 3.17L4 3a1 1 0 0 0-1 1l.17 5.59a2 2 0 0 0 .66 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.82z" />
+      <circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none" />
+    </>
+  ),
   Tools: (
     <>
       <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
