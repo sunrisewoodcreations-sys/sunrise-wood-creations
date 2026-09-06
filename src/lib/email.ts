@@ -998,3 +998,75 @@ export async function sendPickupReminderEmail(opts: {
     html
   });
 }
+
+// Simple {{token}} substitution — the admin writes the subject/heading/body
+// themselves in the campaign builder, and this fills in the dynamic parts
+// per recipient. Nothing about a specific coupon or customer is hardcoded
+// here; every value comes from the campaign/coupon record and the one
+// customer this particular email is being built for.
+function fillCampaignTokens(text: string, tokens: Record<string, string>): string {
+  return text.replace(/\{\{\s*(\w+)\s*\}\}/g, (match, key) => tokens[key] ?? match);
+}
+
+export async function sendCampaignEmail(opts: {
+  toEmail: string;
+  customerFirstName: string;
+  emailSubject: string;
+  emailHeading: string;
+  emailBody: string; // may contain {{first_name}}, {{coupon_code}}, {{discount}}, {{expiration_date}}, {{applies_to}}
+  couponCode: string;
+  discountDisplay: string; // e.g. "15% off" or "$10 off", computed by the caller
+  expirationDisplay?: string; // e.g. "October 31, 2026", omitted if the coupon has no expiration
+  appliesToDisplay: string; // e.g. "Planter Boxes" or "your entire order"
+  isPreview?: boolean;
+  contactPhone?: string;
+  contactEmail?: string;
+}) {
+  const tokens = {
+    first_name: opts.customerFirstName,
+    coupon_code: opts.couponCode,
+    discount: opts.discountDisplay,
+    expiration_date: opts.expirationDisplay || "",
+    applies_to: opts.appliesToDisplay
+  };
+
+  const subject = fillCampaignTokens(opts.emailSubject, tokens);
+  const heading = fillCampaignTokens(opts.emailHeading, tokens);
+  // Body is plain admin-written text — paragraphs preserved, but not
+  // treated as HTML, so nothing the admin types can break the layout.
+  const bodyHtml = fillCampaignTokens(opts.emailBody, tokens)
+    .split("\n").filter(line => line.trim().length > 0)
+    .map(line => `<p style="margin: 0 0 14px;">${escapeHtml(line)}</p>`)
+    .join("");
+
+  const html = shell({
+    preheader: heading,
+    contactPhone: opts.contactPhone,
+    contactEmail: opts.contactEmail,
+    bodyHtml: `
+      <h1 style="margin: 0 0 20px; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; color: #1E3A5F;">${escapeHtml(heading)}</h1>
+      ${bodyHtml}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+        <tr>
+          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 16px; text-align: center;">
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a7a6b; margin-bottom: 6px;">Your Code</div>
+            <div style="font-size: 24px; font-weight: bold; color: #D9603A; font-family: Georgia, 'Times New Roman', serif; letter-spacing: 0.05em;">${escapeHtml(opts.couponCode)}</div>
+            <div style="margin-top: 10px; font-size: 13px; color: #6b5d4f;">
+              Just mention this code when you place your next order and we'll apply your discount — no account or login needed.
+            </div>
+            ${opts.expirationDisplay ? `<div style="margin-top: 6px; font-size: 12px; color: #8a7a6b;">Valid through ${escapeHtml(opts.expirationDisplay)}</div>` : ""}
+          </td>
+        </tr>
+      </table>
+    `
+  });
+
+  return sendViaResend({
+    emailType: "sendCampaignEmail",
+    from: FROM,
+    to: opts.toEmail,
+    subject: opts.isPreview ? `[PREVIEW] ${subject}` : subject,
+    html
+  });
+}
+
