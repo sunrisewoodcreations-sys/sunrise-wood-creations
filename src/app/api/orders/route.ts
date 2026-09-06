@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createOrder, IncomingOrderItem } from "@/lib/orders";
+import { recordCouponRedemption } from "@/lib/coupons";
 
 export async function POST(req: NextRequest) {
   const supabase = createClient();
@@ -12,7 +14,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { customerId, dueDate } = body;
+  const { customerId, dueDate, couponId, couponDiscountCents } = body;
 
   if (!customerId) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -38,6 +40,20 @@ export async function POST(req: NextRequest) {
 
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  // If a coupon was applied, record the redemption against this exact
+  // real order and carry the reference onto the order itself — same
+  // pattern already used when a quote-with-coupon becomes an order.
+  if (couponId) {
+    const admin = createAdminClient();
+    await admin.from("orders").update({ coupon_id: couponId, coupon_discount_cents: couponDiscountCents || 0 }).eq("id", result.order.id);
+    await recordCouponRedemption({
+      couponId,
+      customerId,
+      orderId: result.order.id,
+      discountAppliedCents: couponDiscountCents || 0
+    });
   }
 
   return NextResponse.json({ ok: true, order: result.order });
