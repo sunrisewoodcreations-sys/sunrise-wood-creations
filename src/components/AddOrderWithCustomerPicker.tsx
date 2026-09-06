@@ -72,6 +72,13 @@ export default function AddOrderWithCustomerPicker({
   const [error, setError] = useState("");
   const [capacityWarning, setCapacityWarning] = useState<{ suggestedDate: string | null } | null>(null);
 
+  // Coupon — same server-side validation engine as the Quote Editor's
+  // coupon field, applied directly to this order's items.
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ couponId: string; code: string; discountCents: number } | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
+
   // Checks realistic capacity for the implied production date (one day
   // before the chosen pickup date, same rule already used when an
   // order is actually created) — reuses the same capacity functions
@@ -207,11 +214,47 @@ export default function AddOrderWithCustomerPicker({
     updateItem(index, patch);
   }
 
-  const grandTotal = items.reduce((sum, it) => sum + (Number(it.price) || 0), 0);
+  const itemsTotal = items.reduce((sum, it) => sum + (Number(it.price) || 0), 0);
+  const couponDiscountDollars = (appliedCoupon?.discountCents || 0) / 100;
+  const grandTotal = Math.max(0, itemsTotal - couponDiscountDollars);
 
   const effectiveCustomer: Customer | null = isFixedCustomer
     ? { id: fixedCustomerId!, full_name: fixedCustomerName || "", email: "" }
     : selectedCustomer;
+
+  async function handleApplyCoupon() {
+    setCouponError("");
+    if (!effectiveCustomer) { setCouponError("Select a customer first."); return; }
+    if (!couponCode.trim()) return;
+    setCheckingCoupon(true);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: couponCode,
+          customerId: effectiveCustomer.id,
+          items: items.map(it => ({
+            productType: it.productType,
+            productId: it.selectedProductId || null,
+            quantity: Math.max(1, Math.round(Number(it.quantity)) || 1),
+            unitPriceCentsInclusive: it.unitPriceCents ?? Math.round((Number(it.price) || 0) * 100 / (Math.max(1, Math.round(Number(it.quantity)) || 1)))
+          }))
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) { setCouponError(data.error || "Couldn't apply that coupon."); return; }
+      setAppliedCoupon({ couponId: data.couponId, code: data.code, discountCents: data.discountCents });
+    } finally {
+      setCheckingCoupon(false);
+    }
+  }
+
+  function handleRemoveCoupon() {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -226,20 +269,40 @@ export default function AddOrderWithCustomerPicker({
     setLoading(true);
     setError("");
     try {
+      const orderItems = items.map(it => ({
+        productType: it.productType,
+        productId: it.selectedProductId,
+        title: it.title,
+        sizeDetails: it.sizeDetails,
+        quantity: it.quantity,
+        priceCents: Math.round((Number(it.price) || 0) * 100)
+      }));
+
+      // Represented as its own negative-price line item — this is the
+      // exact same order_items table invoice generation already reads
+      // from, so the discount shows up correctly on the invoice with
+      // zero changes needed there, and the order's own stored total
+      // (summed from these items) is correctly reduced automatically.
+      if (appliedCoupon && appliedCoupon.discountCents > 0) {
+        orderItems.push({
+          productType: items[0]?.productType || "cornhole",
+          productId: null,
+          title: `Coupon: ${appliedCoupon.code}`,
+          sizeDetails: "",
+          quantity: "1",
+          priceCents: -appliedCoupon.discountCents
+        });
+      }
+
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId: effectiveCustomer.id,
           dueDate,
-          items: items.map(it => ({
-            productType: it.productType,
-            productId: it.selectedProductId,
-            title: it.title,
-            sizeDetails: it.sizeDetails,
-            quantity: it.quantity,
-            priceCents: Math.round((Number(it.price) || 0) * 100)
-          }))
+          items: orderItems,
+          couponId: appliedCoupon?.couponId || null,
+          couponDiscountCents: appliedCoupon?.discountCents || 0
         })
       });
       const body = await res.json().catch(() => ({}));
@@ -251,6 +314,8 @@ export default function AddOrderWithCustomerPicker({
       setLoading(false);
       setItems([blankLineItem()]);
       setDueDate("");
+      setAppliedCoupon(null);
+      setCouponCode("");
       clearSelection();
       setOpen(false);
       router.refresh();
@@ -433,6 +498,36 @@ export default function AddOrderWithCustomerPicker({
             </button>
           </div>
 
+          <div>
+            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Coupon Code (optional)</label>
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between bg-sage/10 border border-sage/30 rounded-md px-3 py-2">
+                <span className="text-sm text-sage font-semibold">
+                  {appliedCoupon.code} applied — -${(appliedCoupon.discountCents / 100).toFixed(2)}
+                </span>
+                <button type="button" onClick={handleRemoveCoupon} className="text-xs text-[#1E3A5F]/50 hover:text-ember font-semibold">Remove</button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  value={couponCode}
+                  onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. PLANTER15"
+                  className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyCoupon}
+                  disabled={checkingCoupon || !couponCode.trim()}
+                  className="border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap disabled:opacity-40"
+                >
+                  {checkingCoupon ? "Checking…" : "Apply"}
+                </button>
+              </div>
+            )}
+            {couponError && <p className="text-xs text-ember mt-1">{couponError}</p>}
+          </div>
+
           <div className="flex items-center justify-between gap-3">
             <div>
               <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Estimated pickup date (optional)</label>
@@ -449,8 +544,9 @@ export default function AddOrderWithCustomerPicker({
                 </p>
               )}
             </div>
-            <div className="text-sm font-semibold text-[#1E3A5F] text-right">
-              Order total: ${grandTotal.toFixed(2)}
+            <div className="text-sm text-[#1E3A5F] text-right">
+              {appliedCoupon && <div className="text-xs text-ember">Coupon: -${(appliedCoupon.discountCents / 100).toFixed(2)}</div>}
+              <div className="font-semibold">Order total: ${grandTotal.toFixed(2)}</div>
             </div>
           </div>
 
