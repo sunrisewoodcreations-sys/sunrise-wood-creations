@@ -18,7 +18,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const admin = createAdminClient();
   const body = await req.json();
-  const { items, discountCents, deliveryCents, expirationDate, notes, terms, status, customerId } = body;
+  const { items, discountCents, deliveryCents, expirationDate, notes, terms, status, customerId, couponId, couponDiscountCents } = body;
 
   const { data: currentQuote } = await admin.from("quotes").select("*").eq("id", params.id).maybeSingle();
   if (!currentQuote) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
@@ -44,7 +44,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }));
     const discount = Math.max(0, Math.round(Number(discountCents)) || 0);
     const delivery = Math.max(0, Math.round(Number(deliveryCents)) || 0);
-    const totals = calculateQuoteTotals(normalizedItems, discount, delivery);
+    const couponDiscount = Math.max(0, Math.round(Number(couponDiscountCents)) || 0);
+    const totals = calculateQuoteTotals(normalizedItems, discount, delivery, couponDiscount);
     const todayStr = todayEasternStr();
 
     const { data: newRevision, error: revisionError } = await admin
@@ -64,7 +65,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         total_cents: totals.totalCents,
         notes: notes !== undefined ? (notes || null) : currentQuote.notes,
         terms: terms !== undefined ? (terms || null) : currentQuote.terms,
-        quote_request_id: currentQuote.quote_request_id
+        quote_request_id: currentQuote.quote_request_id,
+        coupon_id: couponId !== undefined ? couponId : currentQuote.coupon_id,
+        coupon_discount_cents: couponId !== undefined ? (couponId ? couponDiscount : null) : currentQuote.coupon_discount_cents
         // Deliberately NOT copying sent_at, viewed_at, or converted_order_id —
         // this revision hasn't been sent, viewed, or converted yet itself.
       })
@@ -109,13 +112,18 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }));
     const discount = Math.max(0, Math.round(Number(discountCents)) || 0);
     const delivery = Math.max(0, Math.round(Number(deliveryCents)) || 0);
-    const totals = calculateQuoteTotals(normalizedItems, discount, delivery);
+    const couponDiscount = Math.max(0, Math.round(Number(couponDiscountCents)) || 0);
+    const totals = calculateQuoteTotals(normalizedItems, discount, delivery, couponDiscount);
 
     updatePayload.subtotal_cents = totals.subtotalCents;
     updatePayload.discount_cents = discount;
     updatePayload.tax_cents = totals.taxCents;
     updatePayload.delivery_cents = delivery;
     updatePayload.total_cents = totals.totalCents;
+    if (couponId !== undefined) {
+      updatePayload.coupon_id = couponId;
+      updatePayload.coupon_discount_cents = couponId ? couponDiscount : null;
+    }
 
     await admin.from("quote_items").delete().eq("quote_id", params.id);
     const itemRows = normalizedItems.map((it: any, i: number) => ({
