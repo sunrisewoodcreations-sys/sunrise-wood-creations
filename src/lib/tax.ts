@@ -18,9 +18,9 @@ export function backOutTax(inclusiveCents: number): { subtotalCents: number; tax
 // file specifically so client components can import it without risking
 // pulling in quote.ts's server-only pdf-lib/admin-client code.
 export type QuoteLineItemForTotals = { quantity: number; unitPriceCents: number };
-export function calculateQuoteTotals(items: QuoteLineItemForTotals[], discountCents: number, deliveryCents: number) {
+export function calculateQuoteTotals(items: QuoteLineItemForTotals[], discountCents: number, deliveryCents: number, couponDiscountCents: number = 0) {
   const itemsTotalCents = items.reduce((sum, it) => sum + it.unitPriceCents * (it.quantity || 1), 0);
-  const afterDiscountCents = Math.max(0, itemsTotalCents - discountCents);
+  const afterDiscountCents = Math.max(0, itemsTotalCents - discountCents - couponDiscountCents);
   const { subtotalCents, taxCents } = backOutTax(afterDiscountCents);
   const totalCents = afterDiscountCents + deliveryCents;
   return { subtotalCents, taxCents, totalCents, itemsTotalCents };
