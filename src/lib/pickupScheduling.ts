@@ -300,50 +300,74 @@ export async function cancelPickupAppointment(appointmentId: string): Promise<{ 
   return { ok: true };
 }
 
-// The single source of truth for "send this order's pickup-scheduling
-// email," called from every path that can put an order into
-// ready_for_pickup: the admin manual status change AND
-// checkStockAndAutoMarkReady()'s automatic transition. Whichever one
-// gets there first wins — the guard below (sent-at timestamp, plus any
-// already-existing appointment) makes every other call a safe no-op,
-// so it is never possible to send this email twice for the same order,
+// Shared eligibility check + token issuance for pickup scheduling —
+// does NOT send any email itself. Called from every path that can put
+// an order into ready_for_pickup (admin manual status change, order
+// creation when stock is already on hand, and checkStockAndAutoMarkReady()'s
+// automatic transition). Whichever one gets there first wins — the
+// guard below (sent-at timestamp, plus any already-existing
+// appointment) makes every other call a safe no-op, so the same order
+// never gets a second scheduling link generated or counted as sent,
 // no matter how many call sites or how many times each one fires.
-export async function triggerPickupSchedulingEmail(orderId: string, siteUrl: string): Promise<{ sent: boolean; error?: string }> {
+// Callers that are about to send their own "your order is ready" email
+// use this to get the scheduling URL and fold it into that one email
+// (see sendOrderStatusEmail's schedulingUrl option) instead of sending
+// a second, separate scheduling email.
+export async function getOrCreatePickupSchedulingUrl(orderId: string, siteUrl: string): Promise<{ ok: true; url: string } | { ok: false; reason: "not_eligible" | "no_email"; error?: string }> {
   const admin = createAdminClient();
 
   const { data: order } = await admin
     .from("orders")
-    .select("id, title, fulfillment_method, pickup_scheduling_email_sent_at, profiles:customer_id(full_name, email)")
+    .select("id, fulfillment_method, pickup_scheduling_email_sent_at, profiles:customer_id(email)")
     .eq("id", orderId)
     .maybeSingle();
-  if (!order) return { sent: false, error: "Order not found" };
-  if (order.fulfillment_method !== "pickup") return { sent: false };
-  if (order.pickup_scheduling_email_sent_at) return { sent: false };
+  if (!order) return { ok: false, reason: "not_eligible" };
+  if (order.fulfillment_method !== "pickup") return { ok: false, reason: "not_eligible" };
+  if (order.pickup_scheduling_email_sent_at) return { ok: false, reason: "not_eligible" };
 
   const { count: existingAppointments } = await admin
     .from("pickup_appointments")
     .select("id", { count: "exact", head: true })
     .eq("order_id", orderId);
-  if ((existingAppointments || 0) > 0) return { sent: false };
+  if ((existingAppointments || 0) > 0) return { ok: false, reason: "not_eligible" };
 
   const customer = (order as any).profiles;
-  const email = customer?.email;
-  const name = customer?.full_name;
-  if (!email) return { sent: false, error: "This customer has no email on file." };
+  if (!customer?.email) return { ok: false, reason: "no_email", error: "This customer has no email on file." };
 
   const token = crypto.randomBytes(24).toString("hex");
   const { error: tokenError } = await admin.from("orders").update({
     pickup_scheduling_token: token,
     pickup_scheduling_email_sent_at: new Date().toISOString()
   }).eq("id", orderId);
-  if (tokenError) return { sent: false, error: tokenError.message };
+  if (tokenError) return { ok: false, reason: "no_email", error: tokenError.message };
+
+  return { ok: true, url: `${siteUrl}/pickup/schedule/${token}` };
+}
+
+// Sends the standalone, plain "schedule your pickup" email — used only
+// by the admin's manual "Send Pickup Scheduling Email" action on an
+// order that's already Ready for Pickup without one sent yet. The
+// automatic ready_for_pickup transitions (status change, auto-stock,
+// order creation) no longer call this: they fold the same scheduling
+// link into their own "your order is ready" email instead, via
+// getOrCreatePickupSchedulingUrl, so a customer never gets two emails
+// for one event.
+export async function triggerPickupSchedulingEmail(orderId: string, siteUrl: string): Promise<{ sent: boolean; error?: string }> {
+  const admin = createAdminClient();
+  const { data: order } = await admin.from("orders").select("id, title, profiles:customer_id(full_name, email)").eq("id", orderId).maybeSingle();
+  if (!order) return { sent: false, error: "Order not found" };
+
+  const result = await getOrCreatePickupSchedulingUrl(orderId, siteUrl);
+  if (!result.ok) return { sent: false, error: result.error };
+
+  const customer = (order as any).profiles;
 
   try {
     await sendPickupSchedulingEmail({
-      toEmail: email,
-      customerName: name,
+      toEmail: customer.email,
+      customerName: customer.full_name,
       orderTitle: order.title,
-      schedulingUrl: `${siteUrl}/pickup/schedule/${token}`
+      schedulingUrl: result.url
     });
   } catch (err: any) {
     return { sent: false, error: err.message || "Couldn't send the scheduling email." };
