@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendPickupSchedulingEmail } from "@/lib/email";
-import { sendPickupConfirmation } from "@/lib/pickupScheduling";
+import { sendPickupConfirmation, triggerPickupSchedulingEmail } from "@/lib/pickupScheduling";
 
 // Handles both admin paths from the "Ready for Pickup" dual choice:
 // mode "send_email" generates a token and emails the customer a
@@ -30,29 +28,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 
   if (mode === "send_email") {
-    const { data: customer } = await admin.from("orders").select("profiles:customer_id(full_name, email)").eq("id", params.id).single();
-    const email = (customer as any)?.profiles?.email;
-    const name = (customer as any)?.profiles?.full_name;
-    if (!email) return NextResponse.json({ error: "This customer has no email on file." }, { status: 400 });
-
-    const token = crypto.randomBytes(24).toString("hex");
-    const { error: tokenError } = await admin.from("orders").update({
-      pickup_scheduling_token: token,
-      pickup_scheduling_email_sent_at: new Date().toISOString()
-    }).eq("id", params.id);
-    if (tokenError) return NextResponse.json({ error: tokenError.message }, { status: 400 });
-
-    try {
-      await sendPickupSchedulingEmail({
-        toEmail: email,
-        customerName: name,
-        orderTitle: order.title,
-        schedulingUrl: `${siteUrl}/pickup/schedule/${token}`
-      });
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message || "Couldn't send the scheduling email." }, { status: 500 });
-    }
-
+    const result = await triggerPickupSchedulingEmail(params.id, siteUrl);
+    if (!result.sent) return NextResponse.json({ error: result.error || "Couldn't send the scheduling email." }, { status: 400 });
     return NextResponse.json({ ok: true });
   }
 
