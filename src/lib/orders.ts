@@ -3,7 +3,10 @@ import { sendOrderStatusEmail } from "@/lib/email";
 import { shouldNotify } from "@/lib/notify";
 import { consumePicketsFifo } from "@/lib/pickets";
 import { checkStockAndAutoMarkReady } from "@/lib/invoice";
+import { getOrCreatePickupSchedulingUrl } from "@/lib/pickupScheduling";
 import { ProductType } from "@/lib/statusSteps";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com";
 
 // The exact order-creation logic that used to live only inside
 // /api/orders/route.ts, extracted so a second, non-admin caller (a
@@ -167,6 +170,21 @@ export async function createOrder(opts: {
     .eq("id", opts.customerId)
     .single();
 
+  // If stock was already on hand, checkStockAndAutoMarkReady() above may
+  // have skipped this order straight to ready_for_pickup. When that
+  // happens for a pickup order, fold the scheduling link into this same
+  // confirmation email instead of sending a separate one — same
+  // no-duplicate guard used everywhere else this can happen.
+  let schedulingUrl: string | undefined;
+  if (order.status === "ready_for_pickup") {
+    try {
+      const schedulingResult = await getOrCreatePickupSchedulingUrl(order.id, SITE_URL);
+      if (schedulingResult.ok) schedulingUrl = schedulingResult.url;
+    } catch (err) {
+      console.error("Pickup scheduling link generation failed:", err);
+    }
+  }
+
   if (customer && shouldNotify(customer, "order_updates")) {
     try {
       await sendOrderStatusEmail({
@@ -175,7 +193,8 @@ export async function createOrder(opts: {
         productType: orderProductType as ProductType,
         orderTitle: order.title,
         orderId: order.id,
-        newStatus: order.status
+        newStatus: order.status,
+        schedulingUrl
       });
     } catch (err) {
       console.error("Order-placed email failed to send:", err);
