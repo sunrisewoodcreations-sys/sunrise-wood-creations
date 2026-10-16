@@ -953,6 +953,58 @@ export async function sendPickupConfirmationEmail(opts: {
   });
 }
 
+// Notifies the shop (not the customer) the moment a customer books or
+// reschedules their own pickup time — so you find out the same way you
+// already do for a new quote request or a low-stock alert, without
+// having to check the admin page proactively. Includes a one-tap "Add
+// to Google Calendar" button (reusing the same link-generation already
+// built for the customer's own confirmation email — no calendar
+// account connection required) plus a link straight to the admin
+// Pickup Appointments page. Deliberately NOT sent when you create or
+// change an appointment yourself from the admin side — you already
+// know about those.
+export async function sendPickupScheduledAdminAlert(opts: {
+  orderTitle: string;
+  customerName: string;
+  customerPhone?: string;
+  appointmentDateDisplay: string;
+  appointmentTimeDisplay: string;
+  googleCalendarUrl: string;
+  isReschedule: boolean;
+}) {
+  const html = shell({
+    preheader: `${opts.isReschedule ? "Pickup rescheduled" : "New pickup scheduled"}: ${opts.orderTitle}`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">
+        <strong>${escapeHtml(opts.customerName)}</strong> ${opts.isReschedule ? "rescheduled their pickup" : "just scheduled a pickup"} for
+        <strong>${escapeHtml(opts.orderTitle)}</strong>:
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
+        <tr>
+          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 16px;">
+            <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">
+              ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}
+            </div>
+            ${opts.customerPhone ? `<div style="margin-top: 6px; color: #6b5d4f; font-size: 14px;">${escapeHtml(opts.customerPhone)}</div>` : ""}
+          </td>
+        </tr>
+      </table>
+    `,
+    buttons: [
+      { text: "Add to Google Calendar", url: opts.googleCalendarUrl, color: "#4F7A55" },
+      { text: "View Pickup Appointments", url: `${SITE_URL}/admin/pickup-appointments`, color: "#D9603A" }
+    ]
+  });
+
+  return sendViaResend({
+    emailType: "sendPickupScheduledAdminAlert",
+    from: FROM,
+    to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
+    subject: `${opts.isReschedule ? "Pickup rescheduled" : "New pickup scheduled"}: ${opts.orderTitle} — ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
+    html
+  });
+}
+
 export async function sendPickupReminderEmail(opts: {
   toEmail: string;
   customerName: string;
