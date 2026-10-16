@@ -324,6 +324,13 @@ export async function sendOrderStatusEmail(opts: {
   invoicePdfBuffer?: Buffer;
   invoiceNumber?: number;
   invoiceYear?: number;
+  // When set (only ever on the ready_for_pickup transition, for a
+  // pickup order that still needs a time scheduled), this one email
+  // does double duty: it's both the "your order is ready" notice and
+  // the pickup-scheduling prompt, with "Schedule My Pickup" as the
+  // single primary action instead of the usual "View Your Order" —
+  // so the customer gets one email for this event, not two.
+  schedulingUrl?: string;
 }) {
   const copy = STATUS_COPY[opts.newStatus];
   // statusLabel() correctly returns sentence case ("Being built") for its
@@ -375,9 +382,10 @@ export async function sendOrderStatusEmail(opts: {
       ${progressBarHtml(opts.productType, opts.newStatus)}
       <p style="margin: 20px 0 0;">${escapeHtml(bodyLine)}</p>
       ${balanceHtml}
+      ${opts.schedulingUrl ? `<p style="margin: 16px 0 0;">Pick a day and time that works for you, right from your phone, no login needed.</p>` : ""}
     `,
-    buttonText: "View Your Order",
-    buttonUrl: `${SITE_URL}/account/orders/${opts.orderId}`
+    buttonText: opts.schedulingUrl ? "Schedule My Pickup" : "View Your Order",
+    buttonUrl: opts.schedulingUrl || `${SITE_URL}/account/orders/${opts.orderId}`
   });
 
   const attachments = opts.invoicePdfBuffer && opts.invoiceNumber && opts.invoiceYear
