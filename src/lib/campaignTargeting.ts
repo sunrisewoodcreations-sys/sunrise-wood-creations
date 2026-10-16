@@ -22,16 +22,26 @@ export type MatchedCustomer = { id: string; full_name: string; email: string; ph
 // both orders.product_type (the common single-item case) and
 // order_items.product_type (multi-item orders), since either can carry
 // the real purchase history depending on how the order was built.
-export async function getMatchingCustomers(spec: TargetingSpec): Promise<MatchedCustomer[]> {
-  const admin = createAdminClient();
+// adminClient is optional and defaults to the real service-role client,
+// exactly as before this parameter existed — every existing caller
+// passes only `spec` and is completely unaffected. It exists solely so
+// a regression test can run this exact function against fake data
+// instead of a live database (see scripts/regression-demo-email-safety.ts).
+export async function getMatchingCustomers(spec: TargetingSpec, adminClient?: ReturnType<typeof createAdminClient>): Promise<MatchedCustomer[]> {
+  const admin = adminClient || createAdminClient();
   const excluded = new Set(spec.excludedCustomerIds || []);
   const applyExclusions = (customers: MatchedCustomer[]) => excluded.size > 0 ? customers.filter(c => !excluded.has(c.id)) : customers;
 
   if (spec.type === "manual") {
     if (!spec.customerIds || spec.customerIds.length === 0) return [];
+    // Every other targeting branch below already excludes is_demo/
+    // is_demo_account — this one didn't, so a demo customer profile
+    // manually added to spec.customerIds (e.g. by id, not through the
+    // search box below) would have gone out to a real send. Same
+    // exclusion, same reasoning, for consistency.
     const { data } = await admin
       .from("profiles").select("id, full_name, email, phone")
-      .in("id", spec.customerIds).eq("role", "customer");
+      .in("id", spec.customerIds).eq("role", "customer").eq("is_demo_account", false);
     return data || [];
   }
 
@@ -89,13 +99,20 @@ export async function getCustomerCountsByProductType(): Promise<Record<string, n
 
 // Individual customer search (name/email/phone) for manual selection —
 // same profiles table already used everywhere else, no new customer data.
-export async function searchCustomers(query: string): Promise<MatchedCustomer[]> {
-  const admin = createAdminClient();
+// Same optional adminClient parameter, same reasoning, as getMatchingCustomers above.
+export async function searchCustomers(query: string, adminClient?: ReturnType<typeof createAdminClient>): Promise<MatchedCustomer[]> {
+  const admin = adminClient || createAdminClient();
   const q = query.trim();
   if (!q) return [];
+  // Excluding demo customers from the search results themselves (not
+  // just from the final send) means one can never be manually picked
+  // into a real campaign's recipient list in the first place —
+  // prevention rather than relying only on the targeting-time filter
+  // above catching it.
   const { data } = await admin
     .from("profiles").select("id, full_name, email, phone")
     .eq("role", "customer")
+    .eq("is_demo_account", false)
     .or(`full_name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`)
     .limit(50);
   return data || [];
