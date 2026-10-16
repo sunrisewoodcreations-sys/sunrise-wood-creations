@@ -1,5 +1,6 @@
+import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendPickupConfirmationEmail } from "@/lib/email";
+import { sendPickupConfirmationEmail, sendPickupSchedulingEmail } from "@/lib/email";
 import { googleCalendarUrl, outlookCalendarUrl, appleCalendarDataUrl } from "@/lib/calendarLinks";
 
 export type AvailabilitySettings = {
@@ -297,6 +298,58 @@ export async function cancelPickupAppointment(appointmentId: string): Promise<{ 
   const { error } = await admin.from("pickup_appointments").update({ status: "cancelled" }).eq("id", appointmentId);
   if (error) return { ok: false, error: error.message };
   return { ok: true };
+}
+
+// The single source of truth for "send this order's pickup-scheduling
+// email," called from every path that can put an order into
+// ready_for_pickup: the admin manual status change AND
+// checkStockAndAutoMarkReady()'s automatic transition. Whichever one
+// gets there first wins — the guard below (sent-at timestamp, plus any
+// already-existing appointment) makes every other call a safe no-op,
+// so it is never possible to send this email twice for the same order,
+// no matter how many call sites or how many times each one fires.
+export async function triggerPickupSchedulingEmail(orderId: string, siteUrl: string): Promise<{ sent: boolean; error?: string }> {
+  const admin = createAdminClient();
+
+  const { data: order } = await admin
+    .from("orders")
+    .select("id, title, fulfillment_method, pickup_scheduling_email_sent_at, profiles:customer_id(full_name, email)")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (!order) return { sent: false, error: "Order not found" };
+  if (order.fulfillment_method !== "pickup") return { sent: false };
+  if (order.pickup_scheduling_email_sent_at) return { sent: false };
+
+  const { count: existingAppointments } = await admin
+    .from("pickup_appointments")
+    .select("id", { count: "exact", head: true })
+    .eq("order_id", orderId);
+  if ((existingAppointments || 0) > 0) return { sent: false };
+
+  const customer = (order as any).profiles;
+  const email = customer?.email;
+  const name = customer?.full_name;
+  if (!email) return { sent: false, error: "This customer has no email on file." };
+
+  const token = crypto.randomBytes(24).toString("hex");
+  const { error: tokenError } = await admin.from("orders").update({
+    pickup_scheduling_token: token,
+    pickup_scheduling_email_sent_at: new Date().toISOString()
+  }).eq("id", orderId);
+  if (tokenError) return { sent: false, error: tokenError.message };
+
+  try {
+    await sendPickupSchedulingEmail({
+      toEmail: email,
+      customerName: name,
+      orderTitle: order.title,
+      schedulingUrl: `${siteUrl}/pickup/schedule/${token}`
+    });
+  } catch (err: any) {
+    return { sent: false, error: err.message || "Couldn't send the scheduling email." };
+  }
+
+  return { sent: true };
 }
 
 function formatDateDisplay(dateStr: string): string {
