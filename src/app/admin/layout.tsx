@@ -90,6 +90,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const quickLinks = [
     { href: "/admin/orders", label: "Orders" },
     { href: "/admin/customers", label: "Customers" },
+    { href: "/admin/leads", label: "Leads" },
     { href: "/admin/queue", label: "Production" },
     { href: "/admin/calendar", label: "Calendar" },
     { href: "/admin/pickup-appointments", label: "Pickup Appointments", badge: badges.pickupsToday }
@@ -101,6 +102,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       links: [
         { href: "/admin/orders", label: "Orders" },
         { href: "/admin/customers", label: "Customers" },
+        { href: "/admin/leads", label: "Leads" },
         { href: "/admin/quotes", label: "Quotes", badge: badges.quotes },
         { href: "/admin/messages", label: "Messages", badge: badges.messages },
         { href: "/admin/calendar", label: "Calendar" },
