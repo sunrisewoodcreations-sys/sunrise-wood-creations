@@ -28,6 +28,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const order = (proof as any).orders;
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
 
+  // This route requires a login, but it's the CUSTOMER's own login, not
+  // necessarily the demo admin — so sendViaResend's session-based demo
+  // check alone isn't enough to protect a test order here. Use the
+  // order's own is_demo column instead; fail-safe to "treat as demo" if
+  // it's ever not a plain boolean (should never happen — NOT NULL with
+  // a default — but this is the side to err on if it ever did).
+  const forceDemo = typeof order?.is_demo === "boolean" ? order.is_demo : true;
+
   if (decision === "approved") {
     await supabase.from("orders").update({ status: "design_approved" }).eq("id", order.id);
 
@@ -37,20 +45,23 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       productType: order.product_type as ProductType,
       orderTitle: order.title,
       orderId: order.id,
-      newStatus: "design_approved"
+      newStatus: "design_approved",
+      forceDemo
     });
 
     await sendProofApprovedNotice({
       orderTitle: order.title,
       orderId: order.id,
-      customerName: profile?.full_name || user.email!
+      customerName: profile?.full_name || user.email!,
+      forceDemo
     });
   } else {
     await sendProofDeclinedNotice({
       orderTitle: order.title,
       orderId: order.id,
       customerName: profile?.full_name || user.email!,
-      feedback: feedback || "(no details given)"
+      feedback: feedback || "(no details given)",
+      forceDemo
     });
   }
 
