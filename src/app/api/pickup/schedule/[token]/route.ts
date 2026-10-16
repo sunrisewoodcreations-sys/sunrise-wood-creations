@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { bookPickupAppointment, sendPickupConfirmation } from "@/lib/pickupScheduling";
+import { bookPickupAppointment, sendPickupConfirmation, notifyAdminPickupScheduled } from "@/lib/pickupScheduling";
 
 // Public on purpose — no login required, same principle as every other
 // token-based customer action in this app (proofs, quote acceptance).
@@ -28,6 +28,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.get("host")}`;
   await sendPickupConfirmation(result.appointmentId, siteUrl, false); // best-effort — booking itself already succeeded
+  await notifyAdminPickupScheduled(result.appointmentId, false); // best-effort — lets you know a customer just booked
 
   return NextResponse.json({ ok: true });
 }
