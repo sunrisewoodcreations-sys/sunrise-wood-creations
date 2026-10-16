@@ -21,11 +21,21 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     };
   }
 
+  // No more robots.txt "disallow" entries for /account, /admin, /login,
+  // or /update-password. Blocking crawling there was well-intentioned
+  // but self-defeating: a robots.txt "disallow" stops Google from
+  // fetching the page at all, which means it can never see the
+  // `noindex` meta tag those pages now carry (see their layout.tsx
+  // files) — so a URL already in Google's index from before stays
+  // stuck there, shown as "blocked by robots.txt," instead of actually
+  // dropping out. There's no real exposure risk in allowing the crawl:
+  // the middleware's own auth check (above) already sends every
+  // signed-out visit to those paths straight to /login before any real
+  // page ever renders, crawler or not.
   return {
     rules: {
       userAgent: "*",
-      allow: "/",
-      disallow: ["/account", "/admin", "/login", "/update-password"]
+      allow: "/"
     },
     sitemap: `${SITE_URL}/sitemap.xml`
   };
