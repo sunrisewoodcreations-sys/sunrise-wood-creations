@@ -6,6 +6,9 @@ import { sendInvoiceEmail, sendLowStockAlert } from "@/lib/email";
 import { shouldNotify } from "@/lib/notify";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 import { SALES_TAX_RATE } from "@/lib/tax";
+import { triggerPickupSchedulingEmail } from "@/lib/pickupScheduling";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com";
 
 // Same brand palette already used in the redesigned customer emails —
 // kept as the single source of truth for both, rather than a separate
@@ -423,6 +426,11 @@ export async function checkStockAndAutoMarkReady(admin: ReturnType<typeof create
         await admin.from("orders").update({ status: "ready_for_pickup", stock_deducted: true }).eq("id", order.id);
         order.status = "ready_for_pickup";
         order.stock_deducted = true;
+        try {
+          await triggerPickupSchedulingEmail(order.id, SITE_URL);
+        } catch (err) {
+          console.error("Pickup scheduling email failed to send:", err);
+        }
       }
     }
   } else if (order.product_id) {
@@ -440,6 +448,11 @@ export async function checkStockAndAutoMarkReady(admin: ReturnType<typeof create
       await admin.from("orders").update({ status: "ready_for_pickup", stock_deducted: true }).eq("id", order.id);
       order.status = "ready_for_pickup";
       order.stock_deducted = true;
+      try {
+        await triggerPickupSchedulingEmail(order.id, SITE_URL);
+      } catch (err) {
+        console.error("Pickup scheduling email failed to send:", err);
+      }
     }
   }
 }
