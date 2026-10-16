@@ -49,6 +49,8 @@ export default function QuoteEditor({
     expiration_date: string;
     discount_cents: number;
     delivery_cents: number;
+    delivery_address?: string | null;
+    delivery_miles?: number | string | null;
     coupon_id: string | null;
     coupon_discount_cents: number | null;
     coupons: { code: string } | null;
@@ -95,6 +97,15 @@ export default function QuoteEditor({
 
   const [discount, setDiscount] = useState(existingQuote ? (existingQuote.discount_cents / 100).toString() : "0");
   const [delivery, setDelivery] = useState(existingQuote ? (existingQuote.delivery_cents / 100).toString() : "0");
+  const [deliveryAddress, setDeliveryAddress] = useState(existingQuote?.delivery_address || "");
+  const [deliveryMiles, setDeliveryMiles] = useState<number | null>(
+    existingQuote?.delivery_miles != null && existingQuote.delivery_miles !== "" ? Number(existingQuote.delivery_miles) : null
+  );
+  const [deliveryPanelOpen, setDeliveryPanelOpen] = useState(false);
+  const [deliveryBusy, setDeliveryBusy] = useState(false);
+  const [deliveryError, setDeliveryError] = useState("");
+  const [deliveryNote, setDeliveryNote] = useState("");
+  const [deliverySuggestion, setDeliverySuggestion] = useState<{ address: string; reason: string } | null>(null);
   const [expirationDate, setExpirationDate] = useState(existingQuote?.expiration_date || addDaysToDateStr(todayStr(), 7));
   const [status, setStatus] = useState(existingQuote?.status || "draft");
   const [notes, setNotes] = useState(existingQuote?.notes || "");
@@ -198,6 +209,38 @@ export default function QuoteEditor({
   }));
   const discountCents = Math.max(0, Math.round((Number(discount) || 0) * 100));
   const deliveryCents = Math.max(0, Math.round((Number(delivery) || 0) * 100));
+  const showDeliveryPanel = deliveryCents > 0 || deliveryAddress.trim() !== "" || deliveryPanelOpen;
+
+  async function calculateDelivery(confirmAddress = false) {
+    setDeliveryBusy(true);
+    setDeliveryError("");
+    setDeliverySuggestion(null);
+    try {
+      const res = await fetch("/api/delivery/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: deliveryAddress, confirmAddress })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDeliveryError(body.error || "Couldn't calculate delivery.");
+      } else if (body.needsConfirmation) {
+        setDeliverySuggestion({ address: body.suggestedAddress, reason: body.reason });
+      } else {
+        setDeliveryAddress(body.address);
+        setDeliveryMiles(body.miles);
+        setDelivery((body.feeCents / 100).toFixed(2));
+        setDeliveryNote(
+          body.minimumApplied
+            ? `${body.miles} miles - minimum delivery fee of $${(body.minimumCents / 100).toFixed(2)} applied`
+            : `${body.miles} miles x $${(body.perMileCents / 100).toFixed(2)}/mile = $${(body.feeCents / 100).toFixed(2)}`
+        );
+      }
+    } catch {
+      setDeliveryError("Couldn't reach the server. Try again.");
+    }
+    setDeliveryBusy(false);
+  }
   const couponDiscountCents = appliedCoupon?.discountCents || 0;
   const totals = calculateQuoteTotals(totalsInput, discountCents, deliveryCents, couponDiscountCents);
 
@@ -257,6 +300,8 @@ export default function QuoteEditor({
       })),
       discountCents,
       deliveryCents,
+      deliveryAddress: deliveryAddress.trim(),
+      deliveryMiles: deliveryAddress.trim() ? deliveryMiles : null,
       couponId: appliedCoupon?.couponId || null,
       couponDiscountCents: appliedCoupon?.discountCents || 0,
       expirationDate,
@@ -537,6 +582,9 @@ export default function QuoteEditor({
           <div>
             <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Delivery fee ($)</label>
             <input value={delivery} onChange={e => setDelivery(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            {!showDeliveryPanel && (
+              <button type="button" onClick={() => setDeliveryPanelOpen(true)} className="mt-1 text-xs underline text-ember">Calculate by distance</button>
+            )}
           </div>
           <div>
             <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Expiration date</label>
@@ -551,6 +599,51 @@ export default function QuoteEditor({
             </div>
           )}
         </div>
+
+        {showDeliveryPanel && (
+          <div className="border border-[#1E3A5F]/10 rounded-md p-3 bg-[#1E3A5F]/[0.02]">
+            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Delivery address</label>
+            <p className="text-xs text-[#1E3A5F]/60 mb-2">
+              {deliveryCents > 0 && !deliveryAddress.trim()
+                ? "You've added a delivery charge. Enter the delivery address to price it by the mile from your home."
+                : "Checked against Google Maps and priced one way, by the mile, from your home address."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                value={deliveryAddress}
+                onChange={e => { setDeliveryAddress(e.target.value); setDeliveryMiles(null); setDeliveryNote(""); setDeliverySuggestion(null); }}
+                placeholder="123 Main St, Town, MI 49000"
+                className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => calculateDelivery(false)}
+                disabled={deliveryBusy || deliveryAddress.trim().length < 5}
+                className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60"
+              >
+                {deliveryBusy ? "Calculating..." : "Calculate delivery"}
+              </button>
+            </div>
+            {deliverySuggestion && (
+              <div className="mt-2 text-sm text-[#1E3A5F]">
+                <p className="font-semibold">Did you mean: {deliverySuggestion.address}?</p>
+                <p className="text-xs text-[#1E3A5F]/70 mb-2">{deliverySuggestion.reason}</p>
+                <button
+                  type="button"
+                  onClick={() => { setDeliveryAddress(deliverySuggestion.address); calculateDelivery(true); }}
+                  className="text-xs font-semibold underline text-ember"
+                >
+                  Yes, use that address
+                </button>
+              </div>
+            )}
+            {deliveryNote && <p className="mt-2 text-sm text-sage font-semibold">{deliveryNote}. You can still adjust the fee above.</p>}
+            {!deliveryNote && deliveryMiles != null && deliveryAddress.trim() && (
+              <p className="mt-2 text-xs text-[#1E3A5F]/60">Saved distance: {deliveryMiles} miles.</p>
+            )}
+            {deliveryError && <p className="mt-2 text-sm text-ember">{deliveryError}</p>}
+          </div>
+        )}
 
         {/* Coupon — the customer mentions a code by phone/email, the
             admin enters and validates it here; every rule (dates,

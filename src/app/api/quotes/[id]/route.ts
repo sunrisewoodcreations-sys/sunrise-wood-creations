@@ -1,3 +1,4 @@
+import { deliveryColumnsForUpdate } from "@/lib/delivery";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -18,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const admin = createAdminClient();
   const body = await req.json();
-  const { items, discountCents, deliveryCents, expirationDate, notes, terms, status, customerId, couponId, couponDiscountCents } = body;
+  const { items, discountCents, deliveryCents, expirationDate, notes, terms, status, customerId, couponId, couponDiscountCents, deliveryAddress, deliveryMiles } = body;
 
   const { data: currentQuote } = await admin.from("quotes").select("*").eq("id", params.id).maybeSingle();
   if (!currentQuote) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
@@ -62,6 +63,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         discount_cents: discount,
         tax_cents: totals.taxCents,
         delivery_cents: delivery,
+        ...(deliveryAddress !== undefined
+          ? deliveryColumnsForUpdate(deliveryAddress, deliveryMiles)
+          : { delivery_address: currentQuote.delivery_address ?? null, delivery_miles: currentQuote.delivery_miles ?? null }),
         total_cents: totals.totalCents,
         notes: notes !== undefined ? (notes || null) : currentQuote.notes,
         terms: terms !== undefined ? (terms || null) : currentQuote.terms,
@@ -119,6 +123,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     updatePayload.discount_cents = discount;
     updatePayload.tax_cents = totals.taxCents;
     updatePayload.delivery_cents = delivery;
+    Object.assign(updatePayload, deliveryColumnsForUpdate(deliveryAddress, deliveryMiles));
     updatePayload.total_cents = totals.totalCents;
     if (couponId !== undefined) {
       updatePayload.coupon_id = couponId;

@@ -43,6 +43,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       discount_cents: source.discount_cents,
       tax_cents: source.tax_cents,
       delivery_cents: source.delivery_cents,
+      ...(source.delivery_address ? { delivery_address: source.delivery_address, delivery_miles: source.delivery_miles ?? null } : {}),
       total_cents: source.total_cents,
       notes: source.notes,
       terms: source.terms

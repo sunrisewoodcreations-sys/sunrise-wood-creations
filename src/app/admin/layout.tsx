@@ -156,6 +156,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       label: "Settings",
       links: [
         { href: "/admin/pickup-settings", label: "Pickup Settings" },
+        { href: "/admin/delivery-settings", label: "Delivery Settings" },
         { href: "/admin/website-status", label: "Website Status" }
       ]
     },
