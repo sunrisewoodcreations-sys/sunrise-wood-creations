@@ -40,6 +40,12 @@ const PATHS: Record<string, JSX.Element> = {
   // this one icon shape rather than needing two different ones.
   Production: productionIcon,
   "Production Tools": productionIcon,
+  "Pickup Appointments": (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12.5l2.5 2.5L16 9" />
+    </>
+  ),
   Calendar: (
     <>
       <rect x="3" y="4" width="18" height="18" rx="2" />
