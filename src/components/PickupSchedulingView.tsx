@@ -20,6 +20,8 @@ export default function PickupSchedulingView({
   alreadyUsed,
   availableDays,
   heading,
+  businessAddress,
+  pickupInstructions,
   successMessage
 }: {
   apiEndpoint: string;
@@ -29,6 +31,8 @@ export default function PickupSchedulingView({
   alreadyUsed: boolean;
   availableDays: DaySlots[];
   heading: string;
+  businessAddress?: string;
+  pickupInstructions?: string;
   successMessage: string;
 }) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -75,6 +79,14 @@ export default function PickupSchedulingView({
             </div>
           ))}
         </div>
+
+        {(businessAddress || pickupInstructions) && (
+          <div className="bg-cream border border-walnut/10 rounded-lg p-4 mb-4">
+            <div className="text-xs font-semibold text-walnut/50 uppercase mb-1">Pickup Location</div>
+            {businessAddress && <div className="text-sm font-semibold text-walnut">{businessAddress}</div>}
+            {pickupInstructions && <div className="text-sm text-walnut/70 mt-1">{pickupInstructions}</div>}
+          </div>
+        )}
 
         {booked ? (
           <div className="bg-sage/10 border border-sage/30 rounded-lg p-4">
