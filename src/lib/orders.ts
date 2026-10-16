@@ -54,12 +54,22 @@ export async function createOrder(opts: {
   const totalPriceCents = normalizedItems.reduce((sum, it) => sum + it.priceCents, 0);
   const totalQuantity = normalizedItems.reduce((sum, it) => sum + it.quantity, 0);
 
-  const orderTitle = normalizedItems.length === 1
-    ? normalizedItems[0].title
-    : `${normalizedItems[0].title} + ${normalizedItems.length - 1} more item${normalizedItems.length - 1 === 1 ? "" : "s"}`;
-  const orderSizeDetails = normalizedItems.length === 1 ? normalizedItems[0].sizeDetails : null;
-  const orderProductType = normalizedItems[0].productType;
-  const orderProductId = normalizedItems.length === 1 ? normalizedItems[0].productId : null;
+  // A coupon applied at order creation is stored as its own negative-
+  // price line item (see AddOrderWithCustomerPicker) so it flows
+  // through the existing order-total and invoice code unchanged — but
+  // it's a discount, not a product, so it should never count toward
+  // "+N more items" in the order's own title, or decide whether this
+  // order's single-item fields (size details, product id) get shown.
+  // A real line item never has a negative price, so that's the signal.
+  const productItems = normalizedItems.filter(it => it.priceCents >= 0);
+  const titleItems = productItems.length > 0 ? productItems : normalizedItems;
+
+  const orderTitle = titleItems.length === 1
+    ? titleItems[0].title
+    : `${titleItems[0].title} + ${titleItems.length - 1} more item${titleItems.length - 1 === 1 ? "" : "s"}`;
+  const orderSizeDetails = titleItems.length === 1 ? titleItems[0].sizeDetails : null;
+  const orderProductType = titleItems[0].productType;
+  const orderProductId = titleItems.length === 1 ? titleItems[0].productId : null;
 
   // Auto-set the production date to one day before pickup (glue cure
   // time) — computed directly on the date string, not a real Date
