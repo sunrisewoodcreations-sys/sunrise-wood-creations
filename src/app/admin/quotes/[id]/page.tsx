@@ -42,6 +42,8 @@ export default async function EditQuotePage({ params }: { params: { id: string }
         expiration_date: quote.expiration_date,
         discount_cents: quote.discount_cents,
         delivery_cents: quote.delivery_cents,
+        delivery_address: quote.delivery_address ?? null,
+        delivery_miles: quote.delivery_miles ?? null,
         notes: quote.notes,
         terms: quote.terms,
         share_token: quote.share_token,

@@ -1,3 +1,4 @@
+import { deliveryColumnsForCreate } from "@/lib/delivery";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  const { customerId, items, discountCents, deliveryCents, expirationDate, notes, terms, quoteRequestId, couponId, couponDiscountCents } = await req.json();
+  const { customerId, items, discountCents, deliveryCents, expirationDate, notes, terms, quoteRequestId, couponId, couponDiscountCents, deliveryAddress, deliveryMiles } = await req.json();
 
   if (!customerId) return NextResponse.json({ error: "Select a customer" }, { status: 400 });
   if (!Array.isArray(items) || items.length === 0) return NextResponse.json({ error: "Add at least one line item" }, { status: 400 });
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
       discount_cents: discount,
       tax_cents: totals.taxCents,
       delivery_cents: delivery,
+      ...deliveryColumnsForCreate(deliveryAddress, deliveryMiles),
       total_cents: totals.totalCents,
       notes: notes || null,
       terms: terms || null,
