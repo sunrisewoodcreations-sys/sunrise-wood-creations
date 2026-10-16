@@ -177,7 +177,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           <SendInvoiceButton orderId={order.id} />
         </div>
 
-        <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} fulfillmentMethod={order.fulfillment_method} />
+        <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
         <ProgressTracker productType={order.product_type as ProductType} currentStatus={order.status} statusTimestamps={statusTimestamps} />
 
         <div className="mt-4 pt-4 border-t border-[#1E3A5F]/10">
