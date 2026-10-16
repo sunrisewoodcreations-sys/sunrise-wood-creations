@@ -34,6 +34,11 @@ const PATHS: Record<string, JSX.Element> = {
       <circle cx="12" cy="7" r="4" />
     </>
   ),
+  Leads: (
+    <>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </>
+  ),
   // Same icon under both keys — the quick-access "Production" shortcut
   // and the renamed "Production Tools" category are two different nav
   // entries now, but visually related, so they intentionally share
