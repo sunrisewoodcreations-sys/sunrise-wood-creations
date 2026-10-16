@@ -5,6 +5,7 @@ import { consumePicketsFifo } from "@/lib/pickets";
 import { checkStockAndAutoMarkReady } from "@/lib/invoice";
 import { getOrCreatePickupSchedulingUrl } from "@/lib/pickupScheduling";
 import { ProductType } from "@/lib/statusSteps";
+import { formatOrderNumber } from "@/lib/orderDisplay";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com";
 
@@ -207,6 +208,13 @@ export async function createOrder(opts: {
         schedulingUrl,
         priceCents: order.price_cents,
         amountPaidCents: order.amount_paid_cents,
+        // The customer-facing number ("SWC-1001") is assigned by the
+        // database at the moment of insert, so it's already on `order`
+        // here. If it's missing for any reason (for example the
+        // order_number migration hasn't been run yet), this is undefined
+        // and the email looks it up itself and, failing that, just leaves
+        // the line out. Display only: nothing identifies an order by it.
+        orderNumberDisplay: formatOrderNumber(order.order_number, order.is_demo) ?? undefined,
         // This single change is also what closes the gap for the public,
         // no-login "accept this quote" link (src/app/api/quotes/token/
         // [token]/accept/route.ts): that route has no logged-in session
