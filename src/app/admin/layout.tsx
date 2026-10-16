@@ -7,14 +7,19 @@ import AdminSidebarNav from "@/components/AdminSidebarNav";
 import NavIcon from "@/components/AdminNavIcons";
 
 async function getBadgeCounts(supabase: ReturnType<typeof createClient>) {
-  const [{ count: unrespondedQuotes }, { count: unrespondedGuestChats }, { data: orders }, { data: customerMessages }, { count: pendingReviews }, { count: pendingFaq }] =
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const [{ count: unrespondedQuotes }, { count: unrespondedGuestChats }, { data: orders }, { data: customerMessages }, { count: pendingReviews }, { count: pendingFaq }, { count: pickupsToday }] =
     await Promise.all([
       supabase.from("quote_requests").select("id", { count: "exact", head: true }).eq("responded", false),
       supabase.from("guest_messages").select("id", { count: "exact", head: true }).eq("responded", false),
       supabase.from("orders").select("id, admin_last_read_at"),
       supabase.from("order_messages").select("order_id, created_at").eq("sender_role", "customer"),
       supabase.from("product_reviews").select("id", { count: "exact", head: true }).eq("status", "pending"),
-      supabase.from("faq_questions").select("id", { count: "exact", head: true }).eq("status", "pending")
+      supabase.from("faq_questions").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      // Today's scheduled pickups — shown as a badge on the quick-access
+      // link so you see at a glance whether anyone's due in today,
+      // without having to open the page first.
+      supabase.from("pickup_appointments").select("id", { count: "exact", head: true }).eq("status", "scheduled").eq("appointment_date", todayStr)
     ]);
 
   const lastReadByOrder: Record<string, string | null> = {};
@@ -32,7 +37,8 @@ async function getBadgeCounts(supabase: ReturnType<typeof createClient>) {
     quotes: unrespondedQuotes || 0,
     messages: unreadOrderIds.size + (unrespondedGuestChats || 0),
     reviews: pendingReviews || 0,
-    faq: pendingFaq || 0
+    faq: pendingFaq || 0,
+    pickupsToday: pickupsToday || 0
   };
 }
 
@@ -60,17 +66,21 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // page and the most frequently used single destination.
   const dashboardLink = { href: "/admin/dashboard", label: "Dashboard" };
 
-  // The 4 pages used every day, promoted to one-click access above the
+  // The pages used every day, promoted to one-click access above the
   // collapsible categories — same routes as their entries inside
   // Business/Production Tools below, not a separate or different page.
   // "Production" links to the Production Queue, the day-to-day
   // operational view, matching the same choice already made for the
-  // account dropdown's own "Production" shortcut.
+  // account dropdown's own "Production" shortcut. "Pickup Appointments"
+  // carries a badge for today's scheduled count, same pattern as the
+  // Quotes/Messages badges below, so a pickup due in today is visible
+  // without opening the page.
   const quickLinks = [
     { href: "/admin/orders", label: "Orders" },
     { href: "/admin/customers", label: "Customers" },
     { href: "/admin/queue", label: "Production" },
-    { href: "/admin/calendar", label: "Calendar" }
+    { href: "/admin/calendar", label: "Calendar" },
+    { href: "/admin/pickup-appointments", label: "Pickup Appointments", badge: badges.pickupsToday }
   ];
 
   const categories = [
@@ -177,6 +187,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             >
               <NavIcon name={link.label} />
               {link.label}
+              {!!link.badge && (
+                <span className="ml-auto bg-ember text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  {link.badge}
+                </span>
+              )}
             </Link>
           ))}
         </div>
