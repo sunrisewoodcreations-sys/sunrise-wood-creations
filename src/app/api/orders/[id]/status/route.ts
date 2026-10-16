@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { issueInvoiceForOrder, generateInvoicePdfForOrder } from "@/lib/invoice";
 import { sendOrderStatusEmail } from "@/lib/email";
 import { shouldNotify } from "@/lib/notify";
-import { triggerPickupSchedulingEmail } from "@/lib/pickupScheduling";
+import { getOrCreatePickupSchedulingUrl } from "@/lib/pickupScheduling";
 import { ProductType } from "@/lib/statusSteps";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
@@ -73,6 +73,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       console.error("Invoice generation for Ready for Pickup email failed:", err);
     }
 
+    // If this order still needs a pickup time scheduled, fold the
+    // scheduling link into the same email below instead of sending a
+    // second, separate one — getOrCreatePickupSchedulingUrl() is the
+    // single no-duplicate guard shared by every path that can reach
+    // ready_for_pickup, so this is always safe to call here.
+    let schedulingUrl: string | undefined;
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.get("host")}`;
+      const schedulingResult = await getOrCreatePickupSchedulingUrl(order.id, siteUrl);
+      if (schedulingResult.ok) schedulingUrl = schedulingResult.url;
+    } catch (err) {
+      console.error("Pickup scheduling link generation failed:", err);
+    }
+
     if (shouldNotify(customer, "order_updates")) {
       const balanceDueCents = (order.price_cents || 0) - (order.amount_paid_cents || 0);
       try {
@@ -86,18 +100,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           balanceDueCents,
           invoicePdfBuffer,
           invoiceNumber,
-          invoiceYear
+          invoiceYear,
+          schedulingUrl
         });
       } catch (err) {
         console.error("Status-update email failed to send:", err);
       }
-    }
-
-    try {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.get("host")}`;
-      await triggerPickupSchedulingEmail(order.id, siteUrl);
-    } catch (err) {
-      console.error("Pickup scheduling email failed to send:", err);
     }
   }
 
