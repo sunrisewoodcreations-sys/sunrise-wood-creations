@@ -19,9 +19,26 @@ const DEMO_TEST_EMAIL = process.env.DEMO_TEST_EMAIL || "";
 // Cron jobs have no logged-in user at all, so they always fall through
 // to sending normally, which is correct: they're never demo actions.
 async function sendViaResend(
-  payload: { from: string; to: string; subject: string; html: string; replyTo?: string; attachments?: { filename: string; content: string }[]; emailType: string; orderId?: string }
+  payload: {
+    from: string; to: string; subject: string; html: string; replyTo?: string;
+    attachments?: { filename: string; content: string }[]; emailType: string; orderId?: string;
+    // Set by a caller that already knows, from the actual database record
+    // being emailed about (an order/quote's own is_demo column, or a
+    // customer profile's is_demo_account), that this send is about a
+    // test/demo record — independent of whether anyone is currently
+    // logged in. The session-based check below (isDemoSender) only ever
+    // sees a logged-in user for an admin acting interactively through the
+    // website; it can't see anything for a guest clicking an emailed link
+    // (no login exists for those routes by design) or a scheduled cron
+    // job (no session ever exists there). forceDemo is how those paths
+    // get the same protection: interception now happens if EITHER the
+    // acting session is demo OR the record itself is flagged demo, so
+    // this is purely additive — every existing caller that never passes
+    // it behaves exactly as before.
+    forceDemo?: boolean;
+  }
 ) {
-  const { emailType, orderId, ...resendPayload } = payload;
+  const { emailType, orderId, forceDemo, ...resendPayload } = payload;
 
   let isDemoSender = false;
   try {
@@ -36,7 +53,9 @@ async function sendViaResend(
     isDemoSender = false;
   }
 
-  if (!isDemoSender) {
+  const shouldIntercept = isDemoSender || !!forceDemo;
+
+  if (!shouldIntercept) {
     return resend.emails.send(resendPayload);
   }
 
@@ -80,6 +99,58 @@ function escapeHtml(s: string) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#x27;");
+}
+
+// A short, stable reference derived directly from the order's real
+// database id — not a separately generated/placeholder number (there
+// is no separate "order number" column). Deterministic: the same
+// order always produces the same code. Matches what the admin's own
+// order search already matches against (it does a plain substring
+// check against the full id), so this code can be pasted straight
+// into that search box to pull the order back up.
+function orderRefCode(orderId: string): string {
+  return orderId.replace(/-/g, "").slice(0, 8).toUpperCase();
+}
+
+// Total + payment status for the confirmation email, built from the
+// same two real columns (price_cents, amount_paid_cents) and the same
+// "paid in full = balance <= 0" rule already used by PaymentSummary.tsx
+// on the account page and throughout the admin panel — not a new,
+// separate definition of "paid." Never assumes an order is paid just
+// because it exists: an order with no payment yet correctly shows
+// "Unpaid," not "Paid."
+function paymentStatusHtml(priceCents: number, amountPaidCentsRaw?: number): string {
+  const total = Math.max(0, Math.round(priceCents));
+  const paid = Math.max(0, Math.round(amountPaidCentsRaw || 0));
+  const balance = total - paid;
+  const isPaidInFull = balance <= 0;
+  const isUnpaid = paid <= 0 && total > 0;
+
+  const statusLabel = isPaidInFull ? "Paid in full" : isUnpaid ? "Unpaid" : "Partially paid";
+  const statusColor = isPaidInFull ? "#3f7a5a" : isUnpaid ? "#B23B3B" : "#D9603A";
+  const statusDetail = !isPaidInFull && !isUnpaid
+    ? ` <span style="font-weight: normal; color: #6b5d4f;">($${(paid / 100).toFixed(2)} of $${(total / 100).toFixed(2)} paid)</span>`
+    : "";
+
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 16px 0 0;">
+      <tr>
+        <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td valign="top">
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a7a6b; margin-bottom: 2px;">Order Total</div>
+                <div style="font-size: 16px; font-weight: bold; color: #3D2B1F;">$${(total / 100).toFixed(2)}</div>
+              </td>
+              <td valign="top" align="right">
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a7a6b; margin-bottom: 2px;">Payment Status</div>
+                <div style="font-size: 14px; font-weight: bold; color: ${statusColor};">${statusLabel}${statusDetail}</div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>`;
 }
 
 type EmailButton = { text: string; url: string; color?: string };
@@ -161,7 +232,7 @@ function shell(opts: {
                 <a href="mailto:${email}" style="color: #1E3A5F; font-weight: 600; text-decoration: none;">${email}</a>
               </p>
               <p style="margin: 0 0 14px; font-size: 11px; color: #a89684;">
-                This inbox is not monitored — replies here won't be seen.
+                This is an automated email, so replies sent directly to it aren't seen — if you need help with your order, please call or email us above.
               </p>
               <p style="margin: 0; font-size: 12px; color: #8a7a6b; font-weight: bold;">Sunrise Wood Creations</p>
               <p style="margin: 2px 0 0; font-size: 11px; color: #a89684;">Handmade in Michigan &bull; Built to order &bull; Local pickup</p>
@@ -320,6 +391,12 @@ export async function sendOrderStatusEmail(opts: {
   orderTitle: string;
   orderId: string;
   newStatus: string;
+  // See sendViaResend's forceDemo doc comment — pass the order's own
+  // is_demo column here whenever the caller isn't necessarily running
+  // inside an authenticated admin session (a guest token route, for
+  // instance), so a test order can never email a real inbox just
+  // because nobody happened to be logged in as the demo account.
+  forceDemo?: boolean;
   balanceDueCents?: number;
   invoicePdfBuffer?: Buffer;
   invoiceNumber?: number;
@@ -331,6 +408,11 @@ export async function sendOrderStatusEmail(opts: {
   // single primary action instead of the usual "View Your Order" —
   // so the customer gets one email for this event, not two.
   schedulingUrl?: string;
+  // Only passed in today by the order-placed confirmation email (see
+  // src/lib/orders.ts) — every other status-update call site is left
+  // exactly as it was, so this section only ever appears there.
+  priceCents?: number;
+  amountPaidCents?: number;
 }) {
   const copy = STATUS_COPY[opts.newStatus];
   // statusLabel() correctly returns sentence case ("Being built") for its
@@ -376,12 +458,14 @@ export async function sendOrderStatusEmail(opts: {
           <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px;">
             <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a7a6b; margin-bottom: 2px;">Your Order</div>
             <div style="font-size: 16px; font-weight: bold; color: #3D2B1F;">${escapeHtml(productLabel(opts.productType))} — ${escapeHtml(opts.orderTitle)}</div>
+            <div style="font-size: 11px; color: #8a7a6b; margin-top: 4px;">Order #${escapeHtml(orderRefCode(opts.orderId))}</div>
           </td>
         </tr>
       </table>
       ${progressBarHtml(opts.productType, opts.newStatus)}
       <p style="margin: 20px 0 0;">${escapeHtml(bodyLine)}</p>
       ${balanceHtml}
+      ${typeof opts.balanceDueCents !== "number" && typeof opts.priceCents === "number" ? paymentStatusHtml(opts.priceCents, opts.amountPaidCents) : ""}
       ${opts.schedulingUrl ? `<p style="margin: 16px 0 0;">Pick a day and time that works for you, right from your phone, no login needed.</p>` : ""}
     `,
     buttonText: opts.schedulingUrl ? "Schedule My Pickup" : "View Your Order",
@@ -395,6 +479,7 @@ export async function sendOrderStatusEmail(opts: {
   return sendViaResend({
     emailType: "sendOrderStatusEmail",
     orderId: (opts as any).orderId,
+    forceDemo: opts.forceDemo,
     from: FROM,
     to: opts.toEmail,
     subject: heading,
@@ -455,6 +540,7 @@ export async function sendProofDeclinedNotice(opts: {
   orderId: string;
   customerName: string;
   feedback: string;
+  forceDemo?: boolean;
 }) {
   const html = shell({
     preheader: `${opts.customerName} requested changes on ${opts.orderTitle}`,
@@ -477,6 +563,7 @@ export async function sendProofDeclinedNotice(opts: {
   return sendViaResend({
     emailType: "sendProofDeclinedNotice",
     orderId: (opts as any).orderId,
+    forceDemo: opts.forceDemo,
     from: FROM,
     to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
     subject: `Changes requested: ${opts.orderTitle}`,
@@ -488,6 +575,7 @@ export async function sendProofApprovedNotice(opts: {
   orderTitle: string;
   orderId: string;
   customerName: string;
+  forceDemo?: boolean;
 }) {
   const html = shell({
     preheader: `${opts.customerName} approved the proof for ${opts.orderTitle}`,
@@ -504,6 +592,7 @@ export async function sendProofApprovedNotice(opts: {
   return sendViaResend({
     emailType: "sendProofApprovedNotice",
     orderId: (opts as any).orderId,
+    forceDemo: opts.forceDemo,
     from: FROM,
     to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
     subject: `Design approved: ${opts.orderTitle}`,
@@ -916,6 +1005,7 @@ export async function sendPickupConfirmationEmail(opts: {
   outlookCalendarUrl: string;
   appleCalendarUrl: string;
   isReschedule: boolean;
+  forceDemo?: boolean;
 }) {
   const html = shell({
     preheader: `Pickup confirmed: ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
@@ -952,6 +1042,7 @@ export async function sendPickupConfirmationEmail(opts: {
   return sendViaResend({
     emailType: "sendPickupConfirmationEmail",
     orderId: (opts as any).orderId,
+    forceDemo: opts.forceDemo,
     from: FROM,
     to: opts.toEmail,
     subject: opts.isReschedule
@@ -979,6 +1070,7 @@ export async function sendPickupScheduledAdminAlert(opts: {
   appointmentTimeDisplay: string;
   googleCalendarUrl: string;
   isReschedule: boolean;
+  forceDemo?: boolean;
 }) {
   const html = shell({
     preheader: `${opts.isReschedule ? "Pickup rescheduled" : "New pickup scheduled"}: ${opts.orderTitle}`,
@@ -1006,6 +1098,7 @@ export async function sendPickupScheduledAdminAlert(opts: {
 
   return sendViaResend({
     emailType: "sendPickupScheduledAdminAlert",
+    forceDemo: opts.forceDemo,
     from: FROM,
     to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
     subject: `${opts.isReschedule ? "Pickup rescheduled" : "New pickup scheduled"}: ${opts.orderTitle} — ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
@@ -1023,6 +1116,7 @@ export async function sendPickupReminderEmail(opts: {
   pickupInstructions: string;
   hoursUntil: 24 | 2;
   rescheduleUrl: string;
+  forceDemo?: boolean;
 }) {
   const timeframe = opts.hoursUntil === 24 ? "tomorrow" : "in about 2 hours";
   const html = shell({
@@ -1052,6 +1146,7 @@ export async function sendPickupReminderEmail(opts: {
   return sendViaResend({
     emailType: "sendPickupReminderEmail",
     orderId: (opts as any).orderId,
+    forceDemo: opts.forceDemo,
     from: FROM,
     to: opts.toEmail,
     subject: `Reminder: pickup ${timeframe} for ${opts.orderTitle}`,
