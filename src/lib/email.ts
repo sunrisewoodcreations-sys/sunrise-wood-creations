@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { productLabel, statusLabel, stepsFor, ProductType } from "./statusSteps";
+import { emailProductName, formatOrderNumber } from "./orderDisplay";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -101,15 +102,21 @@ function escapeHtml(s: string) {
     .replace(/'/g, "&#x27;");
 }
 
-// A short, stable reference derived directly from the order's real
-// database id — not a separately generated/placeholder number (there
-// is no separate "order number" column). Deterministic: the same
-// order always produces the same code. Matches what the admin's own
-// order search already matches against (it does a plain substring
-// check against the full id), so this code can be pasted straight
-// into that search box to pull the order back up.
-function orderRefCode(orderId: string): string {
-  return orderId.replace(/-/g, "").slice(0, 8).toUpperCase();
+// Looks up an order's customer-facing number ("SWC-1001", or "DEMO-3" for
+// a demo/test order) by its internal id, so every order-status email can
+// show it without each of its callers having to pass it in. Read-only,
+// and never allowed to block an email: if the lookup fails for any reason
+// (including the order_number column not existing yet because the
+// database migration hasn't been run), this returns null and the email
+// simply leaves the "Order" line out.
+async function lookupOrderNumberDisplay(orderId: string): Promise<string | null> {
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin.from("orders").select("order_number, is_demo").eq("id", orderId).maybeSingle();
+    return formatOrderNumber(data?.order_number, data?.is_demo);
+  } catch {
+    return null;
+  }
 }
 
 // Total + payment status for the confirmation email, built from the
@@ -413,6 +420,11 @@ export async function sendOrderStatusEmail(opts: {
   // exactly as it was, so this section only ever appears there.
   priceCents?: number;
   amountPaidCents?: number;
+  // The order's customer-facing number, already formatted (for example
+  // "SWC-1001"). Optional: when a caller doesn't have it handy, this
+  // function looks it up from the order's id itself. createOrder() passes
+  // it because it just inserted the order and already has it.
+  orderNumberDisplay?: string;
 }) {
   const copy = STATUS_COPY[opts.newStatus];
   // statusLabel() correctly returns sentence case ("Being built") for its
@@ -445,6 +457,7 @@ export async function sendOrderStatusEmail(opts: {
     : "";
 
   const { phone: contactPhone, email: contactEmail } = await getContactInfo();
+  const orderNumberDisplay = opts.orderNumberDisplay || await lookupOrderNumberDisplay(opts.orderId);
 
   const html = shell({
     preheader: heading,
@@ -457,8 +470,8 @@ export async function sendOrderStatusEmail(opts: {
         <tr>
           <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px;">
             <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a7a6b; margin-bottom: 2px;">Your Order</div>
-            <div style="font-size: 16px; font-weight: bold; color: #3D2B1F;">${escapeHtml(productLabel(opts.productType))} — ${escapeHtml(opts.orderTitle)}</div>
-            <div style="font-size: 11px; color: #8a7a6b; margin-top: 4px;">Order #${escapeHtml(orderRefCode(opts.orderId))}</div>
+            <div style="font-size: 16px; font-weight: bold; color: #3D2B1F;">${escapeHtml(emailProductName(opts.orderTitle, opts.productType))}</div>
+            ${orderNumberDisplay ? `<div style="font-size: 11px; color: #8a7a6b; margin-top: 4px;">Order ${escapeHtml(orderNumberDisplay)}</div>` : ""}
           </td>
         </tr>
       </table>
