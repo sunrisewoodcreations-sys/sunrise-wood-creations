@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAvailableSlots } from "@/lib/pickupScheduling";
+import { getAvailableSlots, getAvailabilitySettings } from "@/lib/pickupScheduling";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PickupSchedulingView from "@/components/PickupSchedulingView";
@@ -29,6 +29,7 @@ export default async function PickupReschedulePage({ params }: { params: { token
 
   const alreadyUsed = appointment.status !== "scheduled";
   const availableDays = alreadyUsed ? [] : await getAvailableSlots(21);
+  const settings = await getAvailabilitySettings();
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
@@ -46,6 +47,8 @@ export default async function PickupReschedulePage({ params }: { params: { token
           alreadyUsed={alreadyUsed}
           availableDays={availableDays}
           heading="Reschedule Your Pickup"
+          businessAddress={settings.business_address}
+          pickupInstructions={settings.pickup_instructions}
           successMessage="Your pickup has been rescheduled — an updated confirmation email is on its way to you."
         />
       </main>
