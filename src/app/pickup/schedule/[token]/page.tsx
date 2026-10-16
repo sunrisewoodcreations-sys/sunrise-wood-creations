@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAvailableSlots } from "@/lib/pickupScheduling";
+import { getAvailableSlots, getAvailabilitySettings } from "@/lib/pickupScheduling";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PickupSchedulingView from "@/components/PickupSchedulingView";
@@ -28,6 +28,7 @@ export default async function PickupSchedulePage({ params }: { params: { token: 
 
   const alreadyUsed = !!order.pickup_scheduling_token_used_at;
   const availableDays = alreadyUsed ? [] : await getAvailableSlots(21);
+  const settings = await getAvailabilitySettings();
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
@@ -45,6 +46,8 @@ export default async function PickupSchedulePage({ params }: { params: { token: 
           alreadyUsed={alreadyUsed}
           availableDays={availableDays}
           heading="Schedule Your Pickup"
+          businessAddress={settings.business_address}
+          pickupInstructions={settings.pickup_instructions}
           successMessage="A confirmation email with the full details is on its way to you."
         />
       </main>
