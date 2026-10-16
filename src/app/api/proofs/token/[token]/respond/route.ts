@@ -29,6 +29,13 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   const order = (proof as any).orders;
   const { data: customer } = await supabase.from("profiles").select("*").eq("id", order.customer_id).single();
 
+  // Public, no-login route (the token is the authorization) — there is
+  // never a logged-in session here, so sendViaResend's own demo check
+  // can never see anything on its own. The order's own is_demo column
+  // is the only real signal this route has; fail-safe to "treat as
+  // demo" if it's ever missing/not a boolean rather than assume safe.
+  const forceDemo = typeof order?.is_demo === "boolean" ? order.is_demo : true;
+
   if (decision === "approved") {
     await supabase.from("orders").update({ status: "design_approved" }).eq("id", order.id);
 
@@ -38,20 +45,23 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       productType: order.product_type as ProductType,
       orderTitle: order.title,
       orderId: order.id,
-      newStatus: "design_approved"
+      newStatus: "design_approved",
+      forceDemo
     });
 
     await sendProofApprovedNotice({
       orderTitle: order.title,
       orderId: order.id,
-      customerName: customer.full_name
+      customerName: customer.full_name,
+      forceDemo
     });
   } else {
     await sendProofDeclinedNotice({
       orderTitle: order.title,
       orderId: order.id,
       customerName: customer.full_name,
-      feedback: feedback || "(no details given)"
+      feedback: feedback || "(no details given)",
+      forceDemo
     });
   }
 
