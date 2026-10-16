@@ -6,6 +6,18 @@ import AdminMobileNav from "@/components/AdminMobileNav";
 import AdminSidebarNav from "@/components/AdminSidebarNav";
 import NavIcon from "@/components/AdminNavIcons";
 
+// Keeps every /admin/* page out of Google's index — applies to this
+// whole route tree at once rather than needing it repeated on each of
+// the ~30 individual admin pages. This is a real, logged-in-only area
+// (middleware already redirects anyone without a session straight to
+// /login before any admin content ever renders), so there is no actual
+// private data at risk from Google being allowed to request these URLs
+// — it just never indexes what it finds, which is always the login
+// redirect.
+export const metadata = {
+  robots: { index: false, follow: false }
+};
+
 async function getBadgeCounts(supabase: ReturnType<typeof createClient>) {
   const todayStr = new Date().toISOString().slice(0, 10);
   const [{ count: unrespondedQuotes }, { count: unrespondedGuestChats }, { data: orders }, { data: customerMessages }, { count: pendingReviews }, { count: pendingFaq }, { count: pickupsToday }] =
