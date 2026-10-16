@@ -221,7 +221,15 @@ export async function sendQuoteToCustomer(quoteId: string, siteUrl: string): Pro
   return { ok: true };
 }
 export async function buildOrderItemsFromQuote(admin: ReturnType<typeof createAdminClient>, quoteId: string) {
-  const { data: quote } = await admin.from("quotes").select("discount_cents, delivery_cents").eq("id", quoteId).maybeSingle();
+  // coupon_id/coupon_discount_cents added to this select: a quote's
+  // manual discount and its coupon discount are two independent
+  // amounts (see calculateQuoteTotals in lib/tax.ts, which subtracts
+  // both separately to produce the quote's total_cents the customer
+  // actually saw and agreed to). This function used to only read
+  // discount_cents back out, silently dropping the coupon portion —
+  // so a quote with only a coupon applied (no manual discount) would
+  // convert into an order charging the full, undiscounted price.
+  const { data: quote } = await admin.from("quotes").select("discount_cents, delivery_cents, coupon_id, coupon_discount_cents").eq("id", quoteId).maybeSingle();
   const { data: items } = await admin.from("quote_items").select("*").eq("quote_id", quoteId).order("sort_order", { ascending: true });
   if (!items || items.length === 0) return null;
 
@@ -248,6 +256,24 @@ export async function buildOrderItemsFromQuote(admin: ReturnType<typeof createAd
   // quote did.
   if (quote?.discount_cents && quote.discount_cents > 0) {
     orderItems.push({ productType: "sign", productId: null, title: "Discount", quantity: 1, priceCents: -quote.discount_cents });
+  }
+  // Same fix, same reasoning, for the coupon portion specifically —
+  // kept as its own separate line item rather than merged into the
+  // "Discount" one above, so this is strictly additive: the manual
+  // discount is unaffected whether or not a coupon was also used, and
+  // neither one is ever counted twice. Title matches the exact same
+  // "Coupon: {code}" convention already used when a coupon is applied
+  // directly on a manually-created order (AddOrderWithCustomerPicker),
+  // so both paths produce order items that read the same way.
+  if (quote?.coupon_id && quote.coupon_discount_cents && quote.coupon_discount_cents > 0) {
+    const { data: coupon } = await admin.from("coupons").select("code").eq("id", quote.coupon_id).maybeSingle();
+    orderItems.push({
+      productType: "sign",
+      productId: null,
+      title: coupon?.code ? `Coupon: ${coupon.code}` : "Coupon discount",
+      quantity: 1,
+      priceCents: -quote.coupon_discount_cents
+    });
   }
   if (quote?.delivery_cents && quote.delivery_cents > 0) {
     orderItems.push({ productType: "sign", productId: null, title: "Delivery fee", quantity: 1, priceCents: quote.delivery_cents });
