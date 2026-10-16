@@ -29,10 +29,18 @@ export async function GET(req: NextRequest) {
     const windowStart = new Date(now.getTime() + (hoursUntil - 0.5) * 60 * 60 * 1000);
     const windowEnd = new Date(now.getTime() + (hoursUntil + 0.5) * 60 * 60 * 1000);
 
+    // "!inner" on the orders embed is what makes ".eq("orders.is_demo", ...)"
+    // below actually filter which pickup_appointments rows come back,
+    // rather than just being ignored — PostgREST only applies a filter on
+    // an embedded resource's column when that embed is an inner join.
+    // This is the real, database-level exclusion the admin asked for: a
+    // demo/test appointment is never even selected as a reminder
+    // candidate in the first place.
     const { data: candidates } = await admin
       .from("pickup_appointments")
-      .select("id, appointment_date, appointment_time, order_id, reschedule_token, orders:order_id(title, customer_id, profiles:customer_id(full_name, email))")
+      .select("id, appointment_date, appointment_time, order_id, reschedule_token, orders:order_id!inner(title, customer_id, is_demo, profiles:customer_id(full_name, email))")
       .eq("status", "scheduled")
+      .eq("orders.is_demo", false)
       .is(columnName, null)
       .gte("appointment_date", windowStart.toISOString().slice(0, 10))
       .lte("appointment_date", windowEnd.toISOString().slice(0, 10));
@@ -43,6 +51,17 @@ export async function GET(req: NextRequest) {
       if (apptDateTime < windowStart || apptDateTime > windowEnd) continue;
 
       const order = (appt as any).orders;
+
+      // Belt-and-suspenders: re-check in plain JS, independent of
+      // whether the query-level filter above actually took effect. A
+      // demo/test appointment is skipped entirely here — not even a
+      // redirected/logged email — there's no legitimate reason for an
+      // automated cron job to act on a test record at all. Fail-safe:
+      // anything other than a real "false" (missing data, a shape the
+      // join didn't return, etc.) is treated as demo and skipped rather
+      // than assumed safe to email.
+      if (order?.is_demo !== false) continue;
+
       const customer = order?.profiles;
       if (!customer?.email) continue;
 
@@ -56,7 +75,12 @@ export async function GET(req: NextRequest) {
           businessAddress: settings.business_address,
           pickupInstructions: settings.pickup_instructions,
           hoursUntil,
-          rescheduleUrl: `${siteUrl}/pickup/reschedule/${appt.reschedule_token}`
+          rescheduleUrl: `${siteUrl}/pickup/reschedule/${appt.reschedule_token}`,
+          // Always false by the time execution reaches here (the
+          // `continue` above already skipped anything else) — passed
+          // explicitly anyway so this call stays correct on its own even
+          // if the skip logic above is ever refactored.
+          forceDemo: order?.is_demo !== false
         });
         await admin.from("pickup_appointments").update({ [columnName]: new Date().toISOString() }).eq("id", appt.id);
         if (hoursUntil === 24) sent24h++; else sent2h++;
