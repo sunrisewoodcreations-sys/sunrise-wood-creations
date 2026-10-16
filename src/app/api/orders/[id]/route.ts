@@ -44,6 +44,12 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   await admin.from("invoices").delete().eq("order_id", params.id);
   await admin.from("order_status_history").delete().eq("order_id", params.id);
   await admin.from("quote_requests").update({ converted_order_id: null }).eq("converted_order_id", params.id);
+  // A coupon used on this order is recorded in coupon_redemptions, which
+  // does NOT cascade-delete (and so used to block deleting the order with
+  // "violates foreign key constraint coupon_redemptions_order_id_fkey").
+  // Removing it also releases that coupon use, the same way deleting the
+  // order releases its pickets above.
+  await admin.from("coupon_redemptions").delete().eq("order_id", params.id);
 
   const { error } = await admin.from("orders").delete().eq("id", params.id);
 
