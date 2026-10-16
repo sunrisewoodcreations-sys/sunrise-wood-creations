@@ -394,12 +394,18 @@ function formatTimeDisplay(time: string): string {
 // passes an appointment id and gets the same correct email.
 export async function sendPickupConfirmation(appointmentId: string, siteUrl: string, isReschedule: boolean): Promise<{ ok: true } | { ok: false; error: string }> {
   const admin = createAdminClient();
-  const { data: appointment } = await admin.from("pickup_appointments").select("*, orders:order_id(title, customer_id, profiles:customer_id(full_name, email))").eq("id", appointmentId).maybeSingle();
+  const { data: appointment } = await admin.from("pickup_appointments").select("*, orders:order_id(title, customer_id, is_demo, profiles:customer_id(full_name, email))").eq("id", appointmentId).maybeSingle();
   if (!appointment) return { ok: false, error: "Appointment not found" };
 
   const order = (appointment as any).orders;
   const customer = order?.profiles;
   if (!customer?.email) return { ok: false, error: "This customer has no email on file" };
+
+  // Called from the two public, no-login booking/reschedule routes (the
+  // token itself is the authorization) — there's never a logged-in
+  // session here, so this is the only real signal available. Fail-safe
+  // to "treat as demo" if it's ever missing/not a boolean.
+  const forceDemo = typeof order?.is_demo === "boolean" ? order.is_demo : true;
 
   const settings = await getAvailabilitySettings();
 
@@ -426,7 +432,8 @@ export async function sendPickupConfirmation(appointmentId: string, siteUrl: str
       googleCalendarUrl: googleCalendarUrl(calendarEvent),
       outlookCalendarUrl: outlookCalendarUrl(calendarEvent),
       appleCalendarUrl: appleCalendarDataUrl(calendarEvent),
-      isReschedule
+      isReschedule,
+      forceDemo
     });
   } catch (err: any) {
     return { ok: false, error: err.message || "Couldn't send the confirmation email" };
@@ -447,13 +454,14 @@ export async function notifyAdminPickupScheduled(appointmentId: string, isResche
     const admin = createAdminClient();
     const { data: appointment } = await admin
       .from("pickup_appointments")
-      .select("appointment_date, appointment_time, orders:order_id(title, profiles:customer_id(full_name, phone))")
+      .select("appointment_date, appointment_time, orders:order_id(title, is_demo, profiles:customer_id(full_name, phone))")
       .eq("id", appointmentId)
       .maybeSingle();
     if (!appointment) return;
 
     const order = (appointment as any).orders;
     const customer = order?.profiles;
+    const forceDemo = typeof order?.is_demo === "boolean" ? order.is_demo : true;
     const settings = await getAvailabilitySettings();
 
     const calendarEvent = {
@@ -472,7 +480,8 @@ export async function notifyAdminPickupScheduled(appointmentId: string, isResche
       appointmentDateDisplay: formatDateDisplay(appointment.appointment_date),
       appointmentTimeDisplay: formatTimeDisplay(appointment.appointment_time),
       googleCalendarUrl: googleCalendarUrl(calendarEvent),
-      isReschedule
+      isReschedule,
+      forceDemo
     });
   } catch (err) {
     console.error("Admin pickup-scheduled alert failed to send:", err);
