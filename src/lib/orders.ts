@@ -204,7 +204,20 @@ export async function createOrder(opts: {
         orderTitle: order.title,
         orderId: order.id,
         newStatus: order.status,
-        schedulingUrl
+        schedulingUrl,
+        priceCents: order.price_cents,
+        amountPaidCents: order.amount_paid_cents,
+        // This single change is also what closes the gap for the public,
+        // no-login "accept this quote" link (src/app/api/quotes/token/
+        // [token]/accept/route.ts): that route has no logged-in session
+        // at all by design, so sendViaResend's session-based demo check
+        // can never see it — but it already passes isDemo through into
+        // this same createOrder() call, which is what order.is_demo
+        // below actually reflects. Fail-safe: if this ever came back as
+        // something other than a real boolean (should never happen —
+        // the column is NOT NULL with a default), treat it as demo
+        // rather than assume it's safe to email a real inbox.
+        forceDemo: typeof order.is_demo === "boolean" ? order.is_demo : true
       });
     } catch (err) {
       console.error("Order-placed email failed to send:", err);
