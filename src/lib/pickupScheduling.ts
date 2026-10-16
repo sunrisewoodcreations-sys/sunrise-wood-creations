@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendPickupConfirmationEmail, sendPickupSchedulingEmail } from "@/lib/email";
+import { sendPickupConfirmationEmail, sendPickupSchedulingEmail, sendPickupScheduledAdminAlert } from "@/lib/email";
 import { googleCalendarUrl, outlookCalendarUrl, appleCalendarDataUrl } from "@/lib/calendarLinks";
 
 export type AvailabilitySettings = {
@@ -409,4 +409,48 @@ export async function sendPickupConfirmation(appointmentId: string, siteUrl: str
   }
 
   return { ok: true };
+}
+
+// Tells the shop a customer just booked or rescheduled their own pickup
+// time — called only from the two customer-facing token routes
+// (schedule and reschedule), never when an admin creates or changes an
+// appointment themselves from the admin side, since you already know
+// about those. Best-effort and silent on failure: the customer's own
+// booking/confirmation has already succeeded by the time this runs, so
+// a failed admin notification should never surface as an error to them.
+export async function notifyAdminPickupScheduled(appointmentId: string, isReschedule: boolean): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    const { data: appointment } = await admin
+      .from("pickup_appointments")
+      .select("appointment_date, appointment_time, orders:order_id(title, profiles:customer_id(full_name, phone))")
+      .eq("id", appointmentId)
+      .maybeSingle();
+    if (!appointment) return;
+
+    const order = (appointment as any).orders;
+    const customer = order?.profiles;
+    const settings = await getAvailabilitySettings();
+
+    const calendarEvent = {
+      title: `Pickup: ${order?.title || "Order"}`,
+      description: settings.pickup_instructions,
+      location: settings.business_address,
+      dateStr: appointment.appointment_date,
+      timeStr: appointment.appointment_time,
+      durationMinutes: settings.slot_length_minutes
+    };
+
+    await sendPickupScheduledAdminAlert({
+      orderTitle: order?.title || "Order",
+      customerName: customer?.full_name || "A customer",
+      customerPhone: customer?.phone || undefined,
+      appointmentDateDisplay: formatDateDisplay(appointment.appointment_date),
+      appointmentTimeDisplay: formatTimeDisplay(appointment.appointment_time),
+      googleCalendarUrl: googleCalendarUrl(calendarEvent),
+      isReschedule
+    });
+  } catch (err) {
+    console.error("Admin pickup-scheduled alert failed to send:", err);
+  }
 }
