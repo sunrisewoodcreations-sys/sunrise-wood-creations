@@ -4,6 +4,7 @@ import { isDemoAccountRequest } from "@/lib/demoMode";
 import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
 import { formatCalendarDate } from "@/lib/dateDisplay";
 import { formatInvoiceNumber } from "@/lib/invoice";
+import { matchesOrderNumberQuery } from "@/lib/orderDisplay";
 import { getWorkflowStage, WORKFLOW_LABELS, WORKFLOW_STYLES, WorkflowStage } from "@/lib/workflow";
 import { getPickupBadgeState, PICKUP_BADGE_LABELS, PICKUP_BADGE_STYLES } from "@/lib/pickupScheduling";
 import { checkMaterialAvailabilityForOrder } from "@/lib/materialPlanning";
@@ -146,7 +147,10 @@ export default async function AdminOrdersPage({
       o.profiles?.email?.toLowerCase().includes(q) ||
       o.profiles?.phone?.toLowerCase().includes(q) ||
       o.title?.toLowerCase().includes(q) ||
-      o.id?.toLowerCase().includes(q)
+      o.id?.toLowerCase().includes(q) ||
+      // The customer-facing order number ("SWC-1004", "1004", ...). The
+      // id match above stays, so old 8-character codes still work.
+      matchesOrderNumberQuery(query, o.order_number, o.is_demo)
     );
   }
 
@@ -450,7 +454,7 @@ export default async function AdminOrdersPage({
           <input
             name="q"
             defaultValue={query}
-            placeholder="Search orders by customer name or email..."
+            placeholder="Search by customer, email, or order number (e.g. SWC-1004)..."
             className="w-full px-3 py-2.5 border border-[#1E3A5F]/15 rounded-md text-sm"
           />
           {sortKey !== "created_at" && <input type="hidden" name="sort" value={sortKey} />}
