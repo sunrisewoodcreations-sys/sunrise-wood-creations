@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useId } from "react";
 
 const PRODUCT_TYPES = [
   { value: "", label: "Not sure yet" },
@@ -12,6 +12,7 @@ const PRODUCT_TYPES = [
 ];
 
 export default function QuoteRequestForm({ initialProductType = "" }: { initialProductType?: string }) {
+  const uid = useId();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -58,43 +59,43 @@ export default function QuoteRequestForm({ initialProductType = "" }: { initialP
     <form onSubmit={handleSubmit} className="bg-white border border-walnut/10 rounded-xl p-6 space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-semibold text-walnut mb-1">Your name</label>
-          <input required value={name} onChange={e => setName(e.target.value)} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+          <label htmlFor={`${uid}-name`} className="block text-xs font-semibold text-walnut mb-1">Your name</label>
+          <input id={`${uid}-name`} required value={name} onChange={e => setName(e.target.value)} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-walnut mb-1">Email</label>
-          <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+          <label htmlFor={`${uid}-email`} className="block text-xs font-semibold text-walnut mb-1">Email</label>
+          <input id={`${uid}-email`} required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-walnut mb-1">Phone (optional)</label>
-          <input value={phone} onChange={e => setPhone(e.target.value)} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+          <label htmlFor={`${uid}-phone`} className="block text-xs font-semibold text-walnut mb-1">Phone (optional)</label>
+          <input id={`${uid}-phone`} value={phone} onChange={e => setPhone(e.target.value)} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-walnut mb-1">What are you thinking?</label>
-          <select value={productType} onChange={e => setProductType(e.target.value)} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm">
+          <label htmlFor={`${uid}-type`} className="block text-xs font-semibold text-walnut mb-1">What are you thinking?</label>
+          <select id={`${uid}-type`} value={productType} onChange={e => setProductType(e.target.value)} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm">
             {PRODUCT_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-walnut mb-1">Size, if you know it</label>
-          <input value={dimensions} onChange={e => setDimensions(e.target.value)} placeholder={`e.g. 24"x48"`} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+          <label htmlFor={`${uid}-size`} className="block text-xs font-semibold text-walnut mb-1">Size, if you know it</label>
+          <input id={`${uid}-size`} value={dimensions} onChange={e => setDimensions(e.target.value)} placeholder={`e.g. 24"x48"`} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-walnut mb-1">Wood type (if you have a preference)</label>
-          <input value={woodType} onChange={e => setWoodType(e.target.value)} placeholder="Cedar, oak, no preference..." className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+          <label htmlFor={`${uid}-wood`} className="block text-xs font-semibold text-walnut mb-1">Wood type (if you have a preference)</label>
+          <input id={`${uid}-wood`} value={woodType} onChange={e => setWoodType(e.target.value)} placeholder="Cedar, oak, no preference..." className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-walnut mb-1">Budget range</label>
-          <input value={budget} onChange={e => setBudget(e.target.value)} placeholder="$100-150" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+          <label htmlFor={`${uid}-budget`} className="block text-xs font-semibold text-walnut mb-1">Budget range</label>
+          <input id={`${uid}-budget`} value={budget} onChange={e => setBudget(e.target.value)} placeholder="$100-150" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-walnut mb-1">When do you need it?</label>
-          <input value={timeline} onChange={e => setTimeline(e.target.value)} placeholder="No rush, or a specific date" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+          <label htmlFor={`${uid}-timeline`} className="block text-xs font-semibold text-walnut mb-1">When do you need it?</label>
+          <input id={`${uid}-timeline`} value={timeline} onChange={e => setTimeline(e.target.value)} placeholder="No rush, or a specific date" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
         </div>
       </div>
       <div>
-        <label className="block text-xs font-semibold text-walnut mb-1">Tell us what you're picturing</label>
-        <textarea
+        <label htmlFor={`${uid}-details`} className="block text-xs font-semibold text-walnut mb-1">Tell us what you're picturing</label>
+        <textarea id={`${uid}-details`}
           required
           value={description}
           onChange={e => setDescription(e.target.value)}
