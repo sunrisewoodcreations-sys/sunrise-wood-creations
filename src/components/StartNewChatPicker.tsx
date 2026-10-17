@@ -78,7 +78,7 @@ export default function StartNewChatPicker({ customers }: { customers: Customer[
     return (
       <button
         onClick={() => setOpen(true)}
-        className="bg-[#1E3A5F] text-white px-4 py-2 rounded-md text-sm font-semibold mb-5"
+        className="bg-accent text-white px-4 py-2 rounded-md text-sm font-semibold mb-5"
       >
         + Start new chat
       </button>
@@ -86,12 +86,12 @@ export default function StartNewChatPicker({ customers }: { customers: Customer[
   }
 
   return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5 mb-6 space-y-4">
+    <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-5 mb-6 space-y-4">
       <div>
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Which customer?</label>
+        <label className="block text-xs font-semibold text-[#2E2420] mb-1">Which customer?</label>
         {selectedCustomer ? (
-          <div className="flex items-center justify-between border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm bg-cream/50">
-            <span>{selectedCustomer.full_name} <span className="text-[#1E3A5F]/50">({selectedCustomer.email})</span></span>
+          <div className="flex items-center justify-between border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm bg-cream/50">
+            <span>{selectedCustomer.full_name} <span className="text-[#2E2420]/50">({selectedCustomer.email})</span></span>
             <button type="button" onClick={reset} className="text-xs text-ember font-semibold ml-3">Change</button>
           </div>
         ) : (
@@ -101,24 +101,24 @@ export default function StartNewChatPicker({ customers }: { customers: Customer[
               onChange={e => { setCustomerSearch(e.target.value); setCustomerDropdownOpen(true); }}
               onFocus={() => setCustomerDropdownOpen(true)}
               placeholder="Search customers by name or email..."
-              className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+              className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
             />
             {customerDropdownOpen && (
-              <div className="absolute z-20 mt-1 w-full bg-white border border-[#1E3A5F]/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
+              <div className="absolute z-20 mt-1 w-full bg-white border border-[#2E2420]/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
                 {filteredCustomers.length > 0 ? (
                   filteredCustomers.map(c => (
                     <button
                       key={c.id}
                       type="button"
                       onClick={() => selectCustomer(c)}
-                      className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-[#1E3A5F]/5 last:border-0"
+                      className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-[#2E2420]/5 last:border-0"
                     >
-                      <div className="font-medium text-[#1E3A5F]">{c.full_name}</div>
-                      <div className="text-xs text-[#1E3A5F]/50">{c.email}</div>
+                      <div className="font-medium text-[#2E2420]">{c.full_name}</div>
+                      <div className="text-xs text-[#2E2420]/50">{c.email}</div>
                     </button>
                   ))
                 ) : (
-                  <div className="px-3 py-3 text-sm text-[#1E3A5F]/60">No matching customers.</div>
+                  <div className="px-3 py-3 text-sm text-[#2E2420]/60">No matching customers.</div>
                 )}
               </div>
             )}
@@ -128,11 +128,11 @@ export default function StartNewChatPicker({ customers }: { customers: Customer[
 
       {selectedCustomer && (
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Which order?</label>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Which order?</label>
           {loadingOrders ? (
-            <p className="text-sm text-[#1E3A5F]/50">Loading their orders...</p>
+            <p className="text-sm text-[#2E2420]/50">Loading their orders...</p>
           ) : orders.length === 0 ? (
-            <p className="text-sm text-[#1E3A5F]/50">This customer has no orders yet.</p>
+            <p className="text-sm text-[#2E2420]/50">This customer has no orders yet.</p>
           ) : (
             <div className="relative" ref={orderBoxRef}>
               <input
@@ -140,21 +140,21 @@ export default function StartNewChatPicker({ customers }: { customers: Customer[
                 onChange={e => { setOrderSearch(e.target.value); setOrderDropdownOpen(true); }}
                 onFocus={() => setOrderDropdownOpen(true)}
                 placeholder="Search their orders..."
-                className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+                className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
               />
               {orderDropdownOpen && (
-                <div className="absolute z-20 mt-1 w-full bg-white border border-[#1E3A5F]/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
+                <div className="absolute z-20 mt-1 w-full bg-white border border-[#2E2420]/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
                   {filteredOrders.map(o => (
                     <button
                       key={o.id}
                       type="button"
                       onClick={() => goToOrder(o.id)}
-                      className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-[#1E3A5F]/5 last:border-0"
+                      className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-[#2E2420]/5 last:border-0"
                     >
-                      <div className="font-medium text-[#1E3A5F]">
+                      <div className="font-medium text-[#2E2420]">
                         {productLabel(o.product_type as ProductType)} — {o.title}
                       </div>
-                      <div className="text-xs text-[#1E3A5F]/50">
+                      <div className="text-xs text-[#2E2420]/50">
                         Placed {new Date(o.created_at).toLocaleDateString()}
                       </div>
                     </button>
@@ -166,7 +166,7 @@ export default function StartNewChatPicker({ customers }: { customers: Customer[
         </div>
       )}
 
-      <button type="button" onClick={() => { setOpen(false); reset(); }} className="text-xs text-[#1E3A5F]/50 underline">
+      <button type="button" onClick={() => { setOpen(false); reset(); }} className="text-xs text-[#2E2420]/50 underline">
         Cancel
       </button>
     </div>

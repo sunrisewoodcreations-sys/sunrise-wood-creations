@@ -93,9 +93,9 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
 
 function SummaryBox({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5">
-      <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1">{label}</div>
-      <div className={`text-2xl font-display ${color || "text-[#1E3A5F]"}`}>{value}</div>
+    <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-5">
+      <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide mb-1">{label}</div>
+      <div className={`text-2xl font-display ${color || "text-[#2E2420]"}`}>{value}</div>
     </div>
   );
 }
@@ -134,19 +134,19 @@ export default async function ReportsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Reports</h1>
+        <h1 className="font-display text-2xl text-[#2E2420] mb-1">Reports</h1>
         <Link
           href="/admin/report-settings"
-          className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream"
+          className="text-xs font-semibold text-[#2E2420] border border-[#2E2420]/20 rounded-md px-3 py-1.5 hover:bg-cream"
         >
           Report Settings →
         </Link>
       </div>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">
+      <p className="text-sm text-[#2E2420]/60 mb-6">
         Based on orders actually picked up, dated by when they were picked up — same rule used everywhere else.
       </p>
 
-      <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">{quarterLabel}</h2>
+      <h2 className="text-sm font-semibold text-[#2E2420]/70 uppercase tracking-wide mb-2">{quarterLabel}</h2>
       <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-6">
         <SummaryBox label="Profit" value={`$${quarterTotals.profit.toFixed(2)}`} color={quarterTotals.profit >= 0 ? "text-sage" : "text-ember"} />
         <SummaryBox label="Pickets used" value={`-$${quarterTotals.materialsCost.toFixed(2)}`} color="text-ember" />
@@ -156,7 +156,7 @@ export default async function ReportsPage() {
         <SummaryBox label="Take-home (after all tax)" value={`$${quarterTax.takeHome.toFixed(2)}`} color={quarterTax.takeHome >= 0 ? "text-sage" : "text-ember"} />
       </div>
 
-      <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">Year to date ({year})</h2>
+      <h2 className="text-sm font-semibold text-[#2E2420]/70 uppercase tracking-wide mb-2">Year to date ({year})</h2>
       <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-6">
         <SummaryBox label="Profit" value={`$${yearTotals.profit.toFixed(2)}`} color={yearTotals.profit >= 0 ? "text-sage" : "text-ember"} />
         <SummaryBox label="Pickets used" value={`-$${yearTotals.materialsCost.toFixed(2)}`} color="text-ember" />
@@ -166,25 +166,25 @@ export default async function ReportsPage() {
         <SummaryBox label="Take-home (after all tax)" value={`$${yearTax.takeHome.toFixed(2)}`} color={yearTax.takeHome >= 0 ? "text-sage" : "text-ember"} />
       </div>
 
-      <p className="text-xs text-[#1E3A5F]/40 mb-6">
+      <p className="text-xs text-[#2E2420]/40 mb-6">
         Sales tax and Michigan income tax use real statutory rates. Federal income tax is a planning estimate you
         control in Report Settings. Profit only reflects items with a cost entered in Products, or picket usage
         logged on planter orders. Confirm exact amounts with your tax preparer.
       </p>
 
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-1">Sales by item (detailed PDF)</h2>
-      <p className="text-sm text-[#1E3A5F]/60 mb-4">
+      <h2 className="font-display text-lg text-[#2E2420] mb-1">Sales by item (detailed PDF)</h2>
+      <p className="text-sm text-[#2E2420]/60 mb-4">
         See how much of each item sold, and the same tax breakdown, for any custom time period.
       </p>
 
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5">
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-5">
         <div className="flex flex-wrap gap-2">
-          <a href="/api/reports/sales-by-item?period=today" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Today</a>
-          <a href="/api/reports/sales-by-item?period=this_week" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This week</a>
-          <a href="/api/reports/sales-by-item?period=this_month" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This month</a>
-          <a href="/api/reports/sales-by-item?period=this_quarter" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This quarter</a>
-          <a href="/api/reports/sales-by-item?period=this_year" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This year</a>
-          <a href="/api/reports/sales-by-item?period=lifetime" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Lifetime</a>
+          <a href="/api/reports/sales-by-item?period=today" className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Today</a>
+          <a href="/api/reports/sales-by-item?period=this_week" className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This week</a>
+          <a href="/api/reports/sales-by-item?period=this_month" className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This month</a>
+          <a href="/api/reports/sales-by-item?period=this_quarter" className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This quarter</a>
+          <a href="/api/reports/sales-by-item?period=this_year" className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This year</a>
+          <a href="/api/reports/sales-by-item?period=lifetime" className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Lifetime</a>
         </div>
       </div>
     </div>

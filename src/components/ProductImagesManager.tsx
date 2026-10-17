@@ -80,12 +80,12 @@ export default function ProductImagesManager({
       <div className="space-y-10">
         {products.map(product => (
           <div key={product.key}>
-            <h2 className="font-display text-lg text-[#1E3A5F] mb-3">{product.name}</h2>
+            <h2 className="font-display text-lg text-[#2E2420] mb-3">{product.name}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {product.images.map((slide, i) => {
                 const isBusy = busy?.key === product.key && busy.index === i;
                 return (
-                  <div key={i} className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+                  <div key={i} className="bg-white border border-[#2E2420]/10 rounded-xl overflow-hidden shadow-sm">
                     <div className="relative aspect-[16/9] bg-cream">
                       {slide.src ? (
                         // Plain <img>, not next/image — this is an
@@ -95,7 +95,7 @@ export default function ProductImagesManager({
                         // next/image correctly and is untouched by this).
                         <img src={slide.src} alt={slide.alt} className="absolute inset-0 w-full h-full object-cover" />
                       ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-[#1E3A5F]/30 gap-1">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-[#2E2420]/30 gap-1">
                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="5" width="18" height="14" rx="2" />
                             <circle cx="9" cy="10" r="2" />
@@ -106,17 +106,17 @@ export default function ProductImagesManager({
                       )}
                     </div>
                     <div className="p-3">
-                      <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Slide {i + 1}</div>
+                      <div className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide mb-2">Slide {i + 1}</div>
 
-                      <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Alt text</label>
+                      <label className="block text-xs font-semibold text-[#2E2420] mb-1">Alt text</label>
                       <input
                         defaultValue={slide.alt}
                         onBlur={e => { if (e.target.value !== slide.alt) saveAltText(product.key, i, e.target.value); }}
-                        className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm mb-3"
+                        className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm mb-3"
                       />
 
                       <label className="block">
-                        <span className="inline-block bg-[#1E3A5F] text-white rounded-md px-3 py-2 text-xs font-semibold cursor-pointer hover:opacity-90">
+                        <span className="inline-block bg-accent text-white rounded-md px-3 py-2 text-xs font-semibold cursor-pointer hover:opacity-90">
                           {isBusy ? "Uploading..." : slide.src ? "Replace photo" : "Upload photo"}
                         </span>
                         <input

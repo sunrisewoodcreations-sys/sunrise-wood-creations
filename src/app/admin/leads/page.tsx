@@ -64,15 +64,15 @@ export default async function LeadsPage({ searchParams }: { searchParams: { q?: 
   function tabClass(active: boolean) {
     return `inline-block px-3.5 py-1.5 rounded-full text-sm font-semibold border whitespace-nowrap ${
       active
-        ? "bg-[#1E3A5F] text-white border-[#1E3A5F]"
-        : "bg-white text-[#1E3A5F] border-[#1E3A5F]/20 hover:bg-cream"
+        ? "bg-accent text-white border-accent"
+        : "bg-white text-[#2E2420] border-[#2E2420]/20 hover:bg-cream"
     }`;
   }
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Leads</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">Leads</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6">
         Everyone who messaged you. Mark where each conversation stands, then click Create order when they're ready.
       </p>
 
@@ -83,7 +83,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { q?: 
           name="q"
           defaultValue={query}
           placeholder="Search by name, phone, or notes..."
-          className="w-full px-3 py-2.5 border border-[#1E3A5F]/15 rounded-md text-sm"
+          className="w-full px-3 py-2.5 border border-[#2E2420]/15 rounded-md text-sm"
         />
         {activeStatus && <input type="hidden" name="status" value={activeStatus} />}
       </form>
@@ -115,7 +115,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: { q?: 
           />
         ))}
         {visible.length === 0 && (
-          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl px-4 py-8 text-center text-sm text-[#1E3A5F]/50">
+          <div className="bg-white border border-[#2E2420]/10 rounded-xl px-4 py-8 text-center text-sm text-[#2E2420]/50">
             {rows.length === 0
               ? "No leads yet. Add the first person who messaged you above."
               : "No one matches that search or tab."}

@@ -33,41 +33,41 @@ export default async function PicketsPage() {
   const CARD_BORDER: Record<string, string> = {
     out: "border-ember/40",
     low: "border-amber/40",
-    in_stock: "border-[#1E3A5F]/10"
+    in_stock: "border-[#2E2420]/10"
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display text-2xl text-[#1E3A5F]">Picket inventory</h1>
-        <Link href="/admin/products" className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream whitespace-nowrap">
+        <h1 className="font-display text-2xl text-[#2E2420]">Picket inventory</h1>
+        <Link href="/admin/products" className="text-xs font-semibold text-[#2E2420] border border-[#2E2420]/20 rounded-md px-3 py-1.5 hover:bg-cream whitespace-nowrap">
           View products →
         </Link>
       </div>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">
+      <p className="text-sm text-[#2E2420]/60 mb-6">
         For planter box materials only. Log each pallet as you buy it — usage gets costed oldest-pallet-first automatically.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div className={`bg-white border-2 rounded-xl shadow-sm p-5 ${CARD_BORDER[picketStatus]}`}>
           <div className="flex items-center justify-between mb-1">
-            <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide">Pickets remaining</div>
+            <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide">Pickets remaining</div>
             <StockStatusBadge quantity={totalRemaining} threshold={PICKET_LOW_STOCK_THRESHOLD} compact />
           </div>
-          <div className="text-2xl font-display text-[#1E3A5F]">{totalRemaining}</div>
+          <div className="text-2xl font-display text-[#2E2420]">{totalRemaining}</div>
         </div>
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5">
-          <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1">Value of remaining stock</div>
-          <div className="text-2xl font-display text-[#1E3A5F]">${(totalValueRemainingCents / 100).toFixed(2)}</div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-5">
+          <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide mb-1">Value of remaining stock</div>
+          <div className="text-2xl font-display text-[#2E2420]">${(totalValueRemainingCents / 100).toFixed(2)}</div>
         </div>
       </div>
 
       {planterProducts && planterProducts.length > 0 && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-6">
-          <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Buildable right now, from pickets on hand</div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 mb-6">
+          <div className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide mb-2">Buildable right now, from pickets on hand</div>
           <div className="flex flex-wrap gap-2">
             {planterProducts.map((p: any) => (
-              <span key={p.id} className="text-xs font-semibold bg-cream border border-[#1E3A5F]/10 rounded-full px-3 py-1.5 text-[#1E3A5F]">
+              <span key={p.id} className="text-xs font-semibold bg-cream border border-[#2E2420]/10 rounded-full px-3 py-1.5 text-[#2E2420]">
                 {p.name}: {Math.floor(totalRemaining / p.pickets_per_unit)}
               </span>
             ))}
@@ -77,10 +77,10 @@ export default async function PicketsPage() {
 
       <AddPicketPurchaseForm />
 
-      <div className="hidden md:block overflow-x-auto bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+      <div className="hidden md:block overflow-x-auto bg-white border border-[#2E2420]/10 rounded-xl shadow-sm">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+          <tr className="bg-[#2E2420] text-white text-xs uppercase tracking-wide">
             <th className="text-left px-4 py-3">Date purchased</th>
             <th className="text-right px-4 py-3">Bought</th>
             <th className="text-right px-4 py-3">Total paid</th>
@@ -94,7 +94,7 @@ export default async function PicketsPage() {
             <PicketPurchaseRow key={p.id} purchase={p} />
           ))}
           {(!purchases || purchases.length === 0) && (
-            <tr><td colSpan={6} className="px-4 py-6 text-center text-[#1E3A5F]/50">No purchases logged yet.</td></tr>
+            <tr><td colSpan={6} className="px-4 py-6 text-center text-[#2E2420]/50">No purchases logged yet.</td></tr>
           )}
         </tbody>
       </table>
@@ -106,32 +106,32 @@ export default async function PicketsPage() {
           simplified read display; edit/delete stays available on desktop). */}
       <div className="md:hidden space-y-3">
         {purchases?.map((p: any) => (
-          <div key={p.id} className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
+          <div key={p.id} className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-semibold text-[#1E3A5F]">{new Date(p.purchased_at + "T00:00:00").toLocaleDateString()}</div>
-              <span className={`text-sm font-bold px-2 py-1 rounded-full ${p.remaining_quantity > 0 ? "bg-sage/15 text-sage" : "bg-[#1E3A5F]/5 text-[#1E3A5F]/40"}`}>
+              <div className="text-sm font-semibold text-[#2E2420]">{new Date(p.purchased_at + "T00:00:00").toLocaleDateString()}</div>
+              <span className={`text-sm font-bold px-2 py-1 rounded-full ${p.remaining_quantity > 0 ? "bg-sage/15 text-sage" : "bg-[#2E2420]/5 text-[#2E2420]/40"}`}>
                 {p.remaining_quantity} left
               </span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-sm">
               <div>
-                <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Bought</div>
-                <div className="text-[#1E3A5F]/70">{p.quantity}</div>
+                <div className="text-[10px] text-[#2E2420]/50 uppercase font-semibold">Bought</div>
+                <div className="text-[#2E2420]/70">{p.quantity}</div>
               </div>
               <div>
-                <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Total paid</div>
-                <div className="text-[#1E3A5F]/70">${(p.total_cost_cents / 100).toFixed(2)}</div>
+                <div className="text-[10px] text-[#2E2420]/50 uppercase font-semibold">Total paid</div>
+                <div className="text-[#2E2420]/70">${(p.total_cost_cents / 100).toFixed(2)}</div>
               </div>
               <div>
-                <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Per picket</div>
-                <div className="text-[#1E3A5F]/70">${(p.cost_per_picket_cents / 100).toFixed(2)}</div>
+                <div className="text-[10px] text-[#2E2420]/50 uppercase font-semibold">Per picket</div>
+                <div className="text-[#2E2420]/70">${(p.cost_per_picket_cents / 100).toFixed(2)}</div>
               </div>
             </div>
-            <p className="text-[11px] text-[#1E3A5F]/40 mt-3">To edit or delete a purchase, use a desktop screen.</p>
+            <p className="text-[11px] text-[#2E2420]/40 mt-3">To edit or delete a purchase, use a desktop screen.</p>
           </div>
         ))}
         {(!purchases || purchases.length === 0) && (
-          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-6 text-center text-sm text-[#1E3A5F]/50">
+          <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm px-4 py-6 text-center text-sm text-[#2E2420]/50">
             No purchases logged yet.
           </div>
         )}
@@ -139,12 +139,12 @@ export default async function PicketsPage() {
 
       {usageAllocations && usageAllocations.length > 0 && (
         <div className="mt-8">
-          <h2 className="font-display text-lg text-[#1E3A5F] mb-2">Material usage history</h2>
-          <p className="text-xs text-[#1E3A5F]/50 mb-3">Every time pickets were drawn from a pallet, and which order it went to.</p>
-          <div className="overflow-x-auto bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+          <h2 className="font-display text-lg text-[#2E2420] mb-2">Material usage history</h2>
+          <p className="text-xs text-[#2E2420]/50 mb-3">Every time pickets were drawn from a pallet, and which order it went to.</p>
+          <div className="overflow-x-auto bg-white border border-[#2E2420]/10 rounded-xl shadow-sm">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+                <tr className="bg-[#2E2420] text-white text-xs uppercase tracking-wide">
                   <th className="text-left px-4 py-3">Order</th>
                   <th className="text-right px-4 py-3">Pickets used</th>
                   <th className="text-left px-4 py-3">From pallet purchased</th>
@@ -153,17 +153,17 @@ export default async function PicketsPage() {
               </thead>
               <tbody>
                 {usageAllocations.map((a: any) => (
-                  <tr key={a.id} className="border-t border-[#1E3A5F]/10">
+                  <tr key={a.id} className="border-t border-[#2E2420]/10">
                     <td className="px-4 py-3">
-                      <Link href={`/admin/orders/${a.order_id}`} className="font-semibold text-[#1E3A5F] hover:underline">
+                      <Link href={`/admin/orders/${a.order_id}`} className="font-semibold text-[#2E2420] hover:underline">
                         {a.orders?.title || "Deleted order"}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-right text-[#1E3A5F]/70">{a.quantity}</td>
-                    <td className="px-4 py-3 text-[#1E3A5F]/70">
+                    <td className="px-4 py-3 text-right text-[#2E2420]/70">{a.quantity}</td>
+                    <td className="px-4 py-3 text-[#2E2420]/70">
                       {a.picket_purchases?.purchased_at ? new Date(a.picket_purchases.purchased_at + "T00:00:00").toLocaleDateString() : "—"}
                     </td>
-                    <td className="px-4 py-3 text-[#1E3A5F]/50 text-xs font-mono">{new Date(a.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-[#2E2420]/50 text-xs font-mono">{new Date(a.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>

@@ -100,27 +100,27 @@ export default function ManufacturingQueue({ orders: initialOrders }: { orders: 
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display text-2xl text-[#1E3A5F]">Manufacturing Queue</h1>
+        <h1 className="font-display text-2xl text-[#2E2420]">Manufacturing Queue</h1>
         <div className="flex gap-2">
           {anyPinned && (
-            <button onClick={handleResetToAutomatic} disabled={saving} className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream disabled:opacity-60">
+            <button onClick={handleResetToAutomatic} disabled={saving} className="text-xs font-semibold text-[#2E2420] border border-[#2E2420]/20 rounded-md px-3 py-1.5 hover:bg-cream disabled:opacity-60">
               Reset to automatic order
             </button>
           )}
-          <Link href="/admin/queue" className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream">
+          <Link href="/admin/queue" className="text-xs font-semibold text-[#2E2420] border border-[#2E2420]/20 rounded-md px-3 py-1.5 hover:bg-cream">
             Full Build Queue →
           </Link>
-          <Link href="/admin/schedule" className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream">
+          <Link href="/admin/schedule" className="text-xs font-semibold text-[#2E2420] border border-[#2E2420]/20 rounded-md px-3 py-1.5 hover:bg-cream">
             Production Schedule →
           </Link>
         </div>
       </div>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">
+      <p className="text-sm text-[#2E2420]/60 mb-6">
         Every order currently in production, in the order it should be built. Drag any card to reorder.
       </p>
 
       {orders.length === 0 ? (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#1E3A5F]/50">
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#2E2420]/50">
           <p className="mb-2">Nothing is actively in production right now.</p>
           <p className="text-xs">
             Scheduled orders show up here once production actually starts — either generate a cut list for their
@@ -137,26 +137,26 @@ export default function ManufacturingQueue({ orders: initialOrders }: { orders: 
               onDragEnd={() => setDraggingId(null)}
               onDragOver={e => e.preventDefault()}
               onDrop={() => handleDrop(o.id)}
-              className={`bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 cursor-grab active:cursor-grabbing transition-opacity ${draggingId === o.id ? "opacity-40" : ""}`}
+              className={`bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 cursor-grab active:cursor-grabbing transition-opacity ${draggingId === o.id ? "opacity-40" : ""}`}
             >
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="w-7 h-7 rounded-full bg-[#1E3A5F] text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+                  <span className="w-7 h-7 rounded-full bg-accent text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
                     {i + 1}
                   </span>
                   {o.productPhotoUrl ? (
-                    <img src={o.productPhotoUrl} alt="" className="w-10 h-10 rounded-md object-cover flex-shrink-0 border border-[#1E3A5F]/10" />
+                    <img src={o.productPhotoUrl} alt="" className="w-10 h-10 rounded-md object-cover flex-shrink-0 border border-[#2E2420]/10" />
                   ) : (
-                    <div className="w-10 h-10 rounded-md bg-cream border border-[#1E3A5F]/10 flex-shrink-0" />
+                    <div className="w-10 h-10 rounded-md bg-cream border border-[#2E2420]/10 flex-shrink-0" />
                   )}
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <Link href={`/admin/orders/${o.id}`} className="font-semibold text-[#1E3A5F] hover:underline truncate">
+                      <Link href={`/admin/orders/${o.id}`} className="font-semibold text-[#2E2420] hover:underline truncate">
                         {o.customerName}
                       </Link>
                       {o.isPriorityCustomer && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-ember/15 text-ember flex-shrink-0">Priority</span>}
                     </div>
-                    <div className="text-xs text-[#1E3A5F]/50 truncate">
+                    <div className="text-xs text-[#2E2420]/50 truncate">
                       {productLabel(o.productType as ProductType)} — {o.title}{o.sizeDetails ? ` (${o.sizeDetails})` : ""}
                     </div>
                   </div>
@@ -193,7 +193,7 @@ export default function ManufacturingQueue({ orders: initialOrders }: { orders: 
                   {o.materialCheck.available ? "Material ready" : `Material short: ${o.materialCheck.shortages.map(s => `${s.materialType} (${s.short})`).join(", ")}`}
                 </span>
                 {o.manualQueuePosition != null && (
-                  <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F]/60 whitespace-nowrap">Manually pinned</span>
+                  <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#2E2420]/10 text-[#2E2420]/60 whitespace-nowrap">Manually pinned</span>
                 )}
               </div>
 
@@ -202,12 +202,12 @@ export default function ManufacturingQueue({ orders: initialOrders }: { orders: 
                   <QueueStageAdvanceButton orderId={o.id} currentStage={o.productionStatus} nextStage={getNextProductionStage(o.productionStatus)!} />
                 )}
                 <Link href="/admin/cutlist" className="flex-1">
-                  <button className="w-full border border-[#1E3A5F]/20 text-[#1E3A5F] rounded-md px-3 py-2 text-xs font-semibold hover:bg-cream">
+                  <button className="w-full border border-[#2E2420]/20 text-[#2E2420] rounded-md px-3 py-2 text-xs font-semibold hover:bg-cream">
                     Cut List →
                   </button>
                 </Link>
                 <Link href={`/admin/orders/${o.id}`} className="flex-1">
-                  <button className="w-full bg-[#1E3A5F] text-white rounded-md px-3 py-2 text-xs font-semibold">
+                  <button className="w-full bg-accent text-white rounded-md px-3 py-2 text-xs font-semibold">
                     Open Order →
                   </button>
                 </Link>
@@ -223,8 +223,8 @@ export default function ManufacturingQueue({ orders: initialOrders }: { orders: 
 function Field({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
     <div>
-      <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">{label}</div>
-      <div className={muted ? "text-[#1E3A5F]/40 italic text-sm" : "text-[#1E3A5F] text-sm font-semibold"}>{value}</div>
+      <div className="text-[10px] text-[#2E2420]/50 uppercase font-semibold">{label}</div>
+      <div className={muted ? "text-[#2E2420]/40 italic text-sm" : "text-[#2E2420] text-sm font-semibold"}>{value}</div>
     </div>
   );
 }

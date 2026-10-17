@@ -60,16 +60,16 @@ export default function ReportSettingsForm({
   }
 
   return (
-    <form onSubmit={handleSave} className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-6 space-y-4 max-w-lg">
+    <form onSubmit={handleSave} className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-6 space-y-4 max-w-lg">
       <div>
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">How often should this email send?</label>
-        <select value={frequency} onChange={e => setFrequency(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm">
+        <label className="block text-xs font-semibold text-[#2E2420] mb-1">How often should this email send?</label>
+        <select value={frequency} onChange={e => setFrequency(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm">
           {FREQUENCIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
         </select>
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Michigan state income tax rate</label>
+        <label className="block text-xs font-semibold text-[#2E2420] mb-1">Michigan state income tax rate</label>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -78,18 +78,18 @@ export default function ReportSettingsForm({
             step="0.01"
             value={michiganPercent}
             onChange={e => setMichiganPercent(e.target.value)}
-            className="w-24 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+            className="w-24 border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
           />
-          <span className="text-sm text-[#1E3A5F]/60">% of profit</span>
+          <span className="text-sm text-[#2E2420]/60">% of profit</span>
         </div>
-        <p className="text-xs text-[#1E3A5F]/50 mt-1">
+        <p className="text-xs text-[#2E2420]/50 mt-1">
           Defaults to Michigan's actual flat individual income tax rate (4.25% for 2026). This is a real, calculable
           number — but doesn't account for your personal exemption or other adjustments, so treat it as close, not exact.
         </p>
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Federal income tax set-aside</label>
+        <label className="block text-xs font-semibold text-[#2E2420] mb-1">Federal income tax set-aside</label>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -98,11 +98,11 @@ export default function ReportSettingsForm({
             step="0.01"
             value={federalPercent}
             onChange={e => setFederalPercent(e.target.value)}
-            className="w-24 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+            className="w-24 border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
           />
-          <span className="text-sm text-[#1E3A5F]/60">% of profit</span>
+          <span className="text-sm text-[#2E2420]/60">% of profit</span>
         </div>
-        <p className="text-xs text-[#1E3A5F]/50 mt-1">
+        <p className="text-xs text-[#2E2420]/50 mt-1">
           Unlike Michigan's flat rate, federal income tax depends on your total household income and filing status —
           there's no single correct number software can calculate for you. The default (15.3%) is just the
           self-employment tax floor (Social Security + Medicare); your actual federal bill is likely higher once
@@ -111,14 +111,14 @@ export default function ReportSettingsForm({
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Send the report to</label>
-        <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+        <label className="block text-xs font-semibold text-[#2E2420] mb-1">Send the report to</label>
+        <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
       </div>
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
       <button
         type="submit"
         disabled={loading}
-        className="bg-[#1E3A5F] text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60"
+        className="bg-accent text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60"
       >
         {loading ? "Saving..." : "Save settings"}
       </button>

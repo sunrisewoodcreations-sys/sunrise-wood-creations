@@ -359,22 +359,22 @@ export default function AddOrderWithCustomerPicker({
   }
 
   return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 mb-6 space-y-4">
+    <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5 mb-6 space-y-4">
       {/* Customer picker — skipped entirely when this form already knows
           which customer it's for (e.g. embedded on their own page). */}
       {isFixedCustomer ? (
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Customer</label>
-          <div className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm bg-cream/50">
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Customer</label>
+          <div className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm bg-cream/50">
             {fixedCustomerName}
           </div>
         </div>
       ) : (
       <div>
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Customer</label>
+        <label className="block text-xs font-semibold text-[#2E2420] mb-1">Customer</label>
         {selectedCustomer ? (
-          <div className="flex items-center justify-between border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm bg-cream/50">
-            <span>{selectedCustomer.full_name} <span className="text-[#1E3A5F]/50">({selectedCustomer.email})</span></span>
+          <div className="flex items-center justify-between border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm bg-cream/50">
+            <span>{selectedCustomer.full_name} <span className="text-[#2E2420]/50">({selectedCustomer.email})</span></span>
             <button type="button" onClick={clearSelection} className="text-xs text-ember font-semibold ml-3">
               Change
             </button>
@@ -386,24 +386,24 @@ export default function AddOrderWithCustomerPicker({
               onChange={e => { setSearch(e.target.value); setDropdownOpen(true); }}
               onFocus={() => setDropdownOpen(true)}
               placeholder="Search customers by name or email..."
-              className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+              className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
             />
             {dropdownOpen && (
-              <div className="absolute z-20 mt-1 w-full bg-white border border-[#1E3A5F]/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
+              <div className="absolute z-20 mt-1 w-full bg-white border border-[#2E2420]/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
                 {filtered.length > 0 ? (
                   filtered.map(c => (
                     <button
                       key={c.id}
                       type="button"
                       onClick={() => selectCustomer(c)}
-                      className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-[#1E3A5F]/5 last:border-0"
+                      className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-[#2E2420]/5 last:border-0"
                     >
-                      <div className="font-medium text-[#1E3A5F]">{c.full_name}</div>
-                      <div className="text-xs text-[#1E3A5F]/50">{c.email}</div>
+                      <div className="font-medium text-[#2E2420]">{c.full_name}</div>
+                      <div className="text-xs text-[#2E2420]/50">{c.email}</div>
                     </button>
                   ))
                 ) : (
-                  <div className="px-3 py-3 text-sm text-[#1E3A5F]/60">
+                  <div className="px-3 py-3 text-sm text-[#2E2420]/60">
                     No matching customers.
                     <button
                       type="button"
@@ -425,30 +425,30 @@ export default function AddOrderWithCustomerPicker({
       {effectiveCustomer && (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-2">Items on this order</label>
+            <label className="block text-xs font-semibold text-[#2E2420] mb-2">Items on this order</label>
             <div className="space-y-3">
               {items.map((item, index) => {
                 const matchingProducts = products.filter(p => p.product_type === item.productType);
                 return (
-                  <div key={index} className="border border-[#1E3A5F]/10 rounded-lg p-3 bg-cream/30">
+                  <div key={index} className="border border-[#2E2420]/10 rounded-lg p-3 bg-cream/30">
                     <div className="grid grid-cols-2 gap-2 mb-2">
                       <div>
-                        <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Product type</label>
+                        <label className="block text-[11px] font-semibold text-[#2E2420] mb-1">Product type</label>
                         <select
                           value={item.productType}
                           onChange={e => updateItem(index, { productType: e.target.value, selectedProductId: null, unitPriceCents: null })}
-                          className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                          className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm"
                         >
                           {PRODUCT_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
                         </select>
                       </div>
                       {item.productType !== "cornhole" && matchingProducts.length > 0 && (
                         <div>
-                          <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Fill in from saved product</label>
+                          <label className="block text-[11px] font-semibold text-[#2E2420] mb-1">Fill in from saved product</label>
                           <select
                             onChange={e => applySavedProduct(index, e.target.value)}
                             value={item.selectedProductId || ""}
-                            className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                            className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm"
                           >
                             <option value="">— Choose —</option>
                             {matchingProducts.map(p => (
@@ -460,42 +460,42 @@ export default function AddOrderWithCustomerPicker({
                     </div>
                     <div className="grid grid-cols-4 gap-2">
                       <div className="col-span-2">
-                        <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Title / description</label>
+                        <label className="block text-[11px] font-semibold text-[#2E2420] mb-1">Title / description</label>
                         <input
                           required
                           value={item.title}
                           onChange={e => updateItem(index, { title: e.target.value })}
                           placeholder={item.productType === "cornhole" ? "Design name (e.g. Michigan flag)" : "Title / description"}
-                          className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                          className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Size / details</label>
+                        <label className="block text-[11px] font-semibold text-[#2E2420] mb-1">Size / details</label>
                         <input
                           value={item.sizeDetails}
                           onChange={e => updateItem(index, { sizeDetails: e.target.value })}
-                          className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                          className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Qty</label>
+                        <label className="block text-[11px] font-semibold text-[#2E2420] mb-1">Qty</label>
                         <input
                           type="number"
                           min="1"
                           value={item.quantity}
                           onChange={e => changeItemQuantity(index, e.target.value)}
-                          className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                          className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm"
                         />
                       </div>
                     </div>
                     <div className="grid grid-cols-4 gap-2 mt-2 items-end">
                       <div>
-                        <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Total price ($)</label>
+                        <label className="block text-[11px] font-semibold text-[#2E2420] mb-1">Total price ($)</label>
                         <input
                           value={item.price}
                           onChange={e => updateItem(index, { price: e.target.value, unitPriceCents: null })}
                           placeholder="55"
-                          className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                          className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm"
                         />
                       </div>
                       <div className="col-span-3 flex justify-end">
@@ -517,20 +517,20 @@ export default function AddOrderWithCustomerPicker({
             <button
               type="button"
               onClick={addItemRow}
-              className="mt-2 text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream"
+              className="mt-2 text-xs font-semibold text-[#2E2420] border border-[#2E2420]/20 rounded-md px-3 py-1.5 hover:bg-cream"
             >
               + Add another item
             </button>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Coupon Code (optional)</label>
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Coupon Code (optional)</label>
             {appliedCoupon ? (
               <div className="flex items-center justify-between bg-sage/10 border border-sage/30 rounded-md px-3 py-2">
                 <span className="text-sm text-sage font-semibold">
                   {appliedCoupon.code} applied — -${(appliedCoupon.discountCents / 100).toFixed(2)}
                 </span>
-                <button type="button" onClick={handleRemoveCoupon} className="text-xs text-[#1E3A5F]/50 hover:text-ember font-semibold">Remove</button>
+                <button type="button" onClick={handleRemoveCoupon} className="text-xs text-[#2E2420]/50 hover:text-ember font-semibold">Remove</button>
               </div>
             ) : (
               <div className="flex gap-2">
@@ -538,13 +538,13 @@ export default function AddOrderWithCustomerPicker({
                   value={couponCode}
                   onChange={e => setCouponCode(e.target.value.toUpperCase())}
                   placeholder="e.g. PLANTER15"
-                  className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm font-mono"
+                  className="flex-1 border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm font-mono"
                 />
                 <button
                   type="button"
                   onClick={handleApplyCoupon}
                   disabled={checkingCoupon || !couponCode.trim()}
-                  className="border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap disabled:opacity-40"
+                  className="border border-[#2E2420] text-[#2E2420] px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap disabled:opacity-40"
                 >
                   {checkingCoupon ? "Checking…" : "Apply"}
                 </button>
@@ -562,12 +562,12 @@ export default function AddOrderWithCustomerPicker({
 
           <div className="flex items-center justify-between gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Estimated pickup date (optional)</label>
+              <label className="block text-xs font-semibold text-[#2E2420] mb-1">Estimated pickup date (optional)</label>
               <input
                 type="date"
                 value={dueDate}
                 onChange={e => setDueDate(e.target.value)}
-                className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+                className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
               />
               {capacityWarning && (
                 <p className="text-xs text-ember font-semibold mt-1 max-w-xs">
@@ -576,9 +576,9 @@ export default function AddOrderWithCustomerPicker({
                 </p>
               )}
             </div>
-            <div className="text-sm text-[#1E3A5F] text-right">
+            <div className="text-sm text-[#2E2420] text-right">
               {appliedCoupon && <div className="text-xs text-ember">Coupon: -${(appliedCoupon.discountCents / 100).toFixed(2)}</div>}
-              {deliveryDollars > 0 && <div className="text-xs text-[#1E3A5F]/70">Delivery: ${deliveryDollars.toFixed(2)}</div>}
+              {deliveryDollars > 0 && <div className="text-xs text-[#2E2420]/70">Delivery: ${deliveryDollars.toFixed(2)}</div>}
               <div className="font-semibold">Order total: ${grandTotal.toFixed(2)}</div>
             </div>
           </div>
@@ -596,7 +596,7 @@ export default function AddOrderWithCustomerPicker({
       )}
 
       {!isFixedCustomer && !selectedCustomer && (
-        <button type="button" onClick={() => setOpen(false)} className="text-xs text-[#1E3A5F]/50 underline">
+        <button type="button" onClick={() => setOpen(false)} className="text-xs text-[#2E2420]/50 underline">
           Cancel
         </button>
       )}
@@ -605,7 +605,7 @@ export default function AddOrderWithCustomerPicker({
       {showCreateCustomer && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-sm">
-            <h3 className="font-display text-lg text-[#1E3A5F] mb-3">Create new customer</h3>
+            <h3 className="font-display text-lg text-[#2E2420] mb-3">Create new customer</h3>
             {customerCreatedMsg ? (
               <div>
                 <p className="text-sm text-sage font-semibold mb-4">{customerCreatedMsg}</p>
@@ -619,15 +619,15 @@ export default function AddOrderWithCustomerPicker({
             ) : (
               <form onSubmit={handleCreateCustomer} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Full name</label>
-                  <input required value={newName} onChange={e => setNewName(e.target.value)} placeholder="Jane Doe" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+                  <label className="block text-xs font-semibold text-[#2E2420] mb-1">Full name</label>
+                  <input required value={newName} onChange={e => setNewName(e.target.value)} placeholder="Jane Doe" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Email (optional)</label>
-                  <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="jane@example.com" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+                  <label className="block text-xs font-semibold text-[#2E2420] mb-1">Email (optional)</label>
+                  <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="jane@example.com" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Address (optional)</label>
+                  <label className="block text-xs font-semibold text-[#2E2420] mb-1">Address (optional)</label>
                   <AddressInput value={newAddress} onChange={setNewAddress} />
                 </div>
                 {customerCreateError && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{customerCreateError}</p>}

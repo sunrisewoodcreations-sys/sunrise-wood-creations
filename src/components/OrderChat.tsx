@@ -109,7 +109,7 @@ export default function OrderChat({ orderId, currentUserId, isAdmin }: { orderId
             <div key={m.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
               <div
                 className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${
-                  isMine ? "bg-[#1E3A5F] text-white" : "bg-white border border-black/10 text-black/80"
+                  isMine ? "bg-[#2E2420] text-white" : "bg-white border border-black/10 text-black/80"
                 }`}
               >
                 <div>{m.body}</div>

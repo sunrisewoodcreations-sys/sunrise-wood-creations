@@ -83,36 +83,36 @@ export default async function ProductsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display text-2xl text-[#1E3A5F]">Products</h1>
-        <Link href="/admin/queue" className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream whitespace-nowrap">
+        <h1 className="font-display text-2xl text-[#2E2420]">Products</h1>
+        <Link href="/admin/queue" className="text-xs font-semibold text-[#2E2420] border border-[#2E2420]/20 rounded-md px-3 py-1.5 hover:bg-cream whitespace-nowrap">
           View production queue →
         </Link>
       </div>
-      <p className="text-sm text-[#1E3A5F]/60 mb-4">
+      <p className="text-sm text-[#2E2420]/60 mb-4">
         Save products you make often so you can pick them instantly when creating an order.
       </p>
 
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center">
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-3 text-center">
           <div className="text-xl font-display text-sage">{inStockCount}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">In Stock</div>
+          <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide">In Stock</div>
         </div>
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center">
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-3 text-center">
           <div className="text-xl font-display text-amber">{lowStockCount}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Low Stock</div>
+          <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide">Low Stock</div>
         </div>
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center">
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-3 text-center">
           <div className="text-xl font-display text-ember">{outOfStockCount}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Out of Stock</div>
+          <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide">Out of Stock</div>
         </div>
       </div>
 
       {mostPopular.length > 0 && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-6">
-          <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Most popular (by units picked up)</div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 mb-6">
+          <div className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide mb-2">Most popular (by units picked up)</div>
           <div className="flex flex-wrap gap-2">
             {mostPopular.map((p: any, i: number) => (
-              <span key={p.id} className="text-xs font-semibold bg-cream border border-[#1E3A5F]/10 rounded-full px-3 py-1.5 text-[#1E3A5F]">
+              <span key={p.id} className="text-xs font-semibold bg-cream border border-[#2E2420]/10 rounded-full px-3 py-1.5 text-[#2E2420]">
                 #{i + 1} {p.name} — {p.unitsSold} sold
               </span>
             ))}
@@ -122,10 +122,10 @@ export default async function ProductsPage() {
 
       <AddProductForm />
 
-      <div className="hidden md:block overflow-x-auto bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+      <div className="hidden md:block overflow-x-auto bg-white border border-[#2E2420]/10 rounded-xl shadow-sm">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+          <tr className="bg-[#2E2420] text-white text-xs uppercase tracking-wide">
             <th className="text-left px-4 py-3">Name</th>
             <th className="text-left px-4 py-3">Type</th>
             <th className="text-left px-4 py-3">Size / details</th>
@@ -159,7 +159,7 @@ export default async function ProductsPage() {
             );
           })}
           {products?.length === 0 && (
-            <tr><td colSpan={14} className="px-4 py-6 text-center text-[#1E3A5F]/50">No products saved yet.</td></tr>
+            <tr><td colSpan={14} className="px-4 py-6 text-center text-[#2E2420]/50">No products saved yet.</td></tr>
           )}
         </tbody>
       </table>
@@ -186,7 +186,7 @@ export default async function ProductsPage() {
           );
         })}
         {products?.length === 0 && (
-          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-6 text-center text-sm text-[#1E3A5F]/50">
+          <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm px-4 py-6 text-center text-sm text-[#2E2420]/50">
             No products saved yet.
           </div>
         )}
@@ -194,11 +194,11 @@ export default async function ProductsPage() {
 
       {recentAdjustments && recentAdjustments.length > 0 && (
         <div className="mt-8">
-          <h2 className="font-display text-lg text-[#1E3A5F] mb-2">Recent stock adjustments</h2>
-          <div className="overflow-x-auto bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+          <h2 className="font-display text-lg text-[#2E2420] mb-2">Recent stock adjustments</h2>
+          <div className="overflow-x-auto bg-white border border-[#2E2420]/10 rounded-xl shadow-sm">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+                <tr className="bg-[#2E2420] text-white text-xs uppercase tracking-wide">
                   <th className="text-left px-4 py-3">Product</th>
                   <th className="text-right px-4 py-3">Change</th>
                   <th className="text-left px-4 py-3">Reason</th>
@@ -207,15 +207,15 @@ export default async function ProductsPage() {
               </thead>
               <tbody>
                 {recentAdjustments.map((a: any) => (
-                  <tr key={a.id} className="border-t border-[#1E3A5F]/10">
-                    <td className="px-4 py-3 text-[#1E3A5F]/70">{a.products?.name || "—"}</td>
+                  <tr key={a.id} className="border-t border-[#2E2420]/10">
+                    <td className="px-4 py-3 text-[#2E2420]/70">{a.products?.name || "—"}</td>
                     <td className="px-4 py-3 text-right font-mono">
                       <span className={a.new_quantity > a.old_quantity ? "text-sage" : "text-ember"}>
                         {a.old_quantity} → {a.new_quantity}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[#1E3A5F]/70">{a.reason}</td>
-                    <td className="px-4 py-3 text-[#1E3A5F]/50 text-xs font-mono">{new Date(a.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-[#2E2420]/70">{a.reason}</td>
+                    <td className="px-4 py-3 text-[#2E2420]/50 text-xs font-mono">{new Date(a.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>

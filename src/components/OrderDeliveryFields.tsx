@@ -58,9 +58,9 @@ export default function OrderDeliveryFields({
   }
 
   return (
-    <div className="border border-[#1E3A5F]/10 rounded-md p-3 bg-[#1E3A5F]/[0.02]">
-      <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Delivery (optional)</label>
-      <p className="text-xs text-[#1E3A5F]/60 mb-2">
+    <div className="border border-[#2E2420]/10 rounded-md p-3 bg-[#2E2420]/[0.02]">
+      <label className="block text-xs font-semibold text-[#2E2420] mb-1">Delivery (optional)</label>
+      <p className="text-xs text-[#2E2420]/60 mb-2">
         Leave blank for pickup. To deliver, enter the address and tap Calculate. It's priced one way by the mile from your home and added to the order as a "Delivery fee" line.
       </p>
       <div className="flex flex-col sm:flex-row gap-2">
@@ -89,22 +89,22 @@ export default function OrderDeliveryFields({
         </button>
       )}
       {suggestion && (
-        <div className="mt-2 text-sm text-[#1E3A5F]">
+        <div className="mt-2 text-sm text-[#2E2420]">
           <p className="font-semibold">Did you mean: {suggestion.address}?</p>
-          <p className="text-xs text-[#1E3A5F]/70 mb-2">{suggestion.reason}</p>
+          <p className="text-xs text-[#2E2420]/70 mb-2">{suggestion.reason}</p>
           <button type="button" onClick={() => calculate(suggestion.address, true)} className="text-xs font-semibold underline text-ember">
             Yes, use that address
           </button>
         </div>
       )}
       <div className="mt-3 max-w-[10rem]">
-        <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Delivery fee ($)</label>
+        <label className="block text-[11px] font-semibold text-[#2E2420] mb-1">Delivery fee ($)</label>
         <input
           value={value.feeDollars}
           onChange={e => onChange({ ...value, feeDollars: e.target.value })}
           inputMode="decimal"
           placeholder="0.00"
-          className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+          className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
         />
       </div>
       {note && <p className="mt-2 text-sm text-sage font-semibold">{note}. You can still adjust the fee.</p>}

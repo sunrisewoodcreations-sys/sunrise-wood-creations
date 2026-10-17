@@ -47,7 +47,7 @@ export default function AdminMobileNav({
           Kept deliberately compact (reduced padding/icon/text size vs the
           original) for one-handed use, since this bar is visible on every
           single screen and eats into usable space otherwise. */}
-      <div className="flex items-center justify-between bg-[#1E3A5F] text-white px-4 py-2 sticky top-0 z-40">
+      <div className="flex items-center justify-between bg-[#2E2420] text-white px-4 py-2 sticky top-0 z-40">
         <div className="flex items-center gap-2 min-w-0">
           <Link href="/" className="flex-shrink-0">
             <Image
@@ -82,7 +82,7 @@ export default function AdminMobileNav({
 
       {/* Slide-down panel — large, touch-friendly rows, closes on tap */}
       {open && (
-        <div className="fixed inset-0 top-[44px] bg-[#1E3A5F] z-30 overflow-y-auto">
+        <div className="fixed inset-0 top-[44px] bg-[#2E2420] z-30 overflow-y-auto">
           <nav className="flex flex-col px-2 py-2">
             <Link
               href={dashboardLink.href}

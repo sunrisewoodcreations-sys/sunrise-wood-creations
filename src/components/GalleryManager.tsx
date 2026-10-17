@@ -62,7 +62,7 @@ export default function GalleryManager({ initialPhotos }: { initialPhotos: Photo
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-4">{error}</p>}
 
       <label className="inline-block mb-6">
-        <span className="inline-block bg-[#1E3A5F] text-white rounded-md px-4 py-2.5 text-sm font-semibold cursor-pointer hover:opacity-90">
+        <span className="inline-block bg-accent text-white rounded-md px-4 py-2.5 text-sm font-semibold cursor-pointer hover:opacity-90">
           {uploading ? "Uploading..." : "Upload a new photo"}
         </span>
         <input
@@ -75,11 +75,11 @@ export default function GalleryManager({ initialPhotos }: { initialPhotos: Photo
       </label>
 
       {photos.length === 0 ? (
-        <p className="text-sm text-[#1E3A5F]/50">No photos yet — upload your first one above.</p>
+        <p className="text-sm text-[#2E2420]/50">No photos yet — upload your first one above.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {photos.map((photo, i) => (
-            <div key={photo.id} className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+            <div key={photo.id} className="bg-white border border-[#2E2420]/10 rounded-xl overflow-hidden shadow-sm">
               <div className="relative aspect-[4/3] bg-cream">
                 <img src={photo.image_url} alt={photo.caption || "Gallery photo"} className="absolute inset-0 w-full h-full object-cover" />
               </div>
@@ -89,7 +89,7 @@ export default function GalleryManager({ initialPhotos }: { initialPhotos: Photo
                     onClick={() => handleMove(i, "up")}
                     disabled={i === 0}
                     aria-label="Move up in order"
-                    className="w-7 h-7 rounded border border-[#1E3A5F]/20 text-[#1E3A5F] disabled:opacity-30 flex items-center justify-center"
+                    className="w-7 h-7 rounded border border-[#2E2420]/20 text-[#2E2420] disabled:opacity-30 flex items-center justify-center"
                   >
                     ↑
                   </button>
@@ -97,7 +97,7 @@ export default function GalleryManager({ initialPhotos }: { initialPhotos: Photo
                     onClick={() => handleMove(i, "down")}
                     disabled={i === photos.length - 1}
                     aria-label="Move down in order"
-                    className="w-7 h-7 rounded border border-[#1E3A5F]/20 text-[#1E3A5F] disabled:opacity-30 flex items-center justify-center"
+                    className="w-7 h-7 rounded border border-[#2E2420]/20 text-[#2E2420] disabled:opacity-30 flex items-center justify-center"
                   >
                     ↓
                   </button>

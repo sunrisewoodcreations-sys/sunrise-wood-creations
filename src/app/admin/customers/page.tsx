@@ -38,8 +38,8 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Customers</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">Search, view, and add customers.</p>
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">Customers</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6">Search, view, and add customers.</p>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <form method="GET" className="flex-1 min-w-[240px]">
@@ -47,12 +47,12 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
             name="q"
             defaultValue={query}
             placeholder="Search customers by name, email, or phone..."
-            className="w-full px-3 py-2.5 border border-[#1E3A5F]/15 rounded-md text-sm"
+            className="w-full px-3 py-2.5 border border-[#2E2420]/15 rounded-md text-sm"
           />
         </form>
         <a
           href="/api/export/customers"
-          className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-2 rounded-md text-xs font-semibold hover:bg-cream whitespace-nowrap"
+          className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-2 rounded-md text-xs font-semibold hover:bg-cream whitespace-nowrap"
         >
           Export CSV
         </a>
@@ -60,10 +60,10 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
 
       <AddCustomerForm />
 
-      <div className="overflow-x-auto bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+      <div className="overflow-x-auto bg-white border border-[#2E2420]/10 rounded-xl shadow-sm">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+          <tr className="bg-[#2E2420] text-white text-xs uppercase tracking-wide">
             <th className="text-left px-4 py-3">Name</th>
             <th className="text-left px-4 py-3">Email</th>
             <th className="text-left px-4 py-3">Orders</th>
@@ -74,23 +74,23 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
         </thead>
         <tbody>
           {rows.map((c: any) => (
-            <tr key={c.id} className="border-t border-[#1E3A5F]/10 hover:bg-cream/60">
+            <tr key={c.id} className="border-t border-[#2E2420]/10 hover:bg-cream/60">
               <td className="px-4 py-3">
-                <Link href={`/admin/customers/${c.id}`} className="font-semibold text-[#1E3A5F]">
+                <Link href={`/admin/customers/${c.id}`} className="font-semibold text-[#2E2420]">
                   {c.full_name}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-[#1E3A5F]/70">{c.has_real_email === false ? <span className="text-[#1E3A5F]/40 italic">No email on file</span> : c.email}</td>
-              <td className="px-4 py-3 text-[#1E3A5F]/70">{c.orderCount}</td>
-              <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${c.totalSales.toFixed(2)}</td>
-              <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${c.totalPaid.toFixed(2)}</td>
+              <td className="px-4 py-3 text-[#2E2420]/70">{c.has_real_email === false ? <span className="text-[#2E2420]/40 italic">No email on file</span> : c.email}</td>
+              <td className="px-4 py-3 text-[#2E2420]/70">{c.orderCount}</td>
+              <td className="px-4 py-3 text-right text-[#2E2420]/70">${c.totalSales.toFixed(2)}</td>
+              <td className="px-4 py-3 text-right text-[#2E2420]/70">${c.totalPaid.toFixed(2)}</td>
               <td className={`px-4 py-3 text-right font-semibold ${c.owed > 0 ? "text-ember" : "text-sage"}`}>
                 ${c.owed.toFixed(2)}
               </td>
             </tr>
           ))}
           {rows.length === 0 && (
-            <tr><td colSpan={6} className="px-4 py-6 text-center text-[#1E3A5F]/50">No customers found.</td></tr>
+            <tr><td colSpan={6} className="px-4 py-6 text-center text-[#2E2420]/50">No customers found.</td></tr>
           )}
         </tbody>
       </table>

@@ -91,10 +91,10 @@ export default function AddProductForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 mb-6 space-y-3">
+    <form onSubmit={handleSubmit} className="bg-white border border-[#2E2420]/10 rounded-xl p-5 mb-6 space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Product type</label>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Product type</label>
           <select
             value={productType}
             onChange={e => {
@@ -102,50 +102,50 @@ export default function AddProductForm() {
               setProductType(newType);
               if (newType === "planter" && !estimatedBuildMinutes.trim()) setEstimatedBuildMinutes("60");
             }}
-            className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+            className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
           >
             {PRODUCT_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Name</label>
-          <input required value={name} onChange={e => setName(e.target.value)} placeholder="36x18x18 Cedar planter box" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Name</label>
+          <input required value={name} onChange={e => setName(e.target.value)} placeholder="36x18x18 Cedar planter box" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Size / details</label>
-          <input value={sizeDetails} onChange={e => setSizeDetails(e.target.value)} placeholder="36in x 18in x 18in" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Size / details</label>
+          <input value={sizeDetails} onChange={e => setSizeDetails(e.target.value)} placeholder="36in x 18in x 18in" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Price ($)</label>
-          <input value={price} onChange={e => setPrice(e.target.value)} placeholder="55" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Price ($)</label>
+          <input value={price} onChange={e => setPrice(e.target.value)} placeholder="55" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Your cost ($)</label>
-          <input value={costPrice} onChange={e => setCostPrice(e.target.value)} placeholder="20" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Your cost ($)</label>
+          <input value={costPrice} onChange={e => setCostPrice(e.target.value)} placeholder="20" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Stock on hand</label>
-          <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} placeholder="0" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Stock on hand</label>
+          <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} placeholder="0" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Low stock alert at</label>
-          <input value={lowStockThreshold} onChange={e => setLowStockThreshold(e.target.value)} placeholder="2" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Low stock alert at</label>
+          <input value={lowStockThreshold} onChange={e => setLowStockThreshold(e.target.value)} placeholder="2" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Estimated build time (minutes)</label>
-          <input value={estimatedBuildMinutes} onChange={e => setEstimatedBuildMinutes(e.target.value)} placeholder="60" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
-          <p className="text-[10px] text-[#1E3A5F]/40 mt-1">Active labor only — don't include glue drying or other curing time.</p>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Estimated build time (minutes)</label>
+          <input value={estimatedBuildMinutes} onChange={e => setEstimatedBuildMinutes(e.target.value)} placeholder="60" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
+          <p className="text-[10px] text-[#2E2420]/40 mt-1">Active labor only — don't include glue drying or other curing time.</p>
         </div>
         {productType === "planter" && (
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Pickets used per item</label>
-            <input value={picketsPerUnit} onChange={e => setPicketsPerUnit(e.target.value)} placeholder="5" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
-            <p className="text-[10px] text-[#1E3A5F]/40 mt-1">Orders using this product auto-log and cost this many pickets — no manual entry needed.</p>
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Pickets used per item</label>
+            <input value={picketsPerUnit} onChange={e => setPicketsPerUnit(e.target.value)} placeholder="5" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
+            <p className="text-[10px] text-[#2E2420]/40 mt-1">Orders using this product auto-log and cost this many pickets — no manual entry needed.</p>
           </div>
         )}
       </div>
 
-      <div className="border-t border-[#1E3A5F]/10 pt-3">
+      <div className="border-t border-[#2E2420]/10 pt-3">
         <ProductBOMEditor rows={partRows} onChange={setPartRows} />
       </div>
 

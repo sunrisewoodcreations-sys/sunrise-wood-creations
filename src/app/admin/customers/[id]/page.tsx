@@ -12,9 +12,9 @@ import { getCustomerTimeline } from "@/lib/orderTimeline";
 
 function StatCard({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-4 shadow-sm">
-      <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1">{label}</div>
-      <div className={`text-xl font-display ${color || "text-[#1E3A5F]"}`}>{value}</div>
+    <div className="bg-white border border-[#2E2420]/10 rounded-xl p-4 shadow-sm">
+      <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide mb-1">{label}</div>
+      <div className={`text-xl font-display ${color || "text-[#2E2420]"}`}>{value}</div>
     </div>
   );
 }
@@ -85,12 +85,12 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
   return (
     <div>
-      <Link href="/admin/customers" className="text-sm text-[#1E3A5F]/60 mb-4 inline-block">← All customers</Link>
+      <Link href="/admin/customers" className="text-sm text-[#2E2420]/60 mb-4 inline-block">← All customers</Link>
 
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">{customer.full_name}</h1>
-          <p className="text-sm text-[#1E3A5F]/60 mb-3">
+          <h1 className="font-display text-2xl text-[#2E2420] mb-1">{customer.full_name}</h1>
+          <p className="text-sm text-[#2E2420]/60 mb-3">
             {customer.has_real_email === false ? <span className="italic">No email on file</span> : customer.email}
           </p>
           <EditCustomerContactForm
@@ -129,29 +129,29 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
       </div>
 
       {((received && received.length > 0) || (redeemed && redeemed.length > 0)) && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 shadow-sm mb-8">
-          <h2 className="font-display text-base text-[#1E3A5F] mb-3">Coupons</h2>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5 shadow-sm mb-8">
+          <h2 className="font-display text-base text-[#2E2420] mb-3">Coupons</h2>
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div>
-              <div className="text-xl font-display text-[#1E3A5F]">{received?.length || 0}</div>
-              <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide">Received</div>
+              <div className="text-xl font-display text-[#2E2420]">{received?.length || 0}</div>
+              <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide">Received</div>
             </div>
             <div>
               <div className="text-xl font-display text-sage">{redeemed?.length || 0}</div>
-              <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide">Redeemed</div>
+              <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide">Redeemed</div>
             </div>
             <div>
-              <div className="text-xl font-display text-[#1E3A5F]">{(received?.length || 0) - (redeemed?.length || 0)}</div>
-              <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide">Available</div>
+              <div className="text-xl font-display text-[#2E2420]">{(received?.length || 0) - (redeemed?.length || 0)}</div>
+              <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide">Available</div>
             </div>
           </div>
           {redeemed && redeemed.length > 0 && (
-            <div className="border-t border-[#1E3A5F]/10 pt-3">
-              <p className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Redemption History</p>
+            <div className="border-t border-[#2E2420]/10 pt-3">
+              <p className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide mb-2">Redemption History</p>
               {redeemed.map((r: any) => (
                 <div key={r.id} className="flex justify-between text-sm py-1">
-                  <span className="font-mono text-[#1E3A5F]">{r.coupons?.code}</span>
-                  <span className="text-[#1E3A5F]/60">${(r.discount_applied_cents / 100).toFixed(2)} · {new Date(r.redeemed_at).toLocaleDateString()}</span>
+                  <span className="font-mono text-[#2E2420]">{r.coupons?.code}</span>
+                  <span className="text-[#2E2420]/60">${(r.discount_applied_cents / 100).toFixed(2)} · {new Date(r.redeemed_at).toLocaleDateString()}</span>
                 </div>
               ))}
             </div>
@@ -160,9 +160,9 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
       )}
 
       {customer.has_real_email !== false && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5 mb-6">
-          <h2 className="font-display text-lg text-[#1E3A5F] mb-1">Email preferences</h2>
-          <p className="text-xs text-[#1E3A5F]/50 mb-3">
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-5 mb-6">
+          <h2 className="font-display text-lg text-[#2E2420] mb-1">Email preferences</h2>
+          <p className="text-xs text-[#2E2420]/50 mb-3">
             Set by the customer themselves — read-only here. If something's off, you'll need to message them directly instead of relying on an automatic email.
           </p>
           <div className="grid grid-cols-2 gap-2 text-sm">
@@ -172,8 +172,8 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
               { label: "Design proofs", on: customer.notify_proofs },
               { label: "Messages from you", on: customer.notify_messages }
             ].map(item => (
-              <div key={item.label} className="flex items-center justify-between border border-[#1E3A5F]/10 rounded-md px-3 py-2">
-                <span className="text-[#1E3A5F]/80">{item.label}</span>
+              <div key={item.label} className="flex items-center justify-between border border-[#2E2420]/10 rounded-md px-3 py-2">
+                <span className="text-[#2E2420]/80">{item.label}</span>
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${item.on ? "bg-sage/20 text-sage" : "bg-ember/20 text-ember"}`}>
                   {item.on ? "ON" : "OFF"}
                 </span>
@@ -187,11 +187,11 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         <CustomerNotes customerId={customer.id} />
       </div>
 
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-2">Order history</h2>
-      <div className="hidden md:block overflow-x-auto overflow-y-hidden bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+      <h2 className="font-display text-lg text-[#2E2420] mb-2">Order history</h2>
+      <div className="hidden md:block overflow-x-auto overflow-y-hidden bg-white border border-[#2E2420]/10 rounded-xl shadow-sm">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+            <tr className="bg-[#2E2420] text-white text-xs uppercase tracking-wide">
               <th className="text-left px-4 py-3">Order</th>
               <th className="text-left px-4 py-3">Date</th>
               <th className="text-left px-4 py-3">Size / details</th>
@@ -206,25 +206,25 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
             {orderList.map((order: any) => {
               const invoice = latestInvoiceByOrder[order.id];
               return (
-                <tr key={order.id} className="border-t border-[#1E3A5F]/10 hover:bg-cream/60 transition-colors">
+                <tr key={order.id} className="border-t border-[#2E2420]/10 hover:bg-cream/60 transition-colors">
                   <td className="px-4 py-3">
-                    <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#1E3A5F] hover:underline">
+                    <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#2E2420] hover:underline">
                       {productLabel(order.product_type as ProductType)} — {order.title}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 font-mono text-[#1E3A5F]/70">
+                  <td className="px-4 py-3 font-mono text-[#2E2420]/70">
                     {new Date(order.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-4 py-3 text-[#1E3A5F]/70">{order.size_details}</td>
+                  <td className="px-4 py-3 text-[#2E2420]/70">{order.size_details}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusColor(order.status)}`}>
                       {statusLabel(order.product_type as ProductType, order.status)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right text-[#1E3A5F]/70">
+                  <td className="px-4 py-3 text-right text-[#2E2420]/70">
                     ${((order.price_cents || 0) / 100).toFixed(2)}
                   </td>
-                  <td className="px-4 py-3 text-right text-[#1E3A5F]/70">
+                  <td className="px-4 py-3 text-right text-[#2E2420]/70">
                     ${((order.amount_paid_cents || 0) / 100).toFixed(2)}
                   </td>
                   <td className={`px-4 py-3 text-right font-semibold ${
@@ -243,14 +243,14 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
                         Download #{formatInvoiceNumber(invoice.invoice_year, invoice.invoice_number)}
                       </a>
                     ) : (
-                      <span className="text-xs text-[#1E3A5F]/40">—</span>
+                      <span className="text-xs text-[#2E2420]/40">—</span>
                     )}
                   </td>
                 </tr>
               );
             })}
             {orderList.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-6 text-center text-[#1E3A5F]/50">No orders yet.</td></tr>
+              <tr><td colSpan={8} className="px-4 py-6 text-center text-[#2E2420]/50">No orders yet.</td></tr>
             )}
           </tbody>
         </table>
@@ -261,25 +261,25 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
           const invoice = latestInvoiceByOrder[order.id];
           const balanceCents = (order.price_cents || 0) - (order.amount_paid_cents || 0);
           return (
-            <div key={order.id} className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
-              <Link href={`/admin/orders/${order.id}`} className="text-sm font-semibold text-[#1E3A5F] active:underline block mb-1">
+            <div key={order.id} className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
+              <Link href={`/admin/orders/${order.id}`} className="text-sm font-semibold text-[#2E2420] active:underline block mb-1">
                 {productLabel(order.product_type as ProductType)} — {order.title}
               </Link>
-              <div className="text-xs text-[#1E3A5F]/60 mb-2">{new Date(order.created_at).toLocaleDateString()}</div>
+              <div className="text-xs text-[#2E2420]/60 mb-2">{new Date(order.created_at).toLocaleDateString()}</div>
               <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusColor(order.status)}`}>
                 {statusLabel(order.product_type as ProductType, order.status)}
               </span>
-              <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[#1E3A5F]/10 text-sm">
+              <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[#2E2420]/10 text-sm">
                 <div>
-                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Sales</div>
-                  <div className="text-[#1E3A5F]/70">${((order.price_cents || 0) / 100).toFixed(2)}</div>
+                  <div className="text-[10px] text-[#2E2420]/50 uppercase font-semibold">Sales</div>
+                  <div className="text-[#2E2420]/70">${((order.price_cents || 0) / 100).toFixed(2)}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Paid</div>
-                  <div className="text-[#1E3A5F]/70">${((order.amount_paid_cents || 0) / 100).toFixed(2)}</div>
+                  <div className="text-[10px] text-[#2E2420]/50 uppercase font-semibold">Paid</div>
+                  <div className="text-[#2E2420]/70">${((order.amount_paid_cents || 0) / 100).toFixed(2)}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold">Owed</div>
+                  <div className="text-[10px] text-[#2E2420]/50 uppercase font-semibold">Owed</div>
                   <div className={`font-semibold ${balanceCents > 0 ? "text-ember" : "text-sage"}`}>${(balanceCents / 100).toFixed(2)}</div>
                 </div>
               </div>
@@ -297,7 +297,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
           );
         })}
         {orderList.length === 0 && (
-          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-6 text-center text-sm text-[#1E3A5F]/50">
+          <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm px-4 py-6 text-center text-sm text-[#2E2420]/50">
             No orders yet.
           </div>
         )}

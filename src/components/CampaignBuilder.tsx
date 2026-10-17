@@ -206,11 +206,11 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
   return (
     <div className="bg-cream/40 -m-8 p-8 min-h-full pb-32">
       <div className="flex items-center gap-2 mb-1">
-        <Link href="/admin/coupons" className="text-sm text-[#1E3A5F]/50 hover:underline">Coupons &amp; Campaigns</Link>
-        <span className="text-[#1E3A5F]/30">/</span>
-        <span className="text-sm text-[#1E3A5F]/50">New Campaign</span>
+        <Link href="/admin/coupons" className="text-sm text-[#2E2420]/50 hover:underline">Coupons &amp; Campaigns</Link>
+        <span className="text-[#2E2420]/30">/</span>
+        <span className="text-sm text-[#2E2420]/50">New Campaign</span>
       </div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-6">Create Campaign</h1>
+      <h1 className="font-display text-2xl text-[#2E2420] mb-6">Create Campaign</h1>
 
       {error && (
         <div className="bg-ember/10 border border-ember/30 text-ember text-sm rounded-lg px-4 py-3 mb-6">{error}</div>
@@ -220,55 +220,55 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
       )}
 
       {/* ===== Campaign basics ===== */}
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 shadow-sm mb-5">
-        <h2 className="font-display text-base text-[#1E3A5F] mb-4">Campaign</h2>
-        <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Campaign Name</label>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5 shadow-sm mb-5">
+        <h2 className="font-display text-base text-[#2E2420] mb-4">Campaign</h2>
+        <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Campaign Name</label>
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Planter Box Customer Thank You"
-          className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm mb-4" />
+          className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm mb-4" />
 
-        <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Coupon Code</label>
+        <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Coupon Code</label>
         <div className="flex items-center gap-3 mb-1">
           <input value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())} disabled={autoGenerate}
-            placeholder="PLANTER15" className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm font-mono disabled:bg-[#1E3A5F]/5" />
-          <label className="flex items-center gap-1.5 text-xs text-[#1E3A5F]/70 whitespace-nowrap">
+            placeholder="PLANTER15" className="flex-1 border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm font-mono disabled:bg-[#2E2420]/5" />
+          <label className="flex items-center gap-1.5 text-xs text-[#2E2420]/70 whitespace-nowrap">
             <input type="checkbox" checked={autoGenerate} onChange={e => setAutoGenerate(e.target.checked)} />
             Auto-generate
           </label>
         </div>
-        <p className="text-xs text-[#1E3A5F]/40 mb-4">{autoGenerate ? "A code will be generated from the campaign name when you save." : "Customers will mention this code when they place their next order."}</p>
+        <p className="text-xs text-[#2E2420]/40 mb-4">{autoGenerate ? "A code will be generated from the campaign name when you save." : "Customers will mention this code when they place their next order."}</p>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Discount Type</label>
-            <select value={discountType} onChange={e => setDiscountType(e.target.value as any)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm">
+            <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Discount Type</label>
+            <select value={discountType} onChange={e => setDiscountType(e.target.value as any)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm">
               <option value="percentage">Percentage</option>
               <option value="fixed">Fixed dollar amount</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Discount Amount</label>
+            <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Discount Amount</label>
             <div className="relative">
               <input type="number" value={discountValue} onChange={e => setDiscountValue(e.target.value)}
-                className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
-              <span className="absolute right-3 top-2 text-sm text-[#1E3A5F]/40">{discountType === "percentage" ? "%" : "$"}</span>
+                className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
+              <span className="absolute right-3 top-2 text-sm text-[#2E2420]/40">{discountType === "percentage" ? "%" : "$"}</span>
             </div>
           </div>
         </div>
 
-        <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Applies To</label>
-        <select value={appliesToType} onChange={e => { setAppliesToType(e.target.value as any); setAppliesToValue(""); }} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm mb-2">
+        <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Applies To</label>
+        <select value={appliesToType} onChange={e => { setAppliesToType(e.target.value as any); setAppliesToValue(""); }} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm mb-2">
           <option value="all">Entire order</option>
           <option value="product_type">A product category</option>
           <option value="product">A specific product</option>
         </select>
         {appliesToType === "product_type" && (
-          <select value={appliesToValue} onChange={e => setAppliesToValue(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm">
+          <select value={appliesToValue} onChange={e => setAppliesToValue(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm">
             <option value="">Choose a category…</option>
             {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         )}
         {appliesToType === "product" && (
-          <select value={appliesToValue} onChange={e => setAppliesToValue(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm">
+          <select value={appliesToValue} onChange={e => setAppliesToValue(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm">
             <option value="">Choose a product…</option>
             {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
@@ -276,44 +276,44 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
       </div>
 
       {/* ===== Rules ===== */}
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 shadow-sm mb-5">
-        <h2 className="font-display text-base text-[#1E3A5F] mb-4">Coupon Rules</h2>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5 shadow-sm mb-5">
+        <h2 className="font-display text-base text-[#2E2420] mb-4">Coupon Rules</h2>
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Minimum Purchase ($, optional)</label>
-            <input type="number" value={minPurchase} onChange={e => setMinPurchase(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Minimum Purchase ($, optional)</label>
+            <input type="number" value={minPurchase} onChange={e => setMinPurchase(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Maximum Discount ($, optional)</label>
-            <input type="number" value={maxDiscount} onChange={e => setMaxDiscount(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Maximum Discount ($, optional)</label>
+            <input type="number" value={maxDiscount} onChange={e => setMaxDiscount(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Start Date (optional)</label>
-            <input type="date" value={startsAt} onChange={e => setStartsAt(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Start Date (optional)</label>
+            <input type="date" value={startsAt} onChange={e => setStartsAt(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Expiration Date (optional)</label>
-            <input type="date" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Expiration Date (optional)</label>
+            <input type="date" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Max Total Redemptions (optional)</label>
-            <input type="number" value={maxTotalRedemptions} onChange={e => setMaxTotalRedemptions(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Max Total Redemptions (optional)</label>
+            <input type="number" value={maxTotalRedemptions} onChange={e => setMaxTotalRedemptions(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Max Redemptions Per Customer</label>
-            <input type="number" value={maxPerCustomer} onChange={e => setMaxPerCustomer(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Max Redemptions Per Customer</label>
+            <input type="number" value={maxPerCustomer} onChange={e => setMaxPerCustomer(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
           </div>
         </div>
-        <label className="flex items-center gap-2 text-sm text-[#1E3A5F]/80">
+        <label className="flex items-center gap-2 text-sm text-[#2E2420]/80">
           <input type="checkbox" checked={combinable} onChange={e => setCombinable(e.target.checked)} />
           Allow this coupon to be combined with other discounts
         </label>
       </div>
 
       {/* ===== Targeting ===== */}
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 shadow-sm mb-5">
-        <h2 className="font-display text-base text-[#1E3A5F] mb-1">Who Should Receive This?</h2>
-        <p className="text-xs text-[#1E3A5F]/50 mb-4">Target customers based on what they've actually purchased before.</p>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5 shadow-sm mb-5">
+        <h2 className="font-display text-base text-[#2E2420] mb-1">Who Should Receive This?</h2>
+        <p className="text-xs text-[#2E2420]/50 mb-4">Target customers based on what they've actually purchased before.</p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
           {[
@@ -326,7 +326,7 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
             <button
               key={opt.v}
               onClick={() => setTargetingType(opt.v as any)}
-              className={`px-3 py-2.5 rounded-md text-sm font-semibold border transition-colors ${targetingType === opt.v ? "bg-[#1E3A5F] text-white border-[#1E3A5F]" : "bg-white text-[#1E3A5F]/70 border-[#1E3A5F]/15 hover:border-[#1E3A5F]/40"}`}
+              className={`px-3 py-2.5 rounded-md text-sm font-semibold border transition-colors ${targetingType === opt.v ? "bg-accent text-white border-accent" : "bg-white text-[#2E2420]/70 border-[#2E2420]/15 hover:border-[#2E2420]/40"}`}
             >
               {opt.label}
             </button>
@@ -335,13 +335,13 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
 
         {targetingType === "product_type" && (
           <div className="mb-4">
-            <p className="text-xs font-semibold text-[#1E3A5F]/60 mb-2">Customers who have purchased:</p>
+            <p className="text-xs font-semibold text-[#2E2420]/60 mb-2">Customers who have purchased:</p>
             <div className="grid grid-cols-2 gap-2">
               {CATEGORIES.map(c => (
                 <button key={c.value} onClick={() => setTargetProductType(c.value)}
-                  className={`text-left px-3 py-2.5 rounded-md border text-sm ${targetProductType === c.value ? "border-ember bg-ember/5" : "border-[#1E3A5F]/15"}`}>
-                  <div className="font-semibold text-[#1E3A5F]">{c.label}</div>
-                  <div className="text-xs text-[#1E3A5F]/50">{categoryCounts ? `${categoryCounts[c.value] ?? 0} customers` : "…"}</div>
+                  className={`text-left px-3 py-2.5 rounded-md border text-sm ${targetProductType === c.value ? "border-ember bg-ember/5" : "border-[#2E2420]/15"}`}>
+                  <div className="font-semibold text-[#2E2420]">{c.label}</div>
+                  <div className="text-xs text-[#2E2420]/50">{categoryCounts ? `${categoryCounts[c.value] ?? 0} customers` : "…"}</div>
                 </button>
               ))}
             </div>
@@ -349,7 +349,7 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
         )}
 
         {targetingType === "product" && (
-          <select value={targetProductId} onChange={e => setTargetProductId(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm mb-4">
+          <select value={targetProductId} onChange={e => setTargetProductId(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm mb-4">
             <option value="">Choose a product…</option>
             {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
@@ -358,27 +358,27 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
         {targetingType === "date_range" && (
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Purchased after</label>
-              <input type="date" value={dateStart} onChange={e => setDateStart(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Purchased after</label>
+              <input type="date" value={dateStart} onChange={e => setDateStart(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Purchased before</label>
-              <input type="date" value={dateEnd} onChange={e => setDateEnd(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Purchased before</label>
+              <input type="date" value={dateEnd} onChange={e => setDateEnd(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
             </div>
           </div>
         )}
 
         {targetingType === "manual" && (
           <div className="mb-4">
-            <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Search by name, email, or phone</label>
+            <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Search by name, email, or phone</label>
             <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search customers…"
-              className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm mb-2" />
+              className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm mb-2" />
             {searchResults.length > 0 && (
-              <div className="border border-[#1E3A5F]/10 rounded-md overflow-hidden mb-3">
+              <div className="border border-[#2E2420]/10 rounded-md overflow-hidden mb-3">
                 {searchResults.map(c => (
-                  <button key={c.id} onClick={() => addManualCustomer(c)} className="w-full text-left px-3 py-2 text-sm hover:bg-cream/60 border-b border-[#1E3A5F]/5 last:border-0">
-                    <div className="font-medium text-[#1E3A5F]">{c.full_name}</div>
-                    <div className="text-xs text-[#1E3A5F]/50">{c.email}{c.phone ? ` · ${c.phone}` : ""}</div>
+                  <button key={c.id} onClick={() => addManualCustomer(c)} className="w-full text-left px-3 py-2 text-sm hover:bg-cream/60 border-b border-[#2E2420]/5 last:border-0">
+                    <div className="font-medium text-[#2E2420]">{c.full_name}</div>
+                    <div className="text-xs text-[#2E2420]/50">{c.email}{c.phone ? ` · ${c.phone}` : ""}</div>
                   </button>
                 ))}
               </div>
@@ -386,9 +386,9 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
             {manualCustomers.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {manualCustomers.map(c => (
-                  <span key={c.id} className="inline-flex items-center gap-1.5 bg-[#1E3A5F]/5 text-[#1E3A5F] text-xs px-2.5 py-1.5 rounded-full">
+                  <span key={c.id} className="inline-flex items-center gap-1.5 bg-[#2E2420]/5 text-[#2E2420] text-xs px-2.5 py-1.5 rounded-full">
                     {c.full_name}
-                    <button onClick={() => removeManualCustomer(c.id)} className="text-[#1E3A5F]/50 hover:text-ember font-bold">×</button>
+                    <button onClick={() => removeManualCustomer(c.id)} className="text-[#2E2420]/50 hover:text-ember font-bold">×</button>
                   </span>
                 ))}
               </div>
@@ -397,39 +397,39 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
         )}
 
         {targetingType !== "manual" && (
-          <label className="flex items-center gap-2 text-sm text-[#1E3A5F]/80 mb-4">
+          <label className="flex items-center gap-2 text-sm text-[#2E2420]/80 mb-4">
             <input type="checkbox" checked={excludePreviouslySent} onChange={e => setExcludePreviouslySent(e.target.checked)} />
             Exclude customers who have already received this campaign
           </label>
         )}
 
         {/* Recipient list with select-all / individual deselect */}
-        <div className="border-t border-[#1E3A5F]/10 pt-4">
+        <div className="border-t border-[#2E2420]/10 pt-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-semibold text-[#1E3A5F]">
+            <p className="text-sm font-semibold text-[#2E2420]">
               RECIPIENTS — {loadingRecipients ? "…" : finalRecipients.length} customer{finalRecipients.length === 1 ? "" : "s"} selected
             </p>
             {targetingType !== "manual" && matchedCustomers.length > 0 && (
               <div className="flex gap-3 text-xs font-semibold">
-                <button onClick={() => setDeselectedIds(new Set())} className="text-[#1E3A5F] hover:underline">Select All</button>
-                <button onClick={() => setDeselectedIds(new Set(matchedCustomers.map(c => c.id)))} className="text-[#1E3A5F]/60 hover:underline">Deselect All</button>
+                <button onClick={() => setDeselectedIds(new Set())} className="text-[#2E2420] hover:underline">Select All</button>
+                <button onClick={() => setDeselectedIds(new Set(matchedCustomers.map(c => c.id)))} className="text-[#2E2420]/60 hover:underline">Deselect All</button>
               </div>
             )}
           </div>
 
           {targetingType !== "manual" && matchedCustomers.length === 0 && !loadingRecipients && (
-            <p className="text-sm text-[#1E3A5F]/50 py-3">
+            <p className="text-sm text-[#2E2420]/50 py-3">
               {targetingType === "product_type" ? `No customers have purchased ${CATEGORIES.find(c => c.value === targetProductType)?.label.toLowerCase()} yet.` : "No matching customers found."}
             </p>
           )}
 
           {targetingType !== "manual" && matchedCustomers.length > 0 && (
-            <div className="max-h-64 overflow-y-auto border border-[#1E3A5F]/10 rounded-md">
+            <div className="max-h-64 overflow-y-auto border border-[#2E2420]/10 rounded-md">
               {matchedCustomers.map(c => (
-                <label key={c.id} className="flex items-center gap-2.5 px-3 py-2 text-sm border-b border-[#1E3A5F]/5 last:border-0 hover:bg-cream/40 cursor-pointer">
+                <label key={c.id} className="flex items-center gap-2.5 px-3 py-2 text-sm border-b border-[#2E2420]/5 last:border-0 hover:bg-cream/40 cursor-pointer">
                   <input type="checkbox" checked={!deselectedIds.has(c.id)} onChange={() => toggleDeselect(c.id)} />
-                  <span className="text-[#1E3A5F]">{c.full_name}</span>
-                  <span className="text-xs text-[#1E3A5F]/40">{c.email}</span>
+                  <span className="text-[#2E2420]">{c.full_name}</span>
+                  <span className="text-xs text-[#2E2420]/40">{c.email}</span>
                 </label>
               ))}
             </div>
@@ -438,29 +438,29 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
       </div>
 
       {/* ===== Email composer ===== */}
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 shadow-sm mb-5">
-        <h2 className="font-display text-base text-[#1E3A5F] mb-1">Email</h2>
-        <p className="text-xs text-[#1E3A5F]/50 mb-4">
-          Use <code className="bg-[#1E3A5F]/5 px-1 rounded">{"{{first_name}}"}</code>, <code className="bg-[#1E3A5F]/5 px-1 rounded">{"{{coupon_code}}"}</code>, <code className="bg-[#1E3A5F]/5 px-1 rounded">{"{{discount}}"}</code>, <code className="bg-[#1E3A5F]/5 px-1 rounded">{"{{expiration_date}}"}</code>, and <code className="bg-[#1E3A5F]/5 px-1 rounded">{"{{applies_to}}"}</code> anywhere — they'll be filled in automatically. The coupon code is also always shown in its own box below your message.
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5 shadow-sm mb-5">
+        <h2 className="font-display text-base text-[#2E2420] mb-1">Email</h2>
+        <p className="text-xs text-[#2E2420]/50 mb-4">
+          Use <code className="bg-[#2E2420]/5 px-1 rounded">{"{{first_name}}"}</code>, <code className="bg-[#2E2420]/5 px-1 rounded">{"{{coupon_code}}"}</code>, <code className="bg-[#2E2420]/5 px-1 rounded">{"{{discount}}"}</code>, <code className="bg-[#2E2420]/5 px-1 rounded">{"{{expiration_date}}"}</code>, and <code className="bg-[#2E2420]/5 px-1 rounded">{"{{applies_to}}"}</code> anywhere — they'll be filled in automatically. The coupon code is also always shown in its own box below your message.
         </p>
-        <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Email Subject</label>
-        <input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm mb-4" />
-        <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Email Heading</label>
-        <input value={emailHeading} onChange={e => setEmailHeading(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm mb-4" />
-        <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Email Body</label>
-        <textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={7} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+        <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Email Subject</label>
+        <input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm mb-4" />
+        <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Email Heading</label>
+        <input value={emailHeading} onChange={e => setEmailHeading(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm mb-4" />
+        <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Email Body</label>
+        <textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={7} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
 
-        <button onClick={() => setShowPreview(true)} className="mt-4 border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold">
+        <button onClick={() => setShowPreview(true)} className="mt-4 border border-[#2E2420] text-[#2E2420] px-4 py-2 rounded-md text-sm font-semibold">
           Preview Email
         </button>
       </div>
 
       {/* ===== Bottom action bar ===== */}
-      <div className="fixed bottom-0 left-0 right-0 md:left-60 bg-white border-t border-[#1E3A5F]/10 px-6 py-4 flex flex-wrap gap-3 items-center justify-end z-20">
-        <button onClick={handleSaveDraft} disabled={!!busy} className="text-sm font-semibold text-[#1E3A5F]/70 px-4 py-2.5">
+      <div className="fixed bottom-0 left-0 right-0 md:left-60 bg-white border-t border-[#2E2420]/10 px-6 py-4 flex flex-wrap gap-3 items-center justify-end z-20">
+        <button onClick={handleSaveDraft} disabled={!!busy} className="text-sm font-semibold text-[#2E2420]/70 px-4 py-2.5">
           {busy === "draft" ? "Saving…" : "Save as Draft"}
         </button>
-        <button onClick={handleSendTest} disabled={!!busy} className="border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2.5 rounded-md text-sm font-semibold">
+        <button onClick={handleSendTest} disabled={!!busy} className="border border-[#2E2420] text-[#2E2420] px-4 py-2.5 rounded-md text-sm font-semibold">
           {busy === "test" ? "Sending…" : "Send Test Email"}
         </button>
         <button onClick={() => setShowConfirm(true)} disabled={!!busy} className="bg-ember text-white px-5 py-2.5 rounded-md text-sm font-semibold">
@@ -474,11 +474,11 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
           <div className="bg-white rounded-xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs font-bold text-ember uppercase tracking-wide">Preview — sample data, not sent</p>
-              <button onClick={() => setShowPreview(false)} className="text-[#1E3A5F]/50 text-xl leading-none">×</button>
+              <button onClick={() => setShowPreview(false)} className="text-[#2E2420]/50 text-xl leading-none">×</button>
             </div>
-            <div className="border border-[#1E3A5F]/10 rounded-lg p-5 bg-cream/40">
-              <p className="text-xs text-[#1E3A5F]/50 mb-2">Subject: {emailSubject.replace(/\{\{\s*discount\s*\}\}/g, discountDisplay)}</p>
-              <h3 className="font-display text-lg text-[#1E3A5F] mb-3">{emailHeading}</h3>
+            <div className="border border-[#2E2420]/10 rounded-lg p-5 bg-cream/40">
+              <p className="text-xs text-[#2E2420]/50 mb-2">Subject: {emailSubject.replace(/\{\{\s*discount\s*\}\}/g, discountDisplay)}</p>
+              <h3 className="font-display text-lg text-[#2E2420] mb-3">{emailHeading}</h3>
               {emailBody.split("\n").filter(Boolean).map((line, i) => (
                 <p key={i} className="text-sm text-[#2A211C] mb-2">
                   {line
@@ -503,19 +503,19 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
       {showConfirm && (
         <div className="fixed inset-0 bg-black/40 z-30 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="font-display text-lg text-[#1E3A5F] mb-4">Confirm Campaign</h3>
+            <h3 className="font-display text-lg text-[#2E2420] mb-4">Confirm Campaign</h3>
             <div className="space-y-2 text-sm mb-5">
-              <div className="flex justify-between"><span className="text-[#1E3A5F]/50">Campaign</span><span className="font-semibold text-[#1E3A5F] text-right">{name || "(untitled)"}</span></div>
-              <div className="flex justify-between"><span className="text-[#1E3A5F]/50">Coupon</span><span className="font-mono text-[#1E3A5F]">{couponCode || "(auto-generated)"}</span></div>
-              <div className="flex justify-between"><span className="text-[#1E3A5F]/50">Discount</span><span className="text-[#1E3A5F]">{discountDisplay}</span></div>
-              <div className="flex justify-between"><span className="text-[#1E3A5F]/50">Applies To</span><span className="text-[#1E3A5F]">{appliesToDisplay}</span></div>
-              <div className="flex justify-between"><span className="text-[#1E3A5F]/50">Recipients</span><span className="font-semibold text-[#1E3A5F]">{finalRecipients.length} customers</span></div>
+              <div className="flex justify-between"><span className="text-[#2E2420]/50">Campaign</span><span className="font-semibold text-[#2E2420] text-right">{name || "(untitled)"}</span></div>
+              <div className="flex justify-between"><span className="text-[#2E2420]/50">Coupon</span><span className="font-mono text-[#2E2420]">{couponCode || "(auto-generated)"}</span></div>
+              <div className="flex justify-between"><span className="text-[#2E2420]/50">Discount</span><span className="text-[#2E2420]">{discountDisplay}</span></div>
+              <div className="flex justify-between"><span className="text-[#2E2420]/50">Applies To</span><span className="text-[#2E2420]">{appliesToDisplay}</span></div>
+              <div className="flex justify-between"><span className="text-[#2E2420]/50">Recipients</span><span className="font-semibold text-[#2E2420]">{finalRecipients.length} customers</span></div>
             </div>
 
-            <p className="text-xs font-semibold text-[#1E3A5F]/60 mb-2">Recipients ({finalRecipients.length})</p>
-            <div className="max-h-32 overflow-y-auto border border-[#1E3A5F]/10 rounded-md mb-5 text-sm">
+            <p className="text-xs font-semibold text-[#2E2420]/60 mb-2">Recipients ({finalRecipients.length})</p>
+            <div className="max-h-32 overflow-y-auto border border-[#2E2420]/10 rounded-md mb-5 text-sm">
               {finalRecipients.map(c => (
-                <div key={c.id} className="px-3 py-1.5 border-b border-[#1E3A5F]/5 last:border-0 text-[#1E3A5F]">{c.full_name}</div>
+                <div key={c.id} className="px-3 py-1.5 border-b border-[#2E2420]/5 last:border-0 text-[#2E2420]">{c.full_name}</div>
               ))}
             </div>
 
@@ -526,8 +526,8 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
             {sendSchedule === "later" && (
               <div className="mb-5">
                 <div className="grid grid-cols-2 gap-3 mb-3">
-                  <input type="date" value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
-                  <input type="time" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)} className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+                  <input type="date" value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
+                  <input type="time" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)} className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
                 </div>
                 <p className="text-xs text-amber bg-amber/10 border border-amber/30 rounded-md px-3 py-2">
                   This will save the campaign as "Scheduled" for the chosen time, but it won't send itself automatically until a scheduler is set up to trigger it. Ask your developer before relying on this.
@@ -536,7 +536,7 @@ export default function CampaignBuilder({ products }: { products: Product[] }) {
             )}
 
             <div className="flex gap-3 justify-end">
-              <button onClick={() => setShowConfirm(false)} className="px-4 py-2 text-sm font-semibold text-[#1E3A5F]/70">Cancel</button>
+              <button onClick={() => setShowConfirm(false)} className="px-4 py-2 text-sm font-semibold text-[#2E2420]/70">Cancel</button>
               <button onClick={handleConfirmSend} disabled={!!busy || (sendSchedule === "later" && !scheduledDate)} className="bg-ember text-white px-5 py-2 rounded-md text-sm font-semibold">
                 {busy === "send" ? "Sending…" : sendSchedule === "now" ? "Send Campaign" : "Schedule Campaign"}
               </button>

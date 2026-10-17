@@ -31,7 +31,7 @@ export const WORKFLOW_LABELS: Record<WorkflowStage, string> = {
 };
 
 export const WORKFLOW_STYLES: Record<WorkflowStage, string> = {
-  new: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60",
+  new: "bg-[#2E2420]/10 text-[#2E2420]/60",
   scheduled: "bg-amber/20 text-amber",
   ready_to_build: "bg-sage/20 text-sage",
   in_production: "bg-amber/40 text-white",

@@ -51,18 +51,18 @@ export default function PicketPurchaseRow({ purchase }: { purchase: any }) {
 
   if (editing) {
     return (
-      <tr className="border-t border-[#1E3A5F]/10 bg-cream/40">
+      <tr className="border-t border-[#2E2420]/10 bg-cream/40">
         <td className="px-4 py-3">
-          <input type="date" value={purchasedAt} onChange={e => setPurchasedAt(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm" />
+          <input type="date" value={purchasedAt} onChange={e => setPurchasedAt(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1 text-sm" />
         </td>
         <td className="px-4 py-3 text-right">
-          <input value={quantity} onChange={e => setQuantity(e.target.value)} className="w-20 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
+          <input value={quantity} onChange={e => setQuantity(e.target.value)} className="w-20 border border-[#2E2420]/15 rounded-md px-2 py-1 text-sm text-right" />
         </td>
         <td className="px-4 py-3 text-right">
-          <input value={totalCost} onChange={e => setTotalCost(e.target.value)} className="w-24 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
+          <input value={totalCost} onChange={e => setTotalCost(e.target.value)} className="w-24 border border-[#2E2420]/15 rounded-md px-2 py-1 text-sm text-right" />
         </td>
-        <td className="px-4 py-3 text-right text-[#1E3A5F]/40">—</td>
-        <td className="px-4 py-3 text-right text-[#1E3A5F]/40">—</td>
+        <td className="px-4 py-3 text-right text-[#2E2420]/40">—</td>
+        <td className="px-4 py-3 text-right text-[#2E2420]/40">—</td>
         <td className="px-4 py-3 text-right whitespace-nowrap">
           <div className="flex justify-end gap-2">
             <AdminButton size="sm" onClick={handleSave} disabled={loading}>{loading ? "Saving..." : "Save"}</AdminButton>
@@ -75,18 +75,18 @@ export default function PicketPurchaseRow({ purchase }: { purchase: any }) {
   }
 
   return (
-    <tr className="border-t border-[#1E3A5F]/10">
-      <td className="px-4 py-3 text-[#1E3A5F]/70">{new Date(purchase.purchased_at + "T00:00:00").toLocaleDateString()}</td>
-      <td className="px-4 py-3 text-right text-[#1E3A5F]/70">{purchase.quantity}</td>
-      <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${(purchase.total_cost_cents / 100).toFixed(2)}</td>
-      <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${(purchase.cost_per_picket_cents / 100).toFixed(2)}</td>
-      <td className={`px-4 py-3 text-right font-semibold ${purchase.remaining_quantity > 0 ? "text-sage" : "text-[#1E3A5F]/40"}`}>
+    <tr className="border-t border-[#2E2420]/10">
+      <td className="px-4 py-3 text-[#2E2420]/70">{new Date(purchase.purchased_at + "T00:00:00").toLocaleDateString()}</td>
+      <td className="px-4 py-3 text-right text-[#2E2420]/70">{purchase.quantity}</td>
+      <td className="px-4 py-3 text-right text-[#2E2420]/70">${(purchase.total_cost_cents / 100).toFixed(2)}</td>
+      <td className="px-4 py-3 text-right text-[#2E2420]/70">${(purchase.cost_per_picket_cents / 100).toFixed(2)}</td>
+      <td className={`px-4 py-3 text-right font-semibold ${purchase.remaining_quantity > 0 ? "text-sage" : "text-[#2E2420]/40"}`}>
         {purchase.remaining_quantity}
       </td>
       <td className="px-4 py-3 text-right whitespace-nowrap">
         {confirmingDelete ? (
           <div className="flex justify-end items-center gap-2">
-            <span className="text-xs text-[#1E3A5F]/60">Delete this entry?</span>
+            <span className="text-xs text-[#2E2420]/60">Delete this entry?</span>
             <AdminButton size="sm" variant="destructive" onClick={handleDelete} disabled={loading}>
               {loading ? "..." : "Confirm"}
             </AdminButton>
@@ -94,11 +94,11 @@ export default function PicketPurchaseRow({ purchase }: { purchase: any }) {
           </div>
         ) : (
           <div className="flex justify-end gap-3">
-            <button onClick={() => setEditing(true)} className="text-xs font-semibold text-[#1E3A5F] hover:underline">Edit</button>
+            <button onClick={() => setEditing(true)} className="text-xs font-semibold text-[#2E2420] hover:underline">Edit</button>
             {alreadyUsed === 0 ? (
               <button onClick={() => setConfirmingDelete(true)} className="text-xs font-semibold text-ember hover:underline">Delete</button>
             ) : (
-              <span className="text-xs text-[#1E3A5F]/30" title={`${alreadyUsed} already used from this pallet`}>Delete</span>
+              <span className="text-xs text-[#2E2420]/30" title={`${alreadyUsed} already used from this pallet`}>Delete</span>
             )}
           </div>
         )}

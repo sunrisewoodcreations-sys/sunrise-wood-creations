@@ -389,23 +389,23 @@ export default function QuoteEditor({
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display text-2xl text-[#1E3A5F]">{isEditMode ? `Quote ${displayNumber}` : "New Quote"}</h1>
+        <h1 className="font-display text-2xl text-[#2E2420]">{isEditMode ? `Quote ${displayNumber}` : "New Quote"}</h1>
         {isEditMode && (
-          <span className="text-xs font-bold px-2.5 py-1 rounded-full capitalize bg-[#1E3A5F]/10 text-[#1E3A5F]/60">
+          <span className="text-xs font-bold px-2.5 py-1 rounded-full capitalize bg-[#2E2420]/10 text-[#2E2420]/60">
             {isExpired ? "Expired" : status}
           </span>
         )}
       </div>
 
       {autoSendNotice && (
-        <div className="bg-amber/10 border border-amber/30 rounded-md px-3 py-2 mb-4 text-sm text-[#1E3A5F]">{autoSendNotice}</div>
+        <div className="bg-amber/10 border border-amber/30 rounded-md px-3 py-2 mb-4 text-sm text-[#2E2420]">{autoSendNotice}</div>
       )}
       {!autoSendNotice && isEditMode && existingQuote!.status !== "draft" && searchParams.get("justCreated") === "1" && (
-        <div className="bg-sage/10 border border-sage/30 rounded-md px-3 py-2 mb-4 text-sm text-[#1E3A5F]">
+        <div className="bg-sage/10 border border-sage/30 rounded-md px-3 py-2 mb-4 text-sm text-[#2E2420]">
           Quote automatically emailed to the customer.
         </div>
       )}
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">
+      <p className="text-sm text-[#2E2420]/60 mb-6">
         {isEditMode
           ? existingQuote!.status === "draft"
             ? "Edit pricing, items, and terms — save when you're ready."
@@ -430,22 +430,22 @@ export default function QuoteEditor({
       )}
 
       {isEditMode && existingQuote!.revisions.length > 1 && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-4 mb-6">
-          <h2 className="font-display text-base text-[#1E3A5F] mb-3">Revision History</h2>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl p-4 mb-6">
+          <h2 className="font-display text-base text-[#2E2420] mb-3">Revision History</h2>
           <div className="space-y-2">
             {[...existingQuote!.revisions].sort((a, b) => b.revision_number - a.revision_number).map(rev => (
-              <div key={rev.id} className={`flex items-center justify-between text-sm rounded-md px-3 py-2 ${rev.id === existingQuote!.id ? "bg-[#1E3A5F]/5 border border-[#1E3A5F]/20" : "bg-cream/40"}`}>
+              <div key={rev.id} className={`flex items-center justify-between text-sm rounded-md px-3 py-2 ${rev.id === existingQuote!.id ? "bg-[#2E2420]/5 border border-[#2E2420]/20" : "bg-cream/40"}`}>
                 <div>
-                  <span className="font-semibold text-[#1E3A5F]">Revision {rev.revision_number}</span>
-                  {rev.id === existingQuote!.id && <span className="text-xs text-[#1E3A5F]/50 ml-2">(currently editing)</span>}
-                  <span className="text-xs text-[#1E3A5F]/50 ml-2 capitalize">— {rev.status}</span>
+                  <span className="font-semibold text-[#2E2420]">Revision {rev.revision_number}</span>
+                  {rev.id === existingQuote!.id && <span className="text-xs text-[#2E2420]/50 ml-2">(currently editing)</span>}
+                  <span className="text-xs text-[#2E2420]/50 ml-2 capitalize">— {rev.status}</span>
                   {rev.viewed_at && <span className="text-xs text-sage ml-2">Viewed {new Date(rev.viewed_at).toLocaleDateString()}</span>}
                 </div>
                 <div className="flex gap-3">
                   {rev.id !== existingQuote!.id && (
-                    <a href={`/admin/quotes/${rev.id}`} className="text-xs font-semibold text-[#1E3A5F] hover:underline">View</a>
+                    <a href={`/admin/quotes/${rev.id}`} className="text-xs font-semibold text-[#2E2420] hover:underline">View</a>
                   )}
-                  <a href={`/api/quotes/${rev.id}/pdf`} target="_blank" className="text-xs font-semibold text-[#1E3A5F] hover:underline">Download PDF</a>
+                  <a href={`/api/quotes/${rev.id}/pdf`} target="_blank" className="text-xs font-semibold text-[#2E2420] hover:underline">Download PDF</a>
                 </div>
               </div>
             ))}
@@ -454,41 +454,41 @@ export default function QuoteEditor({
       )}
 
       {showPreview && isEditMode && (
-        <div className="bg-white border-2 border-[#1E3A5F]/20 rounded-xl p-6 mb-6">
+        <div className="bg-white border-2 border-[#2E2420]/20 rounded-xl p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-xl text-[#1E3A5F]">Quote {displayNumber}</h2>
-            <span className="text-sm text-[#1E3A5F]/50">Expires {new Date(expirationDate + "T12:00:00Z").toLocaleDateString()}</span>
+            <h2 className="font-display text-xl text-[#2E2420]">Quote {displayNumber}</h2>
+            <span className="text-sm text-[#2E2420]/50">Expires {new Date(expirationDate + "T12:00:00Z").toLocaleDateString()}</span>
           </div>
-          <p className="text-sm text-[#1E3A5F]/60 mb-4">Prepared for {selectedCustomer?.full_name}</p>
+          <p className="text-sm text-[#2E2420]/60 mb-4">Prepared for {selectedCustomer?.full_name}</p>
           <div className="space-y-2 mb-4">
             {items.map((it, i) => (
-              <div key={i} className="flex justify-between border-b border-[#1E3A5F]/5 pb-2 text-sm">
+              <div key={i} className="flex justify-between border-b border-[#2E2420]/5 pb-2 text-sm">
                 <div>
-                  <div className="font-semibold text-[#1E3A5F]">{it.title || "(untitled item)"}</div>
-                  {it.description && <div className="text-xs text-[#1E3A5F]/50">{it.description}</div>}
+                  <div className="font-semibold text-[#2E2420]">{it.title || "(untitled item)"}</div>
+                  {it.description && <div className="text-xs text-[#2E2420]/50">{it.description}</div>}
                 </div>
-                <div className="text-[#1E3A5F]">${(((Number(it.unitPrice) || 0) * (Number(it.quantity) || 1))).toFixed(2)}</div>
+                <div className="text-[#2E2420]">${(((Number(it.unitPrice) || 0) * (Number(it.quantity) || 1))).toFixed(2)}</div>
               </div>
             ))}
           </div>
           <div className="space-y-1 text-sm">
-            <div className="flex justify-between text-[#1E3A5F]/70"><span>Subtotal</span><span>${(totals.subtotalCents / 100).toFixed(2)}</span></div>
+            <div className="flex justify-between text-[#2E2420]/70"><span>Subtotal</span><span>${(totals.subtotalCents / 100).toFixed(2)}</span></div>
             {discountCents > 0 && <div className="flex justify-between text-ember"><span>Discount</span><span>-${(discountCents / 100).toFixed(2)}</span></div>}
             {appliedCoupon && <div className="flex justify-between text-ember"><span>Coupon ({appliedCoupon.code})</span><span>-${(appliedCoupon.discountCents / 100).toFixed(2)}</span></div>}
-            <div className="flex justify-between text-[#1E3A5F]/70"><span>Tax</span><span>${(totals.taxCents / 100).toFixed(2)}</span></div>
-            {deliveryCents > 0 && <div className="flex justify-between text-[#1E3A5F]/70"><span>Delivery</span><span>${(deliveryCents / 100).toFixed(2)}</span></div>}
-            <div className="flex justify-between text-lg font-bold text-[#1E3A5F] pt-2 border-t border-[#1E3A5F]/10"><span>Total</span><span>${(totals.totalCents / 100).toFixed(2)}</span></div>
+            <div className="flex justify-between text-[#2E2420]/70"><span>Tax</span><span>${(totals.taxCents / 100).toFixed(2)}</span></div>
+            {deliveryCents > 0 && <div className="flex justify-between text-[#2E2420]/70"><span>Delivery</span><span>${(deliveryCents / 100).toFixed(2)}</span></div>}
+            <div className="flex justify-between text-lg font-bold text-[#2E2420] pt-2 border-t border-[#2E2420]/10"><span>Total</span><span>${(totals.totalCents / 100).toFixed(2)}</span></div>
           </div>
         </div>
       )}
 
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 space-y-4">
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5 space-y-4">
         {/* Customer picker */}
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Customer</label>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Customer</label>
           {selectedCustomer ? (
-            <div className="flex items-center justify-between border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm bg-cream/50">
-              <span>{selectedCustomer.full_name} <span className="text-[#1E3A5F]/50">({selectedCustomer.email})</span></span>
+            <div className="flex items-center justify-between border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm bg-cream/50">
+              <span>{selectedCustomer.full_name} <span className="text-[#2E2420]/50">({selectedCustomer.email})</span></span>
               {!isEditMode && (
                 <button type="button" onClick={clearSelection} className="text-xs text-ember font-semibold ml-3">Change</button>
               )}
@@ -500,19 +500,19 @@ export default function QuoteEditor({
                 onChange={e => { setSearch(e.target.value); setDropdownOpen(true); }}
                 onFocus={() => setDropdownOpen(true)}
                 placeholder="Search customers by name or email..."
-                className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+                className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
               />
               {dropdownOpen && (
-                <div className="absolute z-20 mt-1 w-full bg-white border border-[#1E3A5F]/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
+                <div className="absolute z-20 mt-1 w-full bg-white border border-[#2E2420]/10 rounded-md shadow-lg max-h-56 overflow-y-auto">
                   {filtered.length > 0 ? (
                     filtered.map(c => (
-                      <button key={c.id} type="button" onClick={() => selectCustomer(c)} className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-[#1E3A5F]/5 last:border-0">
-                        <div className="font-medium text-[#1E3A5F]">{c.full_name}</div>
-                        <div className="text-xs text-[#1E3A5F]/50">{c.email}</div>
+                      <button key={c.id} type="button" onClick={() => selectCustomer(c)} className="block w-full text-left px-3 py-2 text-sm hover:bg-cream border-b border-[#2E2420]/5 last:border-0">
+                        <div className="font-medium text-[#2E2420]">{c.full_name}</div>
+                        <div className="text-xs text-[#2E2420]/50">{c.email}</div>
                       </button>
                     ))
                   ) : (
-                    <div className="px-3 py-3 text-sm text-[#1E3A5F]/60">
+                    <div className="px-3 py-3 text-sm text-[#2E2420]/60">
                       No matching customers.
                       <button type="button" onClick={() => { setShowCreateCustomer(true); setDropdownOpen(false); }} className="block mt-2 text-ember font-semibold text-sm">
                         + Create new customer
@@ -527,16 +527,16 @@ export default function QuoteEditor({
 
         {/* Line items */}
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-2">Items on this quote</label>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-2">Items on this quote</label>
           <div className="space-y-3">
             {items.map((item, index) => (
-              <div key={index} className="border border-[#1E3A5F]/10 rounded-lg p-3 bg-cream/30">
+              <div key={index} className="border border-[#2E2420]/10 rounded-lg p-3 bg-cream/30">
                 <div className="mb-2">
-                  <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Fill in from an existing product (optional)</label>
+                  <label className="block text-[11px] font-semibold text-[#2E2420] mb-1">Fill in from an existing product (optional)</label>
                   <select
                     value={item.selectedProductId || ""}
                     onChange={e => applySavedProduct(index, e.target.value)}
-                    className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+                    className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm"
                   >
                     <option value="">— Custom line item —</option>
                     {products.map(p => <option key={p.id} value={p.id}>{p.name} — ${(p.price_cents / 100).toFixed(2)}</option>)}
@@ -544,24 +544,24 @@ export default function QuoteEditor({
                 </div>
                 <div className="grid grid-cols-4 gap-2">
                   <div className="col-span-2">
-                    <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Title</label>
-                    <input required value={item.title} onChange={e => updateItem(index, { title: e.target.value })} className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm" />
+                    <label className="block text-[11px] font-semibold text-[#2E2420] mb-1">Title</label>
+                    <input required value={item.title} onChange={e => updateItem(index, { title: e.target.value })} className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Qty</label>
-                    <input type="number" min="1" value={item.quantity} onChange={e => updateItem(index, { quantity: e.target.value })} className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm" />
+                    <label className="block text-[11px] font-semibold text-[#2E2420] mb-1">Qty</label>
+                    <input type="number" min="1" value={item.quantity} onChange={e => updateItem(index, { quantity: e.target.value })} className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Unit price ($)</label>
-                    <input value={item.unitPrice} onChange={e => updateItem(index, { unitPrice: e.target.value })} placeholder="55" className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm" />
+                    <label className="block text-[11px] font-semibold text-[#2E2420] mb-1">Unit price ($)</label>
+                    <input value={item.unitPrice} onChange={e => updateItem(index, { unitPrice: e.target.value })} placeholder="55" className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm" />
                   </div>
                 </div>
                 <div className="mt-2">
-                  <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Description (optional)</label>
-                  <input value={item.description} onChange={e => updateItem(index, { description: e.target.value })} className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm" />
+                  <label className="block text-[11px] font-semibold text-[#2E2420] mb-1">Description (optional)</label>
+                  <input value={item.description} onChange={e => updateItem(index, { description: e.target.value })} className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm" />
                 </div>
                 <div className="flex justify-between items-center mt-2">
-                  <span className="text-xs text-[#1E3A5F]/60">Line total: ${(((Number(item.unitPrice) || 0) * (Number(item.quantity) || 1))).toFixed(2)}</span>
+                  <span className="text-xs text-[#2E2420]/60">Line total: ${(((Number(item.unitPrice) || 0) * (Number(item.quantity) || 1))).toFixed(2)}</span>
                   {items.length > 1 && (
                     <button type="button" onClick={() => removeItemRow(index)} className="text-xs text-ember/70 hover:text-ember underline">Remove</button>
                   )}
@@ -569,7 +569,7 @@ export default function QuoteEditor({
               </div>
             ))}
           </div>
-          <button type="button" onClick={addItemRow} className="mt-2 text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream">
+          <button type="button" onClick={addItemRow} className="mt-2 text-xs font-semibold text-[#2E2420] border border-[#2E2420]/20 rounded-md px-3 py-1.5 hover:bg-cream">
             + Add another item
           </button>
         </div>
@@ -577,24 +577,24 @@ export default function QuoteEditor({
         {/* Pricing adjustments */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Discount ($)</label>
-            <input value={discount} onChange={e => setDiscount(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Discount ($)</label>
+            <input value={discount} onChange={e => setDiscount(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Delivery fee ($)</label>
-            <input value={delivery} onChange={e => setDelivery(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Delivery fee ($)</label>
+            <input value={delivery} onChange={e => setDelivery(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
             {!showDeliveryPanel && (
               <button type="button" onClick={() => setDeliveryPanelOpen(true)} className="mt-1 text-xs underline text-ember">Calculate by distance</button>
             )}
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Expiration date</label>
-            <input type="date" value={expirationDate} onChange={e => setExpirationDate(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Expiration date</label>
+            <input type="date" value={expirationDate} onChange={e => setExpirationDate(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
           </div>
           {isEditMode && (
             <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Status</label>
-              <select value={status} onChange={e => setStatus(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm capitalize">
+              <label className="block text-xs font-semibold text-[#2E2420] mb-1">Status</label>
+              <select value={status} onChange={e => setStatus(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm capitalize">
                 {STATUS_OPTIONS.map(s => <option key={s} value={s} className="capitalize">{s}</option>)}
               </select>
             </div>
@@ -602,9 +602,9 @@ export default function QuoteEditor({
         </div>
 
         {showDeliveryPanel && (
-          <div className="border border-[#1E3A5F]/10 rounded-md p-3 bg-[#1E3A5F]/[0.02]">
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Delivery address</label>
-            <p className="text-xs text-[#1E3A5F]/60 mb-2">
+          <div className="border border-[#2E2420]/10 rounded-md p-3 bg-[#2E2420]/[0.02]">
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Delivery address</label>
+            <p className="text-xs text-[#2E2420]/60 mb-2">
               {deliveryCents > 0 && !deliveryAddress.trim()
                 ? "You've added a delivery charge. Enter the delivery address to price it by the mile from your home."
                 : "Checked against Google Maps and priced one way, by the mile, from your home address."}
@@ -635,9 +635,9 @@ export default function QuoteEditor({
               </button>
             )}
             {deliverySuggestion && (
-              <div className="mt-2 text-sm text-[#1E3A5F]">
+              <div className="mt-2 text-sm text-[#2E2420]">
                 <p className="font-semibold">Did you mean: {deliverySuggestion.address}?</p>
-                <p className="text-xs text-[#1E3A5F]/70 mb-2">{deliverySuggestion.reason}</p>
+                <p className="text-xs text-[#2E2420]/70 mb-2">{deliverySuggestion.reason}</p>
                 <button
                   type="button"
                   onClick={() => { setDeliveryAddress(deliverySuggestion.address); calculateDelivery(true); }}
@@ -649,7 +649,7 @@ export default function QuoteEditor({
             )}
             {deliveryNote && <p className="mt-2 text-sm text-sage font-semibold">{deliveryNote}. You can still adjust the fee above.</p>}
             {!deliveryNote && deliveryMiles != null && deliveryAddress.trim() && (
-              <p className="mt-2 text-xs text-[#1E3A5F]/60">Saved distance: {deliveryMiles} miles.</p>
+              <p className="mt-2 text-xs text-[#2E2420]/60">Saved distance: {deliveryMiles} miles.</p>
             )}
             {deliveryError && <p className="mt-2 text-sm text-ember">{deliveryError}</p>}
           </div>
@@ -661,13 +661,13 @@ export default function QuoteEditor({
             history) is checked server-side by the same engine the
             campaign feature uses. */}
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Coupon Code</label>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Coupon Code</label>
           {appliedCoupon ? (
             <div className="flex items-center justify-between bg-sage/10 border border-sage/30 rounded-md px-3 py-2">
               <span className="text-sm text-sage font-semibold">
                 {appliedCoupon.code} applied — -${(appliedCoupon.discountCents / 100).toFixed(2)}
               </span>
-              <button type="button" onClick={handleRemoveCoupon} className="text-xs text-[#1E3A5F]/50 hover:text-ember font-semibold">Remove</button>
+              <button type="button" onClick={handleRemoveCoupon} className="text-xs text-[#2E2420]/50 hover:text-ember font-semibold">Remove</button>
             </div>
           ) : (
             <div className="flex gap-2">
@@ -675,13 +675,13 @@ export default function QuoteEditor({
                 value={couponCode}
                 onChange={e => setCouponCode(e.target.value.toUpperCase())}
                 placeholder="e.g. PLANTER15"
-                className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm font-mono"
+                className="flex-1 border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm font-mono"
               />
               <button
                 type="button"
                 onClick={handleApplyCoupon}
                 disabled={checkingCoupon || !couponCode.trim()}
-                className="border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap disabled:opacity-40"
+                className="border border-[#2E2420] text-[#2E2420] px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap disabled:opacity-40"
               >
                 {checkingCoupon ? "Checking…" : "Apply"}
               </button>
@@ -691,28 +691,28 @@ export default function QuoteEditor({
         </div>
 
         {/* Live totals */}
-        <div className="bg-cream/40 border border-[#1E3A5F]/10 rounded-lg p-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-          <div><span className="text-[#1E3A5F]/50">Subtotal:</span> <span className="font-semibold text-[#1E3A5F]">${(totals.subtotalCents / 100).toFixed(2)}</span></div>
-          {appliedCoupon && <div><span className="text-[#1E3A5F]/50">Coupon:</span> <span className="font-semibold text-ember">-${(appliedCoupon.discountCents / 100).toFixed(2)}</span></div>}
-          <div><span className="text-[#1E3A5F]/50">Tax (6%):</span> <span className="font-semibold text-[#1E3A5F]">${(totals.taxCents / 100).toFixed(2)}</span></div>
-          <div><span className="text-[#1E3A5F]/50">Delivery:</span> <span className="font-semibold text-[#1E3A5F]">${(deliveryCents / 100).toFixed(2)}</span></div>
-          <div><span className="text-[#1E3A5F]/50">Total:</span> <span className="font-bold text-sage">${(totals.totalCents / 100).toFixed(2)}</span></div>
+        <div className="bg-cream/40 border border-[#2E2420]/10 rounded-lg p-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+          <div><span className="text-[#2E2420]/50">Subtotal:</span> <span className="font-semibold text-[#2E2420]">${(totals.subtotalCents / 100).toFixed(2)}</span></div>
+          {appliedCoupon && <div><span className="text-[#2E2420]/50">Coupon:</span> <span className="font-semibold text-ember">-${(appliedCoupon.discountCents / 100).toFixed(2)}</span></div>}
+          <div><span className="text-[#2E2420]/50">Tax (6%):</span> <span className="font-semibold text-[#2E2420]">${(totals.taxCents / 100).toFixed(2)}</span></div>
+          <div><span className="text-[#2E2420]/50">Delivery:</span> <span className="font-semibold text-[#2E2420]">${(deliveryCents / 100).toFixed(2)}</span></div>
+          <div><span className="text-[#2E2420]/50">Total:</span> <span className="font-bold text-sage">${(totals.totalCents / 100).toFixed(2)}</span></div>
         </div>
 
         {/* Notes and terms */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Notes (internal + shown on quote)</label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Notes (internal + shown on quote)</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Terms &amp; conditions</label>
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Terms &amp; conditions</label>
             <textarea
               value={terms}
               onChange={e => setTerms(e.target.value)}
               rows={3}
               placeholder="This quote is valid until the expiration date shown above. Prices are subject to change after expiration. A deposit may be required to begin production."
-              className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+              className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
             />
           </div>
         </div>
@@ -729,7 +729,7 @@ export default function QuoteEditor({
       {showCreateCustomer && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-sm">
-            <h3 className="font-display text-lg text-[#1E3A5F] mb-3">Create new customer</h3>
+            <h3 className="font-display text-lg text-[#2E2420] mb-3">Create new customer</h3>
             {customerCreatedMsg ? (
               <div>
                 <p className="text-sm text-sage font-semibold mb-4">{customerCreatedMsg}</p>
@@ -738,12 +738,12 @@ export default function QuoteEditor({
             ) : (
               <form onSubmit={handleCreateCustomer} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Full name</label>
-                  <input required value={newName} onChange={e => setNewName(e.target.value)} placeholder="Jane Doe" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+                  <label className="block text-xs font-semibold text-[#2E2420] mb-1">Full name</label>
+                  <input required value={newName} onChange={e => setNewName(e.target.value)} placeholder="Jane Doe" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Email (optional)</label>
-                  <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="jane@example.com" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+                  <label className="block text-xs font-semibold text-[#2E2420] mb-1">Email (optional)</label>
+                  <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="jane@example.com" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
                 </div>
                 {customerCreateError && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{customerCreateError}</p>}
                 <div className="flex gap-2">

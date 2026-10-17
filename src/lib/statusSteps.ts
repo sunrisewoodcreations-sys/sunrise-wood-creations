@@ -47,7 +47,7 @@ export function statusLabel(productType: ProductType, statusKey: string) {
 export function statusColor(statusKey: string): string {
   switch (statusKey) {
     case "order_placed":
-      return "bg-[#1E3A5F] text-white";
+      return "bg-accent text-white";
     case "deposit_received":
       return "bg-amber text-white";
     case "design_proof_sent":
@@ -60,8 +60,8 @@ export function statusColor(statusKey: string): string {
     case "ready_for_pickup":
       return "bg-sage text-white";
     case "picked_up":
-      return "bg-[#1E3A5F]/10 text-[#1E3A5F]/60";
+      return "bg-[#2E2420]/10 text-[#2E2420]/60";
     default:
-      return "bg-[#1E3A5F]/10 text-[#1E3A5F]";
+      return "bg-[#2E2420]/10 text-[#2E2420]";
   }
 }

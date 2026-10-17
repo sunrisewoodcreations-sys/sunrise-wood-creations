@@ -53,8 +53,8 @@ export default function ProductBOMEditor({
   }
 
   return (
-    <div className="bg-cream/40 border border-[#1E3A5F]/10 rounded-lg p-3">
-      <div className="text-xs font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">
+    <div className="bg-cream/40 border border-[#2E2420]/10 rounded-lg p-3">
+      <div className="text-xs font-semibold text-[#2E2420]/70 uppercase tracking-wide mb-2">
         Parts used — length, quantity, and trim
       </div>
 
@@ -65,16 +65,16 @@ export default function ProductBOMEditor({
             value={row.length}
             onChange={e => updateRow(i, { length: e.target.value })}
             placeholder="Length (in)"
-            className="col-span-5 border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+            className="col-span-5 border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm"
           />
           <input
             type="number"
             value={row.quantityPerUnit}
             onChange={e => updateRow(i, { quantityPerUnit: e.target.value })}
             placeholder="Qty"
-            className="col-span-3 border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
+            className="col-span-3 border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-sm"
           />
-          <label className="col-span-3 flex items-center gap-1.5 text-xs text-[#1E3A5F]/70">
+          <label className="col-span-3 flex items-center gap-1.5 text-xs text-[#2E2420]/70">
             <input type="checkbox" checked={row.isTrim} onChange={e => updateRow(i, { isTrim: e.target.checked })} />
             Trim
           </label>

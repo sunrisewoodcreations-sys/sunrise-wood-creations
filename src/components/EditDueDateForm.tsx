@@ -29,17 +29,17 @@ export default function EditDueDateForm({ orderId, initialDueDate }: { orderId: 
 
   return (
     <form onSubmit={handleSave} className="flex items-center gap-2 mb-3">
-      <label className="text-xs text-[#1E3A5F]/50">Estimated pickup date:</label>
+      <label className="text-xs text-[#2E2420]/50">Estimated pickup date:</label>
       <input
         type="date"
         value={date}
         onChange={e => setDate(e.target.value)}
-        className="border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm"
+        className="border border-[#2E2420]/15 rounded-md px-2 py-1 text-sm"
       />
       <button
         type="submit"
         disabled={loading}
-        className="bg-[#1E3A5F] text-white px-3 py-1 rounded-md text-xs font-semibold disabled:opacity-60"
+        className="bg-accent text-white px-3 py-1 rounded-md text-xs font-semibold disabled:opacity-60"
       >
         {loading ? "Saving..." : "Save"}
       </button>

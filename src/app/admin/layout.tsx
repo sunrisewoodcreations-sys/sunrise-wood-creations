@@ -171,10 +171,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ].filter(category => category.links.length > 0);
 
   return (
-    <div className="min-h-screen md:flex bg-white">
+    <div className="min-h-screen md:flex bg-cream">
       <AdminMobileNav dashboardLink={dashboardLink} quickLinks={quickLinks} categories={categories} firstName={firstName} onSignOut={signOut} />
 
-      <div className="hidden md:block w-60 bg-[#1E3A5F] text-white/80 p-6 flex-shrink-0">
+      <div className="hidden md:block w-60 bg-[#2E2420] text-white/80 p-6 flex-shrink-0">
         <Link href="/" className="block">
           <Image
             src="/logo-header.png"
