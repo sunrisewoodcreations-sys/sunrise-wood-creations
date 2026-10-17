@@ -183,7 +183,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
       />
       <SiteHeader />
       <section className="max-w-5xl mx-auto px-6 py-16">
-        <Link href="/" className="text-sm text-walnut/60 mb-4 inline-block">← All products</Link>
+        <Link href="/" className="text-sm text-walnut/70 mb-4 inline-block">← All products</Link>
         <div className="mb-8 sm:mb-10">
           <HeroCarousel slides={product.images?.length ? product.images : DEFAULT_SITE_CONTENT.products[params.slug as ProductKey].images} />
         </div>
@@ -208,7 +208,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
             Call to get a quote: {content.contact.phone}
           </TrackedLink>
         </div>
-        <p className="text-sm text-walnut/50 mt-4">📍 Local pickup only — Lawrence, MI</p>
+        <p className="text-sm text-walnut/70 mt-4">📍 Local pickup only — Lawrence, MI</p>
       </section>
 
       {isCornhole && (
@@ -226,19 +226,19 @@ export default async function ProductPage({ params }: { params: { slug: string }
               <h2 className="font-display text-lg text-walnut mb-3">Board Specifications</h2>
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-walnut/60">Size</dt>
+                  <dt className="text-walnut/70">Size</dt>
                   <dd className="text-walnut font-medium text-right">Regulation size</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-walnut/60">Material</dt>
+                  <dt className="text-walnut/70">Material</dt>
                   <dd className="text-walnut font-medium text-right">Baltic birch plywood (tops &amp; frames)</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-walnut/60">Graphics</dt>
+                  <dt className="text-walnut/70">Graphics</dt>
                   <dd className="text-walnut font-medium text-right">UV-printed (not vinyl)</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-walnut/60">Construction</dt>
+                  <dt className="text-walnut/70">Construction</dt>
                   <dd className="text-walnut font-medium text-right">Built by hand</dd>
                 </div>
               </dl>
@@ -271,7 +271,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="bg-white border border-walnut/10 rounded-xl p-5">
               <h2 className="font-display text-lg text-walnut mb-1">Standard Sizes</h2>
-              <p className="text-xs text-walnut/50 mb-3">All dimensions in inches, listed as Length × Width × Height.</p>
+              <p className="text-xs text-walnut/70 mb-3">All dimensions in inches, listed as Length × Width × Height.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
                 <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">18 × 18 × 18</div>
                 <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">36 × 18 × 18</div>
@@ -281,7 +281,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
                 <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">48 × 18 × 24</div>
                 <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">48 × 18 × 30</div>
               </div>
-              <p className="text-xs text-walnut/60">
+              <p className="text-xs text-walnut/70">
                 Standard planters have approximately 9" of planting depth. Exact depth can vary slightly by design.
               </p>
             </div>
@@ -306,7 +306,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
               <span className="flex-shrink-0 w-2 h-2 rounded-full bg-accent mt-2.5" aria-hidden="true" />
               <div>
                 <h3 className="font-display text-lg text-walnut mb-1">{item.title}</h3>
-                <p className="text-sm text-walnut/60">{item.description}</p>
+                <p className="text-sm text-walnut/70">{item.description}</p>
               </div>
             </div>
           ))}
@@ -323,7 +323,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
             {landing.makeItYours.map(item => (
               <div key={item.title} className="bg-white border border-walnut/10 rounded-xl p-5 text-center">
                 <h3 className="font-display text-base text-walnut mb-1.5">{item.title}</h3>
-                <p className="text-sm text-walnut/60">{item.description}</p>
+                <p className="text-sm text-walnut/70">{item.description}</p>
               </div>
             ))}
           </div>
@@ -346,7 +346,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
                 {i + 1}
               </div>
               <h3 className="font-display text-lg text-walnut mb-1">{step.title}</h3>
-              <p className="text-sm text-walnut/60">{step.description}</p>
+              <p className="text-sm text-walnut/70">{step.description}</p>
             </div>
           ))}
         </div>
@@ -357,9 +357,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
         {categoryFaqs && categoryFaqs.length > 0 ? (
           <FaqAccordion items={categoryFaqs} />
         ) : (
-          <div className="text-center text-walnut/50 border border-walnut/10 rounded-xl py-8 bg-sawdust/40">
+          <div className="text-center text-walnut/70 border border-walnut/10 rounded-xl py-8 bg-sawdust/40">
             <p className="text-sm font-medium mb-1">Have a question we haven't answered?</p>
-            <p className="text-xs text-walnut/40">Ask us below and we'll get back to you.</p>
+            <p className="text-xs text-walnut/70">Ask us below and we'll get back to you.</p>
           </div>
         )}
         <AskQuestionForm />

@@ -77,7 +77,7 @@ export default async function HomePage() {
 
       <section className="text-center px-6 pt-8 pb-2 sm:pt-12 md:pt-14 bg-gradient-to-b from-sawdust to-cream">
         <div className="mb-8 sm:mb-10">
-          <HeroCarousel slides={content.hero.carouselSlides} />
+          <HeroCarousel slides={content.hero.carouselSlides} label="Featured Sunrise Wood Creations projects" />
         </div>
         <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-walnut font-semibold mb-3 sm:mb-4 whitespace-pre-line">
           {content.hero.heading}

@@ -14,7 +14,7 @@ export type CarouselSlide = {
 const AUTOPLAY_MS = 4500;
 const SWIPE_THRESHOLD_PX = 50;
 
-export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
+export default function HeroCarousel({ slides, label = "Photos of our work" }: { slides: CarouselSlide[]; label?: string }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
@@ -56,7 +56,7 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
       className="relative w-full max-w-[88%] sm:max-w-xl mx-auto rounded-xl overflow-hidden shadow-md"
       role="region"
       aria-roledescription="carousel"
-      aria-label="Photos of our work"
+      aria-label={label}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={handleTouchStart}
