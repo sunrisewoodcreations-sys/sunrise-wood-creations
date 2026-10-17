@@ -13,7 +13,7 @@ const STEP = 12;
 const MAX_OFFSET = 300;
 const BUTTON_SIZE_MOBILE = 48;
 
-export default function GuestChatWidget() {
+function GuestChatWidgetInner() {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [bottomOffset, setBottomOffset] = useState<number | null>(null);
@@ -214,4 +214,14 @@ export default function GuestChatWidget() {
       </form>
     </div>
   );
+}
+
+// TEMPORARILY HIDDEN: set to true to bring the chat back everywhere. While
+// false nothing renders and none of the widget's code runs; the component, the
+// /api/guest-messages route and the email handling are untouched.
+const CHAT_ENABLED = false;
+
+export default function GuestChatWidget() {
+  if (!CHAT_ENABLED) return null;
+  return <GuestChatWidgetInner />;
 }
