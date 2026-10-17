@@ -5,7 +5,7 @@ export default async function NewQuotePage() {
   const supabase = createClient();
 
   const [{ data: customers }, { data: products }] = await Promise.all([
-    supabase.from("profiles").select("id, full_name, email").eq("role", "customer").order("full_name", { ascending: true }),
+    supabase.from("profiles").select("id, full_name, email, address").eq("role", "customer").order("full_name", { ascending: true }),
     supabase.from("products").select("id, product_type, name, size_details, price_cents").order("name", { ascending: true })
   ]);
 

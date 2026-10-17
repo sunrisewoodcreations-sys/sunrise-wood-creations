@@ -62,7 +62,10 @@ export async function createOrder(opts: {
   // "+N more items" in the order's own title, or decide whether this
   // order's single-item fields (size details, product id) get shown.
   // A real line item never has a negative price, so that's the signal.
-  const productItems = normalizedItems.filter(it => it.priceCents >= 0);
+  // The "Delivery fee" line (added by a delivery on a manual order, or by
+  // converting a quote that had delivery) is likewise a charge, not a
+  // product, so it is also left out of the title and single-item fields.
+  const productItems = normalizedItems.filter(it => it.priceCents >= 0 && it.title !== "Delivery fee");
   const titleItems = productItems.length > 0 ? productItems : normalizedItems;
 
   const orderTitle = titleItems.length === 1

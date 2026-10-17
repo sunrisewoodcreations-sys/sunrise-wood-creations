@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AddressInput from "@/components/AddressInput";
 import { useRouter } from "next/navigation";
 
 export default function DeliverySettingsForm({
@@ -70,12 +71,7 @@ export default function DeliverySettingsForm({
       <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 max-w-xl space-y-4">
         <div>
           <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Your home address (where deliveries start)</label>
-          <input
-            value={homeAddress}
-            onChange={e => setHomeAddress(e.target.value)}
-            placeholder="123 Main St, Town, MI 49000"
-            className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
-          />
+          <AddressInput value={homeAddress} onChange={setHomeAddress} />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>

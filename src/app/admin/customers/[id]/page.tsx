@@ -106,6 +106,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
           products={savedProducts || []}
           fixedCustomerId={customer.id}
           fixedCustomerName={customer.full_name}
+          fixedCustomerAddress={customer.address}
         />
       </div>
 

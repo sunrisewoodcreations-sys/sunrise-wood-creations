@@ -3,10 +3,11 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AdminButton from "@/components/AdminButton";
+import AddressInput from "@/components/AddressInput";
 import { calculateQuoteTotals } from "@/lib/tax";
 import { formatQuoteNumberWithRevision } from "@/lib/quoteNumber";
 
-type Customer = { id: string; full_name: string; email: string };
+type Customer = { id: string; full_name: string; email: string; address?: string | null };
 type SavedProduct = { id: string; product_type: string; name: string; size_details: string | null; price_cents: number };
 
 type LineItem = {
@@ -609,12 +610,12 @@ export default function QuoteEditor({
                 : "Checked against Google Maps and priced one way, by the mile, from your home address."}
             </p>
             <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                value={deliveryAddress}
-                onChange={e => { setDeliveryAddress(e.target.value); setDeliveryMiles(null); setDeliveryNote(""); setDeliverySuggestion(null); }}
-                placeholder="123 Main St, Town, MI 49000"
-                className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
-              />
+              <div className="flex-1">
+                <AddressInput
+                  value={deliveryAddress}
+                  onChange={v => { setDeliveryAddress(v); setDeliveryMiles(null); setDeliveryNote(""); setDeliverySuggestion(null); }}
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => calculateDelivery(false)}
@@ -624,6 +625,15 @@ export default function QuoteEditor({
                 {deliveryBusy ? "Calculating..." : "Calculate delivery"}
               </button>
             </div>
+            {!deliveryAddress.trim() && selectedCustomer?.address && (
+              <button
+                type="button"
+                onClick={() => { setDeliveryAddress(selectedCustomer.address || ""); setDeliveryMiles(null); setDeliveryNote(""); }}
+                className="mt-2 text-xs font-semibold underline text-ember"
+              >
+                Use {selectedCustomer.full_name}'s address: {selectedCustomer.address}
+              </button>
+            )}
             {deliverySuggestion && (
               <div className="mt-2 text-sm text-[#1E3A5F]">
                 <p className="font-semibold">Did you mean: {deliverySuggestion.address}?</p>

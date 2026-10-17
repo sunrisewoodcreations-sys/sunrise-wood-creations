@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AddressInput from "@/components/AddressInput";
 
 export default function EditCustomerContactForm({
   customerId,
@@ -98,13 +99,7 @@ export default function EditCustomerContactForm({
       </div>
       <div>
         <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Address (optional)</label>
-        <textarea
-          value={address}
-          onChange={e => setAddress(e.target.value)}
-          rows={2}
-          placeholder="123 Main St, Lawrence, MI 49064"
-          className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
-        />
+        <AddressInput value={address} onChange={setAddress} />
       </div>
       {error && <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-2 py-1.5">{error}</p>}
       <div className="flex items-center gap-2">

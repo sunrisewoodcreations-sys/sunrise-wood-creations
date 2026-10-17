@@ -7,7 +7,7 @@ import {
   metersToMiles, calculateDeliveryFeeCents, assessGeocodeResult, parseRouteDistanceMeters,
   deliveryColumnsForCreate, deliveryColumnsForUpdate
 } from "../src/lib/delivery";
-import { geocodeAddress, drivingDistanceMeters, MapsError } from "../src/lib/googleMaps";
+import { geocodeAddress, drivingDistanceMeters, suggestAddresses, MapsError } from "../src/lib/googleMaps";
 
 let n = 0;
 async function test(label: string, fn: () => void | Promise<void>) {
@@ -123,6 +123,27 @@ const fakeFetch = (json: any, ok = true, status = 200) => async () => ({ ok, sta
     assert.deepEqual(deliveryColumnsForUpdate(undefined, undefined), {});
     assert.deepEqual(deliveryColumnsForUpdate("", 3), { delivery_address: null, delivery_miles: null });
     assert.deepEqual(deliveryColumnsForUpdate("1 Main St", 3), { delivery_address: "1 Main St", delivery_miles: 3 });
+  });
+  await test("suggestAddresses: returns up to 5 unique address strings, US only", async () => {
+    let init: any;
+    const sug = (t: string) => ({ placePrediction: { text: { text: t } } });
+    const out = await suggestAddresses("123 ma", "KEY", async (_u: string, i: any) => {
+      init = i;
+      return { ok: true, status: 200, json: async () => ({ suggestions: [sug("123 Main St, Lawrence, MI, USA"), sug("123 Main St, Lawrence, MI, USA"), sug("123 Maple Ave, Paw Paw, MI, USA"), {}, sug("1 A"), sug("2 B"), sug("3 C"), sug("4 D")] }) };
+    });
+    assert.deepEqual(out, ["123 Main St, Lawrence, MI, USA", "123 Maple Ave, Paw Paw, MI, USA", "1 A", "2 B", "3 C"]);
+    assert.equal(init.headers["X-Goog-Api-Key"], "KEY");
+    const b = JSON.parse(init.body);
+    assert.equal(b.input, "123 ma");
+    assert.deepEqual(b.includedRegionCodes, ["us"]);
+  });
+  await test("suggestAddresses: short input makes no request; empty and error cases", async () => {
+    let called = false;
+    assert.deepEqual(await suggestAddresses("ab", "k", async () => { called = true; return { ok: true, status: 200, json: async () => ({}) }; }), []);
+    assert.equal(called, false);
+    assert.deepEqual(await suggestAddresses("123 main", "k", fakeFetch({})), []);
+    await assert.rejects(() => suggestAddresses("123 main", "k", fakeFetch({ error: { status: "PERMISSION_DENIED" } }, false, 403)), /Places API/);
+    await assert.rejects(() => suggestAddresses("123 main", "k", async () => { throw new Error("net"); }), MapsError);
   });
 
   console.log(`\n${n} delivery tests passed`);

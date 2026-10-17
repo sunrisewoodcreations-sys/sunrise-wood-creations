@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AddressInput from "@/components/AddressInput";
 
 export default function AddCustomerForm() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "done">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   // Holds a detected possible duplicate so the confirmation UI can show
@@ -21,7 +23,7 @@ export default function AddCustomerForm() {
     const res = await fetch("/api/customers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, phone, confirmDuplicate })
+      body: JSON.stringify({ fullName, email, phone, address, confirmDuplicate })
     });
     const body = await res.json();
 
@@ -41,6 +43,7 @@ export default function AddCustomerForm() {
     setFullName("");
     setEmail("");
     setPhone("");
+    setAddress("");
     setDuplicateWarning(null);
     router.refresh();
     setTimeout(() => setStatus("idle"), 3000);
@@ -87,6 +90,11 @@ export default function AddCustomerForm() {
             className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
           />
         </div>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Address (optional)</label>
+        <AddressInput value={address} onChange={setAddress} />
       </div>
 
       {duplicateWarning && (

@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
   }
   const isDemo = !!profile?.is_demo_account;
 
-  const { fullName, email, phone, confirmDuplicate } = await req.json();
+  const { fullName, email, phone, address, confirmDuplicate } = await req.json();
+  const cleanAddress = typeof address === "string" && address.trim() ? address.trim().slice(0, 300) : null;
 
   if (!fullName?.trim()) {
     return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
         full_name: fullName.trim(),
         email: placeholderEmail,
         phone: phone?.trim() || null,
+        address: cleanAddress,
         role: "customer",
         has_real_email: isDemo ? true : false,
         notify_order_updates: isDemo ? true : false,
@@ -116,6 +118,7 @@ export async function POST(req: NextRequest) {
   if (match) {
     const updatePayload: Record<string, any> = { has_real_email: true };
     if (phone?.trim()) updatePayload.phone = phone.trim();
+    if (cleanAddress) updatePayload.address = cleanAddress;
     await admin.from("profiles").update(updatePayload).eq("id", match.id);
   }
 
