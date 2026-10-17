@@ -67,3 +67,40 @@ export async function drivingDistanceMeters(origin: string, destination: string,
   }
   return meters;
 }
+
+// Address suggestions while typing (Google Places Autocomplete, "new" API).
+// Returns up to 5 full address strings, US only. Returns [] when there is
+// nothing to suggest. Throws MapsError only for setup problems (key
+// refused / API not enabled) so the caller can decide how loud to be.
+export async function suggestAddresses(input: string, apiKey: string, fetchImpl: FetchLike = fetch as any): Promise<string[]> {
+  const text = (input || "").trim();
+  if (text.length < 3) return [];
+  let res: { ok: boolean; status: number; json: () => Promise<any> };
+  try {
+    res = await fetchImpl("https://places.googleapis.com/v1/places:autocomplete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "suggestions.placePrediction.text.text"
+      },
+      body: JSON.stringify({ input: text.slice(0, 120), includedRegionCodes: ["us"] })
+    });
+  } catch {
+    throw new MapsError("Couldn't reach Google Maps.");
+  }
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (json?.error?.status === "PERMISSION_DENIED") {
+      throw new MapsError("Google refused address suggestions. Check that the Places API (New) is enabled for your key.");
+    }
+    throw new MapsError("Address suggestions aren't available right now.");
+  }
+  const out: string[] = [];
+  for (const s of Array.isArray(json?.suggestions) ? json.suggestions : []) {
+    const t = s?.placePrediction?.text?.text;
+    if (typeof t === "string" && t.trim() && !out.includes(t.trim())) out.push(t.trim());
+    if (out.length >= 5) break;
+  }
+  return out;
+}

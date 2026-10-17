@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import AddressInput from "@/components/AddressInput";
+import OrderDeliveryFields, { OrderDelivery, EMPTY_ORDER_DELIVERY } from "@/components/OrderDeliveryFields";
 import AdminButton from "@/components/AdminButton";
 
 const PRODUCT_TYPES = [
@@ -11,7 +13,7 @@ const PRODUCT_TYPES = [
   { value: "cutting_board", label: "Cutting board" }
 ];
 
-type Customer = { id: string; full_name: string; email: string };
+type Customer = { id: string; full_name: string; email: string; address?: string | null };
 type SavedProduct = { id: string; product_type: string; name: string; size_details: string | null; price_cents: number; estimated_build_minutes: number | null };
 
 type LineItem = {
@@ -40,12 +42,14 @@ export default function AddOrderWithCustomerPicker({
   customers = [],
   products,
   fixedCustomerId,
-  fixedCustomerName
+  fixedCustomerName,
+  fixedCustomerAddress
 }: {
   customers?: Customer[];
   products: SavedProduct[];
   fixedCustomerId?: string;
   fixedCustomerName?: string;
+  fixedCustomerAddress?: string | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -68,6 +72,9 @@ export default function AddOrderWithCustomerPicker({
   // Line items — one order can now hold several different items.
   const [items, setItems] = useState<LineItem[]>([blankLineItem()]);
   const [dueDate, setDueDate] = useState("");
+  const [delivery, setDelivery] = useState<OrderDelivery>(EMPTY_ORDER_DELIVERY);
+  // New-customer popup: optional address
+  const [newAddress, setNewAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [capacityWarning, setCapacityWarning] = useState<{ suggestedDate: string | null } | null>(null);
@@ -151,7 +158,7 @@ export default function AddOrderWithCustomerPicker({
     const res = await fetch("/api/customers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName: newName, email: newEmail })
+      body: JSON.stringify({ fullName: newName, email: newEmail, address: newAddress })
     });
     const body = await res.json().catch(() => ({}));
     setCreatingCustomer(false);
@@ -172,6 +179,7 @@ export default function AddOrderWithCustomerPicker({
     }
     setNewName("");
     setNewEmail("");
+    setNewAddress("");
     router.refresh();
   }
 
@@ -216,10 +224,11 @@ export default function AddOrderWithCustomerPicker({
 
   const itemsTotal = items.reduce((sum, it) => sum + (Number(it.price) || 0), 0);
   const couponDiscountDollars = (appliedCoupon?.discountCents || 0) / 100;
-  const grandTotal = Math.max(0, itemsTotal - couponDiscountDollars);
+  const deliveryDollars = Math.max(0, Number(delivery.feeDollars) || 0);
+  const grandTotal = Math.max(0, itemsTotal - couponDiscountDollars) + deliveryDollars;
 
   const effectiveCustomer: Customer | null = isFixedCustomer
-    ? { id: fixedCustomerId!, full_name: fixedCustomerName || "", email: "" }
+    ? { id: fixedCustomerId!, full_name: fixedCustomerName || "", email: "", address: fixedCustomerAddress || null }
     : selectedCustomer;
 
   async function handleApplyCoupon() {
@@ -294,6 +303,21 @@ export default function AddOrderWithCustomerPicker({
         });
       }
 
+      // Delivery, if any, is its own visible line item, exactly like the
+      // "Delivery fee" line a converted quote already produces, so it
+      // flows through the order total and invoice with no other change.
+      if (deliveryDollars > 0) {
+        const where = delivery.address.trim();
+        orderItems.push({
+          productType: "sign",
+          productId: null,
+          title: "Delivery fee",
+          sizeDetails: where ? `To ${where}${delivery.miles != null ? ` (${delivery.miles} mi)` : ""}` : "",
+          quantity: "1",
+          priceCents: Math.round(deliveryDollars * 100)
+        });
+      }
+
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -314,6 +338,7 @@ export default function AddOrderWithCustomerPicker({
       setLoading(false);
       setItems([blankLineItem()]);
       setDueDate("");
+      setDelivery(EMPTY_ORDER_DELIVERY);
       setAppliedCoupon(null);
       setCouponCode("");
       clearSelection();
@@ -528,6 +553,13 @@ export default function AddOrderWithCustomerPicker({
             {couponError && <p className="text-xs text-ember mt-1">{couponError}</p>}
           </div>
 
+          <OrderDeliveryFields
+            value={delivery}
+            onChange={setDelivery}
+            customerName={effectiveCustomer?.full_name}
+            customerAddress={effectiveCustomer?.address}
+          />
+
           <div className="flex items-center justify-between gap-3">
             <div>
               <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Estimated pickup date (optional)</label>
@@ -546,6 +578,7 @@ export default function AddOrderWithCustomerPicker({
             </div>
             <div className="text-sm text-[#1E3A5F] text-right">
               {appliedCoupon && <div className="text-xs text-ember">Coupon: -${(appliedCoupon.discountCents / 100).toFixed(2)}</div>}
+              {deliveryDollars > 0 && <div className="text-xs text-[#1E3A5F]/70">Delivery: ${deliveryDollars.toFixed(2)}</div>}
               <div className="font-semibold">Order total: ${grandTotal.toFixed(2)}</div>
             </div>
           </div>
@@ -592,6 +625,10 @@ export default function AddOrderWithCustomerPicker({
                 <div>
                   <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Email (optional)</label>
                   <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="jane@example.com" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Address (optional)</label>
+                  <AddressInput value={newAddress} onChange={setNewAddress} />
                 </div>
                 {customerCreateError && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{customerCreateError}</p>}
                 <div className="flex gap-2">
