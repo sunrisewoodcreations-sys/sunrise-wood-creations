@@ -75,7 +75,7 @@ export default async function HomePage() {
     <div>
       <SiteHeader />
 
-      <section className="text-center px-6 pt-10 pb-12 sm:py-16 md:py-20 bg-gradient-to-b from-amber/10 to-cream">
+      <section className="text-center px-6 pt-10 pb-2 sm:pt-16 sm:pb-8 md:pt-20 bg-gradient-to-b from-sawdust to-cream">
         <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-walnut font-semibold mb-3 sm:mb-4 whitespace-pre-line">
           {content.hero.heading}
         </h1>
