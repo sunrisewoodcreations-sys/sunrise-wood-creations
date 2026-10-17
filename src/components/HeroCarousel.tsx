@@ -51,6 +51,14 @@ export default function HeroCarousel({ slides, label = "Photos of our work" }: {
 
   if (slides.length === 0) return null;
 
+  // Photos that share one alt text (e.g. every slide of a category saying
+  // "Cutting boards built by Sunrise Wood Creations") get a position suffix
+  // so each is distinguishable to a screen reader. Alt text that is already
+  // unique is left exactly as written; nothing is invented about the photo.
+  const altCounts = slides.reduce<Record<string, number>>((acc, s) => ({ ...acc, [s.alt]: (acc[s.alt] || 0) + 1 }), {});
+  const altFor = (slide: CarouselSlide, i: number) =>
+    altCounts[slide.alt] > 1 ? `${slide.alt} (photo ${i + 1} of ${slides.length})` : slide.alt;
+
   return (
     <div
       className="relative w-full max-w-[88%] sm:max-w-xl mx-auto rounded-xl overflow-hidden shadow-md"
@@ -77,7 +85,7 @@ export default function HeroCarousel({ slides, label = "Photos of our work" }: {
               {slide.src ? (
                 <Image
                   src={slide.src}
-                  alt={slide.alt}
+                  alt={altFor(slide, i)}
                   fill
                   sizes="(max-width: 768px) 100vw, 768px"
                   className="object-cover"
