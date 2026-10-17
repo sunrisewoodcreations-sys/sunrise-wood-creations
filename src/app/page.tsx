@@ -95,7 +95,7 @@ export default async function HomePage() {
             {content.hero.ctaText}
           </TrackedLink>
           <TrackedLink
-            href="#products"
+            href="#gallery"
             className="w-full sm:w-auto inline-block border border-walnut text-walnut px-7 py-3.5 rounded-md font-semibold hover:bg-walnut/5 transition-colors"
             eventName="view_work_click"
           >
@@ -110,9 +110,9 @@ export default async function HomePage() {
         </p>
       </section>
 
-      <section id="products" className="max-w-5xl mx-auto px-6 py-14 md:py-20 scroll-mt-16">
+      <section id="products" className="max-w-5xl mx-auto px-6 py-10 sm:py-14 md:py-20 scroll-mt-20">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">What we build</h2>
-        <p className="text-center text-walnut/70 mb-10">Every piece is made to order.</p>
+        <p className="text-center text-walnut/70 mb-8 sm:mb-10">Every piece is made to order.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {visibleProducts.map(p => (
             <ProductCard
@@ -127,9 +127,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section id="about" className="bg-sawdust/60 px-6 py-14 md:py-20 scroll-mt-16">
+      <section id="about" className="bg-sawdust/60 px-6 py-10 sm:py-14 md:py-20 scroll-mt-20">
         <div className="max-w-4xl mx-auto">
-          <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-10">{content.whyUs.heading}</h2>
+          <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-8 sm:mb-10">{content.whyUs.heading}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
             {content.whyUs.items.map(item => (
               <div key={item.title} className="flex gap-3">
@@ -146,8 +146,8 @@ export default async function HomePage() {
 
       <OurWorkSection photos={galleryPhotos || []} />
 
-      <section className="max-w-4xl mx-auto px-6 py-14 md:py-20 border-t border-walnut/10">
-        <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-10">{content.howItWorks.heading}</h2>
+      <section className="max-w-4xl mx-auto px-6 py-10 sm:py-14 md:py-20 border-t border-walnut/10">
+        <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-8 sm:mb-10">{content.howItWorks.heading}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {content.howItWorks.steps.map((step, i) => (
             <div key={step.title} className="text-center">
@@ -163,14 +163,14 @@ export default async function HomePage() {
 
       <PublicReviewsSection reviews={publicReviews} />
 
-      <section id="faq" className="px-6 py-14 md:py-20 scroll-mt-16">
+      <section id="faq" className="px-6 py-10 sm:py-14 md:py-20 scroll-mt-20">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">Frequently Asked Questions</h2>
-        <p className="text-center text-walnut/70 mb-10">Common questions about ordering, customization, and pickup.</p>
+        <p className="text-center text-walnut/70 mb-8 sm:mb-10">Common questions about ordering, customization, and pickup.</p>
         <FaqAccordion items={publicFaqRows || []} forceFlat />
         <AskQuestionForm />
       </section>
 
-      <section className="px-6 py-14 md:py-20 text-center bg-walnut">
+      <section className="px-6 py-10 sm:py-14 md:py-20 text-center bg-walnut">
         <h2 className="font-display text-2xl md:text-3xl text-cream mb-3">{content.customCta.heading}</h2>
         <p className="text-cream/70 max-w-md mx-auto mb-7">{content.customCta.subheading}</p>
         <TrackedLink

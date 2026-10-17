@@ -13,7 +13,7 @@ export default async function SiteFooter() {
   return (
     // pb-24 on mobile leaves room for the fixed chat button (bottom-5,
     // 56px tall) so it never sits on top of the copyright line.
-    <footer id="contact" className="bg-bark text-cream pt-12 pb-24 sm:pb-12 px-6 text-sm scroll-mt-16">
+    <footer id="contact" className="bg-bark text-cream pt-12 pb-24 sm:pb-12 px-6 text-sm scroll-mt-20">
       <div className="max-w-5xl mx-auto">
         <div className="grid gap-10 sm:grid-cols-3 text-center sm:text-left">
           <div>
