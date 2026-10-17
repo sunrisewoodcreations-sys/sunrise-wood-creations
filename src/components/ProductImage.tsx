@@ -22,7 +22,7 @@ export default function ProductImage({
   return (
     <div className={`relative bg-sawdust ${areaClassName}`}>
       {imageUrl ? (
-        <Image src={imageUrl} alt={`${name} handcrafted by Sunrise Wood Creations in Michigan`} fill className="object-cover" />
+        <Image src={imageUrl} alt={`${name} handcrafted by Sunrise Wood Creations in Michigan`} fill sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw" className="object-cover" />
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-walnut/30 gap-2">
           <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

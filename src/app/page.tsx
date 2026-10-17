@@ -76,7 +76,9 @@ export default async function HomePage() {
       <SiteHeader />
 
       <section className="text-center px-6 pt-8 pb-2 sm:pt-12 md:pt-14 bg-gradient-to-b from-sawdust to-cream">
-        <HeroCarousel slides={content.hero.carouselSlides} />
+        <div className="mb-8 sm:mb-10">
+          <HeroCarousel slides={content.hero.carouselSlides} />
+        </div>
         <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-walnut font-semibold mb-3 sm:mb-4 whitespace-pre-line">
           {content.hero.heading}
         </h1>
@@ -100,7 +102,7 @@ export default async function HomePage() {
             {content.hero.secondaryCtaText}
           </TrackedLink>
         </div>
-        <p className="text-xs text-walnut/60 mt-5 pb-10 sm:pb-12">
+        <p className="text-[13px] text-walnut/70 mt-5 pb-8 sm:pb-12">
           <span className="whitespace-nowrap">Handmade in Michigan • Built to order</span>
           <br className="sm:hidden" />
           <span className="hidden sm:inline"> • </span>
@@ -110,7 +112,7 @@ export default async function HomePage() {
 
       <section id="products" className="max-w-5xl mx-auto px-6 py-14 md:py-20 scroll-mt-16">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">What we build</h2>
-        <p className="text-center text-walnut/60 mb-10">Every piece is made to order.</p>
+        <p className="text-center text-walnut/70 mb-10">Every piece is made to order.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {visibleProducts.map(p => (
             <ProductCard
@@ -134,7 +136,7 @@ export default async function HomePage() {
                 <span className="flex-shrink-0 w-2 h-2 rounded-full bg-accent mt-2.5" aria-hidden="true" />
                 <div>
                   <h3 className="font-display text-lg text-walnut mb-1">{item.title}</h3>
-                  <p className="text-sm text-walnut/60">{item.description}</p>
+                  <p className="text-sm text-walnut/70">{item.description}</p>
                 </div>
               </div>
             ))}
@@ -153,7 +155,7 @@ export default async function HomePage() {
                 {i + 1}
               </div>
               <h3 className="font-display text-lg text-walnut mb-1">{step.title}</h3>
-              <p className="text-sm text-walnut/60">{step.description}</p>
+              <p className="text-sm text-walnut/70">{step.description}</p>
             </div>
           ))}
         </div>
@@ -163,7 +165,7 @@ export default async function HomePage() {
 
       <section id="faq" className="px-6 py-14 md:py-20 scroll-mt-16">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">Frequently Asked Questions</h2>
-        <p className="text-center text-walnut/60 mb-10">Common questions about ordering, customization, and pickup.</p>
+        <p className="text-center text-walnut/70 mb-10">Common questions about ordering, customization, and pickup.</p>
         <FaqAccordion items={publicFaqRows || []} forceFlat />
         <AskQuestionForm />
       </section>

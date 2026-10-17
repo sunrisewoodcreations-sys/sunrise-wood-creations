@@ -17,7 +17,7 @@ export default function OurWorkSection({ photos }: { photos: Photo[] }) {
   return (
     <section id="gallery" className="max-w-5xl mx-auto px-6 py-14 md:py-20 scroll-mt-16">
       <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">Our Work</h2>
-      <p className="text-center text-walnut/60 mb-10">A look at finished projects, straight from the shop.</p>
+      <p className="text-center text-walnut/70 mb-10">A look at finished projects, straight from the shop.</p>
       <HeroCarousel slides={slides} />
     </section>
   );

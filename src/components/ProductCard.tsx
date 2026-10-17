@@ -62,7 +62,7 @@ export default function ProductCard({
       <ProductImage imageUrl={imageUrl} name={name} areaClassName={imageAreaClass} iconSize={featured ? 40 : 28} />
       <div className={`p-5 flex flex-col flex-1 ${featured ? "sm:p-6" : ""}`}>
         <h3 className={`font-display text-walnut mb-1.5 break-words text-lg ${featured ? "sm:text-2xl" : ""}`}>{name}</h3>
-        <p className={`text-walnut/60 mb-4 flex-1 break-words text-sm ${featured ? "sm:text-base" : ""}`}>{shortDesc}</p>
+        <p className={`text-walnut/70 mb-4 flex-1 break-words text-sm ${featured ? "sm:text-base" : ""}`}>{shortDesc}</p>
         <span className={`inline-flex items-center gap-1.5 font-semibold text-accent group-hover:gap-2.5 transition-all text-sm ${featured ? "sm:text-base" : ""}`}>
           See options
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
