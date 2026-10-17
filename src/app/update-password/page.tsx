@@ -16,6 +16,23 @@ export default function UpdatePasswordPage() {
 
   useEffect(() => {
     async function establishSession() {
+      // Newer reset emails link straight to this page with a one-time
+      // token_hash. Checking it here (instead of bouncing through
+      // Supabase's own redirect) means it doesn't depend on Supabase's
+      // redirect allow-list, and it works even if the email is opened in
+      // a different browser or app than the one that asked for the reset.
+      const query = new URLSearchParams(window.location.search);
+      const tokenHash = query.get("token_hash");
+      const tokenType = query.get("type");
+      if (tokenHash && (tokenType === "recovery" || tokenType === "invite")) {
+        const { error: otpError } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: tokenType });
+        if (otpError) {
+          setError("This link has expired or was already used. Please request a new one.");
+        }
+        setReady(true);
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setReady(true);
