@@ -25,6 +25,11 @@ export default function GuestChatWidget() {
   const [sentMessages, setSentMessages] = useState<SentMessage[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const panelRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  // Phone-only layout state for the open window (see the effects below).
+  const [isPhone, setIsPhone] = useState(false);
+  const [viewport, setViewport] = useState<{ height: number; obscured: number } | null>(null);
 
   // Keeps the closed button clear of interactive content. Runs after the
   // page settles (load, resize, end of scroll) and hides the button while the
@@ -99,6 +104,81 @@ export default function GuestChatWidget() {
     };
   }, [open]);
 
+  // While the window is open on a phone, follow the *visible* screen: Safari's
+  // toolbars and the on-screen keyboard change it, and a fixed window sized in
+  // plain vh/px can end up taller than what the visitor can actually see.
+  // `height` is the visible height; `obscured` is how much of the bottom of the
+  // page the keyboard is covering, so the window can sit above it.
+  useEffect(() => {
+    if (!open) return;
+    const mq = window.matchMedia("(max-width: 639px)");
+    const vv = window.visualViewport;
+    const update = () => {
+      setIsPhone(mq.matches);
+      if (mq.matches && vv && vv.scale <= 1.01) {
+        setViewport({
+          height: vv.height,
+          obscured: Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop))
+        });
+      } else {
+        setViewport(null);
+      }
+    };
+    update();
+    mq.addEventListener("change", update);
+    window.addEventListener("resize", update);
+    vv?.addEventListener("resize", update);
+    vv?.addEventListener("scroll", update);
+    return () => {
+      mq.removeEventListener("change", update);
+      window.removeEventListener("resize", update);
+      vv?.removeEventListener("resize", update);
+      vv?.removeEventListener("scroll", update);
+    };
+  }, [open]);
+
+  // Temporary room at the bottom of the page while the window is open on a
+  // phone, so the page can be scrolled until the quote form (all fields and the
+  // submit button) sits above the window. The original padding is put back
+  // when the window closes or the screen stops being a phone.
+  const obscured = viewport?.obscured ?? 0;
+  useEffect(() => {
+    if (!open || !isPhone) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+    const body = document.body;
+    const original = body.style.paddingBottom;
+    const base = parseFloat(getComputedStyle(body).paddingBottom) || 0;
+    const apply = () => {
+      const top = panel.getBoundingClientRect().top;
+      const room = Math.max(0, Math.ceil(window.innerHeight - top));
+      body.style.paddingBottom = `${base + room}px`;
+    };
+    apply();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(apply) : null;
+    ro?.observe(panel);
+    return () => {
+      ro?.disconnect();
+      body.style.paddingBottom = original;
+    };
+  }, [open, isPhone, obscured]);
+
+  // Keep the newest message in view in a long conversation. A new message
+  // always scrolls to the bottom; when the window only changes size (keyboard
+  // opening, rotating) the list stays at the bottom only if it already was, so
+  // someone reading older messages is not yanked away.
+  const stickToBottom = useRef(true);
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+    stickToBottom.current = true;
+  }, [open, sentMessages.length, identified]);
+  const visibleHeight = viewport?.height;
+  useEffect(() => {
+    const el = listRef.current;
+    if (el && stickToBottom.current) el.scrollTop = el.scrollHeight;
+  }, [visibleHeight]);
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if (!draft.trim()) return;
@@ -144,8 +224,15 @@ export default function GuestChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 w-[320px] max-w-[calc(100vw-2.5rem)] bg-white rounded-xl shadow-2xl border border-walnut/10 overflow-hidden flex flex-col">
-      <div className="bg-walnut text-cream px-4 py-3 flex items-center justify-between">
+    <div
+      ref={panelRef}
+      style={{
+        ...(viewport ? { maxHeight: Math.max(200, viewport.height - 24) } : {}),
+        ...(obscured > 0 ? { bottom: obscured + 12 } : {})
+      }}
+      className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 sm:bottom-5 sm:right-5 z-50 w-[320px] max-w-[calc(100vw-1.5rem)] sm:max-w-[calc(100vw-2.5rem)] max-h-[calc(100dvh-1.5rem)] sm:max-h-none bg-white rounded-xl shadow-2xl border border-walnut/10 overflow-hidden flex flex-col"
+    >
+      <div className="bg-walnut text-cream px-4 py-2.5 sm:py-3 flex shrink-0 items-center justify-between">
         <span className="font-display text-sm font-semibold">Chat with us</span>
         <button onClick={() => setOpen(false)} aria-label="Close chat" className="text-cream/70 hover:text-cream">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -155,7 +242,13 @@ export default function GuestChatWidget() {
         </button>
       </div>
 
-      <div className="px-4 py-3 max-h-64 overflow-y-auto space-y-2 bg-cream/20">
+      <div
+        ref={listRef}
+        onScroll={e => {
+          const el = e.currentTarget;
+          stickToBottom.current = el.scrollHeight - el.clientHeight - el.scrollTop <= 40;
+        }}
+        className="px-4 py-2 sm:py-3 max-h-64 min-h-0 overflow-y-auto space-y-2 bg-cream/20">
         <div className="flex justify-start">
           <div className="max-w-[85%] rounded-lg px-3 py-2 text-sm bg-white border border-walnut/10 text-walnut/80">
             Hi! Send us a message and we'll reply by email — usually within a day.
@@ -177,7 +270,7 @@ export default function GuestChatWidget() {
         )}
       </div>
 
-      <form onSubmit={handleSend} className="p-3 border-t border-walnut/10 space-y-2">
+      <form onSubmit={handleSend} className="p-2.5 sm:p-3 shrink-0 border-t border-walnut/10 space-y-1.5 sm:space-y-2">
         {!identified && (
           <>
             <input
