@@ -1,11 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 type SentMessage = { body: string };
 
+// Candidate distances from the bottom of the screen for the closed chat
+// button, in px. The button rests at the first one (the original spot) and
+// only moves up when that spot would sit on top of a link, button or form
+// field, so it never covers something a visitor needs to tap.
+const REST_OFFSET = 16;
+const STEP = 12;
+const MAX_OFFSET = 300;
+const BUTTON_SIZE_MOBILE = 48;
+
 export default function GuestChatWidget() {
   const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [bottomOffset, setBottomOffset] = useState<number | null>(null);
+  const [scrolling, setScrolling] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [draft, setDraft] = useState("");
@@ -13,6 +25,79 @@ export default function GuestChatWidget() {
   const [sentMessages, setSentMessages] = useState<SentMessage[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+
+  // Keeps the closed button clear of interactive content. Runs after the
+  // page settles (load, resize, end of scroll) and hides the button while the
+  // visitor is actively scrolling on a phone, so it isn't dragged across text.
+  useEffect(() => {
+    if (open) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let scrollTimer: ReturnType<typeof setTimeout> | undefined;
+    const isSmall = () => window.matchMedia("(max-width: 639px)").matches;
+
+    function reposition() {
+      const btn = buttonRef.current;
+      if (!btn) return;
+      const size = btn.offsetWidth || BUTTON_SIZE_MOBILE;
+      const right = window.innerWidth - (parseFloat(getComputedStyle(btn).right) || 16);
+      const targets = Array.from(
+        document.querySelectorAll<HTMLElement>("a[href], button, input, textarea, select, summary, [role='button']")
+      ).filter(el => el !== btn && !el.closest("header"));
+      const rects = targets
+        .map(el => el.getBoundingClientRect())
+        .filter(r => r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < window.innerHeight);
+      // Large block links (a whole product card) can't be avoided without
+      // pushing the button off-screen, and stay tappable everywhere else, so
+      // only links, buttons and fields smaller than a card count as blockers.
+      const smallRects = rects.filter(r => r.height < 200);
+      // Lines of visible text, so the resting spot also avoids covering words
+      // when there is any gap between lines to rest in.
+      const textRects: DOMRect[] = [];
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const parent = node.parentElement;
+        if (!node.textContent?.trim() || !parent || parent.closest("header, script, style") || parent === btn || btn.contains(parent)) continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        for (const r of Array.from(range.getClientRects())) {
+          if (r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < window.innerHeight) textRects.push(r);
+        }
+      }
+      const overlaps = (list: DOMRect[], offset: number) => {
+        const top = window.innerHeight - offset - size;
+        const bottom = window.innerHeight - offset;
+        return list.some(r => r.left < right + 6 && r.right > right - size - 6 && r.top < bottom + 6 && r.bottom > top - 6);
+      };
+      // First choice: a spot clear of controls AND text. Second choice: clear
+      // of controls only. Otherwise stay at the original resting spot.
+      for (const blockers of [[...smallRects, ...textRects], smallRects]) {
+        for (let offset = REST_OFFSET; offset <= MAX_OFFSET; offset += STEP) {
+          if (!overlaps(blockers, offset)) { setBottomOffset(offset === REST_OFFSET ? null : offset); return; }
+        }
+      }
+      setBottomOffset(null);
+    }
+
+    function schedule() {
+      clearTimeout(timer);
+      timer = setTimeout(reposition, 120);
+    }
+    function onScroll() {
+      if (isSmall()) setScrolling(true);
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => { setScrolling(false); reposition(); }, 180);
+    }
+
+    schedule();
+    const late = setTimeout(reposition, 800); // after images and fonts settle
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      clearTimeout(timer); clearTimeout(scrollTimer); clearTimeout(late);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", schedule);
+    };
+  }, [open]);
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -45,9 +130,11 @@ export default function GuestChatWidget() {
   if (!open) {
     return (
       <button
+        ref={buttonRef}
         onClick={() => setOpen(true)}
         aria-label="Open chat"
-        className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 sm:bottom-5 sm:right-5 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-accent text-white shadow-lg flex items-center justify-center hover:opacity-90"
+        style={bottomOffset !== null ? { bottom: `calc(${bottomOffset}px + env(safe-area-inset-bottom))` } : undefined}
+        className={`fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 sm:bottom-5 sm:right-5 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-accent text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-[bottom,opacity,transform] duration-200 ${scrolling ? "opacity-0 translate-x-3 pointer-events-none" : ""}`}
       >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />

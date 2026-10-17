@@ -15,7 +15,7 @@ import AskQuestionForm from "@/components/AskQuestionForm";
 export const metadata: Metadata = {
   title: "Custom cornhole boards, wooden signs, planters & cutting boards",
   description:
-    "Sunrise Wood Creations builds handcrafted, made-to-order cornhole boards, wooden signs, planter boxes, and cutting boards in Michigan. Request a custom order today.",
+    "Handcrafted, made-to-order cornhole boards, wooden signs, planter boxes, and cutting boards built in Michigan. Request a custom order today.",
   alternates: { canonical: "/" }
 };
 
@@ -74,6 +74,7 @@ export default async function HomePage() {
   return (
     <div>
       <SiteHeader />
+      <main>
 
       <section className="text-center px-6 pt-8 pb-2 sm:pt-12 md:pt-14 bg-gradient-to-b from-sawdust to-cream">
         <div className="mb-8 sm:mb-10">
@@ -183,6 +184,7 @@ export default async function HomePage() {
         </TrackedLink>
       </section>
 
+      </main>
       <SiteFooter />
       <GuestChatWidget />
     </div>

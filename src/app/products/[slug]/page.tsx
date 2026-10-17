@@ -126,13 +126,25 @@ async function getContent(): Promise<SiteContent> {
   return (data?.data as SiteContent) || DEFAULT_SITE_CONTENT;
 }
 
+// Search-result snippets are cut off around 155-160 characters. The
+// editable product description is used as-is when it already fits a
+// sensible snippet length; otherwise this short, factual summary is used.
+const SEO_DESCRIPTIONS: Record<ProductKey, string> = {
+  "cornhole-boards": "Custom cornhole boards built to order in Michigan. Regulation-size sets with painted tops, your logo or your own design. Request a quote today.",
+  "wooden-signs": "Personalized wooden signs built to order in Michigan: family names, farmhouse decor, and business signage, each cut, sanded, and finished by hand.",
+  "planter-boxes": "Cedar planter boxes built to order in Michigan for porches, patios, and gardens, finished for outdoor use and sized to fit your space.",
+  "cutting-boards": "Handcrafted end-grain and edge-grain cutting boards built to order in Michigan, personalized with names, dates, or a short message. Request a quote."
+};
+
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const content = await getContent();
   const product = content.products[params.slug as ProductKey];
    if (!product || !product.enabled) return {};
   return {
     title: product.name,
-    description: product.description,
+    description: product.description.length >= 120 && product.description.length <= 155
+      ? product.description
+      : SEO_DESCRIPTIONS[params.slug as ProductKey],
     alternates: { canonical: `/products/${params.slug}` }
   };
 }
@@ -182,6 +194,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <SiteHeader />
+      <main>
       <section className="max-w-5xl mx-auto px-6 py-16">
         <Link href="/" className="text-sm text-walnut/70 mb-4 inline-block">← All products</Link>
         <div className="mb-8 sm:mb-10">
@@ -387,6 +400,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         </div>
         <p className="text-sm text-cream/60">📍 Local pickup only — Lawrence, MI</p>
       </section>
+      </main>
       <SiteFooter />
       <GuestChatWidget />
     </div>
