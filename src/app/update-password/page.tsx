@@ -139,7 +139,7 @@ export default function UpdatePasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-walnut text-cream py-2.5 rounded-md font-semibold text-sm disabled:opacity-60"
+              className="w-full bg-accent text-white py-2.5 rounded-md font-semibold text-sm disabled:opacity-60 hover:opacity-90 transition-opacity"
             >
               {loading ? "Saving..." : "Save password"}
             </button>

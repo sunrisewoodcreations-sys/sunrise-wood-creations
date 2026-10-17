@@ -115,7 +115,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-walnut text-cream py-2.5 rounded-md font-semibold text-sm disabled:opacity-60"
+                className="w-full bg-accent text-white py-2.5 rounded-md font-semibold text-sm disabled:opacity-60 hover:opacity-90 transition-opacity"
               >
                 {loading ? "Logging in..." : "Log in"}
               </button>
@@ -182,7 +182,7 @@ export default function LoginPage() {
             <p className="text-sm font-semibold text-walnut mb-5">Email: sunrisewoodcreations@gmail.com</p>
             <button
               onClick={() => setShowContactModal(false)}
-              className="w-full bg-walnut text-cream py-2 rounded-md text-sm font-semibold"
+              className="w-full bg-accent text-white py-2 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
             >
               Close
             </button>

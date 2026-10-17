@@ -87,7 +87,7 @@ export default async function SiteHeader() {
         {role ? (
           <AccountMenu role={role} name={fullName} />
         ) : (
-          <Link href="/login" className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold">
+          <Link href="/login" className="bg-accent text-white sm:bg-transparent sm:text-walnut sm:border sm:border-walnut/30 sm:hover:bg-walnut/5 px-4 py-2 rounded-md text-sm font-semibold transition-colors">
             Login
           </Link>
         )}
