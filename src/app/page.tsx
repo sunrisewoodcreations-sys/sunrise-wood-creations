@@ -100,7 +100,12 @@ export default async function HomePage() {
             {content.hero.secondaryCtaText}
           </TrackedLink>
         </div>
-        <p className="text-xs text-walnut/60 mt-5 pb-10 sm:pb-12">Handmade in Michigan • Built to order • Local pickup in Lawrence, MI</p>
+        <p className="text-xs text-walnut/60 mt-5 pb-10 sm:pb-12">
+          <span className="whitespace-nowrap">Handmade in Michigan • Built to order</span>
+          <br className="sm:hidden" />
+          <span className="hidden sm:inline"> • </span>
+          <span className="whitespace-nowrap">Local pickup in Lawrence, MI</span>
+        </p>
       </section>
 
       <section id="products" className="max-w-5xl mx-auto px-6 py-14 md:py-20 scroll-mt-16">

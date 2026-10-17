@@ -68,7 +68,7 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
           leftover strip of background around any photo. It resizes
           as you move between photos of different shapes, the same
           way many real photo carousels already behave. */}
-      <div className="relative bg-sawdust aspect-[4/3]">
+      <div className="relative bg-sawdust aspect-[4/3] overflow-hidden">
         <div
           className="flex h-full transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${index * 100}%)` }}
