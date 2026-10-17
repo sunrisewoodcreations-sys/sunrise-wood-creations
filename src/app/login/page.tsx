@@ -48,7 +48,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center px-4 py-16">
+    <main className="min-h-screen bg-cream flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-md">
         <Link href="/" className="block">
           <Image
@@ -189,6 +189,6 @@ export default function LoginPage() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

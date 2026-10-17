@@ -5,7 +5,7 @@ import GuestChatWidget from "@/components/GuestChatWidget";
 
 export const metadata = {
   title: "Request a custom quote",
-  description: "Tell us what you're picturing and we'll send you a custom quote.",
+  description: "Tell us what you're picturing and we'll send you a custom quote for cornhole boards, wooden signs, planter boxes, or cutting boards.",
   alternates: { canonical: "/request-quote" }
 };
 
@@ -13,6 +13,7 @@ export default function RequestQuotePage({ searchParams }: { searchParams: { typ
   return (
     <div>
       <SiteHeader />
+      <main>
       <section className="max-w-2xl mx-auto px-6 py-16">
         <h1 className="font-display text-3xl text-walnut mb-2">Request a custom quote</h1>
         <p className="text-walnut/70 mb-8">
@@ -20,6 +21,7 @@ export default function RequestQuotePage({ searchParams }: { searchParams: { typ
         </p>
         <QuoteRequestForm initialProductType={searchParams.type} />
       </section>
+      </main>
       <SiteFooter />
       <GuestChatWidget />
     </div>

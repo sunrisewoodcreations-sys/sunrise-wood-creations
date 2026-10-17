@@ -19,7 +19,7 @@ export default async function ComingSoonPage() {
   const contact = { ...DEFAULT_SITE_CONTENT.contact, ...content.contact };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-amber/10 to-cream px-6 text-center">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-amber/10 to-cream px-6 text-center">
       <Image
         src="/logo-full.png"
         alt="Sunrise Wood Creations"
@@ -43,6 +43,6 @@ export default async function ComingSoonPage() {
           {contact.email}
         </a>
       </div>
-    </div>
+    </main>
   );
 }

@@ -97,7 +97,7 @@ export default function UpdatePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center px-4">
+    <main className="min-h-screen bg-cream flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white border border-walnut/10 rounded-xl p-8">
         <h1 className="font-display text-2xl text-walnut mb-1">Set your password</h1>
         <p className="text-sm text-walnut/60 mb-6">Choose a password for your account.</p>
@@ -146,6 +146,6 @@ export default function UpdatePasswordPage() {
           </form>
         )}
       </div>
-    </div>
+    </main>
   );
 }
