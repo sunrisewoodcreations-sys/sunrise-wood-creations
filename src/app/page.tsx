@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_SITE_CONTENT, SiteContent, PRODUCT_ORDER } from "@/lib/siteContent";
@@ -76,16 +75,8 @@ export default async function HomePage() {
     <div>
       <SiteHeader />
 
-      <section className="text-center px-6 pt-10 pb-12 sm:py-16 md:py-20 bg-gradient-to-b from-amber/10 to-cream">
+      <section className="text-center px-6 pt-8 pb-2 sm:pt-12 md:pt-14 bg-gradient-to-b from-sawdust to-cream">
         <HeroCarousel slides={content.hero.carouselSlides} />
-        <Image
-          src="/logo-full.png"
-          alt="Sunrise Wood Creations — Handcrafted. Built to last."
-          width={1000}
-          height={1000}
-          priority
-          className="w-28 sm:w-56 md:w-72 h-auto mx-auto mb-5 sm:mb-6"
-        />
         <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-walnut font-semibold mb-3 sm:mb-4 whitespace-pre-line">
           {content.hero.heading}
         </h1>
@@ -95,7 +86,7 @@ export default async function HomePage() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xs sm:max-w-none mx-auto">
           <TrackedLink
             href="/request-quote"
-            className="w-full sm:w-auto inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
+            className="w-full sm:w-auto inline-block bg-accent text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
             eventName="request_quote_click"
             eventParams={{ location: "hero" }}
           >
@@ -109,7 +100,12 @@ export default async function HomePage() {
             {content.hero.secondaryCtaText}
           </TrackedLink>
         </div>
-        <p className="text-xs text-walnut/50 mt-5">Handmade in Michigan • Built to order • Local pickup</p>
+        <p className="text-xs text-walnut/60 mt-5 pb-10 sm:pb-12">
+          <span className="whitespace-nowrap">Handmade in Michigan • Built to order</span>
+          <br className="sm:hidden" />
+          <span className="hidden sm:inline"> • </span>
+          <span className="whitespace-nowrap">Local pickup in Lawrence, MI</span>
+        </p>
       </section>
 
       <section id="products" className="max-w-5xl mx-auto px-6 py-14 md:py-20 scroll-mt-16">
@@ -135,7 +131,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
             {content.whyUs.items.map(item => (
               <div key={item.title} className="flex gap-3">
-                <span className="flex-shrink-0 w-2 h-2 rounded-full bg-ember mt-2.5" aria-hidden="true" />
+                <span className="flex-shrink-0 w-2 h-2 rounded-full bg-accent mt-2.5" aria-hidden="true" />
                 <div>
                   <h3 className="font-display text-lg text-walnut mb-1">{item.title}</h3>
                   <p className="text-sm text-walnut/60">{item.description}</p>
@@ -153,7 +149,7 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {content.howItWorks.steps.map((step, i) => (
             <div key={step.title} className="text-center">
-              <div className="w-10 h-10 rounded-full bg-ember text-white font-display text-lg flex items-center justify-center mx-auto mb-3">
+              <div className="w-10 h-10 rounded-full bg-accent text-white font-display text-lg flex items-center justify-center mx-auto mb-3">
                 {i + 1}
               </div>
               <h3 className="font-display text-lg text-walnut mb-1">{step.title}</h3>
@@ -177,7 +173,7 @@ export default async function HomePage() {
         <p className="text-cream/70 max-w-md mx-auto mb-7">{content.customCta.subheading}</p>
         <TrackedLink
           href="/request-quote"
-          className="inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
+          className="inline-block bg-accent text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
           eventName="request_quote_click"
           eventParams={{ location: "bottom_cta" }}
         >

@@ -8,7 +8,6 @@ import SiteFooter from "@/components/SiteFooter";
 import GuestChatWidget from "@/components/GuestChatWidget";
 import TrackedLink from "@/components/TrackedLink";
 import HeroCarousel from "@/components/HeroCarousel";
-import OurWorkSection from "@/components/OurWorkSection";
 import FaqAccordion from "@/components/FaqAccordion";
 import AskQuestionForm from "@/components/AskQuestionForm";
 
@@ -155,9 +154,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
     .eq("category", params.slug)
     .order("sort_order", { ascending: true });
 
-  // Same gallery_photos + OurWorkSection already used on the homepage —
-  // reused unmodified on every product page now, not just one.
-  const { data: galleryPhotos } = await supabase.from("gallery_photos").select("*").order("sort_order", { ascending: true });
 
   const landing = PRODUCT_LANDING_CONTENT[params.slug as ProductKey];
   const isCornhole = params.slug === "cornhole-boards";
@@ -190,12 +186,12 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <Link href="/" className="text-sm text-walnut/60 mb-4 inline-block">← All products</Link>
         <HeroCarousel slides={product.images?.length ? product.images : DEFAULT_SITE_CONTENT.products[params.slug as ProductKey].images} />
         <h1 className="font-display text-3xl md:text-4xl text-walnut mb-2">{product.name}</h1>
-        <p className="text-lg text-ember font-medium mb-6">{product.tagline}</p>
+        <p className="text-lg text-accent font-medium mb-6">{product.tagline}</p>
         <p className="text-walnut/70 mb-8 leading-relaxed">{product.description}</p>
         <div className="flex flex-col sm:flex-row gap-3">
           <TrackedLink
             href={`/request-quote?type=${PRODUCT_KEY_TO_ORDER_TYPE[params.slug as ProductKey]}`}
-            className="w-full sm:w-auto text-center inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
+            className="w-full sm:w-auto text-center inline-block bg-accent text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
             eventName="request_quote_click"
             eventParams={{ location: "product_page", category: params.slug }}
           >
@@ -249,11 +245,11 @@ export default async function ProductPage({ params }: { params: { slug: string }
               <h2 className="font-display text-lg text-walnut mb-3">What's Included</h2>
               <ul className="space-y-2 text-sm">
                 <li className="flex gap-2">
-                  <span className="flex-shrink-0 w-2 h-2 rounded-full bg-ember mt-1.5" aria-hidden="true" />
+                  <span className="flex-shrink-0 w-2 h-2 rounded-full bg-accent mt-1.5" aria-hidden="true" />
                   <span className="text-walnut/70">Your custom-built cornhole board set, built to your design</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="flex-shrink-0 w-2 h-2 rounded-full bg-ember mt-1.5" aria-hidden="true" />
+                  <span className="flex-shrink-0 w-2 h-2 rounded-full bg-accent mt-1.5" aria-hidden="true" />
                   <span className="text-walnut/70">A design proof to review and approve before we print</span>
                 </li>
               </ul>
@@ -305,7 +301,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
           {landing.whatYouGet.map(item => (
             <div key={item.title} className="flex gap-3">
-              <span className="flex-shrink-0 w-2 h-2 rounded-full bg-ember mt-2.5" aria-hidden="true" />
+              <span className="flex-shrink-0 w-2 h-2 rounded-full bg-accent mt-2.5" aria-hidden="true" />
               <div>
                 <h3 className="font-display text-lg text-walnut mb-1">{item.title}</h3>
                 <p className="text-sm text-walnut/60">{item.description}</p>
@@ -334,7 +330,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
       {/* How it comes together — mirrors the exact visual pattern
           already used for the homepage's "How It Works" section
-          (numbered ember circles). Cornhole's steps mention a design
+          (numbered accent circles). Cornhole's steps mention a design
           proof because cornhole orders genuinely go through that
           stage (see statusSteps.ts: CORNHOLE_STEPS); the other three
           use STANDARD_STEPS instead, so their copy correctly describes
@@ -344,7 +340,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {landing.howItWorks.map((step, i) => (
             <div key={step.title} className="text-center">
-              <div className="w-10 h-10 rounded-full bg-ember text-white font-display text-lg flex items-center justify-center mx-auto mb-3">
+              <div className="w-10 h-10 rounded-full bg-accent text-white font-display text-lg flex items-center justify-center mx-auto mb-3">
                 {i + 1}
               </div>
               <h3 className="font-display text-lg text-walnut mb-1">{step.title}</h3>
@@ -353,14 +349,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
           ))}
         </div>
       </section>
-
-      {/* Reuses the exact same OurWorkSection + gallery_photos already
-          used on the homepage — same photos, same placeholder-when-empty
-          behavior, same auto-update the moment real photos are uploaded
-          via the admin gallery. Not filtered per product, since
-          gallery_photos has no per-product tagging today — every
-          product page shows the same site-wide gallery. */}
-      <OurWorkSection photos={galleryPhotos || []} />
 
       <section className="max-w-5xl mx-auto px-6 py-14 md:py-20 border-t border-walnut/10">
         <h2 className="font-display text-xl text-walnut mb-4">Frequently Asked Questions</h2>
@@ -380,7 +368,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xs sm:max-w-none mx-auto mb-4">
           <TrackedLink
             href={`/request-quote?type=${PRODUCT_KEY_TO_ORDER_TYPE[params.slug as ProductKey]}`}
-            className="w-full sm:w-auto text-center inline-block bg-ember text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
+            className="w-full sm:w-auto text-center inline-block bg-accent text-white px-7 py-3.5 rounded-md font-semibold hover:opacity-90 transition-opacity"
             eventName="request_quote_click"
             eventParams={{ location: "product_page_closing_cta", category: params.slug }}
           >

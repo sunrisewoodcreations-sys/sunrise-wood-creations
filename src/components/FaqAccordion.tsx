@@ -8,9 +8,11 @@ type FaqItem = { id: string; question: string; answer: string; category?: FaqCat
 function AccordionRow({ item, isOpen, onToggle }: { item: FaqItem; isOpen: boolean; onToggle: () => void }) {
   return (
     <div className="bg-white border border-walnut/10 rounded-xl overflow-hidden">
-      <button onClick={onToggle} className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left">
+      <button onClick={onToggle} aria-expanded={isOpen} className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left">
         <span className="font-semibold text-walnut text-sm">{item.question}</span>
-        <span className={`text-walnut/40 flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}>▼</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`text-accent flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}>
+          <path d="M6 9l6 6 6-6" />
+        </svg>
       </button>
       {isOpen && (
         <div className="px-5 pb-4 text-sm text-walnut/70">

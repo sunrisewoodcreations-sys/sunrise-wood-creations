@@ -72,7 +72,7 @@ export default async function SiteHeader() {
       <div className="flex items-center gap-3">
         <TrackedLink
           href="/request-quote"
-          className="hidden sm:inline-block bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
+          className="hidden sm:inline-block bg-accent text-white px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
           eventName="request_quote_click"
           eventParams={{ location: "header" }}
         >
@@ -87,7 +87,7 @@ export default async function SiteHeader() {
         {role ? (
           <AccountMenu role={role} name={fullName} />
         ) : (
-          <Link href="/login" className="bg-walnut text-cream px-4 py-2 rounded-md text-sm font-semibold">
+          <Link href="/login" className="bg-accent text-white sm:bg-transparent sm:text-walnut sm:border sm:border-walnut/30 sm:hover:bg-walnut/5 px-4 py-2 rounded-md text-sm font-semibold transition-colors">
             Login
           </Link>
         )}

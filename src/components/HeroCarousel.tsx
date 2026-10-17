@@ -68,7 +68,7 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
           leftover strip of background around any photo. It resizes
           as you move between photos of different shapes, the same
           way many real photo carousels already behave. */}
-      <div className="relative bg-sawdust" style={{ aspectRatio: ratios[index] ?? 16 / 9 }}>
+      <div className="relative bg-sawdust aspect-[4/3] overflow-hidden">
         <div
           className="flex h-full transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${index * 100}%)` }}
@@ -81,7 +81,7 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
                   alt={slide.alt}
                   fill
                   sizes="(max-width: 768px) 100vw, 768px"
-                  className="object-contain"
+                  className="object-cover"
                   priority={i === 0}
                   onLoad={e => {
                     const img = e.currentTarget;
@@ -123,7 +123,7 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
           </button>
 
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 rounded-full bg-black/35 px-2 py-1.5">
             {slides.map((_, i) => (
               <button
                 key={i}

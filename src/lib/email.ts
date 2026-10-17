@@ -134,20 +134,20 @@ function paymentStatusHtml(priceCents: number, amountPaidCentsRaw?: number): str
   const isUnpaid = paid <= 0 && total > 0;
 
   const statusLabel = isPaidInFull ? "Paid in full" : isUnpaid ? "Unpaid" : "Partially paid";
-  const statusColor = isPaidInFull ? "#3f7a5a" : isUnpaid ? "#B23B3B" : "#D9603A";
+  const statusColor = isPaidInFull ? "#3f7a5a" : isUnpaid ? "#B23B3B" : "#A63D2F";
   const statusDetail = !isPaidInFull && !isUnpaid
-    ? ` <span style="font-weight: normal; color: #6b5d4f;">($${(paid / 100).toFixed(2)} of $${(total / 100).toFixed(2)} paid)</span>`
+    ? ` <span style="font-weight: normal; color: #74655B;">($${(paid / 100).toFixed(2)} of $${(total / 100).toFixed(2)} paid)</span>`
     : "";
 
   return `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 16px 0 0;">
       <tr>
-        <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px;">
+        <td style="background-color: #F6EBDD; border-radius: 8px; padding: 14px 16px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td valign="top">
                 <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a7a6b; margin-bottom: 2px;">Order Total</div>
-                <div style="font-size: 16px; font-weight: bold; color: #3D2B1F;">$${(total / 100).toFixed(2)}</div>
+                <div style="font-size: 16px; font-weight: bold; color: #2E2420;">$${(total / 100).toFixed(2)}</div>
               </td>
               <td valign="top" align="right">
                 <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a7a6b; margin-bottom: 2px;">Payment Status</div>
@@ -182,14 +182,14 @@ function shell(opts: {
   // and gets the exact same single-button output as before.
   const allButtons: EmailButton[] = opts.buttons && opts.buttons.length > 0
     ? opts.buttons
-    : (opts.buttonUrl && opts.buttonText ? [{ text: opts.buttonText, url: opts.buttonUrl, color: "#D9603A" }] : []);
+    : (opts.buttonUrl && opts.buttonText ? [{ text: opts.buttonText, url: opts.buttonUrl, color: "#A63D2F" }] : []);
 
   const button = allButtons.length > 0
     ? `
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 24px 0;">
       <tr>
         ${allButtons.map(b => `
-        <td style="background-color: ${b.color || "#D9603A"}; border-radius: 8px; padding-right: 10px;">
+        <td style="background-color: ${b.color || "#A63D2F"}; border-radius: 8px; padding-right: 10px;">
           <a href="${b.url}" style="display: inline-block; padding: 14px 22px; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; font-weight: bold; color: #ffffff; text-decoration: none; border-radius: 8px;">
             ${b.text}
           </a>
@@ -209,14 +209,14 @@ function shell(opts: {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; background-color: #F7F1E6;">
+<body style="margin: 0; padding: 0; background-color: #FAF6EE;">
   <div style="display: none; max-height: 0; overflow: hidden;">${opts.preheader}</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F7F1E6; padding: 32px 16px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FAF6EE; padding: 32px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" style="max-width: 480px; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e5d9c3;" cellpadding="0" cellspacing="0">
+        <table role="presentation" width="100%" style="max-width: 480px; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #E6DCCB;" cellpadding="0" cellspacing="0">
           <tr>
-            <td style="background-color: #F7F1E6; padding: 20px 32px; text-align: center; border-bottom: 1px solid #e5d9c3;">
+            <td style="background-color: #FAF6EE; padding: 20px 32px; text-align: center; border-bottom: 1px solid #E6DCCB;">
               <img
                 src="${process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com"}/logo-header.png"
                 alt="Sunrise Wood Creations"
@@ -227,14 +227,14 @@ function shell(opts: {
             </td>
           </tr>
           <tr>
-            <td style="padding: 28px 32px 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #2A211C;">
+            <td style="padding: 28px 32px 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #2E2420;">
               ${opts.bodyHtml}
               ${button}
             </td>
           </tr>
           <tr>
-            <td style="padding: 20px 32px; background-color: #F7F1E6; border-top: 1px solid #e5d9c3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;">
-              <p style="margin: 0 0 10px; font-size: 13px; color: #6b5d4f;">
+            <td style="padding: 20px 32px; background-color: #FAF6EE; border-top: 1px solid #E6DCCB; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;">
+              <p style="margin: 0 0 10px; font-size: 13px; color: #74655B;">
                 Questions? Call <a href="tel:${phoneTelHref}" style="color: #1E3A5F; font-weight: 600; text-decoration: none;">${phone}</a> or email
                 <a href="mailto:${email}" style="color: #1E3A5F; font-weight: 600; text-decoration: none;">${email}</a>
               </p>
@@ -360,21 +360,21 @@ function progressBarHtml(productType: ProductType, currentStatus: string): strin
       circleTd = `<td style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#4F7A55;color:#fff;font-size:${fontSize}px;font-weight:bold;text-align:center;line-height:${circleSize}px;font-family:Arial,sans-serif;">&#10003;</td>`;
     } else if (isCurrent) {
       const dotSize = Math.max(6, Math.round(circleSize * 0.4));
-      circleTd = `<td align="center" valign="middle" style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#ffffff;border:3px solid #D9603A;"><table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="width:${dotSize}px;height:${dotSize}px;border-radius:50%;background:#D9603A;font-size:0;line-height:0;">&nbsp;</td></tr></table></td>`;
+      circleTd = `<td align="center" valign="middle" style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#ffffff;border:3px solid #A63D2F;"><table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="width:${dotSize}px;height:${dotSize}px;border-radius:50%;background:#A63D2F;font-size:0;line-height:0;">&nbsp;</td></tr></table></td>`;
     } else {
-      circleTd = `<td style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#ffffff;border:2px solid #e5d9c3;font-size:0;">&nbsp;</td>`;
+      circleTd = `<td style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:#ffffff;border:2px solid #E6DCCB;font-size:0;">&nbsp;</td>`;
     }
 
     circleRow += `<td width="${circleWidthPct}%" align="center" style="font-size:0;"><table cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>${circleTd}</tr></table></td>`;
 
-    const labelColor = isDone ? "#4F7A55" : isCurrent ? "#D9603A" : "#a89684";
+    const labelColor = isDone ? "#4F7A55" : isCurrent ? "#A63D2F" : "#a89684";
     const labelWeight = isCurrent ? "font-weight:bold;" : "";
     labelRow += `<td align="center" style="font-size:${labelFontSize}px;color:${labelColor};${labelWeight}padding-top:6px;">${escapeHtml(step.label)}</td>`;
 
     if (i < n - 1) {
       // Connector after step i: sage if fully between two done steps,
       // ember if it's the one leading into the current step, muted otherwise.
-      const connectorColor = i < currentIndex - 1 ? "#4F7A55" : i === currentIndex - 1 ? "#D9603A" : "#e5d9c3";
+      const connectorColor = i < currentIndex - 1 ? "#4F7A55" : i === currentIndex - 1 ? "#A63D2F" : "#E6DCCB";
       // Bulletproof thin line: a nested single-cell table forces this
       // exact pixel height in Gmail/Outlook — a bare <td style="height:2px">
       // on its own is silently ignored by several email clients, which
@@ -442,9 +442,9 @@ export async function sendOrderStatusEmail(opts: {
       ? `
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 16px 0;">
           <tr>
-            <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px;">
+            <td style="background-color: #F6EBDD; border-radius: 8px; padding: 14px 16px;">
               <span style="color: #6b4d1a;">Balance to bring at pickup:</span>
-              <strong style="font-size: 18px; color: #D9603A; display: block; margin-top: 4px;">
+              <strong style="font-size: 18px; color: #A63D2F; display: block; margin-top: 4px;">
                 $${(opts.balanceDueCents / 100).toFixed(2)}
               </strong>
             </td>
@@ -465,12 +465,12 @@ export async function sendOrderStatusEmail(opts: {
     contactEmail,
     bodyHtml: `
       <h1 style="margin: 0 0 6px; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #1E3A5F;">${escapeHtml(heading)}</h1>
-      <p style="margin: 0 0 20px; color: #6b5d4f; font-size: 14px;">Hi ${escapeHtml(opts.customerName)},</p>
+      <p style="margin: 0 0 20px; color: #74655B; font-size: 14px;">Hi ${escapeHtml(opts.customerName)},</p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 22px;">
         <tr>
-          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px;">
+          <td style="background-color: #F6EBDD; border-radius: 8px; padding: 14px 16px;">
             <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a7a6b; margin-bottom: 2px;">Your Order</div>
-            <div style="font-size: 16px; font-weight: bold; color: #3D2B1F;">${escapeHtml(emailProductName(opts.orderTitle, opts.productType))}</div>
+            <div style="font-size: 16px; font-weight: bold; color: #2E2420;">${escapeHtml(emailProductName(opts.orderTitle, opts.productType))}</div>
             ${orderNumberDisplay ? `<div style="font-size: 11px; color: #8a7a6b; margin-top: 4px;">Order ${escapeHtml(orderNumberDisplay)}</div>` : ""}
           </td>
         </tr>
@@ -563,7 +563,7 @@ export async function sendProofDeclinedNotice(opts: {
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 8px;">
         <tr>
-          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
+          <td style="background-color: #F6EBDD; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
             "${opts.feedback}"
           </td>
         </tr>
@@ -712,7 +712,7 @@ export async function sendNewMessageNotice(opts: {
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 8px;">
         <tr>
-          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
+          <td style="background-color: #F6EBDD; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
             "${opts.messageBody}"
           </td>
         </tr>
@@ -748,7 +748,7 @@ export async function sendCustomerNewMessageNotice(opts: {
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 8px;">
         <tr>
-          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
+          <td style="background-color: #F6EBDD; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
             "${opts.messageBody}"
           </td>
         </tr>
@@ -785,7 +785,7 @@ export async function sendFaqAnswerEmail(opts: {
       <p style="margin: 0 0 16px;">Hi ${safeName}, thanks for reaching out — here's an answer to your question.</p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
         <tr>
-          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
+          <td style="background-color: #F6EBDD; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
             "${safeQuestion}"
           </td>
         </tr>
@@ -823,7 +823,7 @@ export async function sendGuestMessageNotice(opts: {
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 8px;">
         <tr>
-          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
+          <td style="background-color: #F6EBDD; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
             "${safeBody}"
           </td>
         </tr>
@@ -901,7 +901,7 @@ export async function sendQuoteRequestNotice(opts: {
       ${row("Timeline", opts.timeline)}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 12px 0 8px;">
         <tr>
-          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
+          <td style="background-color: #F6EBDD; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">
             "${escapeHtml(opts.description)}"
           </td>
         </tr>
@@ -942,9 +942,9 @@ export async function sendFinancialReportEmail(opts: {
         <tr><td style="padding: 4px 0; color: #6b4d1a;">Total sales:</td><td style="padding: 4px 0; text-align: right; font-weight: bold;">$${opts.totalRevenue.toFixed(2)}</td></tr>
         <tr><td style="padding: 4px 0; color: #6b4d1a;">Materials used (planters):</td><td style="padding: 4px 0; text-align: right; font-weight: bold;">$${opts.totalMaterialsCost.toFixed(2)}</td></tr>
         <tr><td style="padding: 4px 0; color: #6b4d1a;">Profit:</td><td style="padding: 4px 0; text-align: right; font-weight: bold;">$${opts.totalProfit.toFixed(2)}</td></tr>
-        <tr><td style="padding: 4px 0; color: #6b4d1a;">Sales tax owed (6% MI):</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #D9603A;">$${opts.salesTaxOwed.toFixed(2)}</td></tr>
-        <tr><td style="padding: 4px 0; color: #6b4d1a;">Michigan income tax:</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #D9603A;">$${opts.michiganIncomeTaxOwed.toFixed(2)}</td></tr>
-        <tr><td style="padding: 4px 0; color: #6b4d1a;">Federal income tax (set-aside):</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #D9603A;">$${opts.federalIncomeTaxOwed.toFixed(2)}</td></tr>
+        <tr><td style="padding: 4px 0; color: #6b4d1a;">Sales tax owed (6% MI):</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #A63D2F;">$${opts.salesTaxOwed.toFixed(2)}</td></tr>
+        <tr><td style="padding: 4px 0; color: #6b4d1a;">Michigan income tax:</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #A63D2F;">$${opts.michiganIncomeTaxOwed.toFixed(2)}</td></tr>
+        <tr><td style="padding: 4px 0; color: #6b4d1a;">Federal income tax (set-aside):</td><td style="padding: 4px 0; text-align: right; font-weight: bold; color: #A63D2F;">$${opts.federalIncomeTaxOwed.toFixed(2)}</td></tr>
       </table>
       <p style="margin: 0 0 8px; font-size: 13px; color: #8a7a6b;">
         Sales tax and Michigan income tax use real statutory rates. Federal income tax is a planning estimate you
@@ -1030,13 +1030,13 @@ export async function sendPickupConfirmationEmail(opts: {
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
         <tr>
-          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 16px;">
+          <td style="background-color: #F6EBDD; border-radius: 8px; padding: 16px;">
             <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">
               ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}
             </div>
-            <div style="margin-top: 10px; color: #6b5d4f; font-size: 14px;">${opts.businessAddress}</div>
-            <div style="margin-top: 6px; color: #6b5d4f; font-size: 14px;">${opts.pickupInstructions}</div>
-            <div style="margin-top: 6px; color: #6b5d4f; font-size: 14px;">Questions? Call ${opts.contactPhone}</div>
+            <div style="margin-top: 10px; color: #74655B; font-size: 14px;">${opts.businessAddress}</div>
+            <div style="margin-top: 6px; color: #74655B; font-size: 14px;">${opts.pickupInstructions}</div>
+            <div style="margin-top: 6px; color: #74655B; font-size: 14px;">Questions? Call ${opts.contactPhone}</div>
           </td>
         </tr>
       </table>
@@ -1094,18 +1094,18 @@ export async function sendPickupScheduledAdminAlert(opts: {
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
         <tr>
-          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 16px;">
+          <td style="background-color: #F6EBDD; border-radius: 8px; padding: 16px;">
             <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">
               ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}
             </div>
-            ${opts.customerPhone ? `<div style="margin-top: 6px; color: #6b5d4f; font-size: 14px;">${escapeHtml(opts.customerPhone)}</div>` : ""}
+            ${opts.customerPhone ? `<div style="margin-top: 6px; color: #74655B; font-size: 14px;">${escapeHtml(opts.customerPhone)}</div>` : ""}
           </td>
         </tr>
       </table>
     `,
     buttons: [
       { text: "Add to Google Calendar", url: opts.googleCalendarUrl, color: "#4F7A55" },
-      { text: "View Pickup Appointments", url: `${SITE_URL}/admin/pickup-appointments`, color: "#D9603A" }
+      { text: "View Pickup Appointments", url: `${SITE_URL}/admin/pickup-appointments`, color: "#A63D2F" }
     ]
   });
 
@@ -1141,12 +1141,12 @@ export async function sendPickupReminderEmail(opts: {
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
         <tr>
-          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 16px;">
+          <td style="background-color: #F6EBDD; border-radius: 8px; padding: 16px;">
             <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">
               ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}
             </div>
-            <div style="margin-top: 10px; color: #6b5d4f; font-size: 14px;">${opts.businessAddress}</div>
-            <div style="margin-top: 6px; color: #6b5d4f; font-size: 14px;">${opts.pickupInstructions}</div>
+            <div style="margin-top: 10px; color: #74655B; font-size: 14px;">${opts.businessAddress}</div>
+            <div style="margin-top: 6px; color: #74655B; font-size: 14px;">${opts.pickupInstructions}</div>
           </td>
         </tr>
       </table>
@@ -1216,10 +1216,10 @@ export async function sendCampaignEmail(opts: {
       ${bodyHtml}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
         <tr>
-          <td style="background-color: #FCEFDC; border-radius: 8px; padding: 16px; text-align: center;">
+          <td style="background-color: #F6EBDD; border-radius: 8px; padding: 16px; text-align: center;">
             <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a7a6b; margin-bottom: 6px;">Your Code</div>
-            <div style="font-size: 24px; font-weight: bold; color: #D9603A; font-family: Georgia, 'Times New Roman', serif; letter-spacing: 0.05em;">${escapeHtml(opts.couponCode)}</div>
-            <div style="margin-top: 10px; font-size: 13px; color: #6b5d4f;">
+            <div style="font-size: 24px; font-weight: bold; color: #A63D2F; font-family: Georgia, 'Times New Roman', serif; letter-spacing: 0.05em;">${escapeHtml(opts.couponCode)}</div>
+            <div style="margin-top: 10px; font-size: 13px; color: #74655B;">
               Just mention this code when you place your next order and we'll apply your discount — no account or login needed.
             </div>
             ${opts.expirationDisplay ? `<div style="margin-top: 6px; font-size: 12px; color: #8a7a6b;">Valid through ${escapeHtml(opts.expirationDisplay)}</div>` : ""}

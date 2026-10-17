@@ -105,7 +105,7 @@ export default function LoginPage() {
                   <input type="checkbox" defaultChecked className="w-auto" />
                   Keep me logged in
                 </label>
-                <button type="button" onClick={() => setMode("forgot")} className="text-ember font-semibold">
+                <button type="button" onClick={() => setMode("forgot")} className="text-accent font-semibold">
                   Forgot password?
                 </button>
               </div>
@@ -115,7 +115,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-walnut text-cream py-2.5 rounded-md font-semibold text-sm disabled:opacity-60"
+                className="w-full bg-accent text-white py-2.5 rounded-md font-semibold text-sm disabled:opacity-60 hover:opacity-90 transition-opacity"
               >
                 {loading ? "Logging in..." : "Log in"}
               </button>
@@ -123,7 +123,7 @@ export default function LoginPage() {
 
             <p className="text-sm mt-4 text-walnut/70">
               Don&apos;t have an account?{" "}
-              <button type="button" onClick={() => setShowContactModal(true)} className="text-ember font-semibold">
+              <button type="button" onClick={() => setShowContactModal(true)} className="text-accent font-semibold">
                 Create one
               </button>
             </p>
@@ -149,7 +149,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-ember text-white px-5 py-2.5 rounded-md font-semibold text-sm"
+                  className="bg-accent text-white px-5 py-2.5 rounded-md font-semibold text-sm"
                 >
                   Send reset link
                 </button>
@@ -182,7 +182,7 @@ export default function LoginPage() {
             <p className="text-sm font-semibold text-walnut mb-5">Email: sunrisewoodcreations@gmail.com</p>
             <button
               onClick={() => setShowContactModal(false)}
-              className="w-full bg-walnut text-cream py-2 rounded-md text-sm font-semibold"
+              className="w-full bg-accent text-white py-2 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
             >
               Close
             </button>
