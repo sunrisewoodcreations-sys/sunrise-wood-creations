@@ -24,7 +24,13 @@ export const metadata: Metadata = {
     "Handcrafted custom cornhole boards, wooden signs, planter boxes, and cutting boards, built to order in Michigan.",
   openGraph: {
     type: "website",
-    siteName: "Sunrise Wood Creations"
+    siteName: "Sunrise Wood Creations",
+    locale: "en_US"
+  },
+  // X/Twitter falls back to the existing Open Graph image (opengraph-image.tsx)
+  // when no separate Twitter image exists, so this only picks the large card.
+  twitter: {
+    card: "summary_large_image"
   },
   robots: { index: true, follow: true }
 };
