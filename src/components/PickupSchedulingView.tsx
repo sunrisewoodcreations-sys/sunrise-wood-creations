@@ -144,7 +144,7 @@ export default function PickupSchedulingView({
             <button
               onClick={handleConfirm}
               disabled={!selectedDate || !selectedTime || busy}
-              className="w-full bg-ember text-white rounded-md py-3 text-sm font-bold disabled:opacity-50"
+              className="w-full bg-brass text-white rounded-md py-3 text-sm font-bold disabled:opacity-50"
             >
               {busy ? "Booking..." : "Confirm Appointment"}
             </button>

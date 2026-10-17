@@ -40,7 +40,19 @@ export default async function SiteFooter() {
       {/* Hours match the OpeningHoursSpecification in layout.tsx's JSON-LD.
           Update both places if hours ever change. */}
       <div className="opacity-80 mt-1.5">Mon–Fri: 10:00 AM – 7:00 PM</div>
-      <div className="opacity-80 mt-1.5">Appointment Only Saturday-Sunday</div>
+      <div className="opacity-80 mt-1.5">Sat &amp; Sun: by appointment</div>
+      <div className="opacity-80 mt-1.5">Pickup in Lawrence, Michigan</div>
+      <div className="mt-3">
+        <a
+          href="https://www.facebook.com/share/19RchHQbjc/?mibextid=wwXIfr"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2 opacity-80 hover:opacity-100"
+        >
+          Follow us on Facebook
+        </a>
+      </div>
+      <div className="opacity-50 mt-4 text-xs">&copy; {new Date().getFullYear()} Sunrise Wood Creations</div>
     </footer>
   );
 }

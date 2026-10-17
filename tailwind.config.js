@@ -8,14 +8,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        walnut: "#3D2B1F",
-        bark: "#2A1D15",
-        cream: "#F7F1E6",
-        sawdust: "#EFE4CF",
+        walnut: "#25282B",
+        bark: "#1A1C1E",
+        cream: "#F5F3EF",
+        sawdust: "#E9E5DD",
         amber: "#E8A33D",
         ember: "#D9603A",
+        brass: "#9E6A1C",
         sage: "#6E8560",
-        charcoal: "#2A211C"
+        charcoal: "#25282B"
       },
       fontFamily: {
         display: ["var(--font-fraunces)", "serif"],

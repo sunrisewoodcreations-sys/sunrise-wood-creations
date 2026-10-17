@@ -107,7 +107,7 @@ export default function QuoteRequestForm({ initialProductType = "" }: { initialP
       <button
         type="submit"
         disabled={loading}
-        className="bg-ember text-white px-6 py-3 rounded-md text-sm font-semibold disabled:opacity-60"
+        className="bg-brass text-white px-6 py-3 rounded-md text-sm font-semibold disabled:opacity-60"
       >
         {loading ? "Sending..." : "Request a quote"}
       </button>
