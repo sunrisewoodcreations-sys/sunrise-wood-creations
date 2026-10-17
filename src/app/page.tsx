@@ -75,7 +75,8 @@ export default async function HomePage() {
     <div>
       <SiteHeader />
 
-      <section className="text-center px-6 pt-10 pb-2 sm:pt-16 sm:pb-8 md:pt-20 bg-gradient-to-b from-sawdust to-cream">
+      <section className="text-center px-6 pt-8 pb-2 sm:pt-12 md:pt-14 bg-gradient-to-b from-sawdust to-cream">
+        <HeroCarousel slides={content.hero.carouselSlides} />
         <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-walnut font-semibold mb-3 sm:mb-4 whitespace-pre-line">
           {content.hero.heading}
         </h1>
@@ -99,8 +100,7 @@ export default async function HomePage() {
             {content.hero.secondaryCtaText}
           </TrackedLink>
         </div>
-        <p className="text-xs text-walnut/60 mt-5 mb-8 sm:mb-10">Handmade in Michigan • Built to order • Local pickup in Lawrence, MI</p>
-        <HeroCarousel slides={content.hero.carouselSlides} />
+        <p className="text-xs text-walnut/60 mt-5 pb-10 sm:pb-12">Handmade in Michigan • Built to order • Local pickup in Lawrence, MI</p>
       </section>
 
       <section id="products" className="max-w-5xl mx-auto px-6 py-14 md:py-20 scroll-mt-16">
