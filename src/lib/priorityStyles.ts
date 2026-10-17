@@ -7,7 +7,7 @@
 // lets both kinds of components use them safely.
 export const PRIORITY_STYLES: Record<string, string> = {
   high: "bg-ember text-white",
-  normal: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60",
-  low: "bg-[#1E3A5F]/5 text-[#1E3A5F]/40"
+  normal: "bg-[#2E2420]/10 text-[#2E2420]/60",
+  low: "bg-[#2E2420]/5 text-[#2E2420]/40"
 };
 export const PRIORITY_LABELS: Record<string, string> = { high: "High", normal: "Normal", low: "Low" };

@@ -23,7 +23,7 @@ function CategorySelect({ value, onChange }: { value: FaqCategory; onChange: (v:
     <select
       value={value}
       onChange={e => onChange(e.target.value as FaqCategory)}
-      className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+      className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
     >
       {FAQ_CATEGORY_ORDER.map(cat => (
         <option key={cat} value={cat}>{FAQ_CATEGORY_LABELS[cat]}</option>
@@ -145,29 +145,29 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
         {!addingFaq ? (
           <button
             onClick={() => setAddingFaq(true)}
-            className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold"
+            className="border border-[#2E2420]/20 text-[#2E2420] px-4 py-2 rounded-md text-sm font-semibold"
           >
             + Add FAQ manually
           </button>
         ) : (
-          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
-            <p className="text-xs text-[#1E3A5F]/50 mb-3">
+          <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
+            <p className="text-xs text-[#2E2420]/50 mb-3">
               No customer needed — this goes straight to public on the FAQ page, with no email sent (there's no one to send it to).
             </p>
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Question</label>
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Question</label>
             <input
               value={newQuestion}
               onChange={e => setNewQuestion(e.target.value)}
-              className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm mb-3"
+              className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm mb-3"
             />
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Answer</label>
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Answer</label>
             <textarea
               value={newAnswer}
               onChange={e => setNewAnswer(e.target.value)}
               rows={3}
-              className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm mb-3"
+              className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm mb-3"
             />
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Category</label>
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Category</label>
             <div className="mb-2">
               <CategorySelect value={newCategory} onChange={setNewCategory} />
             </div>
@@ -176,13 +176,13 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
               <button
                 onClick={handleAddFaq}
                 disabled={busy}
-                className="bg-[#1E3A5F] text-white px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50"
+                className="bg-accent text-white px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50"
               >
                 {busy ? "Adding..." : "Add to public FAQ"}
               </button>
               <button
                 onClick={() => { setAddingFaq(false); setAddError(""); setNewQuestion(""); setNewAnswer(""); setNewCategory("general"); }}
-                className="text-xs text-[#1E3A5F]/50 font-semibold"
+                className="text-xs text-[#2E2420]/50 font-semibold"
               >
                 Cancel
               </button>
@@ -194,13 +194,13 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
       <div className="flex gap-2 mb-3">
         <button
           onClick={() => setFilter("pending")}
-          className={`px-4 py-2 rounded-full text-sm font-semibold ${filter === "pending" ? "bg-[#1E3A5F] text-white" : "bg-white border border-[#1E3A5F]/15 text-[#1E3A5F]"}`}
+          className={`px-4 py-2 rounded-full text-sm font-semibold ${filter === "pending" ? "bg-accent text-white" : "bg-white border border-[#2E2420]/15 text-[#2E2420]"}`}
         >
           Pending ({pendingCount})
         </button>
         <button
           onClick={() => setFilter("answered")}
-          className={`px-4 py-2 rounded-full text-sm font-semibold ${filter === "answered" ? "bg-[#1E3A5F] text-white" : "bg-white border border-[#1E3A5F]/15 text-[#1E3A5F]"}`}
+          className={`px-4 py-2 rounded-full text-sm font-semibold ${filter === "answered" ? "bg-accent text-white" : "bg-white border border-[#2E2420]/15 text-[#2E2420]"}`}
         >
           Answered ({questions.filter(q => q.status === "answered").length})
         </button>
@@ -210,7 +210,7 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
         <select
           value={categoryFilter}
           onChange={e => setCategoryFilter(e.target.value as "all" | FaqCategory)}
-          className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+          className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
         >
           <option value="all">All categories</option>
           {FAQ_CATEGORY_ORDER.map(cat => (
@@ -221,31 +221,31 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search questions and answers..."
-          className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+          className="flex-1 border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
         />
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-[#1E3A5F]/50">No matching {filter} questions.</p>
+        <p className="text-sm text-[#2E2420]/50">No matching {filter} questions.</p>
       ) : (
         <div className="space-y-3">
           {filtered.map((q, index) => (
-            <div key={q.id} className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
+            <div key={q.id} className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
               <div className="flex items-start justify-between gap-3 flex-wrap mb-1">
                 <div>
-                  <div className="font-semibold text-[#1E3A5F]">
+                  <div className="font-semibold text-[#2E2420]">
                     {q.name === "Added by admin" ? "Added by you" : q.name}
                   </div>
-                  <div className="text-xs text-[#1E3A5F]/50">
+                  <div className="text-xs text-[#2E2420]/50">
                     {q.name === "Added by admin" ? "Not a customer submission" : q.email} · {new Date(q.created_at).toLocaleDateString()}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F]/70">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#2E2420]/10 text-[#2E2420]/70">
                     {FAQ_CATEGORY_LABELS[q.category] || "General"}
                   </span>
                   {q.status === "answered" && (
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${q.is_public ? "bg-sage/20 text-sage" : "bg-[#1E3A5F]/10 text-[#1E3A5F]/60"}`}>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${q.is_public ? "bg-sage/20 text-sage" : "bg-[#2E2420]/10 text-[#2E2420]/60"}`}>
                       {q.is_public ? "Public" : "Private"}
                     </span>
                   )}
@@ -256,30 +256,30 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
                   )}
                 </div>
               </div>
-              <p className="text-sm text-[#1E3A5F]/70 mb-2">{q.question}</p>
+              <p className="text-sm text-[#2E2420]/70 mb-2">{q.question}</p>
 
               {q.answer && openId !== q.id && (
-                <div className="bg-cream rounded-md px-3 py-2 text-sm text-[#1E3A5F]/80 mb-2">{q.answer}</div>
+                <div className="bg-cream rounded-md px-3 py-2 text-sm text-[#2E2420]/80 mb-2">{q.answer}</div>
               )}
 
               {openId === q.id ? (
-                <div className="mt-2 pt-3 border-t border-[#1E3A5F]/10">
+                <div className="mt-2 pt-3 border-t border-[#2E2420]/10">
                   <textarea
                     value={answerText}
                     onChange={e => setAnswerText(e.target.value)}
                     rows={4}
                     placeholder="Write your answer..."
-                    className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm mb-2"
+                    className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm mb-2"
                   />
-                  <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Category</label>
+                  <label className="block text-xs font-semibold text-[#2E2420] mb-1">Category</label>
                   <div className="mb-2">
                     <CategorySelect value={answerCategory} onChange={setAnswerCategory} />
                   </div>
-                  <label className="flex items-center gap-2 text-sm text-[#1E3A5F] mb-2">
+                  <label className="flex items-center gap-2 text-sm text-[#2E2420] mb-2">
                     <input type="checkbox" checked={makePublic} onChange={e => setMakePublic(e.target.checked)} />
                     Show this question and answer publicly on the FAQ page
                   </label>
-                  <label className="flex items-center gap-2 text-sm text-[#1E3A5F] mb-2">
+                  <label className="flex items-center gap-2 text-sm text-[#2E2420] mb-2">
                     <input type="checkbox" checked={showOnHomepage} onChange={e => setShowOnHomepage(e.target.checked)} />
                     Show on Homepage
                   </label>
@@ -288,11 +288,11 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
                     <button
                       onClick={() => submitAnswer(q.id)}
                       disabled={busy}
-                      className="bg-[#1E3A5F] text-white px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50"
+                      className="bg-accent text-white px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50"
                     >
                       {busy ? "Saving..." : q.status === "answered" ? "Save (no email sent)" : "Save & Send Email"}
                     </button>
-                    <button onClick={() => setOpenId(null)} className="text-xs text-[#1E3A5F]/50 font-semibold">Cancel</button>
+                    <button onClick={() => setOpenId(null)} className="text-xs text-[#2E2420]/50 font-semibold">Cancel</button>
                   </div>
                 </div>
               ) : (
@@ -303,7 +303,7 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
                         onClick={() => handleMove(index, "up")}
                         disabled={index === 0}
                         aria-label="Move up"
-                        className="w-6 h-6 rounded border border-[#1E3A5F]/20 text-[#1E3A5F] disabled:opacity-30 flex items-center justify-center text-xs"
+                        className="w-6 h-6 rounded border border-[#2E2420]/20 text-[#2E2420] disabled:opacity-30 flex items-center justify-center text-xs"
                       >
                         ↑
                       </button>
@@ -311,7 +311,7 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
                         onClick={() => handleMove(index, "down")}
                         disabled={index === filtered.length - 1}
                         aria-label="Move down"
-                        className="w-6 h-6 rounded border border-[#1E3A5F]/20 text-[#1E3A5F] disabled:opacity-30 flex items-center justify-center text-xs"
+                        className="w-6 h-6 rounded border border-[#2E2420]/20 text-[#2E2420] disabled:opacity-30 flex items-center justify-center text-xs"
                       >
                         ↓
                       </button>
@@ -320,7 +320,7 @@ export default function AdminFaqManager({ questions }: { questions: Question[] }
                   <button onClick={() => openAnswerForm(q)} className="text-xs font-semibold text-ember hover:underline">
                     {q.answer ? "Edit answer" : "Write answer"}
                   </button>
-                  <button onClick={() => handleDelete(q.id)} className="text-xs font-semibold text-[#1E3A5F]/40 hover:text-ember ml-auto">
+                  <button onClick={() => handleDelete(q.id)} className="text-xs font-semibold text-[#2E2420]/40 hover:text-ember ml-auto">
                     Delete
                   </button>
                 </div>

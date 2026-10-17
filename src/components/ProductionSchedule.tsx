@@ -43,7 +43,7 @@ import { PRIORITY_STYLES, PRIORITY_LABELS } from "@/lib/priorityStyles";
 export { PRIORITY_STYLES, PRIORITY_LABELS };
 
 export const PRODUCTION_STATUS_STYLES: Record<string, string> = {
-  waiting: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60",
+  waiting: "bg-[#2E2420]/10 text-[#2E2420]/60",
   building: "bg-amber/25 text-amber",
   assembly: "bg-amber/50 text-white",
   finishing: "bg-ember/20 text-ember",
@@ -96,11 +96,11 @@ export function OrderScheduleCard({
         onDragStart={e => { e.dataTransfer.setData("text/plain", order.id); setDraggingId(order.id); }}
         onDragEnd={() => setDraggingId(null)}
         className={`bg-white border rounded-lg p-2.5 mb-2 text-xs cursor-grab active:cursor-grabbing ${
-          isOverdue ? "border-ember/40 bg-ember/5" : "border-[#1E3A5F]/15"
+          isOverdue ? "border-ember/40 bg-ember/5" : "border-[#2E2420]/15"
         } ${draggingId === order.id ? "opacity-40" : ""}`}
       >
         <div className="flex items-center justify-between gap-1 mb-1">
-          <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#1E3A5F] truncate hover:underline">
+          <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#2E2420] truncate hover:underline">
             {order.profiles?.full_name || "Unknown"}
           </Link>
           <button
@@ -110,12 +110,12 @@ export function OrderScheduleCard({
             {PRIORITY_LABELS[order.priority || "normal"]}
           </button>
         </div>
-        <div className="text-[#1E3A5F]/60 truncate mb-1.5">{productLabel(order.product_type as ProductType)} — {order.title}</div>
+        <div className="text-[#2E2420]/60 truncate mb-1.5">{productLabel(order.product_type as ProductType)} — {order.title}</div>
         <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${PRODUCTION_STATUS_STYLES[order.production_status || "waiting"]}`}>
           {PRODUCTION_STATUS_LABELS[order.production_status || "waiting"]}
         </span>
         {!compact && order.due_date && (
-          <div className="text-[10px] text-[#1E3A5F]/50 mt-1">Pickup: {formatCalendarDate(order.due_date)}</div>
+          <div className="text-[10px] text-[#2E2420]/50 mt-1">Pickup: {formatCalendarDate(order.due_date)}</div>
         )}
         {!order.production_date && order.due_date && (
           <button
@@ -135,22 +135,22 @@ export function OrderScheduleCard({
           </button>
         )}
         {!compact && !editingDetails && order.production_notes && (
-          <button onClick={() => setEditingDetails(true)} className="block text-[10px] text-[#1E3A5F]/60 mt-1 italic truncate text-left w-full" title={order.production_notes}>
+          <button onClick={() => setEditingDetails(true)} className="block text-[10px] text-[#2E2420]/60 mt-1 italic truncate text-left w-full" title={order.production_notes}>
             “{order.production_notes}”
           </button>
         )}
         {!compact && !editingDetails && !order.production_notes && (
-          <button onClick={() => setEditingDetails(true)} className="text-[10px] text-[#1E3A5F]/30 mt-1 italic">+ add note / set priority</button>
+          <button onClick={() => setEditingDetails(true)} className="text-[10px] text-[#2E2420]/30 mt-1 italic">+ add note / set priority</button>
         )}
 
         {!compact && editingDetails && (
-          <div className="mt-2 pt-2 border-t border-[#1E3A5F]/10" onClick={e => e.stopPropagation()}>
+          <div className="mt-2 pt-2 border-t border-[#2E2420]/10" onClick={e => e.stopPropagation()}>
             <div className="flex gap-1 mb-1.5">
               {(["high", "normal", "low"] as const).map(p => (
                 <button
                   key={p}
                   onClick={() => updateOrder(order.id, { priority: p })}
-                  className={`flex-1 py-1 rounded text-[10px] font-bold ${order.priority === p ? PRIORITY_STYLES[p] : "bg-[#1E3A5F]/5 text-[#1E3A5F]/40"}`}
+                  className={`flex-1 py-1 rounded text-[10px] font-bold ${order.priority === p ? PRIORITY_STYLES[p] : "bg-[#2E2420]/5 text-[#2E2420]/40"}`}
                 >
                   {PRIORITY_LABELS[p]}
                 </button>
@@ -160,17 +160,17 @@ export function OrderScheduleCard({
               value={notesDraft}
               onChange={e => setNotesDraft(e.target.value)}
               placeholder="Note for this job..."
-              className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-xs mb-1.5"
+              className="w-full border border-[#2E2420]/15 rounded-md px-2 py-1 text-xs mb-1.5"
               rows={2}
             />
             <div className="flex gap-1.5">
               <button
                 onClick={() => { updateOrder(order.id, { productionNotes: notesDraft }); setEditingDetails(false); }}
-                className="flex-1 bg-[#1E3A5F] text-white rounded px-2 py-1 text-[11px] font-semibold"
+                className="flex-1 bg-accent text-white rounded px-2 py-1 text-[11px] font-semibold"
               >
                 Save
               </button>
-              <button onClick={() => setEditingDetails(false)} className="flex-1 border border-[#1E3A5F]/20 text-[#1E3A5F] rounded px-2 py-1 text-[11px] font-semibold">
+              <button onClick={() => setEditingDetails(false)} className="flex-1 border border-[#2E2420]/20 text-[#2E2420] rounded px-2 py-1 text-[11px] font-semibold">
                 Cancel
               </button>
             </div>
@@ -180,7 +180,7 @@ export function OrderScheduleCard({
         {materialWarning && (
           <div className="mt-2 bg-ember/10 border border-ember/30 rounded px-2 py-1.5">
             <div className="text-[10px] font-bold text-ember mb-1">Materials short — start anyway?</div>
-            <div className="text-[10px] text-[#1E3A5F]/60 mb-1.5">
+            <div className="text-[10px] text-[#2E2420]/60 mb-1.5">
               {materialWarning.map(s => `${s.materialType}: short ${s.short}`).join(" · ")}
             </div>
             <div className="flex gap-1.5">
@@ -190,7 +190,7 @@ export function OrderScheduleCard({
               >
                 Start anyway
               </button>
-              <button onClick={() => setMaterialWarning(null)} className="flex-1 border border-[#1E3A5F]/20 text-[#1E3A5F] rounded px-2 py-1 text-[10px] font-semibold">
+              <button onClick={() => setMaterialWarning(null)} className="flex-1 border border-[#2E2420]/20 text-[#2E2420] rounded px-2 py-1 text-[10px] font-semibold">
                 Cancel
               </button>
             </div>
@@ -198,7 +198,7 @@ export function OrderScheduleCard({
         )}
 
         {!compact && order.production_status === "waiting" && (
-          <p className="text-[10px] text-[#1E3A5F]/40 italic mt-2">
+          <p className="text-[10px] text-[#2E2420]/40 italic mt-2">
             Not in the Manufacturing Queue yet — start production here or via a cut list.
           </p>
         )}
@@ -209,7 +209,7 @@ export function OrderScheduleCard({
               <button
                 onClick={handleStartProduction}
                 disabled={checkingMaterial}
-                className="flex-1 bg-[#1E3A5F] text-white rounded px-2 py-1.5 text-[11px] font-semibold disabled:opacity-60"
+                className="flex-1 bg-accent text-white rounded px-2 py-1.5 text-[11px] font-semibold disabled:opacity-60"
               >
                 {checkingMaterial ? "Checking materials..." : "Start production"}
               </button>
@@ -397,38 +397,38 @@ export default function ProductionSchedule({
     // is just a soft visual read of "light/moderate/busy" for now.
     // A real limit can plug in here later without changing anything
     // else about this component.
-    const color = count === 0 ? "bg-[#1E3A5F]/10" : count <= 2 ? "bg-sage" : count <= 4 ? "bg-amber" : "bg-ember";
+    const color = count === 0 ? "bg-[#2E2420]/10" : count <= 2 ? "bg-sage" : count <= 4 ? "bg-amber" : "bg-ember";
     return <span className={`inline-block w-2 h-2 rounded-full ${color}`} title={`${count} job${count === 1 ? "" : "s"} scheduled`} />;
   }
 
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Production schedule</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">The daily hub for what to build next, in what order, and where it stands.</p>
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">Production schedule</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6">The daily hub for what to build next, in what order, and where it stands.</p>
 
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-4">{error}</p>}
 
       {/* Daily workload summary */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold mb-1">Scheduled today</div>
-          <div className="text-2xl font-display text-[#1E3A5F]">{scheduledToday.length}</div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
+          <div className="text-[10px] text-[#2E2420]/50 uppercase font-semibold mb-1">Scheduled today</div>
+          <div className="text-2xl font-display text-[#2E2420]">{scheduledToday.length}</div>
         </div>
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold mb-1">Overdue</div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
+          <div className="text-[10px] text-[#2E2420]/50 uppercase font-semibold mb-1">Overdue</div>
           <div className={`text-2xl font-display ${overdueOrders.length > 0 ? "text-ember" : "text-sage"}`}>{overdueOrders.length}</div>
         </div>
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold mb-1">Pickup tomorrow</div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
+          <div className="text-[10px] text-[#2E2420]/50 uppercase font-semibold mb-1">Pickup tomorrow</div>
           <div className="text-2xl font-display text-amber">{dueTomorrowPickup.length}</div>
         </div>
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold mb-1">Waiting on customer</div>
-          <div className="text-2xl font-display text-[#1E3A5F]">{waitingOrders.length}</div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
+          <div className="text-[10px] text-[#2E2420]/50 uppercase font-semibold mb-1">Waiting on customer</div>
+          <div className="text-2xl font-display text-[#2E2420]">{waitingOrders.length}</div>
         </div>
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase font-semibold mb-1">Completed today</div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
+          <div className="text-[10px] text-[#2E2420]/50 uppercase font-semibold mb-1">Completed today</div>
           <div className="text-2xl font-display text-sage">{completedTodayCount}</div>
         </div>
       </div>
@@ -445,19 +445,19 @@ export default function ProductionSchedule({
 
       {/* Desktop: filters + view toggle */}
       <div className="hidden md:flex items-center gap-3 mb-4">
-        <select value={productTypeFilter} onChange={e => setProductTypeFilter(e.target.value)} className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm">
+        <select value={productTypeFilter} onChange={e => setProductTypeFilter(e.target.value)} className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm">
           {PRODUCT_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <select disabled className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm text-[#1E3A5F]/40" title="Employee assignment coming soon">
+        <select disabled className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm text-[#2E2420]/40" title="Employee assignment coming soon">
           <option>All employees</option>
         </select>
         <div className="flex-1" />
-        <div className="flex rounded-md border border-[#1E3A5F]/20 overflow-hidden">
+        <div className="flex rounded-md border border-[#2E2420]/20 overflow-hidden">
           {(["day", "week", "month"] as const).map(mode => (
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
-              className={`px-3 py-1.5 text-xs font-semibold capitalize ${viewMode === mode ? "bg-[#1E3A5F] text-white" : "text-[#1E3A5F] hover:bg-cream"}`}
+              className={`px-3 py-1.5 text-xs font-semibold capitalize ${viewMode === mode ? "bg-accent text-white" : "text-[#2E2420] hover:bg-cream"}`}
             >
               {mode}
             </button>
@@ -470,12 +470,12 @@ export default function ProductionSchedule({
         {viewMode === "month" && (
           <>
             <div className="flex items-center gap-3 mb-3">
-              <button onClick={() => goToMonth(-1)} className="border border-[#1E3A5F]/20 w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">‹</button>
-              <h3 className="font-display text-base text-[#1E3A5F] w-40 text-center">{MONTH_NAMES[calendarMonth - 1]} {calendarYear}</h3>
-              <button onClick={() => goToMonth(1)} className="border border-[#1E3A5F]/20 w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">›</button>
+              <button onClick={() => goToMonth(-1)} className="border border-[#2E2420]/20 w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">‹</button>
+              <h3 className="font-display text-base text-[#2E2420] w-40 text-center">{MONTH_NAMES[calendarMonth - 1]} {calendarYear}</h3>
+              <button onClick={() => goToMonth(1)} className="border border-[#2E2420]/20 w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">›</button>
             </div>
-            <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm overflow-hidden">
-              <div className="grid grid-cols-7 bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+            <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm overflow-hidden">
+              <div className="grid grid-cols-7 bg-[#2E2420] text-white text-xs uppercase tracking-wide">
                 {WEEKDAYS.map(w => <div key={w} className="text-center py-2">{w}</div>)}
               </div>
               <div className="grid grid-cols-7">
@@ -489,12 +489,12 @@ export default function ProductionSchedule({
                       key={i}
                       onDragOver={e => { e.preventDefault(); setDragOverDate(ds); }}
                       onDrop={e => handleDrop(e, ds)}
-                      className={`min-h-[120px] border-t border-l border-[#1E3A5F]/10 p-1.5 [&:nth-child(7n+1)]:border-l-0 ${
+                      className={`min-h-[120px] border-t border-l border-[#2E2420]/10 p-1.5 [&:nth-child(7n+1)]:border-l-0 ${
                         !d.inCurrentMonth ? "bg-cream/40" : "bg-white"
                       } ${dragOverDate === ds ? "bg-sage/10 ring-2 ring-inset ring-sage/40" : ""}`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className={`text-xs font-semibold ${isToday ? "inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#1E3A5F] text-white" : d.inCurrentMonth ? "text-[#1E3A5F]/70" : "text-[#1E3A5F]/30"}`}>
+                        <span className={`text-xs font-semibold ${isToday ? "inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-white" : d.inCurrentMonth ? "text-[#2E2420]/70" : "text-[#2E2420]/30"}`}>
                           {d.day}
                         </span>
                         <div className="flex items-center gap-1">
@@ -525,9 +525,9 @@ export default function ProductionSchedule({
         {viewMode === "week" && (
           <>
             <div className="flex items-center gap-3 mb-3">
-              <button onClick={() => setDesktopDay(addDays(desktopDay, -7))} className="border border-[#1E3A5F]/20 w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">‹</button>
-              <h3 className="font-display text-base text-[#1E3A5F]">Week of {formatCalendarDate(weekGridDays[0].ds)}</h3>
-              <button onClick={() => setDesktopDay(addDays(desktopDay, 7))} className="border border-[#1E3A5F]/20 w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">›</button>
+              <button onClick={() => setDesktopDay(addDays(desktopDay, -7))} className="border border-[#2E2420]/20 w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">‹</button>
+              <h3 className="font-display text-base text-[#2E2420]">Week of {formatCalendarDate(weekGridDays[0].ds)}</h3>
+              <button onClick={() => setDesktopDay(addDays(desktopDay, 7))} className="border border-[#2E2420]/20 w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">›</button>
             </div>
             <div className="grid grid-cols-7 gap-2">
               {weekGridDays.map(d => {
@@ -539,10 +539,10 @@ export default function ProductionSchedule({
                     key={d.ds}
                     onDragOver={e => { e.preventDefault(); setDragOverDate(d.ds); }}
                     onDrop={e => handleDrop(e, d.ds)}
-                    className={`bg-white border rounded-xl shadow-sm p-2 min-h-[300px] ${isToday ? "border-[#1E3A5F]" : "border-[#1E3A5F]/10"} ${dragOverDate === d.ds ? "bg-sage/10 ring-2 ring-inset ring-sage/40" : ""}`}
+                    className={`bg-white border rounded-xl shadow-sm p-2 min-h-[300px] ${isToday ? "border-[#2E2420]" : "border-[#2E2420]/10"} ${dragOverDate === d.ds ? "bg-sage/10 ring-2 ring-inset ring-sage/40" : ""}`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <div className="text-xs font-semibold text-[#1E3A5F]">{WEEKDAYS[new Date(`${d.ds}T12:00:00Z`).getUTCDay()]} {d.month}/{d.day}</div>
+                      <div className="text-xs font-semibold text-[#2E2420]">{WEEKDAYS[new Date(`${d.ds}T12:00:00Z`).getUTCDay()]} {d.month}/{d.day}</div>
                       <div className="flex items-center gap-1">
                         {dayOrders.length > 0 && <CapacityDot count={dayOrders.length} />}
                         {dayPickups.length > 0 && (
@@ -568,26 +568,26 @@ export default function ProductionSchedule({
         {viewMode === "day" && (
           <>
             <div className="flex items-center gap-3 mb-3">
-              <button onClick={() => setDesktopDay(addDays(desktopDay, -1))} className="border border-[#1E3A5F]/20 w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">‹</button>
-              <h3 className="font-display text-base text-[#1E3A5F]">{formatCalendarDate(desktopDay, "long")}</h3>
-              <button onClick={() => setDesktopDay(addDays(desktopDay, 1))} className="border border-[#1E3A5F]/20 w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">›</button>
+              <button onClick={() => setDesktopDay(addDays(desktopDay, -1))} className="border border-[#2E2420]/20 w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">‹</button>
+              <h3 className="font-display text-base text-[#2E2420]">{formatCalendarDate(desktopDay, "long")}</h3>
+              <button onClick={() => setDesktopDay(addDays(desktopDay, 1))} className="border border-[#2E2420]/20 w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">›</button>
             </div>
             <div
               onDragOver={e => { e.preventDefault(); setDragOverDate(desktopDay); }}
               onDrop={e => handleDrop(e, desktopDay)}
-              className={`bg-white border rounded-xl shadow-sm p-4 max-w-2xl ${dragOverDate === desktopDay ? "bg-sage/10 ring-2 ring-inset ring-sage/40" : "border-[#1E3A5F]/10"}`}
+              className={`bg-white border rounded-xl shadow-sm p-4 max-w-2xl ${dragOverDate === desktopDay ? "bg-sage/10 ring-2 ring-inset ring-sage/40" : "border-[#2E2420]/10"}`}
             >
               {(ordersByDate.get(desktopDay) || []).length === 0 && (pickupsByDate.get(desktopDay) || []).length === 0 && (
-                <p className="text-sm text-[#1E3A5F]/50 text-center py-8">Nothing scheduled for this day. Drag an order here.</p>
+                <p className="text-sm text-[#2E2420]/50 text-center py-8">Nothing scheduled for this day. Drag an order here.</p>
               )}
               {(ordersByDate.get(desktopDay) || []).map(o => <OrderScheduleCard key={o.id} order={o} todayStr={todayStr} draggingId={draggingId} setDraggingId={setDraggingId} updateOrder={updateOrder} />)}
               {(pickupsByDate.get(desktopDay) || []).length > 0 && (
-                <div className="mt-3 pt-3 border-t border-[#1E3A5F]/10">
-                  <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">🟢 Pickups today</div>
+                <div className="mt-3 pt-3 border-t border-[#2E2420]/10">
+                  <div className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide mb-2">🟢 Pickups today</div>
                   {(pickupsByDate.get(desktopDay) || []).map(p => (
                     <div key={p.id} className="bg-sage/10 border border-sage/30 rounded-lg px-3 py-2 mb-1.5 text-sm">
                       <span className="font-semibold text-sage">{p.appointment_time}</span>
-                      <span className="text-[#1E3A5F] ml-2">{p.orders?.profiles?.full_name || "Unknown"} — {p.orders?.title}</span>
+                      <span className="text-[#2E2420] ml-2">{p.orders?.profiles?.full_name || "Unknown"} — {p.orders?.title}</span>
                     </div>
                   ))}
                 </div>
@@ -599,10 +599,10 @@ export default function ProductionSchedule({
         {unscheduled.length > 0 && (
           <div
             onDragOver={e => e.preventDefault()}
-            className="mt-4 bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3"
+            className="mt-4 bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-3"
           >
             <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide">
+              <div className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide">
                 Unscheduled ({unscheduled.length}) — drag onto a day to assign a production date
               </div>
               {unscheduled.some(o => o.due_date) && (
@@ -627,7 +627,7 @@ export default function ProductionSchedule({
               key={tab}
               onClick={() => setMobileTab(tab)}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold capitalize ${
-                mobileTab === tab ? "bg-[#1E3A5F] text-white" : "bg-white border border-[#1E3A5F]/15 text-[#1E3A5F]"
+                mobileTab === tab ? "bg-accent text-white" : "bg-white border border-[#2E2420]/15 text-[#2E2420]"
               }`}
             >
               {tab === "day" ? "Day view" : tab === "unscheduled" ? "Unscheduled" : tab === "waiting" ? "Waiting on customer" : tab}
@@ -640,16 +640,16 @@ export default function ProductionSchedule({
             <div className="flex items-center justify-between mb-3">
               <button
                 onClick={() => setMobileDay(addDays(mobileDay, -1))}
-                className="border border-[#1E3A5F]/20 w-11 h-11 rounded-md text-lg font-semibold active:bg-cream"
+                className="border border-[#2E2420]/20 w-11 h-11 rounded-md text-lg font-semibold active:bg-cream"
               >
                 ‹
               </button>
-              <h3 className="font-display text-base text-[#1E3A5F] text-center">
+              <h3 className="font-display text-base text-[#2E2420] text-center">
                 {mobileDay === todayStr ? "Today" : mobileDay === tomorrowStr ? "Tomorrow" : formatCalendarDate(mobileDay, "long")}
               </h3>
               <button
                 onClick={() => setMobileDay(addDays(mobileDay, 1))}
-                className="border border-[#1E3A5F]/20 w-11 h-11 rounded-md text-lg font-semibold active:bg-cream"
+                className="border border-[#2E2420]/20 w-11 h-11 rounded-md text-lg font-semibold active:bg-cream"
               >
                 ›
               </button>
@@ -664,7 +664,7 @@ export default function ProductionSchedule({
               }}
             >
               {(ordersByDate.get(mobileDay) || []).length === 0 ? (
-                <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#1E3A5F]/50">
+                <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#2E2420]/50">
                   Nothing scheduled for this day.
                 </div>
               ) : (
@@ -676,13 +676,13 @@ export default function ProductionSchedule({
 
         {mobileTab === "unscheduled" && (
           unscheduled.length === 0 ? (
-            <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#1E3A5F]/50">
+            <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#2E2420]/50">
               Everything active has a production date set.
             </div>
           ) : (
             <div>
               <div className="flex items-center justify-between gap-2 mb-2">
-                <p className="text-xs text-[#1E3A5F]/50">Tap "Save" after picking a date on the order page, or use the desktop view to drag onto a day.</p>
+                <p className="text-xs text-[#2E2420]/50">Tap "Save" after picking a date on the order page, or use the desktop view to drag onto a day.</p>
                 {unscheduled.some(o => o.due_date) && (
                   <button onClick={handleSuggestAllDates} className="flex-shrink-0 bg-sage/15 text-sage rounded-md px-3 py-1.5 text-xs font-semibold hover:bg-sage/25">
                     Suggest all
@@ -697,17 +697,17 @@ export default function ProductionSchedule({
         )}
         {mobileTab === "overdue" && (
           overdueOrders.length === 0 ? (
-            <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#1E3A5F]/50">Nothing overdue.</div>
+            <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#2E2420]/50">Nothing overdue.</div>
           ) : overdueOrders.map(o => <OrderScheduleCard key={o.id} order={o} todayStr={todayStr} draggingId={draggingId} setDraggingId={setDraggingId} updateOrder={updateOrder} />)
         )}
         {mobileTab === "waiting" && (
           waitingOrders.length === 0 ? (
-            <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#1E3A5F]/50">Nobody's waiting on a response right now.</div>
+            <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#2E2420]/50">Nobody's waiting on a response right now.</div>
           ) : waitingOrders.map(o => <OrderScheduleCard key={o.id} order={o} todayStr={todayStr} draggingId={draggingId} setDraggingId={setDraggingId} updateOrder={updateOrder} />)
         )}
         {mobileTab === "completed" && (
           completedOrders.length === 0 ? (
-            <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#1E3A5F]/50">Nothing marked complete yet.</div>
+            <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#2E2420]/50">Nothing marked complete yet.</div>
           ) : completedOrders.slice(0, 20).map(o => <OrderScheduleCard key={o.id} order={o} todayStr={todayStr} draggingId={draggingId} setDraggingId={setDraggingId} updateOrder={updateOrder} />)
         )}
       </div>
@@ -715,18 +715,18 @@ export default function ProductionSchedule({
       {/* Desktop: Waiting on Customer + Completed, always visible below the calendar */}
       <div className="hidden md:grid grid-cols-2 gap-6 mt-6">
         <div>
-          <h2 className="font-display text-base text-[#1E3A5F] mb-2">💬 Waiting on Customer ({waitingOrders.length})</h2>
-          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 max-h-96 overflow-y-auto">
+          <h2 className="font-display text-base text-[#2E2420] mb-2">💬 Waiting on Customer ({waitingOrders.length})</h2>
+          <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-3 max-h-96 overflow-y-auto">
             {waitingOrders.length === 0 ? (
-              <p className="text-sm text-[#1E3A5F]/50 text-center py-4">Nobody's waiting on a response right now.</p>
+              <p className="text-sm text-[#2E2420]/50 text-center py-4">Nobody's waiting on a response right now.</p>
             ) : waitingOrders.map(o => <OrderScheduleCard key={o.id} order={o} compact todayStr={todayStr} draggingId={draggingId} setDraggingId={setDraggingId} updateOrder={updateOrder} />)}
           </div>
         </div>
         <div>
-          <h2 className="font-display text-base text-[#1E3A5F] mb-2">✅ Completed ({completedOrders.length})</h2>
-          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 max-h-96 overflow-y-auto">
+          <h2 className="font-display text-base text-[#2E2420] mb-2">✅ Completed ({completedOrders.length})</h2>
+          <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-3 max-h-96 overflow-y-auto">
             {completedOrders.length === 0 ? (
-              <p className="text-sm text-[#1E3A5F]/50 text-center py-4">Nothing marked complete yet.</p>
+              <p className="text-sm text-[#2E2420]/50 text-center py-4">Nothing marked complete yet.</p>
             ) : completedOrders.slice(0, 20).map(o => <OrderScheduleCard key={o.id} order={o} compact todayStr={todayStr} draggingId={draggingId} setDraggingId={setDraggingId} updateOrder={updateOrder} />)}
           </div>
         </div>

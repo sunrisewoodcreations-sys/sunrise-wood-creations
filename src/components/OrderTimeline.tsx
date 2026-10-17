@@ -36,22 +36,22 @@ export default function OrderTimeline({
 }) {
   return (
     <div>
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-2">{title}</h2>
-      <p className="text-xs text-[#1E3A5F]/50 mb-3">{subtitle}</p>
+      <h2 className="font-display text-lg text-[#2E2420] mb-2">{title}</h2>
+      <p className="text-xs text-[#2E2420]/50 mb-3">{subtitle}</p>
 
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm overflow-hidden">
         {events.length === 0 && (
-          <p className="px-4 py-6 text-center text-sm text-[#1E3A5F]/50">No activity recorded yet.</p>
+          <p className="px-4 py-6 text-center text-sm text-[#2E2420]/50">No activity recorded yet.</p>
         )}
         {events.map((ev, i) => (
-          <div key={i} className="flex gap-3 px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0">
-            <div className={`w-7 h-7 rounded-full bg-[#1E3A5F]/5 flex items-center justify-center flex-shrink-0 ${ev.color}`}>
+          <div key={i} className="flex gap-3 px-4 py-3 border-t border-[#2E2420]/10 first:border-0">
+            <div className={`w-7 h-7 rounded-full bg-[#2E2420]/5 flex items-center justify-center flex-shrink-0 ${ev.color}`}>
               <Icon name={ev.icon} className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-2">
-                <div className="text-sm font-semibold text-[#1E3A5F]">{ev.label}</div>
-                <div className="text-[11px] text-[#1E3A5F]/40 font-mono whitespace-nowrap">
+                <div className="text-sm font-semibold text-[#2E2420]">{ev.label}</div>
+                <div className="text-[11px] text-[#2E2420]/40 font-mono whitespace-nowrap">
                   {new Date(ev.timestamp).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", year: "numeric" })}
                   {" · "}
                   {new Date(ev.timestamp).toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" })} ET
@@ -62,7 +62,7 @@ export default function OrderTimeline({
                   {ev.orderLabel}
                 </Link>
               )}
-              {ev.detail && <div className="text-xs text-[#1E3A5F]/60 mt-0.5 truncate">{ev.detail}</div>}
+              {ev.detail && <div className="text-xs text-[#2E2420]/60 mt-0.5 truncate">{ev.detail}</div>}
             </div>
           </div>
         ))}

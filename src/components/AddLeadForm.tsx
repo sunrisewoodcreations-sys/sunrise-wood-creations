@@ -40,47 +40,47 @@ export default function AddLeadForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 mb-6">
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-4">Add someone who messaged you</h2>
+    <form onSubmit={handleSubmit} className="bg-white border border-[#2E2420]/10 rounded-xl p-5 mb-6">
+      <h2 className="font-display text-lg text-[#2E2420] mb-4">Add someone who messaged you</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Name</label>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Name</label>
           <input
             required
             value={fullName}
             onChange={e => setFullName(e.target.value)}
             placeholder="Jane Doe"
-            className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
+            className="w-full px-3 py-2 border border-[#2E2420]/15 rounded-md text-sm"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Phone (optional)</label>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Phone (optional)</label>
           <input
             value={phone}
             onChange={e => setPhone(e.target.value)}
             placeholder="(269) 555-0123"
-            className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
+            className="w-full px-3 py-2 border border-[#2E2420]/15 rounded-md text-sm"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Where they messaged</label>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Where they messaged</label>
           <select
             value={source}
             onChange={e => setSource(e.target.value)}
-            className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm bg-white"
+            className="w-full px-3 py-2 border border-[#2E2420]/15 rounded-md text-sm bg-white"
           >
             {LEAD_SOURCES.map(s => <option key={s} value={s}>{LEAD_SOURCE_LABELS[s]}</option>)}
           </select>
         </div>
       </div>
       <div className="mb-4">
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">What they want (optional)</label>
+        <label className="block text-xs font-semibold text-[#2E2420] mb-1">What they want (optional)</label>
         <textarea
           value={notes}
           onChange={e => setNotes(e.target.value)}
           rows={2}
           placeholder="e.g. Wants two 48x18x24 planters for the porch"
-          className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
+          className="w-full px-3 py-2 border border-[#2E2420]/15 rounded-md text-sm"
         />
       </div>
       <div className="flex items-center gap-3">

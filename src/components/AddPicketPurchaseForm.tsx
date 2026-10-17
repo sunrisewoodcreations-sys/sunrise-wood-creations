@@ -48,19 +48,19 @@ export default function AddPicketPurchaseForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 mb-6 space-y-3">
+    <form onSubmit={handleSubmit} className="bg-white border border-[#2E2420]/10 rounded-xl p-5 mb-6 space-y-3">
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Date purchased</label>
-          <input type="date" value={purchasedAt} onChange={e => setPurchasedAt(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Date purchased</label>
+          <input type="date" value={purchasedAt} onChange={e => setPurchasedAt(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">How many pickets</label>
-          <input required type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="150" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">How many pickets</label>
+          <input required type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="150" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Total cost paid ($)</label>
-          <input required value={totalCost} onChange={e => setTotalCost(e.target.value)} placeholder="220" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Total cost paid ($)</label>
+          <input required value={totalCost} onChange={e => setTotalCost(e.target.value)} placeholder="220" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
         </div>
       </div>
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}

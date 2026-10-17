@@ -40,33 +40,33 @@ export default function CustomerQuickActions({
   const viewAllOrdersHref = `/admin/orders?q=${encodeURIComponent(hasRealEmail ? customerEmail : customerName)}`;
 
   return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-6">
-      <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-3">Quick actions</div>
+    <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 mb-6">
+      <div className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide mb-3">Quick actions</div>
 
       <div className="flex flex-wrap gap-2 mb-3">
         {hasRealEmail && (
           <a
             href={`mailto:${customerEmail}`}
-            className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-2 rounded-md text-sm font-semibold hover:bg-cream text-center flex-1 sm:flex-none"
+            className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-2 rounded-md text-sm font-semibold hover:bg-cream text-center flex-1 sm:flex-none"
           >
             Email customer
           </a>
         )}
         <Link
           href={viewAllOrdersHref}
-          className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-2 rounded-md text-sm font-semibold hover:bg-cream text-center flex-1 sm:flex-none"
+          className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-2 rounded-md text-sm font-semibold hover:bg-cream text-center flex-1 sm:flex-none"
         >
           View all orders
         </Link>
       </div>
 
       {orders.length > 0 && (
-        <div className="border-t border-[#1E3A5F]/10 pt-3">
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">For order:</label>
+        <div className="border-t border-[#2E2420]/10 pt-3">
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">For order:</label>
           <select
             value={selectedOrderId}
             onChange={e => { setSelectedOrderId(e.target.value); setShowRecordPayment(false); }}
-            className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm mb-3"
+            className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm mb-3"
           >
             {orders.map(o => {
               const balance = (o.price_cents || 0) - (o.amount_paid_cents || 0);
@@ -83,7 +83,7 @@ export default function CustomerQuickActions({
               <SendInvoiceButton orderId={selectedOrder.id} />
               <button
                 onClick={() => setShowRecordPayment(s => !s)}
-                className="border border-[#1E3A5F] text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold"
+                className="border border-[#2E2420] text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold"
               >
                 {showRecordPayment ? "Hide payment form" : "Record payment"}
               </button>

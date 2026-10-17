@@ -19,15 +19,15 @@ function appliesToDisplay(coupon: any): string {
 // expiration has passed, the badge reflects that on top of the real status.
 function displayStatus(campaign: any, coupon: any): { label: string; color: string } {
   if (coupon?.expires_at && new Date(coupon.expires_at) < new Date() && campaign.status === "sent") {
-    return { label: "Expired", color: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60" };
+    return { label: "Expired", color: "bg-[#2E2420]/10 text-[#2E2420]/60" };
   }
   switch (campaign.status) {
-    case "draft": return { label: "Draft", color: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60" };
+    case "draft": return { label: "Draft", color: "bg-[#2E2420]/10 text-[#2E2420]/60" };
     case "scheduled": return { label: "Scheduled", color: "bg-amber/20 text-amber" };
     case "sending": return { label: "Sending", color: "bg-amber/20 text-amber" };
     case "sent": return { label: "Sent", color: "bg-sage/15 text-sage" };
     case "cancelled": return { label: "Cancelled", color: "bg-ember/15 text-ember" };
-    default: return { label: campaign.status, color: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60" };
+    default: return { label: campaign.status, color: "bg-[#2E2420]/10 text-[#2E2420]/60" };
   }
 }
 
@@ -67,7 +67,7 @@ export default async function CouponsPage() {
   return (
     <div className="bg-cream/40 -m-8 p-8 min-h-full">
       <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display text-2xl text-[#1E3A5F]">Coupons &amp; Campaigns</h1>
+        <h1 className="font-display text-2xl text-[#2E2420]">Coupons &amp; Campaigns</h1>
         <Link
           href="/admin/coupons/new"
           className="bg-ember text-white px-4 py-2.5 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity whitespace-nowrap"
@@ -75,12 +75,12 @@ export default async function CouponsPage() {
           + Create Campaign
         </Link>
       </div>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">Targeted promotional coupons, sent to customers based on what they've bought before.</p>
+      <p className="text-sm text-[#2E2420]/60 mb-6">Targeted promotional coupons, sent to customers based on what they've bought before.</p>
 
       {rows.length === 0 ? (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-10 text-center shadow-sm">
-          <p className="text-sm font-semibold text-[#1E3A5F] mb-1">No campaigns yet</p>
-          <p className="text-xs text-[#1E3A5F]/50 mb-4">Create your first campaign to start sending targeted coupons.</p>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl p-10 text-center shadow-sm">
+          <p className="text-sm font-semibold text-[#2E2420] mb-1">No campaigns yet</p>
+          <p className="text-xs text-[#2E2420]/50 mb-4">Create your first campaign to start sending targeted coupons.</p>
           <Link href="/admin/coupons/new" className="inline-block bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold">
             + Create Campaign
           </Link>
@@ -88,10 +88,10 @@ export default async function CouponsPage() {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden md:block bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+          <div className="hidden md:block bg-white border border-[#2E2420]/10 rounded-xl overflow-hidden shadow-sm">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-[#1E3A5F]/5 text-left text-xs text-[#1E3A5F]/50 uppercase tracking-wide">
+                <tr className="bg-[#2E2420]/5 text-left text-xs text-[#2E2420]/50 uppercase tracking-wide">
                   <th className="px-4 py-3 font-semibold">Campaign</th>
                   <th className="px-4 py-3 font-semibold">Code</th>
                   <th className="px-4 py-3 font-semibold">Discount</th>
@@ -108,23 +108,23 @@ export default async function CouponsPage() {
                 {rows.map(({ campaign, coupon, recipientCount, sentCount, redeemedCount }) => {
                   const status = displayStatus(campaign, coupon);
                   return (
-                    <tr key={campaign.id} className="border-t border-[#1E3A5F]/10 hover:bg-cream/40">
+                    <tr key={campaign.id} className="border-t border-[#2E2420]/10 hover:bg-cream/40">
                       <td className="px-4 py-3">
-                        <Link href={`/admin/coupons/${campaign.id}`} className="font-semibold text-[#1E3A5F] hover:underline">
+                        <Link href={`/admin/coupons/${campaign.id}`} className="font-semibold text-[#2E2420] hover:underline">
                           {campaign.name}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-[#1E3A5F]/70">{coupon?.code || "—"}</td>
-                      <td className="px-4 py-3 text-[#1E3A5F]">{discountDisplay(coupon)}</td>
-                      <td className="px-4 py-3 text-[#1E3A5F]/70">{appliesToDisplay(coupon)}</td>
-                      <td className="px-4 py-3 text-right text-[#1E3A5F]">{recipientCount}</td>
-                      <td className="px-4 py-3 text-right text-[#1E3A5F]">{sentCount}</td>
-                      <td className="px-4 py-3 text-right text-[#1E3A5F]">{redeemedCount}</td>
-                      <td className="px-4 py-3 text-[#1E3A5F]/70">{coupon?.expires_at ? new Date(coupon.expires_at).toLocaleDateString() : "—"}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-[#2E2420]/70">{coupon?.code || "—"}</td>
+                      <td className="px-4 py-3 text-[#2E2420]">{discountDisplay(coupon)}</td>
+                      <td className="px-4 py-3 text-[#2E2420]/70">{appliesToDisplay(coupon)}</td>
+                      <td className="px-4 py-3 text-right text-[#2E2420]">{recipientCount}</td>
+                      <td className="px-4 py-3 text-right text-[#2E2420]">{sentCount}</td>
+                      <td className="px-4 py-3 text-right text-[#2E2420]">{redeemedCount}</td>
+                      <td className="px-4 py-3 text-[#2E2420]/70">{coupon?.expires_at ? new Date(coupon.expires_at).toLocaleDateString() : "—"}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${status.color}`}>{status.label}</span>
                       </td>
-                      <td className="px-4 py-3 text-[#1E3A5F]/50 text-xs">{new Date(campaign.created_at).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-[#2E2420]/50 text-xs">{new Date(campaign.created_at).toLocaleDateString()}</td>
                     </tr>
                   );
                 })}
@@ -141,14 +141,14 @@ export default async function CouponsPage() {
                 <Link
                   key={campaign.id}
                   href={`/admin/coupons/${campaign.id}`}
-                  className="block bg-white border border-[#1E3A5F]/10 rounded-xl p-4 shadow-sm"
+                  className="block bg-white border border-[#2E2420]/10 rounded-xl p-4 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="font-semibold text-[#1E3A5F]">{campaign.name}</div>
+                    <div className="font-semibold text-[#2E2420]">{campaign.name}</div>
                     <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${status.color}`}>{status.label}</span>
                   </div>
-                  <div className="text-xs text-[#1E3A5F]/60 font-mono mb-2">{coupon?.code || "—"} · {discountDisplay(coupon)} · {appliesToDisplay(coupon)}</div>
-                  <div className="flex gap-4 text-xs text-[#1E3A5F]/70">
+                  <div className="text-xs text-[#2E2420]/60 font-mono mb-2">{coupon?.code || "—"} · {discountDisplay(coupon)} · {appliesToDisplay(coupon)}</div>
+                  <div className="flex gap-4 text-xs text-[#2E2420]/70">
                     <span>{recipientCount} recipients</span>
                     <span>{sentCount} sent</span>
                     <span>{redeemedCount} redeemed</span>

@@ -27,11 +27,11 @@ function QueueSection({ emoji, title, orders, todayStr }: { emoji: string; title
   if (orders.length === 0) return null;
   return (
     <div className="mb-6">
-      <h2 className="font-display text-base text-[#1E3A5F] mb-2">{emoji} {title} ({orders.length})</h2>
-      <div className="overflow-x-auto bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+      <h2 className="font-display text-base text-[#2E2420] mb-2">{emoji} {title} ({orders.length})</h2>
+      <div className="overflow-x-auto bg-white border border-[#2E2420]/10 rounded-xl shadow-sm">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+            <tr className="bg-[#2E2420] text-white text-xs uppercase tracking-wide">
               <th className="text-left px-4 py-3">Order</th>
               <th className="text-left px-4 py-3">Customer</th>
               <th className="text-left px-4 py-3">Status</th>
@@ -44,19 +44,19 @@ function QueueSection({ emoji, title, orders, todayStr }: { emoji: string; title
               const isOverdue = order.due_date && order.due_date < todayStr;
               const balanceCents = (order.price_cents || 0) - (order.amount_paid_cents || 0);
               return (
-                <tr key={order.id} className="border-t border-[#1E3A5F]/10 hover:bg-cream/60">
+                <tr key={order.id} className="border-t border-[#2E2420]/10 hover:bg-cream/60">
                   <td className="px-4 py-3">
-                    <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#1E3A5F]">
+                    <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#2E2420]">
                       {productLabel(order.product_type as ProductType)} — {order.title}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-[#1E3A5F]/70">{order.profiles?.full_name}</td>
+                  <td className="px-4 py-3 text-[#2E2420]/70">{order.profiles?.full_name}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusColor(order.status)}`}>
                       {statusLabel(order.product_type as ProductType, order.status)}
                     </span>
                   </td>
-                  <td className={`px-4 py-3 font-mono ${isOverdue ? "text-ember font-semibold" : "text-[#1E3A5F]/70"}`}>
+                  <td className={`px-4 py-3 font-mono ${isOverdue ? "text-ember font-semibold" : "text-[#2E2420]/70"}`}>
                     {order.due_date
                       ? `${formatCalendarDate(order.due_date)}${isOverdue ? " (overdue)" : ""}`
                       : "—"}
@@ -126,13 +126,13 @@ export default async function QueuePage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Build queue</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">Build queue</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6">
         Sorted by production priority — open this each morning to know exactly what to build next.
       </p>
 
       {isEmpty && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-6 text-center text-sm text-[#1E3A5F]/50">
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm px-4 py-6 text-center text-sm text-[#2E2420]/50">
           Nothing in progress right now.
         </div>
       )}

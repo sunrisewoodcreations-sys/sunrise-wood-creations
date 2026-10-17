@@ -22,7 +22,7 @@ type Lead = {
 
 const STATUS_STYLES: Record<LeadStatus, string> = {
   in_talks: "bg-amber/20 text-[#8a5a00] border-amber/40",
-  not_responding: "bg-[#1E3A5F]/10 text-[#1E3A5F]/70 border-[#1E3A5F]/20",
+  not_responding: "bg-[#2E2420]/10 text-[#2E2420]/70 border-[#2E2420]/20",
   ordered: "bg-sage/20 text-[#3f6a45] border-sage/40",
   not_interested: "bg-ember/10 text-ember border-ember/30"
 };
@@ -108,11 +108,11 @@ export default function LeadCard({
   const sourceLabel = isLeadSource(lead.source) ? LEAD_SOURCE_LABELS[lead.source] : lead.source;
 
   return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
+    <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="text-base font-bold text-[#1E3A5F]">{lead.full_name}</div>
-          <div className="text-xs text-[#1E3A5F]/60 mt-0.5">
+          <div className="text-base font-bold text-[#2E2420]">{lead.full_name}</div>
+          <div className="text-xs text-[#2E2420]/60 mt-0.5">
             {lead.phone ? <span>{lead.phone} &middot; </span> : null}
             {sourceLabel} &middot; first messaged {firstContactedLabel}
           </div>
@@ -134,13 +134,13 @@ export default function LeadCard({
           onChange={e => setNotes(e.target.value)}
           rows={2}
           placeholder="Notes: what they want, what you quoted, when to follow up..."
-          className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
+          className="w-full px-3 py-2 border border-[#2E2420]/15 rounded-md text-sm"
         />
         {notes !== savedNotes && (
           <button
             onClick={saveNotes}
             disabled={busy}
-            className="mt-1.5 border border-[#1E3A5F] text-[#1E3A5F] px-3 py-1 rounded-md text-xs font-semibold disabled:opacity-60"
+            className="mt-1.5 border border-[#2E2420] text-[#2E2420] px-3 py-1 rounded-md text-xs font-semibold disabled:opacity-60"
           >
             Save notes
           </button>
@@ -148,7 +148,7 @@ export default function LeadCard({
       </div>
 
       {duplicate && (
-        <div className="mt-3 border border-amber/40 bg-amber/10 rounded-md p-3 text-sm text-[#1E3A5F]">
+        <div className="mt-3 border border-amber/40 bg-amber/10 rounded-md p-3 text-sm text-[#2E2420]">
           <p className="mb-2 font-semibold">
             A customer named {duplicate.name} with this phone number already exists. Is it the same person?
           </p>
@@ -163,14 +163,14 @@ export default function LeadCard({
             <button
               onClick={() => { setDuplicate(null); convert({ confirmDuplicate: true }); }}
               disabled={busy}
-              className="border border-[#1E3A5F]/30 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
+              className="border border-[#2E2420]/30 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
             >
               No, create a new customer
             </button>
             <button
               onClick={() => setDuplicate(null)}
               disabled={busy}
-              className="text-xs text-[#1E3A5F]/60 underline"
+              className="text-xs text-[#2E2420]/60 underline"
             >
               Cancel
             </button>
@@ -180,7 +180,7 @@ export default function LeadCard({
 
       {error && <p className="mt-2 text-xs text-ember">{error}</p>}
 
-      <div className="mt-3 pt-3 border-t border-[#1E3A5F]/10 flex flex-wrap items-center gap-2">
+      <div className="mt-3 pt-3 border-t border-[#2E2420]/10 flex flex-wrap items-center gap-2">
         {lead.customer_id ? (
           <>
             <Link
@@ -189,7 +189,7 @@ export default function LeadCard({
             >
               Open customer / add order
             </Link>
-            <span className="text-xs text-[#1E3A5F]/60">
+            <span className="text-xs text-[#2E2420]/60">
               {orderCount > 0 ? `${orderCount} order${orderCount === 1 ? "" : "s"}` : "Customer created, no order yet"}
             </span>
           </>
@@ -212,7 +212,7 @@ export default function LeadCard({
               Remove from list
             </button>
           ) : (
-            <span className="text-xs text-[#1E3A5F]">
+            <span className="text-xs text-[#2E2420]">
               Remove {lead.full_name}?{" "}
               <button onClick={handleDelete} disabled={busy} className="text-ember font-semibold underline">Yes</button>
               {" / "}

@@ -54,8 +54,8 @@ export default function ProductionDashboard({
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Production Dashboard</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">Your shop floor, at a glance — {formatCalendarDate(todayStr, "long")}</p>
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">Production Dashboard</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6">Your shop floor, at a glance — {formatCalendarDate(todayStr, "long")}</p>
 
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-2 mb-8">
@@ -93,7 +93,7 @@ export default function ProductionDashboard({
               {readiness.ready ? "Materials available — ready to build today" : "Materials short for today"}
             </div>
             {!readiness.ready && (
-              <div className="text-xs text-[#1E3A5F]/60 mt-1">
+              <div className="text-xs text-[#2E2420]/60 mt-1">
                 {readiness.shortages.map(s => `${s.materialType}: short ${s.shortQuantity}`).join(" · ")}
               </div>
             )}
@@ -113,7 +113,7 @@ export default function ProductionDashboard({
         {/* Build Queue */}
         <Section title="📋 Build Queue">
           <div className="mb-3">
-            <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-1.5">Highest priority ({highPriorityOrders.length})</div>
+            <div className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide mb-1.5">Highest priority ({highPriorityOrders.length})</div>
             {highPriorityOrders.length === 0 ? <EmptyNote text="Nothing marked high priority." /> : (
               <div className="space-y-1.5">
                 {highPriorityOrders.slice(0, 5).map(o => <MiniOrderRow key={o.id} order={o} />)}
@@ -141,19 +141,19 @@ export default function ProductionDashboard({
         {/* Inventory */}
         <Section title="📉 Inventory">
           <div className="mb-4">
-            <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-1.5">Low-stock materials</div>
+            <div className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide mb-1.5">Low-stock materials</div>
             <div className={`flex items-center justify-between rounded-lg p-3 ${isPicketsLow ? "bg-ember/10" : "bg-sage/10"}`}>
-              <span className="text-sm text-[#1E3A5F]">Cedar pickets</span>
+              <span className="text-sm text-[#2E2420]">Cedar pickets</span>
               <span className={`text-sm font-bold ${isPicketsLow ? "text-ember" : "text-sage"}`}>{remainingPickets} remaining</span>
             </div>
           </div>
           <div>
-            <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-1.5">Low-stock products ({lowStockProducts.length})</div>
+            <div className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide mb-1.5">Low-stock products ({lowStockProducts.length})</div>
             {lowStockProducts.length === 0 ? <EmptyNote text="Everything's well stocked." /> : (
               <div className="space-y-1.5">
                 {lowStockProducts.slice(0, 6).map(p => (
                   <div key={p.id} className="flex items-center justify-between text-sm bg-ember/5 rounded-md px-3 py-1.5">
-                    <Link href="/admin/products" className="text-[#1E3A5F] hover:underline">{p.name}</Link>
+                    <Link href="/admin/products" className="text-[#2E2420] hover:underline">{p.name}</Link>
                     <span className="text-ember font-semibold">{p.stock_quantity} left</span>
                   </div>
                 ))}
@@ -177,31 +177,31 @@ export default function ProductionDashboard({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-6">
-      <h2 className="font-display text-base text-[#1E3A5F] mb-3">{title}</h2>
+    <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 mb-6">
+      <h2 className="font-display text-base text-[#2E2420] mb-3">{title}</h2>
       {children}
     </div>
   );
 }
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: "sage" | "amber" | "ember" }) {
-  const colorClass = accent === "sage" ? "text-sage" : accent === "amber" ? "text-amber" : accent === "ember" ? "text-ember" : "text-[#1E3A5F]";
+  const colorClass = accent === "sage" ? "text-sage" : accent === "amber" ? "text-amber" : accent === "ember" ? "text-ember" : "text-[#2E2420]";
   return (
-    <div className="bg-cream/40 border border-[#1E3A5F]/10 rounded-lg p-3 text-center">
+    <div className="bg-cream/40 border border-[#2E2420]/10 rounded-lg p-3 text-center">
       <div className={`text-xl font-display ${colorClass}`}>{value}</div>
-      <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">{label}</div>
+      <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide">{label}</div>
     </div>
   );
 }
 
 function EmptyNote({ text }: { text: string }) {
-  return <p className="text-xs text-[#1E3A5F]/40 italic">{text}</p>;
+  return <p className="text-xs text-[#2E2420]/40 italic">{text}</p>;
 }
 
 function MiniOrderRow({ order }: { order: any }) {
   return (
     <div className="flex items-center justify-between text-sm bg-cream/40 rounded-md px-3 py-1.5">
-      <Link href={`/admin/orders/${order.id}`} className="text-[#1E3A5F] hover:underline truncate">
+      <Link href={`/admin/orders/${order.id}`} className="text-[#2E2420] hover:underline truncate">
         {order.profiles?.full_name || "Unknown"} — {order.title}
       </Link>
       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ml-2 ${PRIORITY_STYLES[order.priority || "normal"]}`}>

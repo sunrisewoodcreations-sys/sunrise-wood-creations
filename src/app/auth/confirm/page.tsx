@@ -48,7 +48,7 @@ function AuthConfirmInner() {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>
-      <p style={{ color: error ? "#b91c1c" : "#1E3A5F" }}>
+      <p style={{ color: error ? "#b91c1c" : "#2E2420" }}>
         {error ? `${error} — redirecting to login...` : "Signing you in..."}
       </p>
     </div>

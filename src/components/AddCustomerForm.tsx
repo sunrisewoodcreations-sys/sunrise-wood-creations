@@ -57,49 +57,49 @@ export default function AddCustomerForm() {
   const hasEmail = !!email.trim();
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-[#1E3A5F]/10 rounded-xl p-6 mb-7">
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-4">Add a new customer</h2>
+    <form onSubmit={handleSubmit} className="bg-white border border-[#2E2420]/10 rounded-xl p-6 mb-7">
+      <h2 className="font-display text-lg text-[#2E2420] mb-4">Add a new customer</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Full name</label>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Full name</label>
           <input
             required
             value={fullName}
             onChange={e => setFullName(e.target.value)}
             placeholder="Jane Doe"
-            className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
+            className="w-full px-3 py-2 border border-[#2E2420]/15 rounded-md text-sm"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Email (optional)</label>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Email (optional)</label>
           <input
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="jane@example.com"
-            className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
+            className="w-full px-3 py-2 border border-[#2E2420]/15 rounded-md text-sm"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Phone (optional)</label>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Phone (optional)</label>
           <input
             type="tel"
             value={phone}
             onChange={e => setPhone(e.target.value)}
             placeholder="(269) 555-0123"
-            className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
+            className="w-full px-3 py-2 border border-[#2E2420]/15 rounded-md text-sm"
           />
         </div>
       </div>
 
       <div className="mb-4">
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Address (optional)</label>
+        <label className="block text-xs font-semibold text-[#2E2420] mb-1">Address (optional)</label>
         <AddressInput value={address} onChange={setAddress} />
       </div>
 
       {duplicateWarning && (
         <div className="bg-amber/10 border border-amber/30 rounded-md px-3 py-2.5 mb-4">
-          <p className="text-sm text-[#1E3A5F]">
+          <p className="text-sm text-[#2E2420]">
             A customer named <strong>{duplicateWarning.name}</strong> with this same phone number already exists.
             This might be the same person.
           </p>
@@ -108,14 +108,14 @@ export default function AddCustomerForm() {
               type="button"
               onClick={() => submitCustomer(true)}
               disabled={status === "loading"}
-              className="bg-[#1E3A5F] text-white px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
+              className="bg-accent text-white px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
             >
               Create anyway — it's a different person
             </button>
             <button
               type="button"
               onClick={() => setDuplicateWarning(null)}
-              className="text-xs text-[#1E3A5F]/60 font-semibold"
+              className="text-xs text-[#2E2420]/60 font-semibold"
             >
               Cancel
             </button>
@@ -126,11 +126,11 @@ export default function AddCustomerForm() {
       <button
         type="submit"
         disabled={status === "loading"}
-        className="bg-[#1E3A5F] text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60"
+        className="bg-accent text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60"
       >
         {status === "loading" ? "Creating..." : "Create customer"}
       </button>
-      <p className="text-xs text-[#1E3A5F]/50 mt-2">
+      <p className="text-xs text-[#2E2420]/50 mt-2">
         {hasEmail
           ? `${fullName.split(" ")[0] || "They"}'ll get an email with a link to set a password and see their orders — they can choose their own notification preferences from their account.`
           : "No account will be created — this is just a record for tracking their orders, with no notifications sent."}

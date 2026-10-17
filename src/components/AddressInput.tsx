@@ -11,7 +11,7 @@ export default function AddressInput({
   onChange,
   onPick,
   placeholder = "123 Main St, Town, MI 49000",
-  className = "w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm",
+  className = "w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm",
   required,
   id
 }: {
@@ -93,7 +93,7 @@ export default function AddressInput({
         onKeyDown={onKeyDown}
       />
       {showList && (
-        <ul role="listbox" className="absolute z-30 mt-1 w-full bg-white border border-[#1E3A5F]/15 rounded-md shadow-lg max-h-60 overflow-y-auto">
+        <ul role="listbox" className="absolute z-30 mt-1 w-full bg-white border border-[#2E2420]/15 rounded-md shadow-lg max-h-60 overflow-y-auto">
           {suggestions.map((s, i) => (
             <li
               key={s}
@@ -101,7 +101,7 @@ export default function AddressInput({
               aria-selected={i === active}
               onMouseDown={e => { e.preventDefault(); pick(s); }}
               onMouseEnter={() => setActive(i)}
-              className={`px-3 py-2 text-sm cursor-pointer text-[#1E3A5F] border-b border-[#1E3A5F]/5 last:border-0 ${i === active ? "bg-cream" : ""}`}
+              className={`px-3 py-2 text-sm cursor-pointer text-[#2E2420] border-b border-[#2E2420]/5 last:border-0 ${i === active ? "bg-cream" : ""}`}
             >
               {s}
             </li>

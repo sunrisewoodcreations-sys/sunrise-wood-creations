@@ -56,55 +56,55 @@ export default function DeliverySettingsForm({
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Delivery Settings</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">Delivery Settings</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6">
         Used by the "Calculate delivery" button on quotes. Delivery is charged one way, from your home address to the customer.
       </p>
 
       {!mapsConnected && (
-        <div className="mb-5 border border-amber/40 bg-amber/10 rounded-md p-3 text-sm text-[#1E3A5F]">
+        <div className="mb-5 border border-amber/40 bg-amber/10 rounded-md p-3 text-sm text-[#2E2420]">
           Google Maps isn't connected yet, so addresses can't be checked or measured. You can save these settings now, but
           "Calculate delivery" won't work until the Google Maps key is added.
         </div>
       )}
 
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 max-w-xl space-y-4">
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5 max-w-xl space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Your home address (where deliveries start)</label>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1">Your home address (where deliveries start)</label>
           <AddressInput value={homeAddress} onChange={setHomeAddress} />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Price per mile ($)</label>
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Price per mile ($)</label>
             <input
               value={perMile}
               onChange={e => setPerMile(e.target.value)}
               inputMode="decimal"
               placeholder="1.25"
-              className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
+              className="w-full px-3 py-2 border border-[#2E2420]/15 rounded-md text-sm"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Minimum fee ($, optional)</label>
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Minimum fee ($, optional)</label>
             <input
               value={minimum}
               onChange={e => setMinimum(e.target.value)}
               inputMode="decimal"
               placeholder="10.00"
-              className="w-full px-3 py-2 border border-[#1E3A5F]/15 rounded-md text-sm"
+              className="w-full px-3 py-2 border border-[#2E2420]/15 rounded-md text-sm"
             />
           </div>
         </div>
 
         {suggestion && (
-          <div className="border border-amber/40 bg-amber/10 rounded-md p-3 text-sm text-[#1E3A5F]">
+          <div className="border border-amber/40 bg-amber/10 rounded-md p-3 text-sm text-[#2E2420]">
             <p className="font-semibold mb-1">Did you mean: {suggestion.address}?</p>
-            <p className="text-xs text-[#1E3A5F]/70 mb-2">{suggestion.reason}</p>
+            <p className="text-xs text-[#2E2420]/70 mb-2">{suggestion.reason}</p>
             <div className="flex gap-2">
               <button onClick={() => save(suggestion.address, true)} disabled={busy} className="bg-ember text-white px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60">
                 Yes, use that address
               </button>
-              <button onClick={() => setSuggestion(null)} className="text-xs underline text-[#1E3A5F]/60">No, let me fix it</button>
+              <button onClick={() => setSuggestion(null)} className="text-xs underline text-[#2E2420]/60">No, let me fix it</button>
             </div>
           </div>
         )}

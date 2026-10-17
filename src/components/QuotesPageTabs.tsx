@@ -31,14 +31,14 @@ export default function QuotesPageTabs({
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display text-2xl text-[#1E3A5F]">Quotes</h1>
+        <h1 className="font-display text-2xl text-[#2E2420]">Quotes</h1>
         {currentTab === "quotes" && (
           <Link href="/admin/quotes/new">
-            <button className="bg-[#1E3A5F] text-white px-4 py-2 rounded-md text-sm font-semibold">+ New Quote</button>
+            <button className="bg-accent text-white px-4 py-2 rounded-md text-sm font-semibold">+ New Quote</button>
           </Link>
         )}
       </div>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">
+      <p className="text-sm text-[#2E2420]/60 mb-6">
         {currentTab === "requests"
           ? "Submissions from the \"Request a custom quote\" page on your site."
           : "Formal, priced quotes you create and send to customers."}
@@ -48,7 +48,7 @@ export default function QuotesPageTabs({
         <button
           onClick={() => router.push("/admin/quotes?tab=requests")}
           className={`px-4 py-2 rounded-md text-sm font-semibold border ${
-            currentTab === "requests" ? "bg-[#1E3A5F] text-white border-[#1E3A5F]" : "bg-white text-[#1E3A5F] border-[#1E3A5F]/20 hover:bg-cream"
+            currentTab === "requests" ? "bg-accent text-white border-accent" : "bg-white text-[#2E2420] border-[#2E2420]/20 hover:bg-cream"
           }`}
         >
           Quote Requests {unhandledRequestCount > 0 && `(${unhandledRequestCount})`}
@@ -56,7 +56,7 @@ export default function QuotesPageTabs({
         <button
           onClick={() => router.push("/admin/quotes?tab=quotes")}
           className={`px-4 py-2 rounded-md text-sm font-semibold border ${
-            currentTab === "quotes" ? "bg-[#1E3A5F] text-white border-[#1E3A5F]" : "bg-white text-[#1E3A5F] border-[#1E3A5F]/20 hover:bg-cream"
+            currentTab === "quotes" ? "bg-accent text-white border-accent" : "bg-white text-[#2E2420] border-[#2E2420]/20 hover:bg-cream"
           }`}
         >
           Quotes
@@ -65,7 +65,7 @@ export default function QuotesPageTabs({
 
       {currentTab === "requests" ? (
         <div className="space-y-4">
-          {quoteRequests.length === 0 && <p className="text-sm text-[#1E3A5F]/50">No quote requests yet.</p>}
+          {quoteRequests.length === 0 && <p className="text-sm text-[#2E2420]/50">No quote requests yet.</p>}
           {quoteRequests.map((q: any) => <QuoteRow key={q.id} quote={q} />)}
         </div>
       ) : (
@@ -75,16 +75,16 @@ export default function QuotesPageTabs({
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               placeholder="Search by customer name, email, phone, or quote number..."
-              className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+              className="flex-1 border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
             />
-            <button type="submit" className="bg-[#1E3A5F] text-white px-4 py-2 rounded-md text-sm font-semibold">Search</button>
+            <button type="submit" className="bg-accent text-white px-4 py-2 rounded-md text-sm font-semibold">Search</button>
             {searchQuery && (
-              <Link href="/admin/quotes?tab=quotes" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold">Clear</Link>
+              <Link href="/admin/quotes?tab=quotes" className="border border-[#2E2420]/20 text-[#2E2420] px-4 py-2 rounded-md text-sm font-semibold">Clear</Link>
             )}
           </form>
           <div className="space-y-3">
             {quotes.length === 0 && (
-              <p className="text-sm text-[#1E3A5F]/50">
+              <p className="text-sm text-[#2E2420]/50">
                 {searchQuery ? "No quotes match that search." : 'No quotes yet — click "+ New Quote" to create one.'}
               </p>
             )}

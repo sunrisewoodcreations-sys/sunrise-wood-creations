@@ -15,8 +15,8 @@ export default async function CalendarPage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Production calendar</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">Production calendar</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6">
         Every active order by estimated pickup date. Drag an order onto a new day to reschedule it.
       </p>
       <ProductionCalendar orders={orders || []} />

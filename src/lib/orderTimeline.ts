@@ -49,7 +49,7 @@ export async function getOrderTimeline(orderId: string): Promise<TimelineEvent[]
     type: "order_created",
     label: "Order created",
     icon: "box",
-    color: "text-[#1E3A5F]"
+    color: "text-[#2E2420]"
   });
 
   // Reads the real, current quote system (orders.quote_id -> quotes),
@@ -71,7 +71,7 @@ export async function getOrderTimeline(orderId: string): Promise<TimelineEvent[]
             type: "quote_requested",
             label: "Quote requested",
             icon: "message-circle",
-            color: "text-[#1E3A5F]/70"
+            color: "text-[#2E2420]/70"
           });
         }
       }
@@ -82,7 +82,7 @@ export async function getOrderTimeline(orderId: string): Promise<TimelineEvent[]
         type: "quote_created",
         label: `Quote ${displayNumber} created`,
         icon: "box",
-        color: "text-[#1E3A5F]"
+        color: "text-[#2E2420]"
       });
       if (quote.sent_at) {
         events.push({ timestamp: quote.sent_at, type: "quote_sent", label: `Quote ${displayNumber} sent`, icon: "mail", color: "text-amber" });
@@ -158,7 +158,7 @@ export async function getOrderTimeline(orderId: string): Promise<TimelineEvent[]
       label: m.sender_role === "admin" ? "Staff message sent" : "Customer message received",
       detail: m.body.length > 80 ? `${m.body.slice(0, 80)}…` : m.body,
       icon: "message",
-      color: m.sender_role === "admin" ? "text-[#1E3A5F]" : "text-ember"
+      color: m.sender_role === "admin" ? "text-[#2E2420]" : "text-ember"
     });
   });
 
@@ -234,10 +234,10 @@ export async function getCustomerTimeline(
     if (quote.quote_request_id) {
       const { data: request } = await supabase.from("quote_requests").select("created_at").eq("id", quote.quote_request_id).maybeSingle();
       if (request) {
-        standaloneQuoteEvents.push({ timestamp: request.created_at, type: "quote_requested", label: "Quote requested", icon: "message-circle", color: "text-[#1E3A5F]/70" });
+        standaloneQuoteEvents.push({ timestamp: request.created_at, type: "quote_requested", label: "Quote requested", icon: "message-circle", color: "text-[#2E2420]/70" });
       }
     }
-    standaloneQuoteEvents.push({ timestamp: quote.created_at, type: "quote_created", label: `Quote ${displayNumber} created`, icon: "box", color: "text-[#1E3A5F]" });
+    standaloneQuoteEvents.push({ timestamp: quote.created_at, type: "quote_created", label: `Quote ${displayNumber} created`, icon: "box", color: "text-[#2E2420]" });
     if (quote.sent_at) {
       standaloneQuoteEvents.push({ timestamp: quote.sent_at, type: "quote_sent", label: `Quote ${displayNumber} sent`, icon: "mail", color: "text-amber" });
     }

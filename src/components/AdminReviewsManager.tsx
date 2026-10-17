@@ -57,7 +57,7 @@ export default function AdminReviewsManager({ reviews }: { reviews: Review[] }) 
             key={tab}
             onClick={() => setFilter(tab)}
             className={`px-4 py-2 rounded-full text-sm font-semibold capitalize ${
-              filter === tab ? "bg-[#1E3A5F] text-white" : "bg-white border border-[#1E3A5F]/15 text-[#1E3A5F]"
+              filter === tab ? "bg-accent text-white" : "bg-white border border-[#2E2420]/15 text-[#2E2420]"
             }`}
           >
             {tab} ({counts[tab]})
@@ -66,21 +66,21 @@ export default function AdminReviewsManager({ reviews }: { reviews: Review[] }) 
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-[#1E3A5F]/50">No {filter} reviews.</p>
+        <p className="text-sm text-[#2E2420]/50">No {filter} reviews.</p>
       ) : (
         <div className="space-y-3">
           {filtered.map(review => (
-            <div key={review.id} className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
+            <div key={review.id} className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
               <div className="flex items-start justify-between gap-3 flex-wrap mb-2">
                 <div>
-                  <div className="font-semibold text-[#1E3A5F]">{review.productTitle}</div>
-                  <div className="text-xs text-[#1E3A5F]/50">
+                  <div className="font-semibold text-[#2E2420]">{review.productTitle}</div>
+                  <div className="text-xs text-[#2E2420]/50">
                     {review.customerName} · <a href={`/admin/orders/${review.orderId}`} className="hover:underline">View order</a>
                   </div>
                 </div>
                 <div className="text-amber text-base leading-none">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</div>
               </div>
-              <p className="text-sm text-[#1E3A5F]/70 mb-3">{review.review_text}</p>
+              <p className="text-sm text-[#2E2420]/70 mb-3">{review.review_text}</p>
               <div className="flex gap-2">
                 {review.status !== "approved" && (
                   <button
@@ -95,7 +95,7 @@ export default function AdminReviewsManager({ reviews }: { reviews: Review[] }) 
                   <button
                     onClick={() => setStatus(review.id, "rejected")}
                     disabled={busyId === review.id}
-                    className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50"
+                    className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50"
                   >
                     Reject
                   </button>

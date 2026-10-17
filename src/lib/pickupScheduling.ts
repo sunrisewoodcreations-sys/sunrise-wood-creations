@@ -183,14 +183,14 @@ export const PICKUP_BADGE_LABELS: Record<PickupBadgeState, string> = {
 };
 
 export const PICKUP_BADGE_STYLES: Record<PickupBadgeState, string> = {
-  not_applicable: "bg-[#1E3A5F]/5 text-[#1E3A5F]/30",
+  not_applicable: "bg-[#2E2420]/5 text-[#2E2420]/30",
   waiting_to_schedule: "bg-amber/20 text-amber",
   scheduling_email_sent: "bg-amber/30 text-amber",
   pickup_scheduled: "bg-sage/20 text-sage",
-  customer_rescheduled: "bg-[#1E3A5F]/15 text-[#1E3A5F]",
+  customer_rescheduled: "bg-[#2E2420]/15 text-[#2E2420]",
   pickup_today: "bg-sage text-white",
-  customer_arrived: "bg-[#1E3A5F] text-white",
-  picked_up: "bg-[#1E3A5F]/10 text-[#1E3A5F]/50",
+  customer_arrived: "bg-accent text-white",
+  picked_up: "bg-[#2E2420]/10 text-[#2E2420]/50",
   no_show: "bg-ember/20 text-ember"
 };
 

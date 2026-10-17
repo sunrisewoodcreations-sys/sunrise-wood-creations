@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { formatQuoteNumberWithRevision } from "@/lib/quoteNumber";
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60",
+  draft: "bg-[#2E2420]/10 text-[#2E2420]/60",
   sent: "bg-amber/20 text-amber",
   viewed: "bg-amber/40 text-white",
   accepted: "bg-sage text-white",
@@ -61,13 +61,13 @@ export default function QuoteListRow({ quote }: { quote: any }) {
   }
 
   return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
+    <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
       <div className="flex items-center justify-between mb-2">
         <div>
-          <Link href={`/admin/quotes/${quote.id}`} className="font-semibold text-[#1E3A5F] hover:underline">
+          <Link href={`/admin/quotes/${quote.id}`} className="font-semibold text-[#2E2420] hover:underline">
             {displayNumber} — {quote.profiles?.full_name || "Unknown"}
           </Link>
-          <div className="text-xs text-[#1E3A5F]/50">
+          <div className="text-xs text-[#2E2420]/50">
             ${(quote.total_cents / 100).toFixed(2)} · Expires {new Date(quote.expiration_date + "T12:00:00Z").toLocaleDateString()}
           </div>
         </div>
@@ -83,15 +83,15 @@ export default function QuoteListRow({ quote }: { quote: any }) {
       {error && <p className="text-xs text-ember mb-2">{error}</p>}
 
       <div className="flex flex-wrap gap-3 text-xs font-semibold">
-        <Link href={`/admin/quotes/${quote.id}`} className="text-[#1E3A5F] hover:underline">Edit</Link>
-        <a href={`/api/quotes/${quote.id}/pdf`} target="_blank" className="text-[#1E3A5F] hover:underline">Download PDF</a>
-        <button onClick={handleSend} disabled={busy === "send"} className="text-[#1E3A5F] hover:underline">
+        <Link href={`/admin/quotes/${quote.id}`} className="text-[#2E2420] hover:underline">Edit</Link>
+        <a href={`/api/quotes/${quote.id}/pdf`} target="_blank" className="text-[#2E2420] hover:underline">Download PDF</a>
+        <button onClick={handleSend} disabled={busy === "send"} className="text-[#2E2420] hover:underline">
           {busy === "send" ? "Sending..." : "Email to customer"}
         </button>
-        <button onClick={handleCopyLink} className="text-[#1E3A5F] hover:underline">
+        <button onClick={handleCopyLink} className="text-[#2E2420] hover:underline">
           {busy === "copied" ? "Copied!" : "Copy link"}
         </button>
-        <button onClick={handleDuplicate} disabled={busy === "duplicate"} className="text-[#1E3A5F] hover:underline">
+        <button onClick={handleDuplicate} disabled={busy === "duplicate"} className="text-[#2E2420] hover:underline">
           {busy === "duplicate" ? "Duplicating..." : "Duplicate"}
         </button>
         {quote.converted_order_id ? (

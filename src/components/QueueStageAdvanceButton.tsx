@@ -33,7 +33,7 @@ export default function QueueStageAdvanceButton({ orderId, currentStage, nextSta
     <button
       onClick={handleAdvance}
       disabled={loading}
-      className="bg-[#1E3A5F] text-white rounded-md px-3 py-1.5 text-xs font-semibold disabled:opacity-60"
+      className="bg-accent text-white rounded-md px-3 py-1.5 text-xs font-semibold disabled:opacity-60"
     >
       {loading ? "Saving..." : (STAGE_LABELS[currentStage] || "Advance Stage")}
     </button>

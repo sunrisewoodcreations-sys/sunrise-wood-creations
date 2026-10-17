@@ -55,9 +55,9 @@ export default function EditCustomerContactForm({
 
   if (!editing) {
     return (
-      <div className="text-sm text-[#1E3A5F]/70 space-y-0.5">
-        <div>{initialPhone || <span className="text-[#1E3A5F]/40 italic">No phone on file</span>}</div>
-        <div>{initialAddress || <span className="text-[#1E3A5F]/40 italic">No address on file</span>}</div>
+      <div className="text-sm text-[#2E2420]/70 space-y-0.5">
+        <div>{initialPhone || <span className="text-[#2E2420]/40 italic">No phone on file</span>}</div>
+        <div>{initialAddress || <span className="text-[#2E2420]/40 italic">No address on file</span>}</div>
         <button onClick={() => setEditing(true)} className="text-xs font-semibold text-ember hover:underline mt-1">
           Edit customer info
         </button>
@@ -68,37 +68,37 @@ export default function EditCustomerContactForm({
   return (
     <form onSubmit={handleSave} className="space-y-2 max-w-sm">
       <div>
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Full name</label>
+        <label className="block text-xs font-semibold text-[#2E2420] mb-1">Full name</label>
         <input
           required
           value={fullName}
           onChange={e => setFullName(e.target.value)}
-          className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+          className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
         />
       </div>
       <div>
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Email</label>
+        <label className="block text-xs font-semibold text-[#2E2420] mb-1">Email</label>
         <input
           type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
           placeholder={hasRealEmail ? "" : "No email on file — add one to enable notifications"}
-          className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+          className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
         />
-        <p className="text-[10px] text-[#1E3A5F]/40 mt-0.5">Leaving this blank keeps their current email unchanged — it will never be removed this way.</p>
+        <p className="text-[10px] text-[#2E2420]/40 mt-0.5">Leaving this blank keeps their current email unchanged — it will never be removed this way.</p>
       </div>
       <div>
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Phone (optional)</label>
+        <label className="block text-xs font-semibold text-[#2E2420] mb-1">Phone (optional)</label>
         <input
           type="tel"
           value={phone}
           onChange={e => setPhone(e.target.value)}
           placeholder="(269) 555-0123"
-          className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+          className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm"
         />
       </div>
       <div>
-        <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Address (optional)</label>
+        <label className="block text-xs font-semibold text-[#2E2420] mb-1">Address (optional)</label>
         <AddressInput value={address} onChange={setAddress} />
       </div>
       {error && <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-2 py-1.5">{error}</p>}
@@ -106,7 +106,7 @@ export default function EditCustomerContactForm({
         <button
           type="submit"
           disabled={loading}
-          className="bg-[#1E3A5F] text-white px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
+          className="bg-accent text-white px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
         >
           {loading ? "Saving..." : "Save"}
         </button>
@@ -120,7 +120,7 @@ export default function EditCustomerContactForm({
             setPhone(initialPhone || "");
             setAddress(initialAddress || "");
           }}
-          className="text-xs text-[#1E3A5F]/50"
+          className="text-xs text-[#2E2420]/50"
         >
           Cancel
         </button>

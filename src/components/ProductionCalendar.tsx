@@ -135,16 +135,16 @@ export default function ProductionCalendar({ orders }: { orders: Order[] }) {
         onDragStart={e => { e.dataTransfer.setData("text/plain", order.id); setDraggingId(order.id); }}
         onDragEnd={() => setDraggingId(null)}
         className={`group relative rounded-md px-1.5 py-1 mb-1 text-[11px] leading-tight cursor-grab active:cursor-grabbing ${
-          isOverdue ? "bg-ember/15 border border-ember/40" : "bg-white border border-[#1E3A5F]/15"
+          isOverdue ? "bg-ember/15 border border-ember/40" : "bg-white border border-[#2E2420]/15"
         } ${draggingId === order.id ? "opacity-40" : ""}`}
         title={`${order.profiles?.full_name || "Unknown"} — ${productLabel(order.product_type as ProductType)}: ${order.title}`}
       >
-        <Link href={`/admin/orders/${order.id}`} className="block truncate font-semibold text-[#1E3A5F] hover:underline">
+        <Link href={`/admin/orders/${order.id}`} className="block truncate font-semibold text-[#2E2420] hover:underline">
           {isOverdue && "⚠ "}{order.profiles?.full_name || "Unknown"}
         </Link>
         <div className="flex items-center gap-1 truncate">
           <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColor(order.status).split(" ")[0]}`} />
-          <span className="text-[#1E3A5F]/60 truncate">{productLabel(order.product_type as ProductType)}</span>
+          <span className="text-[#2E2420]/60 truncate">{productLabel(order.product_type as ProductType)}</span>
         </div>
       </div>
     );
@@ -154,13 +154,13 @@ export default function ProductionCalendar({ orders }: { orders: Order[] }) {
     <div>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => goToMonth(-1)} className="border border-[#1E3A5F]/20 text-[#1E3A5F] w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">‹</button>
-          <h2 className="font-display text-lg text-[#1E3A5F] w-44 text-center">{MONTH_NAMES[viewMonth - 1]} {viewYear}</h2>
-          <button onClick={() => goToMonth(1)} className="border border-[#1E3A5F]/20 text-[#1E3A5F] w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">›</button>
+          <button onClick={() => goToMonth(-1)} className="border border-[#2E2420]/20 text-[#2E2420] w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">‹</button>
+          <h2 className="font-display text-lg text-[#2E2420] w-44 text-center">{MONTH_NAMES[viewMonth - 1]} {viewYear}</h2>
+          <button onClick={() => goToMonth(1)} className="border border-[#2E2420]/20 text-[#2E2420] w-8 h-8 rounded-md text-sm font-semibold hover:bg-cream">›</button>
         </div>
         <button
           onClick={() => { setViewMonth(today.month); setViewYear(today.year); }}
-          className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream"
+          className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream"
         >
           Today
         </button>
@@ -171,9 +171,9 @@ export default function ProductionCalendar({ orders }: { orders: Order[] }) {
       {unscheduled.length > 0 && (
         <div
           onDragOver={e => e.preventDefault()}
-          className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 mb-4"
+          className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-3 mb-4"
         >
-          <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">
+          <div className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide mb-2">
             Unscheduled ({unscheduled.length}) — drag onto a day to set a pickup date
           </div>
           <div className="flex flex-wrap gap-2">
@@ -186,8 +186,8 @@ export default function ProductionCalendar({ orders }: { orders: Order[] }) {
         </div>
       )}
 
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm overflow-hidden">
-        <div className="grid grid-cols-7 bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm overflow-hidden">
+        <div className="grid grid-cols-7 bg-[#2E2420] text-white text-xs uppercase tracking-wide">
           {WEEKDAYS.map(w => <div key={w} className="text-center py-2">{w}</div>)}
         </div>
         <div className="grid grid-cols-7">
@@ -203,14 +203,14 @@ export default function ProductionCalendar({ orders }: { orders: Order[] }) {
                 onDragOver={e => { e.preventDefault(); setDragOverDate(ds); }}
                 onDragLeave={() => setDragOverDate(prev => (prev === ds ? null : prev))}
                 onDrop={e => handleDrop(e, ds)}
-                className={`min-h-[110px] border-t border-l border-[#1E3A5F]/10 p-1.5 [&:nth-child(7n+1)]:border-l-0 ${
+                className={`min-h-[110px] border-t border-l border-[#2E2420]/10 p-1.5 [&:nth-child(7n+1)]:border-l-0 ${
                   !d.inCurrentMonth ? "bg-cream/40" : "bg-white"
                 } ${isDragOver ? "bg-sage/10 ring-2 ring-inset ring-sage/40" : ""}`}
               >
                 <div className={`text-xs font-semibold mb-1 ${
                   isToday
-                    ? "inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#1E3A5F] text-white"
-                    : d.inCurrentMonth ? "text-[#1E3A5F]/70" : "text-[#1E3A5F]/30"
+                    ? "inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-white"
+                    : d.inCurrentMonth ? "text-[#2E2420]/70" : "text-[#2E2420]/30"
                 }`}>
                   {d.day}
                 </div>

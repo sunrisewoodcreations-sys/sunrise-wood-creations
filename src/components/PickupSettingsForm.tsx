@@ -96,31 +96,31 @@ export default function PickupSettingsForm({ settings, blockedDates }: { setting
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Pickup Scheduling Settings</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">Controls what customers see and can book on the pickup scheduling page.</p>
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">Pickup Scheduling Settings</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6">Controls what customers see and can book on the pickup scheduling page.</p>
 
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 space-y-5 mb-6">
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5 space-y-5 mb-6">
         <div>
-          <h2 className="font-display text-base text-[#1E3A5F] mb-3">Business info shown to customers</h2>
+          <h2 className="font-display text-base text-[#2E2420] mb-3">Business info shown to customers</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Business address</label>
-              <input value={businessAddress} onChange={e => setBusinessAddress(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-[#2E2420] mb-1">Business address</label>
+              <input value={businessAddress} onChange={e => setBusinessAddress(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Contact phone</label>
-              <input value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-[#2E2420] mb-1">Contact phone</label>
+              <input value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
             </div>
           </div>
           <div className="mt-3">
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Pickup instructions</label>
-            <textarea value={pickupInstructions} onChange={e => setPickupInstructions(e.target.value)} rows={2} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Pickup instructions</label>
+            <textarea value={pickupInstructions} onChange={e => setPickupInstructions(e.target.value)} rows={2} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
           </div>
         </div>
 
-        <div className="pt-4 border-t border-[#1E3A5F]/10">
-          <h2 className="font-display text-base text-[#1E3A5F] mb-3">Availability</h2>
-          <label className="block text-xs font-semibold text-[#1E3A5F] mb-1.5">Available pickup days</label>
+        <div className="pt-4 border-t border-[#2E2420]/10">
+          <h2 className="font-display text-base text-[#2E2420] mb-3">Availability</h2>
+          <label className="block text-xs font-semibold text-[#2E2420] mb-1.5">Available pickup days</label>
           <div className="flex flex-wrap gap-2 mb-3">
             {WEEKDAYS.map(d => (
               <button
@@ -128,7 +128,7 @@ export default function PickupSettingsForm({ settings, blockedDates }: { setting
                 type="button"
                 onClick={() => toggleDay(d.value)}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${
-                  availableDays.includes(d.value) ? "bg-[#1E3A5F] text-white border-[#1E3A5F]" : "bg-white text-[#1E3A5F] border-[#1E3A5F]/20"
+                  availableDays.includes(d.value) ? "bg-accent text-white border-accent" : "bg-white text-[#2E2420] border-[#2E2420]/20"
                 }`}
               >
                 {d.label}
@@ -137,43 +137,43 @@ export default function PickupSettingsForm({ settings, blockedDates }: { setting
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Start time</label>
-              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-[#2E2420] mb-1">Start time</label>
+              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">End time</label>
-              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-[#2E2420] mb-1">End time</label>
+              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Appointment length (min)</label>
-              <input value={slotLengthMinutes} onChange={e => setSlotLengthMinutes(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-[#2E2420] mb-1">Appointment length (min)</label>
+              <input value={slotLengthMinutes} onChange={e => setSlotLengthMinutes(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Max per time slot</label>
-              <input value={maxPickupsPerSlot} onChange={e => setMaxPickupsPerSlot(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-[#2E2420] mb-1">Max per time slot</label>
+              <input value={maxPickupsPerSlot} onChange={e => setMaxPickupsPerSlot(e.target.value)} className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
             </div>
           </div>
         </div>
 
-        <div className="pt-4 border-t border-[#1E3A5F]/10">
-          <h2 className="font-display text-base text-[#1E3A5F] mb-2">Customer reminders</h2>
-          <p className="text-xs text-[#1E3A5F]/50 mb-2">A reminder email always goes out 24 hours before a scheduled pickup.</p>
+        <div className="pt-4 border-t border-[#2E2420]/10">
+          <h2 className="font-display text-base text-[#2E2420] mb-2">Customer reminders</h2>
+          <p className="text-xs text-[#2E2420]/50 mb-2">A reminder email always goes out 24 hours before a scheduled pickup.</p>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={send2hourReminder} onChange={e => setSend2hourReminder(e.target.checked)} className="w-4 h-4" />
-            <span className="text-sm font-semibold text-[#1E3A5F]">Also send a reminder 2 hours before pickup</span>
+            <span className="text-sm font-semibold text-[#2E2420]">Also send a reminder 2 hours before pickup</span>
           </label>
         </div>
 
-        <div className="pt-4 border-t border-[#1E3A5F]/10">
+        <div className="pt-4 border-t border-[#2E2420]/10">
           <label className="flex items-center gap-2 mb-2">
             <input type="checkbox" checked={vacationModeEnabled} onChange={e => setVacationModeEnabled(e.target.checked)} className="w-4 h-4" />
-            <span className="text-sm font-semibold text-[#1E3A5F]">Vacation mode — disable all scheduling</span>
+            <span className="text-sm font-semibold text-[#2E2420]">Vacation mode — disable all scheduling</span>
           </label>
           {vacationModeEnabled && (
             <div className="ml-6">
-              <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Resume scheduling on (optional)</label>
-              <input type="date" value={vacationReturnDate} onChange={e => setVacationReturnDate(e.target.value)} className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
-              <p className="text-[11px] text-[#1E3A5F]/50 mt-1">Leave blank to stay closed until you turn this off manually.</p>
+              <label className="block text-xs font-semibold text-[#2E2420] mb-1">Resume scheduling on (optional)</label>
+              <input type="date" value={vacationReturnDate} onChange={e => setVacationReturnDate(e.target.value)} className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
+              <p className="text-[11px] text-[#2E2420]/50 mt-1">Leave blank to stay closed until you turn this off manually.</p>
             </div>
           )}
         </div>
@@ -185,28 +185,28 @@ export default function PickupSettingsForm({ settings, blockedDates }: { setting
         </div>
       </div>
 
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5">
-        <h2 className="font-display text-base text-[#1E3A5F] mb-3">Holidays &amp; blocked dates</h2>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5">
+        <h2 className="font-display text-base text-[#2E2420] mb-3">Holidays &amp; blocked dates</h2>
         <form onSubmit={handleAddBlockedDate} className="flex flex-wrap items-end gap-2 mb-4">
           <div>
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Date</label>
-            <input type="date" required value={newBlockedDate} onChange={e => setNewBlockedDate(e.target.value)} className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Date</label>
+            <input type="date" required value={newBlockedDate} onChange={e => setNewBlockedDate(e.target.value)} className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
           </div>
           <div className="flex-1 min-w-[160px]">
-            <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Reason (optional)</label>
-            <input value={newBlockedReason} onChange={e => setNewBlockedReason(e.target.value)} placeholder="e.g. Thanksgiving" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-[#2E2420] mb-1">Reason (optional)</label>
+            <input value={newBlockedReason} onChange={e => setNewBlockedReason(e.target.value)} placeholder="e.g. Thanksgiving" className="w-full border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm" />
           </div>
           <AdminButton type="submit">Block date</AdminButton>
         </form>
         {blockedDates.length === 0 ? (
-          <p className="text-sm text-[#1E3A5F]/50">No upcoming blocked dates.</p>
+          <p className="text-sm text-[#2E2420]/50">No upcoming blocked dates.</p>
         ) : (
           <div className="space-y-1.5">
             {blockedDates.map(bd => (
               <div key={bd.id} className="flex items-center justify-between bg-cream/40 rounded-md px-3 py-2 text-sm">
-                <span className="text-[#1E3A5F]">
+                <span className="text-[#2E2420]">
                   {new Date(bd.blocked_date + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                  {bd.reason && <span className="text-[#1E3A5F]/50"> — {bd.reason}</span>}
+                  {bd.reason && <span className="text-[#2E2420]/50"> — {bd.reason}</span>}
                 </span>
                 <button onClick={() => handleRemoveBlockedDate(bd.id)} className="text-xs font-semibold text-ember hover:underline">Remove</button>
               </div>

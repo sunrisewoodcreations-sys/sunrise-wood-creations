@@ -10,7 +10,7 @@ import { SALES_TAX_RATE } from "@/lib/tax";
 // Same brand palette already used in the redesigned customer emails —
 // kept as the single source of truth for both, rather than a separate
 // invoice-only color set that could drift out of sync.
-const WALNUT = rgb(0.1176, 0.2275, 0.3725); // #1E3A5F
+const WALNUT = rgb(0.180, 0.141, 0.125); // #2E2420
 const WALNUT_DARK = rgb(0.180, 0.141, 0.125); // #2E2420
 const CREAM = rgb(0.980, 0.965, 0.933); // #FAF6EE
 const WHITE = rgb(1, 1, 1);

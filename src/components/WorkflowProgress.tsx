@@ -16,17 +16,17 @@ export default function WorkflowProgress({ stage }: { stage: WorkflowStage }) {
             <div className="flex flex-col items-center">
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                  isCurrent ? "bg-[#1E3A5F] text-white" : isDone ? "bg-sage text-white" : "bg-[#1E3A5F]/10 text-[#1E3A5F]/40"
+                  isCurrent ? "bg-accent text-white" : isDone ? "bg-sage text-white" : "bg-[#2E2420]/10 text-[#2E2420]/40"
                 }`}
               >
                 {isDone ? "✓" : i + 1}
               </div>
-              <span className={`text-[10px] mt-1 whitespace-nowrap ${isCurrent ? "font-bold text-[#1E3A5F]" : "text-[#1E3A5F]/50"}`}>
+              <span className={`text-[10px] mt-1 whitespace-nowrap ${isCurrent ? "font-bold text-[#2E2420]" : "text-[#2E2420]/50"}`}>
                 {WORKFLOW_LABELS[s]}
               </span>
             </div>
             {i < WORKFLOW_STAGES.length - 1 && (
-              <div className={`w-6 sm:w-10 h-0.5 mb-4 flex-shrink-0 ${isDone ? "bg-sage" : "bg-[#1E3A5F]/10"}`} />
+              <div className={`w-6 sm:w-10 h-0.5 mb-4 flex-shrink-0 ${isDone ? "bg-sage" : "bg-[#2E2420]/10"}`} />
             )}
           </div>
         );

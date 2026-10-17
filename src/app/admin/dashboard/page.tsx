@@ -73,15 +73,15 @@ function SummaryCard({
   label, value, subValue, color, href, icon, tint, compact
 }: { label: string; value: string | number; subValue?: string; color?: string; href?: string; icon: string; tint: string; compact?: boolean }) {
   const content = (
-    <div className={`bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm transition-all ${compact ? "p-3 sm:p-5" : "p-5"} ${href ? "hover:shadow-lg hover:border-[#1E3A5F]/30 hover:-translate-y-0.5 cursor-pointer" : ""}`}>
+    <div className={`bg-white border border-[#2E2420]/10 rounded-xl shadow-sm transition-all ${compact ? "p-3 sm:p-5" : "p-5"} ${href ? "hover:shadow-lg hover:border-[#2E2420]/30 hover:-translate-y-0.5 cursor-pointer" : ""}`}>
       <div className={`flex items-center justify-between ${compact ? "mb-1.5 sm:mb-3" : "mb-3"}`}>
-        <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide font-semibold">{label}</div>
+        <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide font-semibold">{label}</div>
         <div className={`rounded-lg flex items-center justify-center flex-shrink-0 ${compact ? "w-6 h-6 sm:w-8 sm:h-8" : "w-8 h-8"} ${tint}`}>
           <Icon name={icon} className="w-4 h-4" />
         </div>
       </div>
-      <div className={`font-display font-semibold ${compact ? "text-lg sm:text-3xl" : "text-3xl"} ${color || "text-[#1E3A5F]"}`}>{value}</div>
-      {subValue && <div className="text-xs text-[#1E3A5F]/50 mt-1">{subValue}</div>}
+      <div className={`font-display font-semibold ${compact ? "text-lg sm:text-3xl" : "text-3xl"} ${color || "text-[#2E2420]"}`}>{value}</div>
+      {subValue && <div className="text-xs text-[#2E2420]/50 mt-1">{subValue}</div>}
     </div>
   );
   if (!href) return content;
@@ -90,18 +90,18 @@ function SummaryCard({
 
 function SectionCard({ title, children, emptyText, emptyIcon, count }: { title: string; children: React.ReactNode; emptyText?: string; emptyIcon?: string; count?: number }) {
   return (
-    <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
-      <div className="px-4 py-3.5 border-b border-[#1E3A5F]/10 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-[#1E3A5F]">{title}</h2>
+    <div className="bg-white border border-[#2E2420]/10 rounded-xl overflow-hidden shadow-sm">
+      <div className="px-4 py-3.5 border-b border-[#2E2420]/10 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-[#2E2420]">{title}</h2>
         {typeof count === "number" && count > 0 && (
-          <span className="text-xs font-semibold text-[#1E3A5F]/40 bg-[#1E3A5F]/5 px-2 py-0.5 rounded-full">{count}</span>
+          <span className="text-xs font-semibold text-[#2E2420]/40 bg-[#2E2420]/5 px-2 py-0.5 rounded-full">{count}</span>
         )}
       </div>
       <div>
         {children || (
           <div className="flex flex-col items-center justify-center gap-2 px-4 py-8">
-            <Icon name={emptyIcon || "layers"} className="w-6 h-6 text-[#1E3A5F]/25" />
-            <p className="text-sm text-[#1E3A5F]/50">{emptyText}</p>
+            <Icon name={emptyIcon || "layers"} className="w-6 h-6 text-[#2E2420]/25" />
+            <p className="text-sm text-[#2E2420]/50">{emptyText}</p>
           </div>
         )}
       </div>
@@ -129,21 +129,21 @@ function TaskSection({
   if (orders.length === 0) return null;
   return (
     <div className="mb-6">
-      <h2 className="font-display text-base text-[#1E3A5F] mb-2">{emoji} {title} ({orders.length})</h2>
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+      <h2 className="font-display text-base text-[#2E2420] mb-2">{emoji} {title} ({orders.length})</h2>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl overflow-hidden shadow-sm">
         {orders.map((o: any) => {
           const balanceCents = (o.price_cents || 0) - (o.amount_paid_cents || 0);
           return (
             <div
               key={o.id}
-              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors"
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 border-t border-[#2E2420]/10 first:border-0 hover:bg-cream/60 transition-colors"
             >
               <div className="min-w-0">
-                <Link href={`/admin/orders/${o.id}`} className="text-sm font-semibold text-[#1E3A5F] truncate hover:underline block">
+                <Link href={`/admin/orders/${o.id}`} className="text-sm font-semibold text-[#2E2420] truncate hover:underline block">
                   {productLabel(o.product_type as ProductType)} — {o.title}
                 </Link>
-                <div className="text-xs text-[#1E3A5F]/60">
-                  <Link href={`/admin/customers/${o.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
+                <div className="text-xs text-[#2E2420]/60">
+                  <Link href={`/admin/customers/${o.customer_id}`} className="hover:underline hover:text-[#2E2420]">
                     {o.profiles?.full_name}
                   </Link>
                   {o.due_date && ` · Due ${formatCalendarDate(o.due_date)}`}
@@ -164,19 +164,19 @@ function QuoteRequestTaskSection({ requests }: { requests: any[] }) {
   if (requests.length === 0) return null;
   return (
     <div className="mb-6">
-      <h2 className="font-display text-base text-[#1E3A5F] mb-2">📨 New Quote Requests ({requests.length})</h2>
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+      <h2 className="font-display text-base text-[#2E2420] mb-2">📨 New Quote Requests ({requests.length})</h2>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl overflow-hidden shadow-sm">
         {requests.map((q: any) => (
           <Link
             key={q.id}
             href="/admin/quotes?tab=requests"
-            className="flex items-center justify-between gap-2 px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors"
+            className="flex items-center justify-between gap-2 px-4 py-3 border-t border-[#2E2420]/10 first:border-0 hover:bg-cream/60 transition-colors"
           >
             <div className="min-w-0">
-              <div className="text-sm font-semibold text-[#1E3A5F] truncate">{q.name}</div>
-              <div className="text-xs text-[#1E3A5F]/60">{q.product_type || "General inquiry"}</div>
+              <div className="text-sm font-semibold text-[#2E2420] truncate">{q.name}</div>
+              <div className="text-xs text-[#2E2420]/60">{q.product_type || "General inquiry"}</div>
             </div>
-            <span className="text-xs text-[#1E3A5F]/40 flex-shrink-0">
+            <span className="text-xs text-[#2E2420]/40 flex-shrink-0">
               {new Date(q.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
             </span>
           </Link>
@@ -190,10 +190,10 @@ function PendingReviewsTaskSection({ count }: { count: number }) {
   if (count === 0) return null;
   return (
     <div className="mb-6">
-      <h2 className="font-display text-base text-[#1E3A5F] mb-2">⭐ Pending Reviews ({count})</h2>
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+      <h2 className="font-display text-base text-[#2E2420] mb-2">⭐ Pending Reviews ({count})</h2>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl overflow-hidden shadow-sm">
         <Link href="/admin/reviews" className="flex items-center justify-between gap-2 px-4 py-3 hover:bg-cream/60 transition-colors">
-          <span className="text-sm text-[#1E3A5F]">Customer reviews waiting for approval</span>
+          <span className="text-sm text-[#2E2420]">Customer reviews waiting for approval</span>
           <span className="text-xs text-ember font-semibold">Review →</span>
         </Link>
       </div>
@@ -205,10 +205,10 @@ function PendingFaqTaskSection({ count }: { count: number }) {
   if (count === 0) return null;
   return (
     <div className="mb-6">
-      <h2 className="font-display text-base text-[#1E3A5F] mb-2">❓ New Questions ({count})</h2>
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+      <h2 className="font-display text-base text-[#2E2420] mb-2">❓ New Questions ({count})</h2>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl overflow-hidden shadow-sm">
         <Link href="/admin/faq" className="flex items-center justify-between gap-2 px-4 py-3 hover:bg-cream/60 transition-colors">
-          <span className="text-sm text-[#1E3A5F]">Customer questions waiting for an answer</span>
+          <span className="text-sm text-[#2E2420]">Customer questions waiting for an answer</span>
           <span className="text-xs text-ember font-semibold">Answer →</span>
         </Link>
       </div>
@@ -220,15 +220,15 @@ function LowInventoryTaskSection({ products }: { products: any[] }) {
   if (products.length === 0) return null;
   return (
     <div className="mb-6">
-      <h2 className="font-display text-base text-[#1E3A5F] mb-2">📦 Low Inventory ({products.length})</h2>
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+      <h2 className="font-display text-base text-[#2E2420] mb-2">📦 Low Inventory ({products.length})</h2>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl overflow-hidden shadow-sm">
         {products.map((p: any) => (
           <Link
             key={p.id}
             href="/admin/products"
-            className="flex items-center justify-between gap-2 px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors"
+            className="flex items-center justify-between gap-2 px-4 py-3 border-t border-[#2E2420]/10 first:border-0 hover:bg-cream/60 transition-colors"
           >
-            <span className="text-sm font-semibold text-[#1E3A5F] truncate">{p.name}</span>
+            <span className="text-sm font-semibold text-[#2E2420] truncate">{p.name}</span>
             <span className="text-sm font-bold text-ember flex-shrink-0">{p.stock_quantity ?? 0} left</span>
           </Link>
         ))}
@@ -438,8 +438,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="bg-cream/40 -m-8 p-8 min-h-full">
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Dashboard</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">Your daily command center — today's priorities first.</p>
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">Dashboard</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6">Your daily command center — today's priorities first.</p>
 
       {/* ============================================================
           1. NEEDS ATTENTION — everything requiring action, first.
@@ -451,7 +451,7 @@ export default async function DashboardPage() {
           also shown once more in Today's Business as a KPI snapshot,
           not a duplicate display of the same list. ============ */}
       <div className="flex items-center gap-2 mb-3">
-        <h2 className="font-display text-lg text-[#1E3A5F]">Needs Attention</h2>
+        <h2 className="font-display text-lg text-[#2E2420]">Needs Attention</h2>
         {needsAttentionCount > 0 && (
           <span className="text-xs font-semibold text-white bg-ember px-2 py-0.5 rounded-full">{needsAttentionCount}</span>
         )}
@@ -460,47 +460,47 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
         <Link href="/admin/orders?filter=overdue" className="bg-white border-2 border-ember/30 rounded-xl shadow-sm p-3 text-center hover:border-ember/60 transition-colors">
           <div className="text-xl font-display text-ember">{overdueOrders.length}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Overdue</div>
+          <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide">Overdue</div>
         </Link>
-        <Link href="/admin/orders?filter=waiting_payment" className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#1E3A5F]/30 transition-colors">
+        <Link href="/admin/orders?filter=waiting_payment" className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#2E2420]/30 transition-colors">
           <div className="text-xl font-display text-amber">{outstandingBalanceTaskOrders.length}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Payments Waiting</div>
+          <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide">Payments Waiting</div>
           {outstandingBalanceCents > 0 && (
             <div className="text-[10px] text-amber/70 mt-0.5">${(outstandingBalanceCents / 100).toFixed(2)} owed</div>
           )}
         </Link>
-        <Link href="/admin/orders?filter=waiting_customer" className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#1E3A5F]/30 transition-colors">
-          <div className="text-xl font-display text-[#1E3A5F]">{waitingOnCustomerTaskOrders.length}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Waiting on Customer</div>
+        <Link href="/admin/orders?filter=waiting_customer" className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#2E2420]/30 transition-colors">
+          <div className="text-xl font-display text-[#2E2420]">{waitingOnCustomerTaskOrders.length}</div>
+          <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide">Waiting on Customer</div>
         </Link>
-        <Link href="/admin/quotes?tab=requests" className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#1E3A5F]/30 transition-colors">
-          <div className="text-xl font-display text-[#1E3A5F]">{(unrespondedQuoteRequests || []).length}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">New Quote Requests</div>
+        <Link href="/admin/quotes?tab=requests" className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#2E2420]/30 transition-colors">
+          <div className="text-xl font-display text-[#2E2420]">{(unrespondedQuoteRequests || []).length}</div>
+          <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide">New Quote Requests</div>
         </Link>
-        <Link href="/admin/faq" className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#1E3A5F]/30 transition-colors">
-          <div className="text-xl font-display text-[#1E3A5F]">{pendingFaqCount || 0}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">New Questions</div>
+        <Link href="/admin/faq" className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#2E2420]/30 transition-colors">
+          <div className="text-xl font-display text-[#2E2420]">{pendingFaqCount || 0}</div>
+          <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide">New Questions</div>
         </Link>
-        <Link href="/admin/reviews" className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#1E3A5F]/30 transition-colors">
-          <div className="text-xl font-display text-[#1E3A5F]">{pendingReviewsCount || 0}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Pending Reviews</div>
+        <Link href="/admin/reviews" className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-3 text-center hover:border-[#2E2420]/30 transition-colors">
+          <div className="text-xl font-display text-[#2E2420]">{pendingReviewsCount || 0}</div>
+          <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide">Pending Reviews</div>
         </Link>
-        <a href="#inventory" className={`bg-white border rounded-xl shadow-sm p-3 text-center transition-colors ${inventoryAlertCount > 0 ? "border-ember/30 hover:border-ember/60" : "border-[#1E3A5F]/10 hover:border-[#1E3A5F]/30"}`}>
+        <a href="#inventory" className={`bg-white border rounded-xl shadow-sm p-3 text-center transition-colors ${inventoryAlertCount > 0 ? "border-ember/30 hover:border-ember/60" : "border-[#2E2420]/10 hover:border-[#2E2420]/30"}`}>
           <div className={`text-xl font-display ${inventoryAlertCount > 0 ? "text-ember" : "text-sage"}`}>{inventoryAlertCount}</div>
-          <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">Inventory Alerts</div>
+          <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide">Inventory Alerts</div>
         </a>
       </div>
 
       <div className="mb-10 sm:mb-8">
         {!anyTasks && (
-          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-white border border-[#2E2420]/10 rounded-xl overflow-hidden shadow-sm">
             <div className="flex flex-col items-center justify-center gap-3 px-4 py-10">
               <div className="w-12 h-12 rounded-full bg-sage/15 flex items-center justify-center">
                 <Icon name="check-circle" className="w-7 h-7 text-sage" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-[#1E3A5F]">You're all caught up</p>
-                <p className="text-xs text-[#1E3A5F]/50 mt-0.5">Nothing overdue, unpaid, or waiting on anyone right now.</p>
+                <p className="text-sm font-semibold text-[#2E2420]">You're all caught up</p>
+                <p className="text-xs text-[#2E2420]/50 mt-0.5">Nothing overdue, unpaid, or waiting on anyone right now.</p>
               </div>
             </div>
           </div>
@@ -522,29 +522,29 @@ export default async function DashboardPage() {
           revenue breakdown (same $ figures as before, now grouped here
           since a dollar-value snapshot is very much a "today's
           business" concern). ============ */}
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-3">Today's Business</h2>
+      <h2 className="font-display text-lg text-[#2E2420] mb-3">Today's Business</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
-        <SummaryCard label="New orders" value={newOrders} href="/admin/orders?filter=new" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+        <SummaryCard label="New orders" value={newOrders} href="/admin/orders?filter=new" icon="box" tint="bg-[#2E2420]/10 text-[#2E2420]" />
         <SummaryCard label="In production" value={inProduction} href="/admin/orders?filter=in_production" icon="hammer" tint="bg-amber/20 text-amber" />
         <SummaryCard label="Ready for pickup" value={readyForPickup} color="text-sage" href="/admin/orders?filter=ready_pickup" icon="check-circle" tint="bg-sage/15 text-sage" />
         <SummaryCard label="Due this week" value={dueThisWeek} href="/admin/orders?filter=due_week" icon="clock-alert" tint="bg-amber/20 text-amber" />
         <SummaryCard label="Sales this month" value={`$${(salesThisMonthCents / 100).toFixed(2)}`} color="text-sage" href="/admin/reports" icon="trending-up" tint="bg-sage/15 text-sage" />
       </div>
 
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-10 sm:mb-8">
-        <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Revenue Snapshot</div>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 mb-10 sm:mb-8">
+        <div className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide mb-2">Revenue Snapshot</div>
         <div className="grid grid-cols-3 gap-2 text-center">
           <Link href="/admin/orders?filter=ready_pickup" className="hover:opacity-70">
             <div className="text-lg font-display text-sage">${(revenueWaitingForPickupCents / 100).toFixed(0)}</div>
-            <div className="text-[9px] text-[#1E3A5F]/50 uppercase">Waiting Pickup</div>
+            <div className="text-[9px] text-[#2E2420]/50 uppercase">Waiting Pickup</div>
           </Link>
           <Link href="/admin/orders?filter=due_week" className="hover:opacity-70">
-            <div className="text-lg font-display text-[#1E3A5F]">${(revenueScheduledThisWeekCents / 100).toFixed(0)}</div>
-            <div className="text-[9px] text-[#1E3A5F]/50 uppercase">This Week</div>
+            <div className="text-lg font-display text-[#2E2420]">${(revenueScheduledThisWeekCents / 100).toFixed(0)}</div>
+            <div className="text-[9px] text-[#2E2420]/50 uppercase">This Week</div>
           </Link>
           <Link href="/admin/orders?filter=overdue" className="hover:opacity-70">
             <div className="text-lg font-display text-ember">${(revenueOverdueCents / 100).toFixed(0)}</div>
-            <div className="text-[9px] text-[#1E3A5F]/50 uppercase">Overdue</div>
+            <div className="text-[9px] text-[#2E2420]/50 uppercase">Overdue</div>
           </Link>
         </div>
       </div>
@@ -553,10 +553,10 @@ export default async function DashboardPage() {
           3. PRODUCTION — materials readiness, the status-mix breakdown
           (both already computed exactly as before, just relocated
           here), and a direct link to the Production Queue. ============ */}
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-3">Production</h2>
+      <h2 className="font-display text-lg text-[#2E2420] mb-3">Production</h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <Link href="/admin/material-planning" className={`bg-white border-2 rounded-xl shadow-sm p-4 hover:opacity-90 transition-opacity ${materialsNeeded.requirements.some(r => (r.shortQuantity ?? 0) > 0) ? "border-ember/40" : "border-sage/30"}`}>
-          <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-1">Materials Needed</div>
+          <div className="text-xs font-semibold text-[#2E2420]/50 uppercase tracking-wide mb-1">Materials Needed</div>
           {materialsNeeded.requirements.filter(r => (r.shortQuantity ?? 0) > 0).length === 0 ? (
             <div className="text-sm font-semibold text-sage">Enough on hand for all active orders</div>
           ) : (
@@ -568,14 +568,14 @@ export default async function DashboardPage() {
           )}
         </Link>
 
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-sm text-[#1E3A5F]/70">
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-sm text-[#2E2420]/70">
             <span>{buildTodayOrders.length} to build today</span>
             <span>{dueTodayOrders.length} due today</span>
           </div>
           <Link
             href="/admin/queue"
-            className="mt-3 inline-block text-center bg-[#1E3A5F] text-white px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
+            className="mt-3 inline-block text-center bg-accent text-white px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
           >
             View Production Queue →
           </Link>
@@ -583,8 +583,8 @@ export default async function DashboardPage() {
       </div>
 
       {activeOrders.length > 0 && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-4 mb-10 sm:mb-8 shadow-sm">
-          <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Active orders by stage ({activeOrders.length})</div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl p-4 mb-10 sm:mb-8 shadow-sm">
+          <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide mb-2">Active orders by stage ({activeOrders.length})</div>
           <div className="flex h-3 rounded-full overflow-hidden mb-2">
             {statusMix.map(([status, count]) => (
               <div
@@ -595,7 +595,7 @@ export default async function DashboardPage() {
               />
             ))}
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#1E3A5F]/60">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#2E2420]/60">
             {statusMix.map(([status, count]) => (
               <span key={status} className="inline-flex items-center gap-1.5">
                 <span className={`w-2 h-2 rounded-full ${statusColor(status).split(" ")[0]}`} />
@@ -610,19 +610,19 @@ export default async function DashboardPage() {
           4. UPCOMING PICKUPS — same pickupAppointmentsThisWeek data
           and empty-state message already used before, now given its
           own full-width section instead of one column in a 3-up row. */}
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-3">Upcoming Pickups</h2>
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-10 sm:mb-8">
+      <h2 className="font-display text-lg text-[#2E2420] mb-3">Upcoming Pickups</h2>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 mb-10 sm:mb-8">
         {(pickupAppointmentsThisWeek || []).length === 0 ? (
-          <p className="text-sm text-[#1E3A5F]/50 text-center py-4">No pickups scheduled in the next 7 days yet.</p>
+          <p className="text-sm text-[#2E2420]/50 text-center py-4">No pickups scheduled in the next 7 days yet.</p>
         ) : (
-          <div className="divide-y divide-[#1E3A5F]/10">
+          <div className="divide-y divide-[#2E2420]/10">
             {(pickupAppointmentsThisWeek || []).map((a: any) => (
               <Link key={a.id} href={`/admin/orders/${a.orders?.id}`} className="flex items-center justify-between gap-2 py-2.5 first:pt-0 last:pb-0 hover:opacity-70 transition-opacity">
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold text-[#1E3A5F] truncate">{a.orders?.profiles?.full_name || "Unknown"}</div>
-                  <div className="text-xs text-[#1E3A5F]/50 truncate">{a.orders?.title}</div>
+                  <div className="text-sm font-semibold text-[#2E2420] truncate">{a.orders?.profiles?.full_name || "Unknown"}</div>
+                  <div className="text-xs text-[#2E2420]/50 truncate">{a.orders?.title}</div>
                 </div>
-                <span className="text-xs text-[#1E3A5F]/60 flex-shrink-0">
+                <span className="text-xs text-[#2E2420]/60 flex-shrink-0">
                   {new Date(a.appointment_date + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {a.appointment_time}
                 </span>
               </Link>
@@ -637,28 +637,28 @@ export default async function DashboardPage() {
           plus cedar pickets (moved here from the old general summary
           grid, same calculation). This is the one place the full
           product list appears — no longer repeated at the bottom too. */}
-      <h2 id="inventory" className="font-display text-lg text-[#1E3A5F] mb-3 scroll-mt-4">Inventory</h2>
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm overflow-hidden mb-10 sm:mb-8">
-        <div className="p-4 border-b border-[#1E3A5F]/10 flex flex-wrap items-center justify-between gap-3">
+      <h2 id="inventory" className="font-display text-lg text-[#2E2420] mb-3 scroll-mt-4">Inventory</h2>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm overflow-hidden mb-10 sm:mb-8">
+        <div className="p-4 border-b border-[#2E2420]/10 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <span className="text-sm text-[#1E3A5F]/70">Cedar pickets remaining: </span>
+            <span className="text-sm text-[#2E2420]/70">Cedar pickets remaining: </span>
             <span className={`text-sm font-bold ${isPicketsLow ? "text-ember" : "text-sage"}`}>{remainingPickets}</span>
           </div>
-          <Link href="/admin/products" className="border border-[#1E3A5F] text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap">
+          <Link href="/admin/products" className="border border-[#2E2420] text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap">
             View Inventory
           </Link>
         </div>
 
         {outOfStockProducts.length === 0 && lowStockProducts.length === 0 && !isPicketsLow ? (
-          <p className="px-4 py-8 text-center text-sm text-[#1E3A5F]/50">Everything's well stocked.</p>
+          <p className="px-4 py-8 text-center text-sm text-[#2E2420]/50">Everything's well stocked.</p>
         ) : (
           <div>
             {outOfStockProducts.length > 0 && (
               <div className="px-4 pt-3 pb-1 text-xs font-bold text-ember uppercase tracking-wide">Out of Stock</div>
             )}
             {outOfStockProducts.map((p: any) => (
-              <Link key={p.id} href="/admin/products" className="flex items-center justify-between gap-2 px-4 py-3 border-t border-[#1E3A5F]/10 hover:bg-cream/60 transition-colors">
-                <span className="text-sm font-semibold text-[#1E3A5F] truncate">{p.name}</span>
+              <Link key={p.id} href="/admin/products" className="flex items-center justify-between gap-2 px-4 py-3 border-t border-[#2E2420]/10 hover:bg-cream/60 transition-colors">
+                <span className="text-sm font-semibold text-[#2E2420] truncate">{p.name}</span>
                 <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-ember/20 text-ember flex-shrink-0">Out of Stock</span>
               </Link>
             ))}
@@ -667,8 +667,8 @@ export default async function DashboardPage() {
               <div className="px-4 pt-3 pb-1 text-xs font-bold text-amber uppercase tracking-wide">Low Stock</div>
             )}
             {lowStockProducts.map((p: any) => (
-              <Link key={p.id} href="/admin/products" className="flex items-center justify-between gap-2 px-4 py-3 border-t border-[#1E3A5F]/10 hover:bg-cream/60 transition-colors">
-                <span className="text-sm font-semibold text-[#1E3A5F] truncate">{p.name}</span>
+              <Link key={p.id} href="/admin/products" className="flex items-center justify-between gap-2 px-4 py-3 border-t border-[#2E2420]/10 hover:bg-cream/60 transition-colors">
+                <span className="text-sm font-semibold text-[#2E2420] truncate">{p.name}</span>
                 <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber/20 text-amber flex-shrink-0">{p.stock_quantity ?? 0} left</span>
               </Link>
             ))}
@@ -681,11 +681,11 @@ export default async function DashboardPage() {
           unchanged, just repositioned. ============ */}
       <div className="mb-10 sm:mb-8">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-lg text-[#1E3A5F]">Quotes</h2>
-          <a href="/admin/quotes?tab=quotes" className="text-xs font-semibold text-[#1E3A5F] hover:underline">View all quotes →</a>
+          <h2 className="font-display text-lg text-[#2E2420]">Quotes</h2>
+          <a href="/admin/quotes?tab=quotes" className="text-xs font-semibold text-[#2E2420] hover:underline">View all quotes →</a>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 sm:gap-3">
-          <SummaryCard compact label="Awaiting send" value={quotesAwaitingSend} href="/admin/quotes?tab=quotes" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+          <SummaryCard compact label="Awaiting send" value={quotesAwaitingSend} href="/admin/quotes?tab=quotes" icon="box" tint="bg-[#2E2420]/10 text-[#2E2420]" />
           <SummaryCard compact label="Awaiting response" value={quotesAwaitingResponse} href="/admin/quotes?tab=quotes" icon="clock-alert" tint="bg-amber/20 text-amber" />
           <SummaryCard
             compact
@@ -714,7 +714,7 @@ export default async function DashboardPage() {
             icon="trending-up"
             tint="bg-sage/15 text-sage"
           />
-          <SummaryCard compact label="Total quoted value" value={`$${(totalQuotedValueCents / 100).toFixed(2)}`} href="/admin/quotes?tab=quotes" icon="box" tint="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+          <SummaryCard compact label="Total quoted value" value={`$${(totalQuotedValueCents / 100).toFixed(2)}`} href="/admin/quotes?tab=quotes" icon="box" tint="bg-[#2E2420]/10 text-[#2E2420]" />
           <SummaryCard compact label="Accepted quote value" value={`$${(acceptedQuoteValueCents / 100).toFixed(2)}`} color="text-sage" href="/admin/quotes?tab=quotes" icon="trending-up" tint="bg-sage/15 text-sage" />
         </div>
       </div>
@@ -724,19 +724,19 @@ export default async function DashboardPage() {
           Quote Requests, all unchanged. Low Inventory Alerts is not
           repeated a third time here — the same data now lives once,
           clearly, in the Inventory section above. ============ */}
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-3">Recent Activity</h2>
+      <h2 className="font-display text-lg text-[#2E2420] mb-3">Recent Activity</h2>
 
       <SectionCard title="Recent orders" count={recentOrders.length}>
         {recentOrders.map(o => {
           const balanceCents = (o.price_cents || 0) - (o.amount_paid_cents || 0);
           return (
-            <div key={o.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 sm:gap-3 px-4 py-2.5 sm:py-3.5 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/40 transition-colors">
+            <div key={o.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 sm:gap-3 px-4 py-2.5 sm:py-3.5 border-t border-[#2E2420]/10 first:border-0 hover:bg-cream/40 transition-colors">
               <div className="min-w-0 flex-1">
-                <Link href={`/admin/orders/${o.id}`} className="text-sm font-semibold text-[#1E3A5F] hover:underline">
+                <Link href={`/admin/orders/${o.id}`} className="text-sm font-semibold text-[#2E2420] hover:underline">
                   {productLabel(o.product_type as ProductType)} — {o.title}
                 </Link>
-                <div className="text-xs text-[#1E3A5F]/60 mt-0.5">
-                  <Link href={`/admin/customers/${o.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
+                <div className="text-xs text-[#2E2420]/60 mt-0.5">
+                  <Link href={`/admin/customers/${o.customer_id}`} className="hover:underline hover:text-[#2E2420]">
                     {o.profiles?.full_name}
                   </Link>
                   {o.due_date && ` · Due ${formatCalendarDate(o.due_date)}`}
@@ -752,7 +752,7 @@ export default async function DashboardPage() {
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <Link
                     href={`/admin/orders/${o.id}`}
-                    className="border border-[#1E3A5F] text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap"
+                    className="border border-[#2E2420] text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap"
                   >
                     Open order
                   </Link>
@@ -764,7 +764,7 @@ export default async function DashboardPage() {
           );
         })}
         {recentOrders.length === 0 && (
-          <p className="px-4 py-6 text-center text-sm text-[#1E3A5F]/50">No orders yet.</p>
+          <p className="px-4 py-6 text-center text-sm text-[#2E2420]/50">No orders yet.</p>
         )}
       </SectionCard>
 
@@ -773,16 +773,16 @@ export default async function DashboardPage() {
           {recentConversations.map((m: any) => {
             const order = m.orders;
             return (
-              <Link key={m.order_id} href={`/admin/orders/${m.order_id}`} className="flex items-center justify-between px-4 py-2 sm:py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors">
+              <Link key={m.order_id} href={`/admin/orders/${m.order_id}`} className="flex items-center justify-between px-4 py-2 sm:py-3 border-t border-[#2E2420]/10 first:border-0 hover:bg-cream/60 transition-colors">
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold text-[#1E3A5F] truncate">
+                  <div className="text-sm font-semibold text-[#2E2420] truncate">
                     {order?.profiles?.full_name || "Unknown"} — {order ? order.title : "Order"}
                   </div>
-                  <div className="text-xs text-[#1E3A5F]/60 truncate">
+                  <div className="text-xs text-[#2E2420]/60 truncate">
                     {m.sender_role === "admin" ? "You: " : ""}{m.body}
                   </div>
                 </div>
-                <div className="text-xs font-mono text-[#1E3A5F]/40 whitespace-nowrap ml-2">
+                <div className="text-xs font-mono text-[#2E2420]/40 whitespace-nowrap ml-2">
                   {new Date(m.created_at).toLocaleDateString()}
                 </div>
               </Link>
@@ -792,14 +792,14 @@ export default async function DashboardPage() {
 
         <SectionCard title="Recent quote requests" emptyText="No quote requests yet." emptyIcon="message">
           {(recentQuotes || []).map((q: any) => (
-            <Link key={q.id} href="/admin/quotes" className="flex items-center justify-between px-4 py-2 sm:py-3 border-t border-[#1E3A5F]/10 first:border-0 hover:bg-cream/60 transition-colors">
+            <Link key={q.id} href="/admin/quotes" className="flex items-center justify-between px-4 py-2 sm:py-3 border-t border-[#2E2420]/10 first:border-0 hover:bg-cream/60 transition-colors">
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-[#1E3A5F] truncate">{q.name}</div>
-                <div className="text-xs text-[#1E3A5F]/60 truncate">{q.description}</div>
+                <div className="text-sm font-semibold text-[#2E2420] truncate">{q.name}</div>
+                <div className="text-xs text-[#2E2420]/60 truncate">{q.description}</div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                 {!q.responded && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-ember/20 text-ember">New</span>}
-                <div className="text-xs font-mono text-[#1E3A5F]/40 whitespace-nowrap">
+                <div className="text-xs font-mono text-[#2E2420]/40 whitespace-nowrap">
                   {new Date(q.created_at).toLocaleDateString()}
                 </div>
               </div>

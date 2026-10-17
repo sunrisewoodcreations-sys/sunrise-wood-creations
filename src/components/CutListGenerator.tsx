@@ -166,8 +166,8 @@ export default function CutListGenerator({
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Cut List Generator</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6 print:hidden">Cedar planter box cutting optimizer, using your real products and orders.</p>
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">Cut List Generator</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6 print:hidden">Cedar planter box cutting optimizer, using your real products and orders.</p>
 
       <div className="flex flex-wrap gap-2 mb-6 print:hidden">
         {([
@@ -180,7 +180,7 @@ export default function CutListGenerator({
             key={key}
             onClick={() => { setMode(key); setGenerationError(""); }}
             className={`px-4 py-2 rounded-md text-sm font-semibold border ${
-              mode === key ? "bg-[#1E3A5F] text-white border-[#1E3A5F]" : "bg-white text-[#1E3A5F] border-[#1E3A5F]/20 hover:bg-cream"
+              mode === key ? "bg-accent text-white border-accent" : "bg-white text-[#2E2420] border-[#2E2420]/20 hover:bg-cream"
             }`}
           >
             {label}
@@ -188,14 +188,14 @@ export default function CutListGenerator({
         ))}
       </div>
 
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-6 flex flex-wrap gap-4 items-end print:hidden">
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 mb-6 flex flex-wrap gap-4 items-end print:hidden">
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F]/50 mb-1">Board length</label>
-          <input value={`${boardLength}" (your stock length)`} readOnly className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm bg-cream/40 w-56" />
+          <label className="block text-xs font-semibold text-[#2E2420]/50 mb-1">Board length</label>
+          <input value={`${boardLength}" (your stock length)`} readOnly className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm bg-cream/40 w-56" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-[#1E3A5F]/50 mb-1">Saw kerf (inches)</label>
-          <input type="number" step="0.0625" value={kerf} onChange={e => setKerf(Number(e.target.value))} className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm w-28" />
+          <label className="block text-xs font-semibold text-[#2E2420]/50 mb-1">Saw kerf (inches)</label>
+          <input type="number" step="0.0625" value={kerf} onChange={e => setKerf(Number(e.target.value))} className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm w-28" />
         </div>
       </div>
 
@@ -204,14 +204,14 @@ export default function CutListGenerator({
       )}
 
       {(mode === "today" || mode === "tomorrow") && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-6 print:hidden">
-          <div className="text-sm font-semibold text-[#1E3A5F] mb-2">Planter jobs scheduled {mode === "today" ? "today" : "tomorrow"}</div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 mb-6 print:hidden">
+          <div className="text-sm font-semibold text-[#2E2420] mb-2">Planter jobs scheduled {mode === "today" ? "today" : "tomorrow"}</div>
           {(mode === "today" ? todayJobs : tomorrowJobs).length === 0 ? (
-            <p className="text-sm text-[#1E3A5F]/50">No planter orders scheduled for this day.</p>
+            <p className="text-sm text-[#2E2420]/50">No planter orders scheduled for this day.</p>
           ) : (
             <div className="space-y-1 mb-3">
               {(mode === "today" ? todayJobs : tomorrowJobs).map((j, i) => (
-                <div key={i} className="text-sm text-[#1E3A5F]/70 flex justify-between border-b border-[#1E3A5F]/5 py-1">
+                <div key={i} className="text-sm text-[#2E2420]/70 flex justify-between border-b border-[#2E2420]/5 py-1">
                   <span>{j.customerName || j.orderTitle}</span>
                   <span>{j.quantity} × {j.productName || "Unknown product"} {!j.hasBOM && <span className="text-ember font-semibold">(no parts list)</span>}</span>
                 </div>
@@ -225,18 +225,18 @@ export default function CutListGenerator({
       )}
 
       {mode === "manual" && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-6 print:hidden">
-          <div className="text-sm font-semibold text-[#1E3A5F] mb-2">Select products manually</div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 mb-6 print:hidden">
+          <div className="text-sm font-semibold text-[#2E2420] mb-2">Select products manually</div>
           {bomReadyProducts.length === 0 ? (
             <p className="text-sm text-ember">No planter products have a parts list yet — add one on the Products page first.</p>
           ) : (
             <>
               {manualRows.map((row, i) => (
                 <div key={i} className="flex gap-2 mb-2">
-                  <select value={row.productId} onChange={e => setManualRows(rows => rows.map((r, ri) => ri === i ? { ...r, productId: e.target.value } : r))} className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm flex-1">
+                  <select value={row.productId} onChange={e => setManualRows(rows => rows.map((r, ri) => ri === i ? { ...r, productId: e.target.value } : r))} className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm flex-1">
                     {bomReadyProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
-                  <input type="number" value={row.qty} onChange={e => setManualRows(rows => rows.map((r, ri) => ri === i ? { ...r, qty: e.target.value } : r))} placeholder="Qty" className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm w-24" />
+                  <input type="number" value={row.qty} onChange={e => setManualRows(rows => rows.map((r, ri) => ri === i ? { ...r, qty: e.target.value } : r))} placeholder="Qty" className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm w-24" />
                   <button onClick={() => setManualRows(rows => rows.filter((_, ri) => ri !== i))} className="text-ember text-sm font-semibold px-2">Remove</button>
                 </div>
               ))}
@@ -250,20 +250,20 @@ export default function CutListGenerator({
       )}
 
       {mode === "saved" && (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-6 print:hidden">
-          <div className="text-sm font-semibold text-[#1E3A5F] mb-2">Saved cut lists</div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 mb-6 print:hidden">
+          <div className="text-sm font-semibold text-[#2E2420] mb-2">Saved cut lists</div>
           {savedCutLists.length === 0 ? (
-            <p className="text-sm text-[#1E3A5F]/50">Nothing saved yet.</p>
+            <p className="text-sm text-[#2E2420]/50">Nothing saved yet.</p>
           ) : (
             <div className="space-y-2">
               {savedCutLists.map(list => (
-                <div key={list.id} className="flex items-center justify-between border border-[#1E3A5F]/10 rounded-md px-3 py-2">
+                <div key={list.id} className="flex items-center justify-between border border-[#2E2420]/10 rounded-md px-3 py-2">
                   <div>
-                    <div className="text-sm font-semibold text-[#1E3A5F]">{list.name}</div>
-                    <div className="text-xs text-[#1E3A5F]/50">{new Date(list.created_at).toLocaleString()}</div>
+                    <div className="text-sm font-semibold text-[#2E2420]">{list.name}</div>
+                    <div className="text-xs text-[#2E2420]/50">{new Date(list.created_at).toLocaleString()}</div>
                   </div>
                   <div className="flex gap-3">
-                    <button onClick={() => openSaved(list)} className="text-sm font-semibold text-[#1E3A5F] hover:underline">Open</button>
+                    <button onClick={() => openSaved(list)} className="text-sm font-semibold text-[#2E2420] hover:underline">Open</button>
                     <button onClick={() => handleDeleteSaved(list.id)} className="text-sm font-semibold text-ember hover:underline">Delete</button>
                   </div>
                 </div>
@@ -275,20 +275,20 @@ export default function CutListGenerator({
 
       {generated && (
         <div>
-          <div className="print:hidden flex flex-wrap items-center gap-2 mb-6 bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
-            <input value={listName} onChange={e => setListName(e.target.value)} placeholder="Name this cut list (optional)" className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm flex-1 min-w-[200px]" />
+          <div className="print:hidden flex flex-wrap items-center gap-2 mb-6 bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4">
+            <input value={listName} onChange={e => setListName(e.target.value)} placeholder="Name this cut list (optional)" className="border border-[#2E2420]/15 rounded-md px-3 py-2 text-sm flex-1 min-w-[200px]" />
             <AdminButton onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save this cut list"}</AdminButton>
             <AdminButton variant="secondary" onClick={() => window.print()}>Print / Save as PDF</AdminButton>
             {saveMessage && <span className="text-sm font-semibold text-sage">{saveMessage}</span>}
           </div>
 
           <div className="mb-2">
-            <h2 className="text-xl font-bold text-[#1E3A5F]">{generated.label}</h2>
-            <p className="text-xs text-[#1E3A5F]/50">Generated {new Date().toLocaleString()} · Board: {boardLength}{'"'} · Kerf: {kerf}{'"'}</p>
+            <h2 className="text-xl font-bold text-[#2E2420]">{generated.label}</h2>
+            <p className="text-xs text-[#2E2420]/50">Generated {new Date().toLocaleString()} · Board: {boardLength}{'"'} · Kerf: {kerf}{'"'}</p>
           </div>
 
-          <h3 className="text-lg font-bold text-[#1E3A5F] mb-2">Cut List — Standard Parts</h3>
-          {generated.normalResults.length === 0 ? <p className="text-sm text-[#1E3A5F]/50 mb-6">No standard parts in this list.</p> :
+          <h3 className="text-lg font-bold text-[#2E2420] mb-2">Cut List — Standard Parts</h3>
+          {generated.normalResults.length === 0 ? <p className="text-sm text-[#2E2420]/50 mb-6">No standard parts in this list.</p> :
             generated.normalResults.map((result, i) => <ResultSection key={i} result={result} />)}
 
           <div className="my-8 border-t-2 border-dashed border-amber pt-2 print:break-before-page">
@@ -296,7 +296,7 @@ export default function CutListGenerator({
           </div>
 
           <h3 className="text-lg font-bold text-amber mb-2">Cut List — Trim (final-cut after assembly)</h3>
-          {generated.trimResults.length === 0 ? <p className="text-sm text-[#1E3A5F]/50">No trim parts in this list.</p> :
+          {generated.trimResults.length === 0 ? <p className="text-sm text-[#2E2420]/50">No trim parts in this list.</p> :
             generated.trimResults.map((result, i) => <ResultSection key={i} result={result} isTrim />)}
         </div>
       )}
@@ -307,7 +307,7 @@ export default function CutListGenerator({
 function ResultSection({ result, isTrim }: { result: OptimizationResult; isTrim?: boolean }) {
   return (
     <div className="mb-8">
-      <h4 className="text-sm font-bold mb-2 uppercase tracking-wide text-[#1E3A5F]/60">Material: {result.materialType}</h4>
+      <h4 className="text-sm font-bold mb-2 uppercase tracking-wide text-[#2E2420]/60">Material: {result.materialType}</h4>
       {result.oversizedParts.length > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-3 text-sm text-red-700">
           {result.oversizedParts.length} part(s) are longer than your stock length and were excluded:
@@ -315,12 +315,12 @@ function ResultSection({ result, isTrim }: { result: OptimizationResult; isTrim?
         </div>
       )}
       <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-lg p-3 text-center"><div className="text-2xl font-display text-[#1E3A5F]">{result.totalBoards}</div><div className="text-xs text-[#1E3A5F]/50">Boards required</div></div>
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-lg p-3 text-center"><div className="text-2xl font-display text-[#1E3A5F]">{result.wastePercent.toFixed(1)}%</div><div className="text-xs text-[#1E3A5F]/50">Waste</div></div>
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-lg p-3 text-center"><div className="text-2xl font-display text-[#1E3A5F]">{result.totalWasteInches.toFixed(1)}{'"'}</div><div className="text-xs text-[#1E3A5F]/50">Total scrap</div></div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-lg p-3 text-center"><div className="text-2xl font-display text-[#2E2420]">{result.totalBoards}</div><div className="text-xs text-[#2E2420]/50">Boards required</div></div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-lg p-3 text-center"><div className="text-2xl font-display text-[#2E2420]">{result.wastePercent.toFixed(1)}%</div><div className="text-xs text-[#2E2420]/50">Waste</div></div>
+        <div className="bg-white border border-[#2E2420]/10 rounded-lg p-3 text-center"><div className="text-2xl font-display text-[#2E2420]">{result.totalWasteInches.toFixed(1)}{'"'}</div><div className="text-xs text-[#2E2420]/50">Total scrap</div></div>
       </div>
-      {isTrim && result.boards.length > 0 && <p className="text-xs text-[#1E3A5F]/50 mb-2 italic">Rough-cut to the lengths shown, then final-trim after assembly.</p>}
-      {result.boards.length === 0 ? <p className="text-sm text-[#1E3A5F]/50">No boards needed.</p> :
+      {isTrim && result.boards.length > 0 && <p className="text-xs text-[#2E2420]/50 mb-2 italic">Rough-cut to the lengths shown, then final-trim after assembly.</p>}
+      {result.boards.length === 0 ? <p className="text-sm text-[#2E2420]/50">No boards needed.</p> :
         groupIdenticalBoards(result.boards).map((group, i) => <CutDiagram key={i} board={group.board} index={i} count={group.count} />)}
     </div>
   );

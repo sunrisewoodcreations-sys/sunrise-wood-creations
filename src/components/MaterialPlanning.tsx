@@ -46,17 +46,17 @@ export default function MaterialPlanning({
   return (
     <div>
       <div className="flex items-center justify-between mb-1 print:hidden">
-        <h1 className="font-display text-2xl text-[#1E3A5F]">Material Planning</h1>
+        <h1 className="font-display text-2xl text-[#2E2420]">Material Planning</h1>
         <div className="flex gap-2">
-          <Link href="/admin/cutlist" className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream">
+          <Link href="/admin/cutlist" className="text-xs font-semibold text-[#2E2420] border border-[#2E2420]/20 rounded-md px-3 py-1.5 hover:bg-cream">
             Cut List Generator →
           </Link>
-          <Link href="/admin/pickets" className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream">
+          <Link href="/admin/pickets" className="text-xs font-semibold text-[#2E2420] border border-[#2E2420]/20 rounded-md px-3 py-1.5 hover:bg-cream">
             Picket Inventory →
           </Link>
         </div>
       </div>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6 print:hidden">
+      <p className="text-sm text-[#2E2420]/60 mb-6 print:hidden">
         What material your scheduled production actually needs, compared against what's on hand.
       </p>
 
@@ -85,7 +85,7 @@ export default function MaterialPlanning({
                 {readiness.ready ? "Ready to build today — enough material on hand" : "Short on material for today's schedule"}
               </div>
               {!readiness.ready && (
-                <div className="text-xs text-[#1E3A5F]/60 mt-0.5">
+                <div className="text-xs text-[#2E2420]/60 mt-0.5">
                   {readiness.shortages.map(s => `${s.materialType}: short ${s.shortQuantity}`).join(" · ")}
                 </div>
               )}
@@ -114,35 +114,35 @@ export default function MaterialPlanning({
             key={key}
             onClick={() => router.push(`/admin/material-planning?range=${key}`)}
             className={`px-4 py-2 rounded-md text-sm font-semibold border ${
-              currentRange === key ? "bg-[#1E3A5F] text-white border-[#1E3A5F]" : "bg-white text-[#1E3A5F] border-[#1E3A5F]/20 hover:bg-cream"
+              currentRange === key ? "bg-accent text-white border-accent" : "bg-white text-[#2E2420] border-[#2E2420]/20 hover:bg-cream"
             }`}
           >
             {label}
           </button>
         ))}
-        <div className="flex items-center gap-1.5 border border-[#1E3A5F]/20 rounded-md px-2 py-1">
+        <div className="flex items-center gap-1.5 border border-[#2E2420]/20 rounded-md px-2 py-1">
           <input type="date" value={customStartInput} onChange={e => setCustomStartInput(e.target.value)} className="text-xs border-none focus:outline-none" />
-          <span className="text-xs text-[#1E3A5F]/40">to</span>
+          <span className="text-xs text-[#2E2420]/40">to</span>
           <input type="date" value={customEndInput} onChange={e => setCustomEndInput(e.target.value)} className="text-xs border-none focus:outline-none" />
           <button
             onClick={() => router.push(`/admin/material-planning?range=custom&start=${customStartInput}&end=${customEndInput}`)}
-            className={`px-2 py-1 rounded text-xs font-semibold ${currentRange === "custom" ? "bg-[#1E3A5F] text-white" : "text-[#1E3A5F] hover:bg-cream"}`}
+            className={`px-2 py-1 rounded text-xs font-semibold ${currentRange === "custom" ? "bg-accent text-white" : "text-[#2E2420] hover:bg-cream"}`}
           >
             Go
           </button>
         </div>
-        <button onClick={() => window.print()} className="ml-auto border border-[#1E3A5F]/20 text-[#1E3A5F] px-4 py-2 rounded-md text-sm font-semibold hover:bg-cream">
+        <button onClick={() => window.print()} className="ml-auto border border-[#2E2420]/20 text-[#2E2420] px-4 py-2 rounded-md text-sm font-semibold hover:bg-cream">
           Print shopping list
         </button>
       </div>
 
       <div className="mb-4 print:mb-6">
-        <h2 className="font-display text-lg text-[#1E3A5F]">{result.rangeLabel}</h2>
-        <p className="text-xs text-[#1E3A5F]/50">{result.ordersInRange} order{result.ordersInRange === 1 ? "" : "s"} scheduled in this range</p>
+        <h2 className="font-display text-lg text-[#2E2420]">{result.rangeLabel}</h2>
+        <p className="text-xs text-[#2E2420]/50">{result.ordersInRange} order{result.ordersInRange === 1 ? "" : "s"} scheduled in this range</p>
       </div>
 
       {result.requirements.length === 0 ? (
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#1E3A5F]/50">
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm px-4 py-8 text-center text-sm text-[#2E2420]/50">
           Nothing scheduled for production in this range.
         </div>
       ) : (
@@ -151,10 +151,10 @@ export default function MaterialPlanning({
             across everything before drilling into any one material's
             detail card below. Same requirement data, just a second view
             of it — no recalculation. */}
-        <div className="overflow-x-auto bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm mb-6 print:hidden">
+        <div className="overflow-x-auto bg-white border border-[#2E2420]/10 rounded-xl shadow-sm mb-6 print:hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+              <tr className="bg-[#2E2420] text-white text-xs uppercase tracking-wide">
                 <th className="text-left px-4 py-3">Material</th>
                 <th className="text-right px-4 py-3">On Hand</th>
                 <th className="text-right px-4 py-3">Required</th>
@@ -167,16 +167,16 @@ export default function MaterialPlanning({
                 const remaining = req.onHandQuantity != null ? req.onHandQuantity - req.optimization.totalBoards : null;
                 const isShort = req.shortQuantity != null && req.shortQuantity > 0;
                 return (
-                  <tr key={req.materialType} className="border-t border-[#1E3A5F]/10">
-                    <td className="px-4 py-3 font-semibold text-[#1E3A5F]">{req.materialType}</td>
-                    <td className="px-4 py-3 text-right text-[#1E3A5F]/70">{req.onHandQuantity == null ? "—" : req.onHandQuantity}</td>
-                    <td className="px-4 py-3 text-right text-[#1E3A5F]/70">{req.optimization.totalBoards}</td>
-                    <td className={`px-4 py-3 text-right font-semibold ${remaining != null && remaining < 0 ? "text-ember" : "text-[#1E3A5F]/70"}`}>
+                  <tr key={req.materialType} className="border-t border-[#2E2420]/10">
+                    <td className="px-4 py-3 font-semibold text-[#2E2420]">{req.materialType}</td>
+                    <td className="px-4 py-3 text-right text-[#2E2420]/70">{req.onHandQuantity == null ? "—" : req.onHandQuantity}</td>
+                    <td className="px-4 py-3 text-right text-[#2E2420]/70">{req.optimization.totalBoards}</td>
+                    <td className={`px-4 py-3 text-right font-semibold ${remaining != null && remaining < 0 ? "text-ember" : "text-[#2E2420]/70"}`}>
                       {remaining == null ? "—" : remaining}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {req.onHandQuantity == null ? (
-                        <span className="text-xs text-[#1E3A5F]/40">Not tracked</span>
+                        <span className="text-xs text-[#2E2420]/40">Not tracked</span>
                       ) : (
                         <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${isShort ? "bg-ember/15 text-ember" : "bg-sage/15 text-sage"}`}>
                           {isShort ? "Short" : "Enough"}
@@ -194,11 +194,11 @@ export default function MaterialPlanning({
           {result.requirements.map(req => {
             const isShort = req.shortQuantity != null && req.shortQuantity > 0;
             return (
-              <div key={req.materialType} className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 print:break-inside-avoid">
+              <div key={req.materialType} className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm p-4 print:break-inside-avoid">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-display text-base text-[#1E3A5F]">{req.materialType}</h3>
+                  <h3 className="font-display text-base text-[#2E2420]">{req.materialType}</h3>
                   {req.onHandQuantity == null ? (
-                    <span className="text-xs font-semibold bg-[#1E3A5F]/10 text-[#1E3A5F]/60 px-2.5 py-1 rounded-full">
+                    <span className="text-xs font-semibold bg-[#2E2420]/10 text-[#2E2420]/60 px-2.5 py-1 rounded-full">
                       No inventory tracked for this material yet
                     </span>
                   ) : (
@@ -219,35 +219,35 @@ export default function MaterialPlanning({
                 <div className="flex gap-4 print:hidden">
                   <button
                     onClick={() => toggleMaterial(req.materialType, "parts")}
-                    className="text-xs font-semibold text-[#1E3A5F] hover:underline"
+                    className="text-xs font-semibold text-[#2E2420] hover:underline"
                   >
                     {expandedMaterial === req.materialType && expandedView === "parts" ? "Hide parts" : `See ${req.parts.length} part(s) making up this total`}
                   </button>
                   <button
                     onClick={() => toggleMaterial(req.materialType, "orders")}
-                    className="text-xs font-semibold text-[#1E3A5F] hover:underline"
+                    className="text-xs font-semibold text-[#2E2420] hover:underline"
                   >
                     {expandedMaterial === req.materialType && expandedView === "orders" ? "Hide orders" : `See ${req.contributingOrders.length} order(s) using this material`}
                   </button>
                 </div>
 
                 {expandedMaterial === req.materialType && expandedView === "parts" && (
-                  <div className="mt-3 pt-3 border-t border-[#1E3A5F]/10">
+                  <div className="mt-3 pt-3 border-t border-[#2E2420]/10">
                     {req.parts.map((p, i) => (
-                      <div key={i} className="flex justify-between text-sm py-1 border-b border-[#1E3A5F]/5 last:border-0">
-                        <span className="text-[#1E3A5F]/70">{p.partName} — {p.length}{'"'}</span>
-                        <span className="font-semibold text-[#1E3A5F]">× {p.totalQuantity}</span>
+                      <div key={i} className="flex justify-between text-sm py-1 border-b border-[#2E2420]/5 last:border-0">
+                        <span className="text-[#2E2420]/70">{p.partName} — {p.length}{'"'}</span>
+                        <span className="font-semibold text-[#2E2420]">× {p.totalQuantity}</span>
                       </div>
                     ))}
                   </div>
                 )}
 
                 {expandedMaterial === req.materialType && expandedView === "orders" && (
-                  <div className="mt-3 pt-3 border-t border-[#1E3A5F]/10">
+                  <div className="mt-3 pt-3 border-t border-[#2E2420]/10">
                     {req.contributingOrders.map(o => (
-                      <div key={o.orderId} className="flex justify-between text-sm py-1 border-b border-[#1E3A5F]/5 last:border-0">
-                        <Link href={`/admin/orders/${o.orderId}`} className="text-[#1E3A5F] hover:underline">{o.customerName} — {o.orderTitle}</Link>
-                        <span className="text-[#1E3A5F]/60">{o.pieceCount} pieces, {o.totalInches.toFixed(0)}{'"'}</span>
+                      <div key={o.orderId} className="flex justify-between text-sm py-1 border-b border-[#2E2420]/5 last:border-0">
+                        <Link href={`/admin/orders/${o.orderId}`} className="text-[#2E2420] hover:underline">{o.customerName} — {o.orderTitle}</Link>
+                        <span className="text-[#2E2420]/60">{o.pieceCount} pieces, {o.totalInches.toFixed(0)}{'"'}</span>
                       </div>
                     ))}
                   </div>
@@ -255,8 +255,8 @@ export default function MaterialPlanning({
 
                 {/* Print-only: always show the full parts breakdown, since
                     interactive expand/collapse doesn't apply on paper. */}
-                <div className="hidden print:block mt-3 pt-3 border-t border-[#1E3A5F]/10">
-                  <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase mb-1">Shopping list — parts needed</div>
+                <div className="hidden print:block mt-3 pt-3 border-t border-[#2E2420]/10">
+                  <div className="text-xs font-semibold text-[#2E2420]/50 uppercase mb-1">Shopping list — parts needed</div>
                   {req.parts.map((p, i) => (
                     <div key={i} className="flex justify-between text-sm py-0.5">
                       <span>{p.partName} — {p.length}{'"'}</span>
@@ -276,9 +276,9 @@ export default function MaterialPlanning({
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: "ember" }) {
   return (
-    <div className="bg-cream/40 border border-[#1E3A5F]/10 rounded-lg p-2 text-center">
-      <div className={`text-lg font-display ${accent === "ember" ? "text-ember" : "text-[#1E3A5F]"}`}>{value}</div>
-      <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide">{label}</div>
+    <div className="bg-cream/40 border border-[#2E2420]/10 rounded-lg p-2 text-center">
+      <div className={`text-lg font-display ${accent === "ember" ? "text-ember" : "text-[#2E2420]"}`}>{value}</div>
+      <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide">{label}</div>
     </div>
   );
 }

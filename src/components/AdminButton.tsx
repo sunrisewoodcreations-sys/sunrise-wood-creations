@@ -9,7 +9,7 @@ type Variant = "primary" | "secondary" | "destructive";
 type Size = "md" | "sm";
 
 const VARIANT_STYLES: Record<Variant, string> = {
-  primary: "bg-[#1E3A5F] text-white hover:bg-[#1E3A5F]/90",
+  primary: "bg-accent text-white hover:opacity-90",
   secondary: "border border-gray-300 text-gray-600 hover:bg-gray-50",
   destructive: "bg-ember text-white hover:bg-ember/90"
 };

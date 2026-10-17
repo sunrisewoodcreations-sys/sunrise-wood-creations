@@ -37,8 +37,8 @@ export default async function AdminReviewsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Customer Reviews</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">Approve, reject, or remove customer-submitted reviews.</p>
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">Customer Reviews</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6">Approve, reject, or remove customer-submitted reviews.</p>
       <AdminReviewsManager reviews={enrichedReviews} />
     </div>
   );

@@ -35,8 +35,8 @@ export default function ProductChecklistEditor({ productId, initialSteps }: { pr
   }
 
   return (
-    <div className="mt-2 border-t border-[#1E3A5F]/10 pt-2">
-      <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Build checklist (shown on Shop Floor Mode)</label>
+    <div className="mt-2 border-t border-[#2E2420]/10 pt-2">
+      <label className="block text-xs font-semibold text-[#2E2420]/60 mb-1">Build checklist (shown on Shop Floor Mode)</label>
       <div className="space-y-1.5">
         {steps.map((step, i) => (
           <div key={i} className="flex gap-1.5">
@@ -44,7 +44,7 @@ export default function ProductChecklistEditor({ productId, initialSteps }: { pr
               value={step}
               onChange={e => updateStep(i, e.target.value)}
               placeholder={`Step ${i + 1}, e.g. "Sand corners"`}
-              className="flex-1 border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-xs"
+              className="flex-1 border border-[#2E2420]/15 rounded-md px-2 py-1.5 text-xs"
             />
             {steps.length > 1 && (
               <button onClick={() => removeStep(i)} className="text-xs text-ember/70 px-2">✕</button>
@@ -53,8 +53,8 @@ export default function ProductChecklistEditor({ productId, initialSteps }: { pr
         ))}
       </div>
       <div className="flex items-center gap-2 mt-1.5">
-        <button onClick={addStep} className="text-xs font-semibold text-[#1E3A5F]">+ Add step</button>
-        <button onClick={handleSave} disabled={saving} className="text-xs font-semibold text-white bg-[#1E3A5F] rounded-md px-2.5 py-1 disabled:opacity-60">
+        <button onClick={addStep} className="text-xs font-semibold text-[#2E2420]">+ Add step</button>
+        <button onClick={handleSave} disabled={saving} className="text-xs font-semibold text-white bg-accent rounded-md px-2.5 py-1 disabled:opacity-60">
           {saving ? "Saving..." : "Save steps"}
         </button>
         {saved && <span className="text-xs text-sage font-semibold">Saved</span>}

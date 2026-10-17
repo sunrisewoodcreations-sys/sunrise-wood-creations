@@ -235,8 +235,8 @@ function shell(opts: {
           <tr>
             <td style="padding: 20px 32px; background-color: #FAF6EE; border-top: 1px solid #E6DCCB; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;">
               <p style="margin: 0 0 10px; font-size: 13px; color: #74655B;">
-                Questions? Call <a href="tel:${phoneTelHref}" style="color: #1E3A5F; font-weight: 600; text-decoration: none;">${phone}</a> or email
-                <a href="mailto:${email}" style="color: #1E3A5F; font-weight: 600; text-decoration: none;">${email}</a>
+                Questions? Call <a href="tel:${phoneTelHref}" style="color: #2E2420; font-weight: 600; text-decoration: none;">${phone}</a> or email
+                <a href="mailto:${email}" style="color: #2E2420; font-weight: 600; text-decoration: none;">${email}</a>
               </p>
               <p style="margin: 0 0 14px; font-size: 11px; color: #a89684;">
                 This is an automated email, so replies sent directly to it aren't seen — if you need help with your order, please call or email us above.
@@ -464,7 +464,7 @@ export async function sendOrderStatusEmail(opts: {
     contactPhone,
     contactEmail,
     bodyHtml: `
-      <h1 style="margin: 0 0 6px; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #1E3A5F;">${escapeHtml(heading)}</h1>
+      <h1 style="margin: 0 0 6px; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #2E2420;">${escapeHtml(heading)}</h1>
       <p style="margin: 0 0 20px; color: #74655B; font-size: 14px;">Hi ${escapeHtml(opts.customerName)},</p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 22px;">
         <tr>
@@ -640,7 +640,7 @@ export async function sendQuoteEmail(opts: {
       </p>
     `,
     buttons: [
-      { text: "View Quote", url: opts.shareUrl, color: "#1E3A5F" },
+      { text: "View Quote", url: opts.shareUrl, color: "#2E2420" },
       { text: "Accept Quote", url: opts.acceptUrl, color: "#4F7A55" },
       { text: "Decline Quote", url: opts.declineUrl, color: "#8a8a8a" }
     ]
@@ -1031,7 +1031,7 @@ export async function sendPickupConfirmationEmail(opts: {
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
         <tr>
           <td style="background-color: #F6EBDD; border-radius: 8px; padding: 16px;">
-            <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">
+            <div style="font-size: 18px; font-weight: bold; color: #2E2420; font-family: Georgia, serif;">
               ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}
             </div>
             <div style="margin-top: 10px; color: #74655B; font-size: 14px;">${opts.businessAddress}</div>
@@ -1042,9 +1042,9 @@ export async function sendPickupConfirmationEmail(opts: {
       </table>
       <p style="margin: 0 0 8px; font-size: 13px; color: #8a7a6b;">Add to your calendar:</p>
       <p style="margin: 0 0 16px; font-size: 13px;">
-        <a href="${opts.googleCalendarUrl}" style="color: #1E3A5F; font-weight: 600;">Google</a> &nbsp;·&nbsp;
-        <a href="${opts.outlookCalendarUrl}" style="color: #1E3A5F; font-weight: 600;">Outlook</a> &nbsp;·&nbsp;
-        <a href="${opts.appleCalendarUrl}" style="color: #1E3A5F; font-weight: 600;">Apple Calendar</a>
+        <a href="${opts.googleCalendarUrl}" style="color: #2E2420; font-weight: 600;">Google</a> &nbsp;·&nbsp;
+        <a href="${opts.outlookCalendarUrl}" style="color: #2E2420; font-weight: 600;">Outlook</a> &nbsp;·&nbsp;
+        <a href="${opts.appleCalendarUrl}" style="color: #2E2420; font-weight: 600;">Apple Calendar</a>
       </p>
       <p style="margin: 0; font-size: 13px; color: #8a7a6b;">Need a different time? Use the button below.</p>
     `,
@@ -1095,7 +1095,7 @@ export async function sendPickupScheduledAdminAlert(opts: {
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
         <tr>
           <td style="background-color: #F6EBDD; border-radius: 8px; padding: 16px;">
-            <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">
+            <div style="font-size: 18px; font-weight: bold; color: #2E2420; font-family: Georgia, serif;">
               ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}
             </div>
             ${opts.customerPhone ? `<div style="margin-top: 6px; color: #74655B; font-size: 14px;">${escapeHtml(opts.customerPhone)}</div>` : ""}
@@ -1142,7 +1142,7 @@ export async function sendPickupReminderEmail(opts: {
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
         <tr>
           <td style="background-color: #F6EBDD; border-radius: 8px; padding: 16px;">
-            <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">
+            <div style="font-size: 18px; font-weight: bold; color: #2E2420; font-family: Georgia, serif;">
               ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}
             </div>
             <div style="margin-top: 10px; color: #74655B; font-size: 14px;">${opts.businessAddress}</div>
@@ -1212,7 +1212,7 @@ export async function sendCampaignEmail(opts: {
     contactPhone: opts.contactPhone,
     contactEmail: opts.contactEmail,
     bodyHtml: `
-      <h1 style="margin: 0 0 20px; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; color: #1E3A5F;">${escapeHtml(heading)}</h1>
+      <h1 style="margin: 0 0 20px; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; color: #2E2420;">${escapeHtml(heading)}</h1>
       ${bodyHtml}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
         <tr>

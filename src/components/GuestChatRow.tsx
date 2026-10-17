@@ -28,19 +28,19 @@ export default function GuestChatRow({ guest }: { guest: any }) {
   }
 
   return (
-    <div className="px-4 py-3 border-t border-[#1E3A5F]/10 first:border-0">
+    <div className="px-4 py-3 border-t border-[#2E2420]/10 first:border-0">
       <div className="flex items-center justify-between mb-1">
-        <div className="text-sm font-semibold text-[#1E3A5F]">
-          {guest.name} <span className="font-normal text-[#1E3A5F]/50">({guest.email})</span>
+        <div className="text-sm font-semibold text-[#2E2420]">
+          {guest.name} <span className="font-normal text-[#2E2420]/50">({guest.email})</span>
         </div>
-        <div className="text-xs font-mono text-[#1E3A5F]/40">
+        <div className="text-xs font-mono text-[#2E2420]/40">
           {new Date(guest.created_at).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })}
         </div>
       </div>
-      <p className="text-sm text-[#1E3A5F]/80 mb-2">{guest.body}</p>
+      <p className="text-sm text-[#2E2420]/80 mb-2">{guest.body}</p>
       {confirmingDelete ? (
         <div className="flex items-center gap-3">
-          <span className="text-xs text-[#1E3A5F]/60">Delete this conversation?</span>
+          <span className="text-xs text-[#2E2420]/60">Delete this conversation?</span>
           <AdminButton size="sm" variant="destructive" onClick={handleDelete} disabled={loading}>
             {loading ? "..." : "Confirm"}
           </AdminButton>
@@ -59,7 +59,7 @@ export default function GuestChatRow({ guest }: { guest: any }) {
           <button
             onClick={toggleResponded}
             disabled={loading}
-            className="text-xs font-semibold text-[#1E3A5F] hover:underline disabled:opacity-50"
+            className="text-xs font-semibold text-[#2E2420] hover:underline disabled:opacity-50"
           >
             {guest.responded ? "Mark as unresponded" : "Mark as responded"}
           </button>

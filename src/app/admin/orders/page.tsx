@@ -53,7 +53,7 @@ function daysBetween(fromStr: string, toStr: string): number {
 
 function priorityInfo(todayStr: string, dueDate: string | null, status: string): { label: string; badge: string; daysText: string } | null {
   if (status === "picked_up") return null; // completed orders don't need a priority signal
-  if (!dueDate) return { label: "Future", badge: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60", daysText: "No due date" };
+  if (!dueDate) return { label: "Future", badge: "bg-[#2E2420]/10 text-[#2E2420]/60", daysText: "No due date" };
 
   const days = daysBetween(todayStr, dueDate);
   if (days < 0) {
@@ -65,7 +65,7 @@ function priorityInfo(todayStr: string, dueDate: string | null, status: string):
   if (days <= 7) {
     return { label: "This Week", badge: "bg-amber/60 text-white", daysText: days === 1 ? "Due tomorrow" : `${days} days left` };
   }
-  return { label: "Future", badge: "bg-[#1E3A5F]/10 text-[#1E3A5F]/60", daysText: `${days} days left` };
+  return { label: "Future", badge: "bg-[#2E2420]/10 text-[#2E2420]/60", daysText: `${days} days left` };
 }
 
 function SummaryCard({
@@ -75,19 +75,19 @@ function SummaryCard({
     <div
       className={`bg-white border rounded-xl p-5 shadow-sm transition-all ${
         active
-          ? "border-[#1E3A5F] ring-2 ring-[#1E3A5F]/25 shadow-md"
-          : "border-[#1E3A5F]/10"
-      } ${href ? "hover:shadow-lg hover:border-[#1E3A5F]/30 hover:-translate-y-0.5 cursor-pointer" : ""}`}
+          ? "border-[#2E2420] ring-2 ring-[#2E2420]/25 shadow-md"
+          : "border-[#2E2420]/10"
+      } ${href ? "hover:shadow-lg hover:border-[#2E2420]/30 hover:-translate-y-0.5 cursor-pointer" : ""}`}
     >
       <div className="flex items-center justify-between mb-1.5">
-        <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide">{label}</div>
+        <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide">{label}</div>
         {active && (
-          <span className="text-[10px] font-semibold text-[#1E3A5F] bg-[#1E3A5F]/10 px-1.5 py-0.5 rounded-full">
+          <span className="text-[10px] font-semibold text-[#2E2420] bg-[#2E2420]/10 px-1.5 py-0.5 rounded-full">
             ✓ Active
           </span>
         )}
       </div>
-      <div className={`text-2xl font-display ${color || "text-[#1E3A5F]"}`}>{value}</div>
+      <div className={`text-2xl font-display ${color || "text-[#2E2420]"}`}>{value}</div>
     </div>
   );
 
@@ -375,8 +375,8 @@ export default async function AdminOrdersPage({
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Orders</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">All orders, across every customer.</p>
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">Orders</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6">All orders, across every customer.</p>
 
       {/* New summary row — click a card to filter the table below */}
       <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-4 mb-4">
@@ -399,10 +399,10 @@ export default async function AdminOrdersPage({
       </div>
 
       {activeFilter ? (
-        <div className="flex items-center justify-between gap-3 mb-6 bg-[#1E3A5F]/5 border border-[#1E3A5F]/15 rounded-lg px-4 py-3">
-          <div className="text-sm text-[#1E3A5F]">
+        <div className="flex items-center justify-between gap-3 mb-6 bg-[#2E2420]/5 border border-[#2E2420]/15 rounded-lg px-4 py-3">
+          <div className="text-sm text-[#2E2420]">
             Filtering by <span className="font-semibold">{filterLabels[activeFilter] || activeFilter}</span>
-            <span className="text-[#1E3A5F]/60"> — {sorted.length} order{sorted.length === 1 ? "" : "s"} match</span>
+            <span className="text-[#2E2420]/60"> — {sorted.length} order{sorted.length === 1 ? "" : "s"} match</span>
           </div>
           <Link
             href={(() => { const p = new URLSearchParams(); if (query) p.set("q", query); if (sortKey !== "created_at") p.set("sort", sortKey); if (sortDir !== "desc") p.set("dir", sortDir); const qs = p.toString(); return `/admin/orders${qs ? `?${qs}` : ""}`; })()}
@@ -415,35 +415,35 @@ export default async function AdminOrdersPage({
         <div className="mb-3" />
       )}
 
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5 mb-6">
-        <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-3">Download invoices in bulk (paid orders only)</div>
+      <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5 mb-6">
+        <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide mb-3">Download invoices in bulk (paid orders only)</div>
         <div className="flex flex-wrap gap-2">
-          <a href="/api/invoices/bulk?period=this_month" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This month</a>
-          <a href="/api/invoices/bulk?period=this_quarter" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This quarter</a>
-          <a href="/api/invoices/bulk?period=last_quarter" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last quarter</a>
-          <a href="/api/invoices/bulk?period=this_year" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This year</a>
-          <a href="/api/invoices/bulk?period=last_year" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last year</a>
+          <a href="/api/invoices/bulk?period=this_month" className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This month</a>
+          <a href="/api/invoices/bulk?period=this_quarter" className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This quarter</a>
+          <a href="/api/invoices/bulk?period=last_quarter" className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last quarter</a>
+          <a href="/api/invoices/bulk?period=this_year" className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This year</a>
+          <a href="/api/invoices/bulk?period=last_year" className="border border-[#2E2420]/20 text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Last year</a>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5">
-          <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1">
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5">
+          <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide mb-1">
             {quarterLabel} sales (after tax removed)
           </div>
-          <div className="text-2xl font-display text-[#1E3A5F]">${quarterSales.toFixed(2)}</div>
+          <div className="text-2xl font-display text-[#2E2420]">${quarterSales.toFixed(2)}</div>
         </div>
         <div className="bg-ember/5 border border-ember/20 rounded-xl p-5">
-          <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1">
+          <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide mb-1">
             Sales tax owed ({quarterLabel}, 6% MI)
           </div>
           <div className="text-2xl font-display text-ember">${quarterTaxOwed.toFixed(2)}</div>
         </div>
-        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-5">
-          <div className="text-xs text-[#1E3A5F]/50 uppercase tracking-wide mb-1">
+        <div className="bg-white border border-[#2E2420]/10 rounded-xl p-5">
+          <div className="text-xs text-[#2E2420]/50 uppercase tracking-wide mb-1">
             Sales year-to-date ({currentYear}, after tax removed)
           </div>
-          <div className="text-2xl font-display text-[#1E3A5F]">${yearSales.toFixed(2)}</div>
+          <div className="text-2xl font-display text-[#2E2420]">${yearSales.toFixed(2)}</div>
         </div>
       </div>
 
@@ -455,7 +455,7 @@ export default async function AdminOrdersPage({
             name="q"
             defaultValue={query}
             placeholder="Search by customer, email, or order number (e.g. SWC-1004)..."
-            className="w-full px-3 py-2.5 border border-[#1E3A5F]/15 rounded-md text-sm"
+            className="w-full px-3 py-2.5 border border-[#2E2420]/15 rounded-md text-sm"
           />
           {sortKey !== "created_at" && <input type="hidden" name="sort" value={sortKey} />}
           {sortDir !== "desc" && <input type="hidden" name="dir" value={sortDir} />}
@@ -463,16 +463,16 @@ export default async function AdminOrdersPage({
         </form>
         <a
           href="/api/export/orders"
-          className="text-center border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-2.5 sm:py-2 rounded-md text-xs font-semibold hover:bg-cream whitespace-nowrap"
+          className="text-center border border-[#2E2420]/20 text-[#2E2420] px-3 py-2.5 sm:py-2 rounded-md text-xs font-semibold hover:bg-cream whitespace-nowrap"
         >
           Export CSV
         </a>
       </div>
 
       <div className="hidden md:block overflow-x-auto">
-        <table className="w-full bg-white border border-[#1E3A5F]/10 rounded-xl overflow-hidden text-sm">
+        <table className="w-full bg-white border border-[#2E2420]/10 rounded-xl overflow-hidden text-sm">
           <thead>
-            <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+            <tr className="bg-[#2E2420] text-white text-xs uppercase tracking-wide">
               <th className="text-left px-4 py-3.5">Product</th>
               <th className="text-left px-4 py-3.5"><SortLink label="Customer" sortKey="customer" currentSort={sortKey} currentDir={sortDir} query={query} filter={activeFilter} /></th>
               <th className="text-left px-4 py-3.5"><SortLink label="Order date" sortKey="created_at" currentSort={sortKey} currentDir={sortDir} query={query} filter={activeFilter} /></th>
@@ -503,9 +503,9 @@ export default async function AdminOrdersPage({
                 : "";
 
               return (
-                <tr key={order.id} className={`border-t border-[#1E3A5F]/10 hover:bg-cream/70 transition-colors ${rowBg}`}>
+                <tr key={order.id} className={`border-t border-[#2E2420]/10 hover:bg-cream/70 transition-colors ${rowBg}`}>
                   <td className="px-4 py-3.5">
-                    <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#1E3A5F]">
+                    <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#2E2420]">
                       {productLabel(order.product_type as ProductType)} — {order.title}
                     </Link>
                     <span className={`ml-2 inline-block text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${WORKFLOW_STYLES[workflowStageByOrderId.get(order.id) as WorkflowStage]}`}>
@@ -517,12 +517,12 @@ export default async function AdminOrdersPage({
                       </Link>
                     )}
                   </td>
-                  <td className="px-4 py-3.5 text-[#1E3A5F]/70">
-                    <Link href={`/admin/customers/${order.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
+                  <td className="px-4 py-3.5 text-[#2E2420]/70">
+                    <Link href={`/admin/customers/${order.customer_id}`} className="hover:underline hover:text-[#2E2420]">
                       {order.profiles?.full_name}
                     </Link>
                   </td>
-                  <td className="px-4 py-3.5 font-mono text-[#1E3A5F]/70">
+                  <td className="px-4 py-3.5 font-mono text-[#2E2420]/70">
                     {new Date(order.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3.5">
@@ -530,13 +530,13 @@ export default async function AdminOrdersPage({
                   </td>
                   <td className="px-4 py-3.5 font-mono">
                     {order.due_date ? (
-                      <span className={isOverdue || isDueToday ? "text-ember font-semibold" : isDueTomorrow ? "text-[#1E3A5F] font-semibold" : "text-[#1E3A5F]/70"}>
+                      <span className={isOverdue || isDueToday ? "text-ember font-semibold" : isDueTomorrow ? "text-[#2E2420] font-semibold" : "text-[#2E2420]/70"}>
                         {isOverdue && "⚠ "}
                         {formatCalendarDate(order.due_date)}
                         {isOverdue ? " (overdue)" : isDueToday ? " (today)" : isDueTomorrow ? " (tomorrow)" : ""}
                       </span>
                     ) : (
-                      <span className="text-[#1E3A5F]/30">—</span>
+                      <span className="text-[#2E2420]/30">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3.5">
@@ -545,16 +545,16 @@ export default async function AdminOrdersPage({
                         <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${priority.badge}`}>
                           {priority.label}
                         </span>
-                        <div className="text-[11px] text-[#1E3A5F]/50 mt-1 whitespace-nowrap">{priority.daysText}</div>
+                        <div className="text-[11px] text-[#2E2420]/50 mt-1 whitespace-nowrap">{priority.daysText}</div>
                       </div>
                     ) : (
-                      <span className="text-[#1E3A5F]/30 text-xs">—</span>
+                      <span className="text-[#2E2420]/30 text-xs">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3.5 text-right text-[#1E3A5F]/70">
+                  <td className="px-4 py-3.5 text-right text-[#2E2420]/70">
                     ${((order.price_cents || 0) / 100).toFixed(2)}
                   </td>
-                  <td className="px-4 py-3.5 text-right text-[#1E3A5F]/70">
+                  <td className="px-4 py-3.5 text-right text-[#2E2420]/70">
                     ${((order.amount_paid_cents || 0) / 100).toFixed(2)}
                   </td>
                   <td className="px-4 py-3.5 text-right">
@@ -573,14 +573,14 @@ export default async function AdminOrdersPage({
                         Download #{formatInvoiceNumber(invoice.invoice_year, invoice.invoice_number)}
                       </a>
                     ) : (
-                      <span className="text-xs text-[#1E3A5F]/40">—</span>
+                      <span className="text-xs text-[#2E2420]/40">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex flex-col items-end gap-1.5">
                       <Link
                         href={`/admin/orders/${order.id}`}
-                        className="border border-[#1E3A5F] text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap"
+                        className="border border-[#2E2420] text-[#2E2420] px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap"
                       >
                         Open order
                       </Link>
@@ -593,7 +593,7 @@ export default async function AdminOrdersPage({
               );
             })}
             {sorted.length === 0 && (
-              <tr><td colSpan={11} className="px-4 py-6 text-center text-[#1E3A5F]/50">No orders yet.</td></tr>
+              <tr><td colSpan={11} className="px-4 py-6 text-center text-[#2E2420]/50">No orders yet.</td></tr>
             )}
           </tbody>
         </table>
@@ -616,14 +616,14 @@ export default async function AdminOrdersPage({
             <div
               key={order.id}
               className={`bg-white border rounded-xl shadow-sm p-4 ${
-                isOverdue ? "border-ember/40 border-l-4 border-l-ember bg-ember/5" : "border-[#1E3A5F]/10"
+                isOverdue ? "border-ember/40 border-l-4 border-l-ember bg-ember/5" : "border-[#2E2420]/10"
               }`}
             >
               {/* Most important info first: who it's for, what it is, and its status */}
-              <Link href={`/admin/customers/${order.customer_id}`} className="text-base font-bold text-[#1E3A5F] active:underline">
+              <Link href={`/admin/customers/${order.customer_id}`} className="text-base font-bold text-[#2E2420] active:underline">
                 {order.profiles?.full_name}
               </Link>
-              <Link href={`/admin/orders/${order.id}`} className="block text-sm text-[#1E3A5F]/70 mb-2 active:underline">
+              <Link href={`/admin/orders/${order.id}`} className="block text-sm text-[#2E2420]/70 mb-2 active:underline">
                 {productLabel(order.product_type as ProductType)} — {order.title}
               </Link>
 
@@ -639,38 +639,38 @@ export default async function AdminOrdersPage({
                 </Link>
               )}
 
-              <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-[#1E3A5F]/10">
+              <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-[#2E2420]/10">
                 <div>
-                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide font-semibold">Pickup date</div>
+                  <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide font-semibold">Pickup date</div>
                   {order.due_date ? (
-                    <div className={`text-sm font-mono ${isOverdue || isDueToday ? "text-ember font-semibold" : isDueTomorrow ? "text-[#1E3A5F] font-semibold" : "text-[#1E3A5F]/70"}`}>
+                    <div className={`text-sm font-mono ${isOverdue || isDueToday ? "text-ember font-semibold" : isDueTomorrow ? "text-[#2E2420] font-semibold" : "text-[#2E2420]/70"}`}>
                       {isOverdue && "⚠ "}
                       {formatCalendarDate(order.due_date)}
                     </div>
                   ) : (
-                    <div className="text-sm text-[#1E3A5F]/30">—</div>
+                    <div className="text-sm text-[#2E2420]/30">—</div>
                   )}
-                  {priority && <div className="text-[11px] text-[#1E3A5F]/50 mt-0.5">{priority.daysText}</div>}
+                  {priority && <div className="text-[11px] text-[#2E2420]/50 mt-0.5">{priority.daysText}</div>}
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide font-semibold">Amount due</div>
+                  <div className="text-[10px] text-[#2E2420]/50 uppercase tracking-wide font-semibold">Amount due</div>
                   <div className={`text-lg font-bold ${balanceCents > 0 ? "text-ember" : "text-sage"}`}>
                     ${(balanceCents / 100).toFixed(2)}
                   </div>
-                  <div className="text-[11px] text-[#1E3A5F]/50">
+                  <div className="text-[11px] text-[#2E2420]/50">
                     ${((order.price_cents || 0) / 100).toFixed(2)} total
                   </div>
                 </div>
               </div>
 
-              <div className="mt-3 pt-3 border-t border-[#1E3A5F]/10">
+              <div className="mt-3 pt-3 border-t border-[#2E2420]/10">
                 <div className="mb-2">
                   <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Link
                     href={`/admin/orders/${order.id}`}
-                    className="flex-1 min-w-[100px] text-center border border-[#1E3A5F] text-[#1E3A5F] px-3 py-2.5 rounded-md text-sm font-semibold"
+                    className="flex-1 min-w-[100px] text-center border border-[#2E2420] text-[#2E2420] px-3 py-2.5 rounded-md text-sm font-semibold"
                   >
                     Open order
                   </Link>
@@ -695,7 +695,7 @@ export default async function AdminOrdersPage({
           );
         })}
         {sorted.length === 0 && (
-          <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm px-4 py-6 text-center text-sm text-[#1E3A5F]/50">
+          <div className="bg-white border border-[#2E2420]/10 rounded-xl shadow-sm px-4 py-6 text-center text-sm text-[#2E2420]/50">
             No orders yet.
           </div>
         )}

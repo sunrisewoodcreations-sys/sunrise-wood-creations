@@ -9,8 +9,8 @@ export default async function AdminFaqPage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">FAQ Questions</h1>
-      <p className="text-sm text-[#1E3A5F]/60 mb-6">Answer submitted questions. Saving sends the answer directly to the person by email.</p>
+      <h1 className="font-display text-2xl text-[#2E2420] mb-1">FAQ Questions</h1>
+      <p className="text-sm text-[#2E2420]/60 mb-6">Answer submitted questions. Saving sends the answer directly to the person by email.</p>
       <AdminFaqManager questions={questions || []} />
     </div>
   );
