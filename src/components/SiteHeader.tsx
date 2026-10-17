@@ -72,7 +72,7 @@ export default async function SiteHeader() {
       <div className="flex items-center gap-3">
         <TrackedLink
           href="/request-quote"
-          className="hidden sm:inline-block bg-brass text-white px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
+          className="hidden sm:inline-block bg-accent text-white px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
           eventName="request_quote_click"
           eventParams={{ location: "header" }}
         >

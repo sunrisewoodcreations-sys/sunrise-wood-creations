@@ -11,15 +11,15 @@ import { SALES_TAX_RATE } from "@/lib/tax";
 // kept as the single source of truth for both, rather than a separate
 // invoice-only color set that could drift out of sync.
 const WALNUT = rgb(0.1176, 0.2275, 0.3725); // #1E3A5F
-const WALNUT_DARK = rgb(0.145, 0.157, 0.169); // #25282B
-const CREAM = rgb(0.961, 0.953, 0.937); // #F5F3EF
+const WALNUT_DARK = rgb(0.180, 0.141, 0.125); // #2E2420
+const CREAM = rgb(0.980, 0.965, 0.933); // #FAF6EE
 const WHITE = rgb(1, 1, 1);
-const EMBER = rgb(0.620, 0.416, 0.110); // #9E6A1C (brass)
+const EMBER = rgb(0.651, 0.239, 0.184); // #A63D2F (barn red)
 const SAGE = rgb(0.310, 0.478, 0.333); // #4F7A55
-const GRAY = rgb(0.373, 0.388, 0.408); // #5F6368, matches email footer text
-const MUTED_TAN = rgb(0.604, 0.616, 0.639); // matches email's muted #9A9DA3
-const LIGHT_LINE = rgb(0.871, 0.855, 0.824); // matches email's card border #DEDAD2
-const ROW_SHADE = rgb(0.965, 0.957, 0.937); // very light neutral for zebra striping
+const GRAY = rgb(0.455, 0.396, 0.357); // #74655B, matches email footer text
+const MUTED_TAN = rgb(0.659, 0.588, 0.518); // matches email's muted #a89684
+const LIGHT_LINE = rgb(0.902, 0.863, 0.796); // matches email's card border #E6DCCB
+const ROW_SHADE = rgb(0.988, 0.965, 0.918); // very light cream for zebra striping
 
 // Same fallback values already used in email.ts if the live site_settings
 // read fails for any reason — never a second, different hardcoded copy.

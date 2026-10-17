@@ -105,7 +105,7 @@ export default function LoginPage() {
                   <input type="checkbox" defaultChecked className="w-auto" />
                   Keep me logged in
                 </label>
-                <button type="button" onClick={() => setMode("forgot")} className="text-brass font-semibold">
+                <button type="button" onClick={() => setMode("forgot")} className="text-accent font-semibold">
                   Forgot password?
                 </button>
               </div>
@@ -123,7 +123,7 @@ export default function LoginPage() {
 
             <p className="text-sm mt-4 text-walnut/70">
               Don&apos;t have an account?{" "}
-              <button type="button" onClick={() => setShowContactModal(true)} className="text-brass font-semibold">
+              <button type="button" onClick={() => setShowContactModal(true)} className="text-accent font-semibold">
                 Create one
               </button>
             </p>
@@ -149,7 +149,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-brass text-white px-5 py-2.5 rounded-md font-semibold text-sm"
+                  className="bg-accent text-white px-5 py-2.5 rounded-md font-semibold text-sm"
                 >
                   Send reset link
                 </button>

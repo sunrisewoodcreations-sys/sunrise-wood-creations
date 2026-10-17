@@ -45,7 +45,7 @@ export default function AskQuestionForm() {
               <div className="text-center py-4">
                 <p className="text-walnut font-semibold mb-1">Question sent!</p>
                 <p className="text-sm text-walnut/60 mb-4">We'll get back to you at the email you provided.</p>
-                <button onClick={() => setOpen(false)} className="text-sm font-semibold text-brass">Close</button>
+                <button onClick={() => setOpen(false)} className="text-sm font-semibold text-accent">Close</button>
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
@@ -71,7 +71,7 @@ export default function AskQuestionForm() {
                 <button
                   type="submit"
                   disabled={status === "loading"}
-                  className="w-full mt-4 bg-brass text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60"
+                  className="w-full mt-4 bg-accent text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60"
                 >
                   {status === "loading" ? "Sending..." : "Submit Question"}
                 </button>

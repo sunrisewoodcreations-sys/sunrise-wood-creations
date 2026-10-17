@@ -40,13 +40,13 @@ export default function CompactProgressTracker({
             <div
               className={`w-5 h-5 rounded-full border-2 flex items-center justify-center z-10 text-[9px] font-bold
               ${isDone ? "bg-sage border-sage text-white" : ""}
-              ${isCurrent ? "bg-white border-brass" : ""}
+              ${isCurrent ? "bg-white border-accent" : ""}
               ${!isDone && !isCurrent ? "bg-white border-walnut/10" : ""}`}
             >
               {isDone && "✓"}
-              {isCurrent && <span className="w-2 h-2 rounded-full bg-brass" />}
+              {isCurrent && <span className="w-2 h-2 rounded-full bg-accent" />}
             </div>
-            <div className={`text-[11px] sm:text-xs text-center mt-1 leading-tight px-0.5 ${isCurrent ? "text-brass font-semibold" : "text-walnut/70 font-medium"}`}>
+            <div className={`text-[11px] sm:text-xs text-center mt-1 leading-tight px-0.5 ${isCurrent ? "text-accent font-semibold" : "text-walnut/70 font-medium"}`}>
               {step.label}
             </div>
             {(isDone || isCurrent) && stamp && (

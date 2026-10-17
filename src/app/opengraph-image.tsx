@@ -41,7 +41,7 @@ export default async function OpengraphImage() {
           // amber/10 -> cream, same gradient direction already used
           // for the real hero section, for visual consistency between
           // the shared image and the actual page someone lands on.
-          background: "linear-gradient(to bottom, #EFEBE3, #F5F3EF)"
+          background: "linear-gradient(to bottom, #F3EBDD, #FAF6EE)"
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -50,7 +50,7 @@ export default async function OpengraphImage() {
           style={{
             fontSize: 62,
             fontWeight: 600,
-            color: "#25282B", // walnut
+            color: "#2E2420", // walnut
             marginBottom: 14,
             textAlign: "center"
           }}
@@ -60,7 +60,7 @@ export default async function OpengraphImage() {
         <div
           style={{
             fontSize: 34,
-            color: "#25282B",
+            color: "#2E2420",
             opacity: 0.75,
             textAlign: "center"
           }}
