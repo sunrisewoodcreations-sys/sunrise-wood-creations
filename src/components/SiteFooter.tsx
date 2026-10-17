@@ -25,11 +25,11 @@ export default async function SiteFooter() {
               className="h-16 w-auto mx-auto sm:mx-0 mb-3"
             />
             <p className="text-cream/70 leading-relaxed">Handmade in Michigan.<br />Built to order.</p>
-            <nav aria-label="Footer" className="mt-4 flex flex-wrap justify-center sm:justify-start gap-x-4 gap-y-2 text-cream/80">
-              <Link href="/#products" className="hover:text-cream">Products</Link>
-              <Link href="/#about" className="hover:text-cream">About</Link>
-              <Link href="/#faq" className="hover:text-cream">FAQ</Link>
-              <Link href="/request-quote" className="hover:text-cream">Custom Order</Link>
+            <nav aria-label="Footer" className="mt-3 flex flex-wrap justify-center sm:justify-start gap-x-5 text-cream/80">
+              <Link href="/#products" className="py-2.5 hover:text-cream">Products</Link>
+              <Link href="/#about" className="py-2.5 hover:text-cream">About</Link>
+              <Link href="/#faq" className="py-2.5 hover:text-cream">FAQ</Link>
+              <Link href="/request-quote" className="py-2.5 hover:text-cream">Custom Order</Link>
             </nav>
           </div>
 
@@ -46,7 +46,7 @@ export default async function SiteFooter() {
             <div className="mt-3">
               <TrackedLink
                 href={`mailto:${content.contact.email}`}
-                className="text-cream/90 hover:text-cream break-all"
+                className="inline-block py-1.5 text-cream/90 hover:text-cream break-all"
                 eventName="email_click"
                 eventParams={{ location: "footer" }}
               >
@@ -59,7 +59,7 @@ export default async function SiteFooter() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Sunrise Wood Creations on Facebook"
-                className="inline-flex items-center gap-2 text-cream/80 hover:text-cream"
+                className="inline-flex items-center gap-2 py-2 text-cream/80 hover:text-cream"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z" />

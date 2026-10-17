@@ -28,7 +28,8 @@ export default function MobileNavToggle({
       <button
         onClick={() => setOpen(o => !o)}
         aria-label={open ? "Close menu" : "Open menu"}
-        className="p-2 -mr-2 text-walnut"
+        aria-expanded={open}
+        className="p-2.5 -mr-2.5 text-walnut"
       >
         {open ? (
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -66,7 +67,7 @@ export default function MobileNavToggle({
               </Link>
             ))}
 
-            <div className="pt-3 pb-1 text-xs font-semibold text-walnut/40 uppercase tracking-wide">
+            <div className="pt-3 pb-1 text-xs font-semibold text-walnut/60 uppercase tracking-wide">
               Products
             </div>
             {products.map((p, i) => (
