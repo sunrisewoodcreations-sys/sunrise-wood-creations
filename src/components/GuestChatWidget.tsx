@@ -9,7 +9,7 @@ type SentMessage = { body: string };
 // only moves up when that spot would sit on top of a link, button or form
 // field, so it never covers something a visitor needs to tap.
 const REST_OFFSET = 16;
-const STEP = 12;
+const STEP = 6;
 const MAX_OFFSET = 300;
 const BUTTON_SIZE_MOBILE = 48;
 
@@ -68,14 +68,31 @@ export default function GuestChatWidget() {
         const bottom = window.innerHeight - offset;
         return list.some(r => r.left < right + 6 && r.right > right - size - 6 && r.top < bottom + 6 && r.bottom > top - 6);
       };
-      // First choice: a spot clear of controls AND text. Second choice: clear
-      // of controls only. Otherwise stay at the original resting spot.
-      for (const blockers of [[...smallRects, ...textRects], smallRects]) {
-        for (let offset = REST_OFFSET; offset <= MAX_OFFSET; offset += STEP) {
-          if (!overlaps(blockers, offset)) { setBottomOffset(offset === REST_OFFSET ? null : offset); return; }
+      // Choose the resting spot: never on top of a small control; among those,
+      // the one that covers the least text (zero whenever the page leaves a
+      // gap), preferring the original spot on ties. If every spot is blocked
+      // by a control, stay at the original resting spot.
+      const textOverlapArea = (offset: number) => {
+        const top = window.innerHeight - offset - size;
+        const bottom = window.innerHeight - offset;
+        const left = right - size;
+        let area = 0;
+        for (const r of textRects) {
+          const w = Math.min(r.right, right) - Math.max(r.left, left);
+          const h = Math.min(r.bottom, bottom) - Math.max(r.top, top);
+          if (w > 0 && h > 0) area += w * h;
         }
+        return area;
+      };
+      let best: number | null = null;
+      let bestArea = Infinity;
+      for (let offset = REST_OFFSET; offset <= MAX_OFFSET; offset += STEP) {
+        if (overlaps(smallRects, offset)) continue;
+        const area = overlaps(textRects, offset) ? textOverlapArea(offset) : 0;
+        if (area < bestArea) { best = offset; bestArea = area; }
+        if (area === 0) break;
       }
-      setBottomOffset(null);
+      setBottomOffset(best === null || best === REST_OFFSET ? null : best);
     }
 
     function schedule() {

@@ -63,7 +63,7 @@ export default function LoginPage() {
         {mode === "login" && (
           <div className="bg-white border border-walnut/10 rounded-xl p-8">
             <h1 className="font-display text-2xl text-walnut mb-1">Log in</h1>
-            <p className="text-sm text-walnut/60 mb-6">
+            <p className="text-sm text-walnut/70 mb-6">
               Enter your email and password to see your orders.
             </p>
 
@@ -93,7 +93,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(s => !s)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-walnut/60 hover:text-walnut"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-walnut/70 hover:text-walnut"
                   >
                     {showPassword ? "Hide" : "Show"}
                   </button>
@@ -133,7 +133,7 @@ export default function LoginPage() {
         {mode === "forgot" && (
           <div className="bg-white border border-walnut/10 rounded-xl p-8">
             <h1 className="font-display text-2xl text-walnut mb-1">Reset your password</h1>
-            <p className="text-sm text-walnut/60 mb-6">
+            <p className="text-sm text-walnut/70 mb-6">
               Enter the email on your account and we&apos;ll send a link to set a new password.
             </p>
             <form onSubmit={handleForgotPassword} className="space-y-4">
