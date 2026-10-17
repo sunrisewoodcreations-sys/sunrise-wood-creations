@@ -6,10 +6,10 @@ export default function PublicReviewsSection({ reviews }: { reviews: Review[] })
   if (reviews.length === 0) return null;
 
   return (
-    <section className="bg-sawdust/60 px-6 py-14 md:py-20">
+    <section className="bg-sawdust/60 px-6 py-10 sm:py-14 md:py-20">
       <div className="max-w-5xl mx-auto">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">Customer Reviews</h2>
-        <p className="text-center text-walnut/60 mb-10">What people are saying about pieces we've built for them.</p>
+        <p className="text-center text-walnut/70 mb-8 sm:mb-10">What people are saying about pieces we've built for them.</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {reviews.map(review => (

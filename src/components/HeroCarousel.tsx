@@ -14,16 +14,10 @@ export type CarouselSlide = {
 const AUTOPLAY_MS = 4500;
 const SWIPE_THRESHOLD_PX = 50;
 
-export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
+export default function HeroCarousel({ slides, label = "Photos of our work" }: { slides: CarouselSlide[]; label?: string }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
-  // Each real photo's own width/height ratio, captured once it loads —
-  // lets the box size itself to match whichever slide is showing,
-  // instead of forcing every photo into one fixed shape. Falls back to
-  // 16:9 for the placeholder state and for the brief moment before a
-  // photo has finished loading.
-  const [ratios, setRatios] = useState<Record<number, number>>({});
 
   const goTo = useCallback((i: number) => {
     setIndex(((i % slides.length) + slides.length) % slides.length);
@@ -34,6 +28,8 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
   // they stop, rather than staying paused forever.
   useEffect(() => {
     if (paused || slides.length <= 1) return;
+    // Respect visitors who ask their device to reduce motion: no autoplay.
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const timer = setInterval(() => {
       setIndex(i => (i + 1) % slides.length);
     }, AUTOPLAY_MS);
@@ -57,7 +53,10 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
 
   return (
     <div
-      className="relative w-full max-w-[88%] sm:max-w-xl mx-auto mb-8 sm:mb-10 rounded-xl overflow-hidden shadow-md"
+      className="relative w-full max-w-[88%] sm:max-w-xl mx-auto rounded-xl overflow-hidden shadow-md"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={label}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={handleTouchStart}
@@ -74,7 +73,7 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
           style={{ transform: `translateX(-${index * 100}%)` }}
         >
           {slides.map((slide, i) => (
-            <div key={i} className="relative w-full h-full flex-shrink-0">
+            <div key={i} className="relative w-full h-full flex-shrink-0" aria-hidden={i !== index}>
               {slide.src ? (
                 <Image
                   src={slide.src}
@@ -83,12 +82,6 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
                   sizes="(max-width: 768px) 100vw, 768px"
                   className="object-cover"
                   priority={i === 0}
-                  onLoad={e => {
-                    const img = e.currentTarget;
-                    if (img.naturalWidth && img.naturalHeight) {
-                      setRatios(r => ({ ...r, [i]: img.naturalWidth / img.naturalHeight }));
-                    }
-                  }}
                 />
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-walnut/30 gap-2">
@@ -111,26 +104,29 @@ export default function HeroCarousel({ slides }: { slides: CarouselSlide[] }) {
           <button
             onClick={() => goTo(index - 1)}
             aria-label="Previous slide"
-            className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 text-walnut items-center justify-center shadow hover:bg-white transition-colors"
+            className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 text-walnut items-center justify-center shadow hover:bg-white transition-colors"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
           </button>
           <button
             onClick={() => goTo(index + 1)}
             aria-label="Next slide"
-            className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 text-walnut items-center justify-center shadow hover:bg-white transition-colors"
+            className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 text-walnut items-center justify-center shadow hover:bg-white transition-colors"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
           </button>
 
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 rounded-full bg-black/35 px-2 py-1.5">
+          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex items-center rounded-full bg-black/35 px-1">
             {slides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => goTo(i)}
                 aria-label={`Go to slide ${i + 1}`}
-                className={`w-2 h-2 rounded-full transition-colors ${i === index ? "bg-white" : "bg-white/50"}`}
-              />
+                aria-current={i === index}
+                className="w-6 h-8 flex items-center justify-center"
+              >
+                <span className={`block w-2 h-2 rounded-full transition-colors ${i === index ? "bg-white" : "bg-white/50"}`} />
+              </button>
             ))}
           </div>
         </>
