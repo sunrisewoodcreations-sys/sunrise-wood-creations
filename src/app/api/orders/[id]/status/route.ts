@@ -101,7 +101,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           invoicePdfBuffer,
           invoiceNumber,
           invoiceYear,
-          schedulingUrl
+          schedulingUrl,
+          schedulingKind: order.fulfillment_method === "delivery" ? "delivery" : "pickup"
         });
       } catch (err) {
         console.error("Status-update email failed to send:", err);

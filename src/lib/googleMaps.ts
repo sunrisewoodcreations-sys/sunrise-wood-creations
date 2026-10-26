@@ -104,3 +104,40 @@ export async function suggestAddresses(input: string, apiKey: string, fetchImpl:
   }
   return out;
 }
+
+// One-way driving time in whole minutes (rounded up) between two addresses.
+// Uses the same Routes API call as drivingDistanceMeters but asks for the
+// duration (no live-traffic option, which keeps it in the cheaper tier).
+export async function drivingDurationMinutes(origin: string, destination: string, apiKey: string, fetchImpl: FetchLike = fetch as any): Promise<number> {
+  let res: { ok: boolean; status: number; json: () => Promise<any> };
+  try {
+    res = await fetchImpl("https://routes.googleapis.com/directions/v2:computeRoutes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "routes.duration"
+      },
+      body: JSON.stringify({
+        origin: { address: origin },
+        destination: { address: destination },
+        travelMode: "DRIVE"
+      })
+    });
+  } catch {
+    throw new MapsError("Couldn't reach Google Maps. Try again in a moment.");
+  }
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (json?.error?.status === "PERMISSION_DENIED") {
+      throw new MapsError("Google Maps refused the request. Check that the Routes API is enabled for your key.");
+    }
+    throw new MapsError("Google Maps couldn't work out the drive time right now.");
+  }
+  const raw = json?.routes?.[0]?.duration; // e.g. "1843s"
+  const seconds = typeof raw === "string" ? parseInt(raw.replace(/s$/, ""), 10) : NaN;
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    throw new MapsError("Google Maps couldn't find a driving route to that address.");
+  }
+  return Math.max(1, Math.ceil(seconds / 60));
+}

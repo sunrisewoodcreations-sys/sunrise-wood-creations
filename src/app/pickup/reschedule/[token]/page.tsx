@@ -15,7 +15,7 @@ export default async function PickupReschedulePage({ params }: { params: { token
 
   const { data: appointment } = await admin
     .from("pickup_appointments")
-    .select("id, status, order_id, orders:order_id(title, customer_id, profiles:customer_id(full_name))")
+    .select("id, status, order_id, appointment_type, on_my_way_at, orders:order_id(title, customer_id, delivery_address, delivery_drive_minutes, profiles:customer_id(full_name))")
     .eq("reschedule_token", params.token)
     .maybeSingle();
 
@@ -28,7 +28,10 @@ export default async function PickupReschedulePage({ params }: { params: { token
     .eq("order_id", appointment.order_id);
 
   const alreadyUsed = appointment.status !== "scheduled";
-  const availableDays = alreadyUsed ? [] : await getAvailableSlots(21);
+  const isDelivery = appointment.appointment_type === "delivery";
+  const availableDays = alreadyUsed ? [] : await getAvailableSlots(21, isDelivery
+    ? { kind: "delivery", driveMinutes: order?.delivery_drive_minutes || 0, excludeAppointmentId: appointment.id }
+    : { excludeAppointmentId: appointment.id });
   const settings = await getAvailabilitySettings();
 
   return (
@@ -46,10 +49,13 @@ export default async function PickupReschedulePage({ params }: { params: { token
           }))}
           alreadyUsed={alreadyUsed}
           availableDays={availableDays}
-          heading="Reschedule Your Pickup"
+          heading={isDelivery ? "Reschedule Your Delivery" : "Reschedule Your Pickup"}
+          kind={isDelivery ? "delivery" : "pickup"}
+          deliveryAddress={order?.delivery_address || undefined}
+          onMyWayAt={isDelivery && appointment.status === "scheduled" ? appointment.on_my_way_at : null}
           businessAddress={settings.business_address}
           pickupInstructions={settings.pickup_instructions}
-          successMessage="Your pickup has been rescheduled — an updated confirmation email is on its way to you."
+          successMessage={`Your ${isDelivery ? "delivery" : "pickup"} has been rescheduled — an updated confirmation email is on its way to you.`}
         />
       </main>
       <SiteFooter />
