@@ -23,6 +23,7 @@ type BuildOrder = {
   priority: string;
   dueDate: string | null;
   productionStatus: string;
+  isDelivery?: boolean;
   productionNotes: string | null;
   estimatedBuildMinutes: number | null;
   materialsAvailable: boolean;
@@ -207,7 +208,7 @@ export default function ShopFloorView({ orders }: { orders: BuildOrder[] }) {
       <div className="min-h-screen bg-cream flex items-center justify-center p-6 text-center">
         <div>
           <p className="font-display text-xl text-[#1E3A5F] mb-2">Nothing to build right now</p>
-          <p className="text-sm text-[#1E3A5F]/60">Every active order is either waiting to be scheduled or already at Ready for Pickup.</p>
+          <p className="text-sm text-[#1E3A5F]/60">Every active order is either waiting to be scheduled or already ready for pickup or delivery.</p>
           <Link href="/admin" className="inline-block mt-4 text-sm font-semibold text-[#1E3A5F] underline">← Back to admin</Link>
         </div>
       </div>
@@ -371,11 +372,11 @@ export default function ShopFloorView({ orders }: { orders: BuildOrder[] }) {
                     {nextStage && (
                       nextStage === "ready_for_pickup" ? (
                         <button onClick={() => handleReadyForPickup(o.id)} disabled={isBusy} className="flex-1 bg-sage text-white rounded-md py-3 text-sm font-bold disabled:opacity-60">
-                          {isBusy ? "Saving..." : "✓ Ready for Pickup"}
+                          {isBusy ? "Saving..." : o.isDelivery ? "✓ Ready for Delivery" : "✓ Ready for Pickup"}
                         </button>
                       ) : (
                         <button onClick={() => handleAdvanceStage(o.id, nextStage)} disabled={isBusy} className="flex-1 bg-[#1E3A5F] text-white rounded-md py-3 text-sm font-bold disabled:opacity-60">
-                          {isBusy ? "Saving..." : STAGE_ACTION_LABELS[o.productionStatus] || "Next Stage →"}
+                          {isBusy ? "Saving..." : (o.isDelivery && o.productionStatus === "finishing" ? "Mark Ready for Delivery" : STAGE_ACTION_LABELS[o.productionStatus]) || "Next Stage →"}
                         </button>
                       )
                     )}

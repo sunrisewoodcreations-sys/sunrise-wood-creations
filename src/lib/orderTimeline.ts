@@ -38,7 +38,7 @@ export async function getOrderTimeline(orderId: string): Promise<TimelineEvent[]
 
   const { data: order } = await supabase
     .from("orders")
-    .select("created_at, product_type, quote_id")
+    .select("created_at, product_type, quote_id, fulfillment_method")
     .eq("id", orderId)
     .single();
 
@@ -114,14 +114,14 @@ export async function getOrderTimeline(orderId: string): Promise<TimelineEvent[]
   // just recorded a second time by the status-logging trigger.
   (statusHistory || []).slice(1).forEach((row: any, i: number) => {
     const prevStatus = (statusHistory || [])[i].status; // i is the index into the ORIGINAL array's previous element
-    const newLabel = statusLabel(order.product_type as ProductType, row.status);
-    const oldLabel = statusLabel(order.product_type as ProductType, prevStatus);
+    const newLabel = statusLabel(order.product_type as ProductType, row.status, (order as any).fulfillment_method);
+    const oldLabel = statusLabel(order.product_type as ProductType, prevStatus, (order as any).fulfillment_method);
     events.push({
       timestamp: row.created_at,
       type: "status_changed",
       label:
-        row.status === "ready_for_pickup" ? "Marked ready for pickup" :
-        row.status === "picked_up" ? "Order picked up / completed" :
+        row.status === "ready_for_pickup" ? ((order as any).fulfillment_method === "delivery" ? "Marked ready for delivery" : "Marked ready for pickup") :
+        row.status === "picked_up" ? ((order as any).fulfillment_method === "delivery" ? "Order delivered / completed" : "Order picked up / completed") :
         `Status changed to ${newLabel}`,
       detail: `${oldLabel} → ${newLabel}`,
       icon: row.status === "picked_up" ? "check-circle" : "hammer",

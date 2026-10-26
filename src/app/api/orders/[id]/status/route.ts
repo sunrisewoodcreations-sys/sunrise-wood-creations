@@ -50,7 +50,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           productType: order.product_type as ProductType,
           orderTitle: order.title,
           orderId: order.id,
-          newStatus: status
+          newStatus: status,
+          fulfillmentMethod: order.fulfillment_method
         });
       } catch (err) {
         console.error("Status-update email failed to send:", err);
@@ -102,6 +103,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           invoiceNumber,
           invoiceYear,
           schedulingUrl,
+          fulfillmentMethod: order.fulfillment_method,
           schedulingKind: order.fulfillment_method === "delivery" ? "delivery" : "pickup"
         });
       } catch (err) {

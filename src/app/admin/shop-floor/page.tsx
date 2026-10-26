@@ -12,7 +12,7 @@ export default async function ShopFloorPage() {
   const [{ data: orders }, { data: orderItems }, { data: scheduledPickups }, { data: buildSessions }] = await Promise.all([
     supabase
       .from("orders")
-      .select("id, title, product_type, status, production_status, priority, production_date, due_date, customer_id, manual_queue_position, production_notes, profiles:customer_id(full_name, is_priority_customer)")
+      .select("id, title, product_type, status, fulfillment_method, production_status, priority, production_date, due_date, customer_id, manual_queue_position, production_notes, profiles:customer_id(full_name, is_priority_customer)")
       .in("production_status", ["waiting", "building", "assembly", "finishing"])
       .neq("status", "picked_up"),
     supabase.from("order_items").select("order_id, product_id, quantity, title, products:product_id(name, size_details, estimated_build_minutes, image_url)"),
@@ -102,6 +102,7 @@ export default async function ShopFloorPage() {
       productionDate: o.production_date,
       manualQueuePosition: o.manual_queue_position,
       productionStatus: o.production_status,
+      isDelivery: o.fulfillment_method === "delivery",
       productionNotes: o.production_notes,
       estimatedBuildMinutes: totalBuildMinutes > 0 ? totalBuildMinutes : null,
       materialsAvailable: materialCheck.available,

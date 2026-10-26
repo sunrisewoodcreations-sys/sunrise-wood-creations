@@ -65,7 +65,7 @@ export default async function AccountDashboardPage() {
       notifications.push({ text: `Your order "${o.title}" is now in production.`, color: "text-amber" });
     }
     if (o.status === "ready_for_pickup") {
-      notifications.push({ text: `Your order "${o.title}" is ready for pickup!`, color: "text-sage" });
+      notifications.push({ text: `Your order "${o.title}" is ready for ${o.fulfillment_method === "delivery" ? "delivery" : "pickup"}!`, color: "text-sage" });
     }
   });
   completedOrders.slice(0, 3).forEach(o => {
@@ -132,7 +132,7 @@ export default async function AccountDashboardPage() {
                   <div>
                     <div className="font-semibold text-walnut">{productLabel(o.product_type as ProductType)} — {o.title}</div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor(o.status)}`}>{statusLabel(o.product_type as ProductType, o.status)}</span>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor(o.status)}`}>{statusLabel(o.product_type as ProductType, o.status, o.fulfillment_method)}</span>
                       {o.due_date && <span className="text-xs text-walnut/50">Pickup: {formatCalendarDate(o.due_date)}</span>}
                     </div>
                   </div>

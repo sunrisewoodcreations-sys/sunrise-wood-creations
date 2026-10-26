@@ -39,6 +39,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       orderTitle: order.title,
       orderId: order.id,
       newStatus: order.status,
+      fulfillmentMethod: (order as any).fulfillment_method,
       balanceDueCents
     });
   } catch (err) {

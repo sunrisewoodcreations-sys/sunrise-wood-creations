@@ -74,14 +74,14 @@ export default async function AccountOrdersPage() {
                         {productLabel(order.product_type as ProductType)} — {order.title}
                       </div>
                       <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusColor(order.status)}`}>
-                        {statusLabel(order.product_type as ProductType, order.status)}
+                        {statusLabel(order.product_type as ProductType, order.status, order.fulfillment_method)}
                       </span>
                     </div>
 
                     <div className="flex flex-col gap-1.5">
                       {showPickupDate && (
                         <div className="inline-flex items-center gap-2 bg-amber/20 border border-amber/40 rounded-md px-3 py-1.5 w-fit">
-                          <span className="text-walnut/70 uppercase tracking-wide font-bold text-[11px]">Estimated pickup</span>
+                          <span className="text-walnut/70 uppercase tracking-wide font-bold text-[11px]">Estimated {order.fulfillment_method === "delivery" ? "delivery" : "pickup"}</span>
                           <span className="text-walnut font-mono font-bold text-sm">{formatCalendarDate(order.due_date, "long")}</span>
                         </div>
                       )}
@@ -122,7 +122,7 @@ export default async function AccountOrdersPage() {
 
                 {!isPickedUp && (
                   <div className="mt-4 sm:mt-5">
-                    <CompactProgressTracker productType={order.product_type as ProductType} currentStatus={order.status} statusTimestamps={orderStatusTimestamps} />
+                    <CompactProgressTracker fulfillmentMethod={order.fulfillment_method} productType={order.product_type as ProductType} currentStatus={order.status} statusTimestamps={orderStatusTimestamps} />
                   </div>
                 )}
               </div>

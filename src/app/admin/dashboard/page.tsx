@@ -372,7 +372,8 @@ export default async function DashboardPage() {
   // tomorrow needs to be built today to be ready in time.
   const buildTodayOrders = allOrders.filter(o => o.status !== "picked_up" && o.due_date === tomorrowStr);
   const dueTodayOrders = allOrders.filter(o => o.status !== "picked_up" && o.due_date === todayStr);
-  const readyForPickupOrders = allOrders.filter(o => o.status === "ready_for_pickup");
+  const readyForPickupOrders = allOrders.filter(o => o.status === "ready_for_pickup" && o.fulfillment_method !== "delivery");
+  const readyForDeliveryOrders = allOrders.filter(o => o.status === "ready_for_pickup" && o.fulfillment_method === "delivery");
   const waitingOnCustomerTaskOrders = allOrders.filter(o => waitingOnCustomerOrderIds.has(o.id));
   const outstandingBalanceTaskOrders = waitingOnPaymentOrders;
 
@@ -510,6 +511,7 @@ export default async function DashboardPage() {
         <TaskSection emoji="🛠️" title="Build Today (pickup tomorrow — glue needs 24hrs)" orders={buildTodayOrders} />
         <TaskSection emoji="📅" title="Due Today" orders={dueTodayOrders} />
         <TaskSection emoji="🚚" title="Ready for Pickup" orders={readyForPickupOrders} />
+        <TaskSection emoji="🚐" title="Ready for Delivery" orders={readyForDeliveryOrders} />
         <TaskSection emoji="💬" title="Waiting on Customer" orders={waitingOnCustomerTaskOrders} />
         <TaskSection emoji="💰" title="Outstanding Balance" orders={outstandingBalanceTaskOrders} showBalance />
         <QuoteRequestTaskSection requests={unrespondedQuoteRequests || []} />
@@ -744,7 +746,7 @@ export default async function DashboardPage() {
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusColor(o.status)}`}>
-                  {statusLabel(o.product_type as ProductType, o.status)}
+                  {statusLabel(o.product_type as ProductType, o.status, o.fulfillment_method)}
                 </span>
                 <span className={`text-sm font-bold whitespace-nowrap ${balanceCents > 0 ? "text-ember" : "text-sage"}`}>
                   ${(balanceCents / 100).toFixed(2)} due
