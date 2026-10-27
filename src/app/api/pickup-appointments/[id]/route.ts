@@ -51,9 +51,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const { error } = await admin.from("pickup_appointments").update({ status: "completed" }).eq("id", params.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-    // A completed delivery finishes the order the same way "Picked up"
-    // does: paid in full, status updated, final invoice emailed.
-    if (appt?.appointment_type === "delivery" && appt.order_id) {
+    // Marking a pickup or delivery done finishes the order the same way
+    // "Picked up" does on the order page: paid in full, status updated,
+    // final invoice and the rate-your-order email sent.
+    if (appt?.order_id) {
       const { data: order } = await admin
         .from("orders")
         .select("*, profiles:customer_id(email, full_name, has_real_email, notify_invoices, notify_order_updates)")
