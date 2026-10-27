@@ -91,7 +91,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (appt.appointment_type !== "delivery") return NextResponse.json({ error: "\"On my way\" is only for deliveries." }, { status: 400 });
     if (appt.status !== "scheduled") return NextResponse.json({ error: "This delivery isn't active." }, { status: 400 });
     // Opening Google/Apple Maps counts as "I'm leaving" only when it is
-    // around leave time: from 10 minutes before the leave-by time until
+    // around leave time: from 5 minutes before the leave-by time until
     // 30 minutes after the arrival time. Earlier than that is just looking.
     if (action === "maps_opened") {
       if (appt.on_my_way_at) return NextResponse.json({ ok: true, skipped: "already_sent" });
@@ -100,7 +100,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         : absMinute(appt.appointment_date, String(appt.appointment_time).slice(0, 5));
       const arriveAbs = absMinute(appt.appointment_date, String(appt.appointment_time).slice(0, 5));
       const nowAbs = easternNow().abs;
-      if (nowAbs < leaveAbs - 10 || nowAbs > arriveAbs + 30) return NextResponse.json({ ok: true, skipped: "outside_window" });
+      if (nowAbs < leaveAbs - 5 || nowAbs > arriveAbs + 30) return NextResponse.json({ ok: true, skipped: "outside_window" });
     }
     const { error } = await admin.from("pickup_appointments")
       .update({ on_my_way_at: action === "clear_on_my_way" ? null : new Date().toISOString() }).eq("id", params.id);
