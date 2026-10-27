@@ -5,6 +5,7 @@ import { getAvailableSlots, getAvailabilitySettings } from "@/lib/pickupScheduli
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PickupSchedulingView from "@/components/PickupSchedulingView";
+import DeliveryAddressStep from "@/components/DeliveryAddressStep";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false }
@@ -15,7 +16,7 @@ export default async function PickupSchedulePage({ params }: { params: { token: 
 
   const { data: order } = await admin
     .from("orders")
-    .select("id, title, pickup_scheduling_token_used_at, profiles:customer_id(full_name)")
+    .select("id, title, fulfillment_method, delivery_address, delivery_drive_minutes, pickup_scheduling_token_used_at, profiles:customer_id(full_name, address)")
     .eq("pickup_scheduling_token", params.token)
     .maybeSingle();
 
@@ -27,7 +28,28 @@ export default async function PickupSchedulePage({ params }: { params: { token: 
     .eq("order_id", order.id);
 
   const alreadyUsed = !!order.pickup_scheduling_token_used_at;
-  const availableDays = alreadyUsed ? [] : await getAvailableSlots(21);
+  const isDelivery = order.fulfillment_method === "delivery";
+
+  // Delivery needs the address (and so the drive time) before any times
+  // can be shown, because how long the trip takes decides what fits.
+  if (isDelivery && !alreadyUsed && !(order.delivery_drive_minutes > 0)) {
+    return (
+      <div className="min-h-screen flex flex-col bg-cream">
+        <SiteHeader />
+        <main className="flex-1">
+          <DeliveryAddressStep
+            apiEndpoint={`/api/pickup/schedule/${params.token}/address`}
+            orderTitle={order.title}
+            customerName={(order as any).profiles?.full_name || "Customer"}
+            initialAddress={order.delivery_address || (order as any).profiles?.address || ""}
+          />
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  const availableDays = alreadyUsed ? [] : await getAvailableSlots(21, isDelivery ? { kind: "delivery", driveMinutes: order.delivery_drive_minutes } : {});
   const settings = await getAvailabilitySettings();
 
   return (
@@ -45,7 +67,9 @@ export default async function PickupSchedulePage({ params }: { params: { token: 
           }))}
           alreadyUsed={alreadyUsed}
           availableDays={availableDays}
-          heading="Schedule Your Pickup"
+          heading={isDelivery ? "Schedule Your Delivery" : "Schedule Your Pickup"}
+          kind={isDelivery ? "delivery" : "pickup"}
+          deliveryAddress={order.delivery_address || undefined}
           businessAddress={settings.business_address}
           pickupInstructions={settings.pickup_instructions}
           successMessage="A confirmation email with the full details is on its way to you."

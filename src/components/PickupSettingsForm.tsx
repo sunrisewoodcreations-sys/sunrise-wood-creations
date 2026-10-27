@@ -150,7 +150,8 @@ export default function PickupSettingsForm({ settings, blockedDates }: { setting
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Max per time slot</label>
-              <input value={maxPickupsPerSlot} onChange={e => setMaxPickupsPerSlot(e.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+              <input value="1" disabled readOnly className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm bg-[#1E3A5F]/5" />
+              <p className="text-[10px] text-[#1E3A5F]/50 mt-1">Always one customer at a time (deliveries also block your drive time).</p>
             </div>
           </div>
         </div>

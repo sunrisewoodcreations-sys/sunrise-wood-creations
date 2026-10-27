@@ -22,7 +22,10 @@ export default function PickupSchedulingView({
   heading,
   businessAddress,
   pickupInstructions,
-  successMessage
+  successMessage,
+  kind = "pickup",
+  deliveryAddress,
+  onMyWayAt
 }: {
   apiEndpoint: string;
   orderTitle: string;
@@ -34,7 +37,12 @@ export default function PickupSchedulingView({
   businessAddress?: string;
   pickupInstructions?: string;
   successMessage: string;
+  kind?: "pickup" | "delivery";
+  deliveryAddress?: string;
+  // Set when the delivery driver has tapped "on my way" for this appointment.
+  onMyWayAt?: string | null;
 }) {
+  const isDelivery = kind === "delivery";
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -80,7 +88,22 @@ export default function PickupSchedulingView({
           ))}
         </div>
 
-        {(businessAddress || pickupInstructions) && (
+        {onMyWayAt && (
+          <div className="bg-sage/15 border border-sage/40 rounded-lg p-4 mb-4">
+            <p className="text-sm font-bold text-walnut">🚚 We're on our way!</p>
+            <p className="text-sm text-walnut/70">Left at {new Date(onMyWayAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })}. See you soon.</p>
+          </div>
+        )}
+
+        {isDelivery && deliveryAddress && (
+          <div className="bg-cream border border-walnut/10 rounded-lg p-4 mb-4">
+            <div className="text-xs font-semibold text-walnut/50 uppercase mb-1">Delivery Address</div>
+            <div className="text-sm font-semibold text-walnut">{deliveryAddress}</div>
+            <div className="text-sm text-walnut/70 mt-1">The times below are when we'll arrive at your address.</div>
+          </div>
+        )}
+
+        {!isDelivery && (businessAddress || pickupInstructions) && (
           <div className="bg-cream border border-walnut/10 rounded-lg p-4 mb-4">
             <div className="text-xs font-semibold text-walnut/50 uppercase mb-1">Pickup Location</div>
             {businessAddress && <div className="text-sm font-semibold text-walnut">{businessAddress}</div>}
@@ -99,7 +122,7 @@ export default function PickupSchedulingView({
           </div>
         ) : availableDays.length === 0 ? (
           <div className="bg-amber/10 border border-amber/30 rounded-lg p-4">
-            <p className="text-sm text-walnut/70">No pickup times are available right now. Please contact us directly to schedule.</p>
+            <p className="text-sm text-walnut/70">No {isDelivery ? "delivery" : "pickup"} times are available right now. Please contact us directly to schedule.</p>
           </div>
         ) : (
           <>

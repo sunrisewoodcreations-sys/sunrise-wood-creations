@@ -1,6 +1,9 @@
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPickupConfirmationEmail, sendPickupSchedulingEmail, sendPickupScheduledAdminAlert } from "@/lib/email";
+import {
+  Kind, SlotConfig, DaySlots, absMinute, absToTimestamp, dayNumber, addDays, easternNow, blockFor, computeSlots, isSlotOpen, easternToUtcMs
+} from "@/lib/scheduleCore";
 import { googleCalendarUrl, outlookCalendarUrl, appleCalendarDataUrl } from "@/lib/calendarLinks";
 
 export type AvailabilitySettings = {
@@ -30,128 +33,101 @@ export async function getAvailabilitySettings(): Promise<AvailabilitySettings> {
   return created!;
 }
 
-function timeToMinutes(t: string): number {
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + m;
-}
-function minutesToTime(mins: number): string {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+export type { DaySlots } from "@/lib/scheduleCore";
+
+export type ScheduleKind = Kind;
+
+function parseLocalTimestamp(ts: string): number {
+  // 'YYYY-MM-DDTHH:MM:SS' (local Eastern wall clock, no timezone)
+  return absMinute(ts.slice(0, 10), ts.slice(11, 16));
 }
 
-// The current hour:minute in Eastern time, as minutes since midnight —
-// used only to filter out today's already-passed slots, same
-// timeToMinutes format as everything else in this file.
-function currentEasternMinutesOfDay(): number {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hour12: false
-  }).formatToParts(new Date());
-  const h = Number(parts.find(p => p.type === "hour")?.value) % 24;
-  const m = Number(parts.find(p => p.type === "minute")?.value);
-  return h * 60 + m;
-}
-
-function dateStrToWeekday(dateStr: string): number {
-  // Computed directly from the date parts (UTC) rather than parsing
-  // dateStr as a local Date, to avoid timezone-shift-induced off-by-one
-  // weekday bugs — same care taken with dates throughout this app.
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-}
-function addDaysToDateStr(dateStr: string, days: number): string {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  dt.setUTCDate(dt.getUTCDate() + days);
-  return dt.toISOString().slice(0, 10);
-}
-
-export type DaySlots = { date: string; times: string[] };
-
-// Computes real bookable slots for the next `daysAhead` days: only on
-// configured available weekdays, not on blocked dates, split into
-// slot_length_minutes increments between start_time and end_time, and
-// excluding any slot that's already at max_pickups_per_slot from
-// existing scheduled appointments.
-export async function getAvailableSlots(daysAhead: number = 21): Promise<DaySlots[]> {
+// Everything needed to decide which times are open, loaded in one place so
+// the customer picker, the booking re-check, and the admin views all use
+// exactly the same rules.
+async function loadScheduleConfig(opts: {
+  kind: Kind;
+  driveMinutes: number;
+  daysAhead: number;
+  excludeAppointmentId?: string;
+}): Promise<{ cfg: SlotConfig; onVacation: boolean }> {
   const admin = createAdminClient();
   const settings = await getAvailabilitySettings();
+  const now = easternNow();
+  const endStr = addDays(now.dateStr, opts.daysAhead + 1);
+  const startStr = addDays(now.dateStr, -1);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const endStr = addDaysToDateStr(todayStr, daysAhead);
-
-  // "Disables all scheduling UNTIL a selected return date" — once that
-  // date arrives, availability resumes automatically without needing
-  // the toggle switched off by hand. No return date set means closed
-  // indefinitely until the admin turns it off.
-  const onVacation = settings.vacation_mode_enabled && (!settings.vacation_return_date || todayStr < settings.vacation_return_date);
-  if (onVacation) return [];
-
-  const [{ data: blockedDates }, { data: existingAppointments }] = await Promise.all([
-    admin.from("pickup_blocked_dates").select("blocked_date").gte("blocked_date", todayStr).lte("blocked_date", endStr),
-    admin.from("pickup_appointments").select("appointment_date, appointment_time")
-      .eq("status", "scheduled").gte("appointment_date", todayStr).lte("appointment_date", endStr)
+  const [{ data: blockedDates }, { data: blockedTimes }, { data: existingRows }, { data: ds }] = await Promise.all([
+    admin.from("pickup_blocked_dates").select("blocked_date").gte("blocked_date", now.dateStr).lte("blocked_date", endStr),
+    admin.from("schedule_blocked_times").select("blocked_date, start_time, end_time").gte("blocked_date", startStr).lte("blocked_date", endStr),
+    admin.from("pickup_appointments").select("id, block_start_at, block_end_at")
+      .in("status", ["scheduled", "arrived"]).not("block_start_at", "is", null)
+      .gte("appointment_date", startStr).lte("appointment_date", endStr),
+    admin.from("delivery_settings").select("minutes_at_customer, buffer_after_minutes").eq("id", 1).maybeSingle()
   ]);
 
-  const blockedSet = new Set((blockedDates || []).map((b: any) => b.blocked_date));
-  const countBySlot = new Map<string, number>();
-  (existingAppointments || []).forEach((a: any) => {
-    const key = `${a.appointment_date}|${a.appointment_time}`;
-    countBySlot.set(key, (countBySlot.get(key) || 0) + 1);
+  const onVacation = settings.vacation_mode_enabled && (!settings.vacation_return_date || now.dateStr < settings.vacation_return_date);
+
+  const cfg: SlotConfig = {
+    kind: opts.kind,
+    driveMinutes: opts.driveMinutes,
+    availableDays: settings.available_days,
+    startTime: settings.start_time.slice(0, 5),
+    endTime: settings.end_time.slice(0, 5),
+    slotLengthMinutes: settings.slot_length_minutes,
+    minutesAtCustomer: ds?.minutes_at_customer ?? 15,
+    bufferAfterMinutes: ds?.buffer_after_minutes ?? 15,
+    blockedDates: new Set((blockedDates || []).map((b: any) => b.blocked_date)),
+    blockedRanges: (blockedTimes || []).map((r: any) => ({ date: r.blocked_date, start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5) })),
+    existing: (existingRows || [])
+      .filter((r: any) => r.id !== opts.excludeAppointmentId)
+      .map((r: any) => ({ start: parseLocalTimestamp(r.block_start_at), end: parseLocalTimestamp(r.block_end_at) })),
+    todayStr: now.dateStr,
+    nowAbs: now.abs,
+    daysAhead: opts.daysAhead
+  };
+  return { cfg, onVacation };
+}
+
+export type SlotOptions = { kind?: Kind; driveMinutes?: number; excludeAppointmentId?: string };
+
+// Computes real bookable slots for the next `daysAhead` days. One customer
+// per slot, enforced by the actual blocks of time (a delivery blocks the
+// drive there, the visit, the drive home and a buffer; pickups are blocked
+// while you're out), plus blocked days and blocked time ranges.
+export async function getAvailableSlots(daysAhead: number = 21, opts: SlotOptions = {}): Promise<DaySlots[]> {
+  const { cfg, onVacation } = await loadScheduleConfig({
+    kind: opts.kind || "pickup", driveMinutes: opts.driveMinutes || 0, daysAhead, excludeAppointmentId: opts.excludeAppointmentId
   });
-
-  const startMin = timeToMinutes(settings.start_time);
-  const endMin = timeToMinutes(settings.end_time);
-  const allTimes: string[] = [];
-  for (let m = startMin; m < endMin; m += settings.slot_length_minutes) {
-    allTimes.push(minutesToTime(m));
-  }
-
-  const days: DaySlots[] = [];
-  for (let i = 0; i <= daysAhead; i++) {
-    const dateStr = addDaysToDateStr(todayStr, i);
-    if (blockedSet.has(dateStr)) continue;
-    if (!settings.available_days.includes(dateStrToWeekday(dateStr))) continue;
-
-    let openTimes = allTimes.filter(t => (countBySlot.get(`${dateStr}|${t}`) || 0) < settings.max_pickups_per_slot);
-
-    // For today specifically, also exclude any time that's already
-    // passed — otherwise a customer opening this page in the afternoon
-    // would see (and could book) a slot from earlier that morning,
-    // which is what actually surfaced this during testing.
-    if (dateStr === todayStr) {
-      const nowEasternMinutes = currentEasternMinutesOfDay();
-      openTimes = openTimes.filter(t => timeToMinutes(t) > nowEasternMinutes);
-    }
-
-    if (openTimes.length > 0) days.push({ date: dateStr, times: openTimes });
-  }
-
-  return days;
+  // "Disables all scheduling UNTIL a selected return date" — availability
+  // resumes automatically once that date arrives.
+  if (onVacation) return [];
+  return computeSlots(cfg);
 }
 
 // Whether a specific date+time is still actually bookable right now —
 // re-checked at booking time (not just trusted from what the page
-// showed on load), so two customers can't both grab the same slot.
-export async function isSlotStillAvailable(dateStr: string, time: string): Promise<boolean> {
-  const admin = createAdminClient();
-  const settings = await getAvailabilitySettings();
-
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const onVacation = settings.vacation_mode_enabled && (!settings.vacation_return_date || todayStr < settings.vacation_return_date);
+// showed on load). The database also refuses overlapping appointments
+// outright, so two customers can never both get the same time.
+export async function isSlotStillAvailable(dateStr: string, time: string, opts: SlotOptions = {}): Promise<boolean> {
+  // The window must reach the requested date, or blocked days/times and
+  // existing bookings out there would never be loaded and checked.
+  const daysAhead = Math.max(1, dayNumber(dateStr) - dayNumber(easternNow().dateStr) + 1);
+  const { cfg, onVacation } = await loadScheduleConfig({
+    kind: opts.kind || "pickup", driveMinutes: opts.driveMinutes || 0, daysAhead, excludeAppointmentId: opts.excludeAppointmentId
+  });
   if (onVacation) return false;
-
-  const { data: blocked } = await admin.from("pickup_blocked_dates").select("id").eq("blocked_date", dateStr).maybeSingle();
-  if (blocked) return false;
-  if (!settings.available_days.includes(dateStrToWeekday(dateStr))) return false;
-  if (dateStr === todayStr && timeToMinutes(time) <= currentEasternMinutesOfDay()) return false;
-
-  const { count } = await admin.from("pickup_appointments")
-    .select("id", { count: "exact", head: true })
-    .eq("appointment_date", dateStr).eq("appointment_time", time).eq("status", "scheduled");
-
-  return (count || 0) < settings.max_pickups_per_slot;
+  return isSlotOpen(cfg, dateStr, time);
 }
+
+// The block of time (as local timestamps) an appointment uses.
+async function blockColumnsFor(kind: Kind, dateStr: string, time: string, driveMinutes: number) {
+  const { cfg } = await loadScheduleConfig({ kind, driveMinutes, daysAhead: 1 });
+  const block = blockFor(cfg, absMinute(dateStr, time));
+  return { block_start_at: absToTimestamp(block.start), block_end_at: absToTimestamp(block.end) };
+}
+
+const CONFLICT_MESSAGE = "That time is no longer available. Please choose another.";
 
 // The admin-only, computed pickup-scheduling badge for an order —
 // never stored, always derived from the order's scheduling-email
@@ -208,9 +184,8 @@ type AppointmentForBadge = {
 // sitting as "Pickup Scheduled" until someone happens to notice.
 export function isAppointmentOverdue(appt: AppointmentForBadge, nowIso: string): boolean {
   if (!appt || appt.status !== "scheduled") return false;
-  const [h, m] = appt.appointment_time.split(":").map(Number);
-  const apptDateTime = new Date(`${appt.appointment_date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
-  return apptDateTime.getTime() < new Date(nowIso).getTime();
+  // appointment_date/time are Eastern wall-clock; compare as real instants.
+  return easternToUtcMs(appt.appointment_date, appt.appointment_time.slice(0, 5)) < new Date(nowIso).getTime();
 }
 
 export function getPickupBadgeState(
@@ -253,18 +228,37 @@ export async function bookPickupAppointment(opts: {
   dateStr: string;
   time: string;
   source: AppointmentSource;
+  // Admin manual bookings may go outside the usual hours/blocked days —
+  // the database's no-overlap guard still applies either way.
+  skipAvailabilityCheck?: boolean;
 }): Promise<{ ok: true; appointmentId: string } | { ok: false; error: string }> {
   const admin = createAdminClient();
 
-  const available = await isSlotStillAvailable(opts.dateStr, opts.time);
-  if (!available) return { ok: false, error: "That time is no longer available. Please choose another." };
+  // Pickup vs delivery, and the stored one-way drive time, come from the
+  // order itself — callers never pass them, so a customer can't tamper.
+  const { data: order } = await admin.from("orders").select("fulfillment_method, delivery_drive_minutes").eq("id", opts.orderId).maybeSingle();
+  if (!order) return { ok: false, error: "Order not found." };
+  const kind: Kind = order.fulfillment_method === "delivery" ? "delivery" : "pickup";
+  const driveMinutes = order.delivery_drive_minutes ?? 0;
+  if (kind === "delivery" && !(order.delivery_drive_minutes > 0)) {
+    return { ok: false, error: "We need your delivery address before we can schedule." };
+  }
 
+  if (!opts.skipAvailabilityCheck) {
+    const available = await isSlotStillAvailable(opts.dateStr, opts.time, { kind, driveMinutes });
+    if (!available) return { ok: false, error: CONFLICT_MESSAGE };
+  }
+
+  const blockCols = await blockColumnsFor(kind, opts.dateStr, opts.time, driveMinutes);
   const { data: appointment, error } = await admin
     .from("pickup_appointments")
-    .insert({ order_id: opts.orderId, appointment_date: opts.dateStr, appointment_time: opts.time, source: opts.source })
+    .insert({ order_id: opts.orderId, appointment_date: opts.dateStr, appointment_time: opts.time, source: opts.source, appointment_type: kind, ...blockCols })
     .select()
     .single();
 
+  // 23P01 = the database's no-overlap guard fired (someone else took it
+  // a split second earlier).
+  if (error?.code === "23P01") return { ok: false, error: CONFLICT_MESSAGE };
   if (error || !appointment) return { ok: false, error: error?.message || "Couldn't book that appointment." };
   return { ok: true, appointmentId: appointment.id };
 }
@@ -272,7 +266,8 @@ export async function bookPickupAppointment(opts: {
 // Moves an existing appointment to a new date/time, after re-validating
 // availability the same way a fresh booking does. Shared by admin
 // manual reschedule and the customer's reschedule action (whether from
-// their email link or their logged-in account).
+// their email link or their logged-in account). The appointment's own
+// current block never counts as a conflict with itself.
 export async function reschedulePickupAppointment(opts: {
   appointmentId: string;
   dateStr: string;
@@ -281,14 +276,29 @@ export async function reschedulePickupAppointment(opts: {
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const admin = createAdminClient();
 
-  const available = await isSlotStillAvailable(opts.dateStr, opts.time);
-  if (!available) return { ok: false, error: "That time is no longer available. Please choose another." };
+  const { data: appt } = await admin
+    .from("pickup_appointments")
+    .select("appointment_type, orders:order_id(delivery_drive_minutes)")
+    .eq("id", opts.appointmentId).maybeSingle();
+  if (!appt) return { ok: false, error: "Appointment not found." };
+  const kind: Kind = appt.appointment_type === "delivery" ? "delivery" : "pickup";
+  const driveMinutes = (appt as any).orders?.delivery_drive_minutes ?? 0;
 
+  const available = await isSlotStillAvailable(opts.dateStr, opts.time, { kind, driveMinutes, excludeAppointmentId: opts.appointmentId });
+  if (!available) return { ok: false, error: CONFLICT_MESSAGE };
+
+  const blockCols = await blockColumnsFor(kind, opts.dateStr, opts.time, driveMinutes);
   const { error } = await admin
     .from("pickup_appointments")
-    .update({ appointment_date: opts.dateStr, appointment_time: opts.time, status: "scheduled", rescheduled_by: opts.rescheduledBy })
+    .update({
+      appointment_date: opts.dateStr, appointment_time: opts.time, status: "scheduled", rescheduled_by: opts.rescheduledBy,
+      ...blockCols,
+      // A new time means fresh reminders, and any "on my way" no longer applies.
+      reminder_24h_sent_at: null, reminder_1h_sent_at: null, reminder_2h_sent_at: null, on_my_way_at: null, follows_appointment_id: null
+    })
     .eq("id", opts.appointmentId);
 
+  if (error?.code === "23P01") return { ok: false, error: CONFLICT_MESSAGE };
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
@@ -322,7 +332,8 @@ export async function getOrCreatePickupSchedulingUrl(orderId: string, siteUrl: s
     .eq("id", orderId)
     .maybeSingle();
   if (!order) return { ok: false, reason: "not_eligible" };
-  if (order.fulfillment_method !== "pickup") return { ok: false, reason: "not_eligible" };
+  // Pickup and delivery orders both get a scheduling link; shipping doesn't.
+  if (order.fulfillment_method !== "pickup" && order.fulfillment_method !== "delivery") return { ok: false, reason: "not_eligible" };
   if (order.pickup_scheduling_email_sent_at) return { ok: false, reason: "not_eligible" };
 
   const { count: existingAppointments } = await admin
@@ -354,7 +365,7 @@ export async function getOrCreatePickupSchedulingUrl(orderId: string, siteUrl: s
 // for one event.
 export async function triggerPickupSchedulingEmail(orderId: string, siteUrl: string): Promise<{ sent: boolean; error?: string }> {
   const admin = createAdminClient();
-  const { data: order } = await admin.from("orders").select("id, title, profiles:customer_id(full_name, email)").eq("id", orderId).maybeSingle();
+  const { data: order } = await admin.from("orders").select("id, title, fulfillment_method, profiles:customer_id(full_name, email)").eq("id", orderId).maybeSingle();
   if (!order) return { sent: false, error: "Order not found" };
 
   const result = await getOrCreatePickupSchedulingUrl(orderId, siteUrl);
@@ -367,7 +378,8 @@ export async function triggerPickupSchedulingEmail(orderId: string, siteUrl: str
       toEmail: customer.email,
       customerName: customer.full_name,
       orderTitle: order.title,
-      schedulingUrl: result.url
+      schedulingUrl: result.url,
+      kind: order.fulfillment_method === "delivery" ? "delivery" : "pickup"
     });
   } catch (err: any) {
     return { sent: false, error: err.message || "Couldn't send the scheduling email." };
@@ -394,8 +406,9 @@ function formatTimeDisplay(time: string): string {
 // passes an appointment id and gets the same correct email.
 export async function sendPickupConfirmation(appointmentId: string, siteUrl: string, isReschedule: boolean): Promise<{ ok: true } | { ok: false; error: string }> {
   const admin = createAdminClient();
-  const { data: appointment } = await admin.from("pickup_appointments").select("*, orders:order_id(title, customer_id, is_demo, profiles:customer_id(full_name, email))").eq("id", appointmentId).maybeSingle();
+  const { data: appointment } = await admin.from("pickup_appointments").select("*, orders:order_id(title, customer_id, is_demo, delivery_address, profiles:customer_id(full_name, email))").eq("id", appointmentId).maybeSingle();
   if (!appointment) return { ok: false, error: "Appointment not found" };
+  const isDelivery = appointment.appointment_type === "delivery";
 
   const order = (appointment as any).orders;
   const customer = order?.profiles;
@@ -410,16 +423,18 @@ export async function sendPickupConfirmation(appointmentId: string, siteUrl: str
   const settings = await getAvailabilitySettings();
 
   const calendarEvent = {
-    title: `Pickup: ${order.title}`,
-    description: settings.pickup_instructions,
-    location: settings.business_address,
+    title: `${isDelivery ? "Delivery" : "Pickup"}: ${order.title}`,
+    description: isDelivery ? "Delivery from Sunrise Wood Creations" : settings.pickup_instructions,
+    location: isDelivery ? (order.delivery_address || "") : settings.business_address,
     dateStr: appointment.appointment_date,
     timeStr: appointment.appointment_time,
-    durationMinutes: settings.slot_length_minutes
+    durationMinutes: isDelivery ? 15 : settings.slot_length_minutes
   };
 
   try {
     await sendPickupConfirmationEmail({
+      kind: isDelivery ? "delivery" : "pickup",
+      deliveryAddress: isDelivery ? (order.delivery_address || undefined) : undefined,
       toEmail: customer.email,
       customerName: customer.full_name,
       orderTitle: order.title,
@@ -454,7 +469,7 @@ export async function notifyAdminPickupScheduled(appointmentId: string, isResche
     const admin = createAdminClient();
     const { data: appointment } = await admin
       .from("pickup_appointments")
-      .select("appointment_date, appointment_time, orders:order_id(title, is_demo, profiles:customer_id(full_name, phone))")
+      .select("appointment_date, appointment_time, appointment_type, orders:order_id(title, is_demo, delivery_address, profiles:customer_id(full_name, phone))")
       .eq("id", appointmentId)
       .maybeSingle();
     if (!appointment) return;
@@ -465,7 +480,7 @@ export async function notifyAdminPickupScheduled(appointmentId: string, isResche
     const settings = await getAvailabilitySettings();
 
     const calendarEvent = {
-      title: `Pickup: ${order?.title || "Order"}`,
+      title: `${appointment.appointment_type === "delivery" ? "Delivery" : "Pickup"}: ${order?.title || "Order"}`,
       description: settings.pickup_instructions,
       location: settings.business_address,
       dateStr: appointment.appointment_date,
@@ -474,6 +489,8 @@ export async function notifyAdminPickupScheduled(appointmentId: string, isResche
     };
 
     await sendPickupScheduledAdminAlert({
+      kind: appointment.appointment_type === "delivery" ? "delivery" : "pickup",
+      deliveryAddress: order?.delivery_address || undefined,
       orderTitle: order?.title || "Order",
       customerName: customer?.full_name || "A customer",
       customerPhone: customer?.phone || undefined,

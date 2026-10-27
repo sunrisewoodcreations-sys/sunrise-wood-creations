@@ -93,7 +93,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/leads", label: "Leads" },
     { href: "/admin/queue", label: "Production" },
     { href: "/admin/calendar", label: "Calendar" },
-    { href: "/admin/pickup-appointments", label: "Pickup Appointments", badge: badges.pickupsToday }
+    { href: "/admin/pickup-appointments", label: "Pickups & Deliveries", badge: badges.pickupsToday }
   ];
 
   const categories = [
@@ -106,7 +106,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: "/admin/quotes", label: "Quotes", badge: badges.quotes },
         { href: "/admin/messages", label: "Messages", badge: badges.messages },
         { href: "/admin/calendar", label: "Calendar" },
-        { href: "/admin/pickup-appointments", label: "Pickup Appointments" }
+        { href: "/admin/pickup-appointments", label: "Pickups & Deliveries" }
       ]
     },
     {

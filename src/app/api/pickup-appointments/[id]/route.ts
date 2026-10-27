@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { addStopOnWayHome } from "@/lib/deliveryChain";
 import { reschedulePickupAppointment, cancelPickupAppointment, sendPickupConfirmation } from "@/lib/pickupScheduling";
 
 // Admin-side appointment management — reuses the exact same
@@ -17,7 +18,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const admin = createAdminClient();
-  const { action, dateStr, time, notes } = await req.json();
+  const { action, dateStr, time, notes, secondOrderId, secondAddress, confirmAddress } = await req.json();
 
   if (action === "reschedule") {
     if (!dateStr || !time) return NextResponse.json({ error: "Pick a date and time." }, { status: 400 });
@@ -56,6 +57,32 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const { error } = await admin.from("pickup_appointments").update({ status: "missed" }).eq("id", params.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ ok: true });
+  }
+
+  // Deliveries only: tap when you leave. The customer sees "on our way"
+  // (status only, no location) on their appointment page.
+  if (action === "on_my_way" || action === "clear_on_my_way") {
+    const { data: appt } = await admin.from("pickup_appointments").select("appointment_type, status").eq("id", params.id).maybeSingle();
+    if (!appt) return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
+    if (appt.appointment_type !== "delivery") return NextResponse.json({ error: "\"On my way\" is only for deliveries." }, { status: 400 });
+    if (appt.status !== "scheduled") return NextResponse.json({ error: "This delivery isn't active." }, { status: 400 });
+    const { error } = await admin.from("pickup_appointments")
+      .update({ on_my_way_at: action === "on_my_way" ? new Date().toISOString() : null }).eq("id", params.id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ ok: true });
+  }
+
+  // "I'm dropping another one on my way home."
+  if (action === "add_stop_home") {
+    if (!secondOrderId) return NextResponse.json({ error: "Pick the second order." }, { status: 400 });
+    const result = await addStopOnWayHome({ firstAppointmentId: params.id, secondOrderId, secondAddress, confirmAddress: confirmAddress === true });
+    if (!result.ok) {
+      if (result.needsConfirmation) return NextResponse.json({ needsConfirmation: true, suggestedAddress: result.suggestedAddress, reason: result.reason });
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.get("host")}`;
+    const confirmResult = await sendPickupConfirmation(result.appointmentId, siteUrl, false);
+    return NextResponse.json({ ok: true, arrivalDate: result.arrivalDate, arrivalTime: result.arrivalTime, emailWarning: confirmResult.ok ? undefined : confirmResult.error });
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });

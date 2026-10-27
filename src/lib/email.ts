@@ -415,6 +415,9 @@ export async function sendOrderStatusEmail(opts: {
   // single primary action instead of the usual "View Your Order" —
   // so the customer gets one email for this event, not two.
   schedulingUrl?: string;
+  // "delivery" when the scheduling link is for a delivery order, so the
+  // wording says delivery instead of pickup.
+  schedulingKind?: "pickup" | "delivery";
   // Only passed in today by the order-placed confirmation email (see
   // src/lib/orders.ts) — every other status-update call site is left
   // exactly as it was, so this section only ever appears there.
@@ -479,9 +482,9 @@ export async function sendOrderStatusEmail(opts: {
       <p style="margin: 20px 0 0;">${escapeHtml(bodyLine)}</p>
       ${balanceHtml}
       ${typeof opts.balanceDueCents !== "number" && typeof opts.priceCents === "number" ? paymentStatusHtml(opts.priceCents, opts.amountPaidCents) : ""}
-      ${opts.schedulingUrl ? `<p style="margin: 16px 0 0;">Pick a day and time that works for you, right from your phone, no login needed.</p>` : ""}
+      ${opts.schedulingUrl ? `<p style="margin: 16px 0 0;">${opts.schedulingKind === "delivery" ? "Confirm your delivery address and pick a day and time that works for you, right from your phone, no login needed." : "Pick a day and time that works for you, right from your phone, no login needed."}</p>` : ""}
     `,
-    buttonText: opts.schedulingUrl ? "Schedule My Pickup" : "View Your Order",
+    buttonText: opts.schedulingUrl ? (opts.schedulingKind === "delivery" ? "Schedule My Delivery" : "Schedule My Pickup") : "View Your Order",
     buttonUrl: opts.schedulingUrl || `${SITE_URL}/account/orders/${opts.orderId}`
   });
 
@@ -980,17 +983,19 @@ export async function sendPickupSchedulingEmail(opts: {
   customerName: string;
   orderTitle: string;
   schedulingUrl: string;
+  kind?: "pickup" | "delivery";
 }) {
+  const isDelivery = opts.kind === "delivery";
   const html = shell({
-    preheader: `${opts.orderTitle} is ready — schedule your pickup`,
+    preheader: `${opts.orderTitle} is ready — schedule your ${isDelivery ? "delivery" : "pickup"}`,
     bodyHtml: `
       <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
       <p style="margin: 0 0 16px;">
-        Great news — <strong>${opts.orderTitle}</strong> is ready for pickup! Pick a day and time that works for
+        Great news — <strong>${opts.orderTitle}</strong> is ready${isDelivery ? " for delivery" : " for pickup"}! ${isDelivery ? "Confirm your delivery address and pick" : "Pick"} a day and time that works for
         you, right from your phone, no login needed.
       </p>
     `,
-    buttonText: "Schedule My Pickup",
+    buttonText: isDelivery ? "Schedule My Delivery" : "Schedule My Pickup",
     buttonUrl: opts.schedulingUrl
   });
 
@@ -999,7 +1004,7 @@ export async function sendPickupSchedulingEmail(opts: {
     orderId: (opts as any).orderId,
     from: FROM,
     to: opts.toEmail,
-    subject: `${opts.orderTitle} is ready — schedule your pickup`,
+    subject: `${opts.orderTitle} is ready — schedule your ${isDelivery ? "delivery" : "pickup"}`,
     html
   });
 }
@@ -1019,13 +1024,18 @@ export async function sendPickupConfirmationEmail(opts: {
   appleCalendarUrl: string;
   isReschedule: boolean;
   forceDemo?: boolean;
+  kind?: "pickup" | "delivery";
+  deliveryAddress?: string;
 }) {
+  const isDelivery = opts.kind === "delivery";
+  const noun = isDelivery ? "delivery" : "pickup";
+  const Noun = isDelivery ? "Delivery" : "Pickup";
   const html = shell({
-    preheader: `Pickup confirmed: ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
+    preheader: `${Noun} confirmed: ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
     bodyHtml: `
       <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
       <p style="margin: 0 0 16px;">
-        ${opts.isReschedule ? "Your pickup has been rescheduled." : "Your pickup is confirmed."} for
+        ${opts.isReschedule ? `Your ${noun} has been rescheduled` : `Your ${noun} is confirmed`} for
         <strong>${opts.orderTitle}</strong>:
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
@@ -1034,8 +1044,11 @@ export async function sendPickupConfirmationEmail(opts: {
             <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">
               ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}
             </div>
-            <div style="margin-top: 10px; color: #74655B; font-size: 14px;">${opts.businessAddress}</div>
-            <div style="margin-top: 6px; color: #74655B; font-size: 14px;">${opts.pickupInstructions}</div>
+            ${isDelivery
+              ? `<div style="margin-top: 10px; color: #74655B; font-size: 14px;">We'll arrive at: ${escapeHtml(opts.deliveryAddress || "your delivery address")}</div>
+                 <div style="margin-top: 6px; color: #74655B; font-size: 14px;">We'll let you know when we're on our way.</div>`
+              : `<div style="margin-top: 10px; color: #74655B; font-size: 14px;">${opts.businessAddress}</div>
+                 <div style="margin-top: 6px; color: #74655B; font-size: 14px;">${opts.pickupInstructions}</div>`}
             <div style="margin-top: 6px; color: #74655B; font-size: 14px;">Questions? Call ${opts.contactPhone}</div>
           </td>
         </tr>
@@ -1048,7 +1061,7 @@ export async function sendPickupConfirmationEmail(opts: {
       </p>
       <p style="margin: 0; font-size: 13px; color: #8a7a6b;">Need a different time? Use the button below.</p>
     `,
-    buttonText: "Reschedule Pickup",
+    buttonText: `Reschedule ${Noun}`,
     buttonUrl: opts.rescheduleUrl
   });
 
@@ -1059,8 +1072,8 @@ export async function sendPickupConfirmationEmail(opts: {
     from: FROM,
     to: opts.toEmail,
     subject: opts.isReschedule
-      ? `Pickup rescheduled: ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`
-      : `Pickup confirmed: ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
+      ? `${Noun} rescheduled: ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`
+      : `${Noun} confirmed: ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
     html
   });
 }
@@ -1084,12 +1097,15 @@ export async function sendPickupScheduledAdminAlert(opts: {
   googleCalendarUrl: string;
   isReschedule: boolean;
   forceDemo?: boolean;
+  kind?: "pickup" | "delivery";
+  deliveryAddress?: string;
 }) {
+  const noun = opts.kind === "delivery" ? "delivery" : "pickup";
   const html = shell({
-    preheader: `${opts.isReschedule ? "Pickup rescheduled" : "New pickup scheduled"}: ${opts.orderTitle}`,
+    preheader: `${opts.isReschedule ? `${noun} rescheduled` : `New ${noun} scheduled`}: ${opts.orderTitle}`,
     bodyHtml: `
       <p style="margin: 0 0 16px;">
-        <strong>${escapeHtml(opts.customerName)}</strong> ${opts.isReschedule ? "rescheduled their pickup" : "just scheduled a pickup"} for
+        <strong>${escapeHtml(opts.customerName)}</strong> ${opts.isReschedule ? `rescheduled their ${noun}` : `just scheduled a ${noun}`} for
         <strong>${escapeHtml(opts.orderTitle)}</strong>:
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
@@ -1098,6 +1114,7 @@ export async function sendPickupScheduledAdminAlert(opts: {
             <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">
               ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}
             </div>
+            ${opts.deliveryAddress ? `<div style="margin-top: 6px; color: #74655B; font-size: 14px;">${escapeHtml(opts.deliveryAddress)}</div>` : ""}
             ${opts.customerPhone ? `<div style="margin-top: 6px; color: #74655B; font-size: 14px;">${escapeHtml(opts.customerPhone)}</div>` : ""}
           </td>
         </tr>
@@ -1114,7 +1131,7 @@ export async function sendPickupScheduledAdminAlert(opts: {
     forceDemo: opts.forceDemo,
     from: FROM,
     to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
-    subject: `${opts.isReschedule ? "Pickup rescheduled" : "New pickup scheduled"}: ${opts.orderTitle} — ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
+    subject: `${opts.isReschedule ? `${noun[0].toUpperCase()}${noun.slice(1)} rescheduled` : `New ${noun} scheduled`}: ${opts.orderTitle} — ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
     html
   });
 }
@@ -1127,17 +1144,21 @@ export async function sendPickupReminderEmail(opts: {
   appointmentTimeDisplay: string;
   businessAddress: string;
   pickupInstructions: string;
-  hoursUntil: 24 | 2;
+  hoursUntil: 24 | 2 | 1;
   rescheduleUrl: string;
   forceDemo?: boolean;
+  kind?: "pickup" | "delivery";
+  deliveryAddress?: string;
 }) {
-  const timeframe = opts.hoursUntil === 24 ? "tomorrow" : "in about 2 hours";
+  const isDelivery = opts.kind === "delivery";
+  const noun = isDelivery ? "delivery" : "pickup";
+  const timeframe = opts.hoursUntil === 24 ? "tomorrow" : opts.hoursUntil === 1 ? "in about an hour" : "in about 2 hours";
   const html = shell({
-    preheader: `Reminder: pickup ${timeframe}`,
+    preheader: `Reminder: ${noun} ${timeframe}`,
     bodyHtml: `
       <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
       <p style="margin: 0 0 16px;">
-        Just a reminder — your pickup for <strong>${opts.orderTitle}</strong> is ${timeframe}:
+        Just a reminder — your ${noun} for <strong>${opts.orderTitle}</strong> is ${timeframe}:
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
         <tr>
@@ -1145,14 +1166,16 @@ export async function sendPickupReminderEmail(opts: {
             <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">
               ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}
             </div>
-            <div style="margin-top: 10px; color: #74655B; font-size: 14px;">${opts.businessAddress}</div>
-            <div style="margin-top: 6px; color: #74655B; font-size: 14px;">${opts.pickupInstructions}</div>
+            ${isDelivery
+              ? `<div style="margin-top: 10px; color: #74655B; font-size: 14px;">Delivering to: ${escapeHtml(opts.deliveryAddress || "your delivery address")}</div>`
+              : `<div style="margin-top: 10px; color: #74655B; font-size: 14px;">${opts.businessAddress}</div>
+                 <div style="margin-top: 6px; color: #74655B; font-size: 14px;">${opts.pickupInstructions}</div>`}
           </td>
         </tr>
       </table>
       <p style="margin: 0; font-size: 13px; color: #8a7a6b;">Can't make it? Use the button below to pick a new time.</p>
     `,
-    buttonText: "Reschedule Pickup",
+    buttonText: isDelivery ? "Reschedule Delivery" : "Reschedule Pickup",
     buttonUrl: opts.rescheduleUrl
   });
 
@@ -1162,7 +1185,7 @@ export async function sendPickupReminderEmail(opts: {
     forceDemo: opts.forceDemo,
     from: FROM,
     to: opts.toEmail,
-    subject: `Reminder: pickup ${timeframe} for ${opts.orderTitle}`,
+    subject: `Reminder: ${noun} ${timeframe} for ${opts.orderTitle}`,
     html
   });
 }
