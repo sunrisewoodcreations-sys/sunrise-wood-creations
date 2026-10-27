@@ -18,6 +18,16 @@ export function minutesToTime(mins: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
+// "45 mins", "1 hour", "1 hour and 30 mins", "2 hours and 59 mins".
+export function formatDuration(totalMinutes: number): string {
+  const t = Math.round(totalMinutes);
+  if (t < 60) return `${t} ${t === 1 ? "min" : "mins"}`;
+  const h = Math.floor(t / 60);
+  const m = t % 60;
+  const hours = `${h} ${h === 1 ? "hour" : "hours"}`;
+  return m === 0 ? hours : `${hours} and ${m} ${m === 1 ? "min" : "mins"}`;
+}
+
 // Day number (days since 1970-01-01) of a YYYY-MM-DD string.
 export function dayNumber(dateStr: string): number {
   const [y, m, d] = dateStr.split("-").map(Number);

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { formatDuration } from "@/lib/scheduleCore";
 
 type DaySlots = { date: string; times: string[] };
 type Appointment = {
@@ -144,7 +145,7 @@ export default function PickupAppointmentsView({ appointments, slotsByAppointmen
                   <div className="text-xs mt-1 text-[#1E3A5F]">
                     {leave && <>🚗 Leave by <strong>{formatTimeDisplay(leave)}</strong> · </>}
                     Arrive <strong>{formatTimeDisplay(a.appointment_time)}</strong>
-                    {a.orders?.delivery_drive_minutes ? <> · {a.orders.delivery_drive_minutes} min drive</> : null}
+                    {a.orders?.delivery_drive_minutes ? <> · {formatDuration(a.orders.delivery_drive_minutes)} drive</> : null}
                   </div>
                   {addr && (
                     <div className="text-xs text-[#1E3A5F]/70 mt-0.5">
