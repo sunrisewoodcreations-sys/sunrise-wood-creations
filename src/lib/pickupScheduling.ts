@@ -328,19 +328,30 @@ export async function getOrCreatePickupSchedulingUrl(orderId: string, siteUrl: s
 
   const { data: order } = await admin
     .from("orders")
-    .select("id, fulfillment_method, pickup_scheduling_email_sent_at, profiles:customer_id(email)")
+    .select("id, fulfillment_method, pickup_scheduling_token, pickup_scheduling_token_used_at, pickup_scheduling_email_sent_at, profiles:customer_id(email)")
     .eq("id", orderId)
     .maybeSingle();
   if (!order) return { ok: false, reason: "not_eligible" };
   // Pickup and delivery orders both get a scheduling link; shipping doesn't.
   if (order.fulfillment_method !== "pickup" && order.fulfillment_method !== "delivery") return { ok: false, reason: "not_eligible" };
-  if (order.pickup_scheduling_email_sent_at) return { ok: false, reason: "not_eligible" };
 
   const { count: existingAppointments } = await admin
     .from("pickup_appointments")
     .select("id", { count: "exact", head: true })
-    .eq("order_id", orderId);
+    .eq("order_id", orderId)
+    .in("status", ["scheduled", "arrived"]);
   if ((existingAppointments || 0) > 0) return { ok: false, reason: "not_eligible" };
+
+  // A link was already made (for instance when the order was first marked
+  // ready) and nobody has used it yet: hand back that same link instead of
+  // leaving it out. No second link is created, so the customer only ever
+  // has one working scheduling link.
+  if (order.pickup_scheduling_email_sent_at) {
+    if (order.pickup_scheduling_token && !order.pickup_scheduling_token_used_at) {
+      return { ok: true, url: `${siteUrl}/pickup/schedule/${order.pickup_scheduling_token}` };
+    }
+    return { ok: false, reason: "not_eligible" };
+  }
 
   const customer = (order as any).profiles;
   if (!customer?.email) return { ok: false, reason: "no_email", error: "This customer has no email on file." };
