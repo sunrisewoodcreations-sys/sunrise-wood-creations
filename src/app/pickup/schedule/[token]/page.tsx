@@ -16,7 +16,7 @@ export default async function PickupSchedulePage({ params }: { params: { token: 
 
   const { data: order } = await admin
     .from("orders")
-    .select("id, title, fulfillment_method, delivery_address, delivery_drive_minutes, pickup_scheduling_token_used_at, profiles:customer_id(full_name, address)")
+    .select("id, title, due_date, fulfillment_method, delivery_address, delivery_drive_minutes, pickup_scheduling_token_used_at, profiles:customer_id(full_name, address)")
     .eq("pickup_scheduling_token", params.token)
     .maybeSingle();
 
@@ -49,7 +49,7 @@ export default async function PickupSchedulePage({ params }: { params: { token: 
     );
   }
 
-  const availableDays = alreadyUsed ? [] : await getAvailableSlots(21, isDelivery ? { kind: "delivery", driveMinutes: order.delivery_drive_minutes } : {});
+  const availableDays = alreadyUsed ? [] : await getAvailableSlots(21, isDelivery ? { kind: "delivery", driveMinutes: order.delivery_drive_minutes, onlyDate: order.due_date } : { onlyDate: order.due_date });
   const settings = await getAvailabilitySettings();
 
   return (
@@ -69,6 +69,7 @@ export default async function PickupSchedulePage({ params }: { params: { token: 
           availableDays={availableDays}
           heading={isDelivery ? "Schedule Your Delivery" : "Schedule Your Pickup"}
           kind={isDelivery ? "delivery" : "pickup"}
+          requiredDate={order.due_date || undefined}
           deliveryAddress={order.delivery_address || undefined}
           businessAddress={settings.business_address}
           pickupInstructions={settings.pickup_instructions}

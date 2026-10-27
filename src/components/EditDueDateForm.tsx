@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function EditDueDateForm({ orderId, initialDueDate }: { orderId: string; initialDueDate: string | null }) {
+export default function EditDueDateForm({ orderId, initialDueDate, fulfillmentMethod }: { orderId: string; initialDueDate: string | null; fulfillmentMethod?: string | null }) {
   const router = useRouter();
   const [date, setDate] = useState(initialDueDate || "");
   const [loading, setLoading] = useState(false);
@@ -29,7 +29,7 @@ export default function EditDueDateForm({ orderId, initialDueDate }: { orderId: 
 
   return (
     <form onSubmit={handleSave} className="flex items-center gap-2 mb-3">
-      <label className="text-xs text-[#1E3A5F]/50">Estimated pickup date:</label>
+      <label className="text-xs text-[#1E3A5F]/50">Estimated {fulfillmentMethod === "delivery" ? "delivery" : "pickup"} date:</label>
       <input
         type="date"
         value={date}

@@ -103,7 +103,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         </h1>
         <p className="text-sm text-[#1E3A5F]/60 mb-1">Customer: {customer.full_name} ({customer.email})</p>
         <EditOrderDateForm orderId={order.id} initialDate={order.created_at} />
-        <EditDueDateForm orderId={order.id} initialDueDate={order.due_date} />
+        <EditDueDateForm orderId={order.id} initialDueDate={order.due_date} fulfillmentMethod={order.fulfillment_method} />
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xs text-[#1E3A5F]/50">Production date:</span>
           <span className="text-sm font-semibold text-[#1E3A5F]">
@@ -182,7 +182,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
 
         <div className="mt-4 pt-4 border-t border-[#1E3A5F]/10">
           <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Production Workflow</div>
-          <WorkflowProgress stage={workflowStage} />
+          <WorkflowProgress stage={workflowStage} fulfillmentMethod={order.fulfillment_method} />
           {(workflowStage === "scheduled" || workflowStage === "ready_to_build") && (
             <div className="mt-3 bg-amber/10 border border-amber/30 rounded-md px-3 py-2 text-xs text-[#1E3A5F]">
               <strong>This order won't show in the Manufacturing Queue yet.</strong> Either generate a cut list that

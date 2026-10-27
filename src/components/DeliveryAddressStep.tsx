@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AddressInput from "@/components/AddressInput";
 
 // First step of delivery scheduling: the customer enters where we're
 // delivering. The server checks it with Google and works out the drive
@@ -55,12 +56,15 @@ export default function DeliveryAddressStep({
         </div>
 
         <label className="block text-xs font-semibold text-walnut mb-1">Where should we deliver?</label>
-        <input
-          value={address}
-          onChange={e => { setAddress(e.target.value); setSuggestion(null); }}
-          placeholder="House number, street, town, state"
-          className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm mb-3"
-        />
+        <div className="mb-3">
+          <AddressInput
+            value={address}
+            onChange={v => { setAddress(v); setSuggestion(null); }}
+            suggestEndpoint={`${apiEndpoint}/suggest`}
+            placeholder="Start typing your street address"
+            className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm"
+          />
+        </div>
 
         {suggestion && (
           <div className="bg-amber/10 border border-amber/30 rounded-lg p-3 mb-3">

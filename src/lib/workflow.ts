@@ -20,6 +20,13 @@ export const WORKFLOW_STAGES: WorkflowStage[] = [
   "new", "scheduled", "ready_to_build", "in_production", "waiting_on_customer", "ready_for_pickup", "completed"
 ];
 
+// Delivery orders read "Ready for Delivery" at the ready stage. The stage key
+// itself never changes.
+export function workflowLabel(stage: WorkflowStage, fulfillmentMethod?: string | null): string {
+  if (stage === "ready_for_pickup" && fulfillmentMethod === "delivery") return "Ready for Delivery";
+  return WORKFLOW_LABELS[stage];
+}
+
 export const WORKFLOW_LABELS: Record<WorkflowStage, string> = {
   new: "New",
   scheduled: "Scheduled",

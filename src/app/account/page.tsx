@@ -133,7 +133,7 @@ export default async function AccountDashboardPage() {
                     <div className="font-semibold text-walnut">{productLabel(o.product_type as ProductType)} — {o.title}</div>
                     <div className="flex items-center gap-2 mt-1">
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor(o.status)}`}>{statusLabel(o.product_type as ProductType, o.status, o.fulfillment_method)}</span>
-                      {o.due_date && <span className="text-xs text-walnut/50">Pickup: {formatCalendarDate(o.due_date)}</span>}
+                      {o.due_date && <span className="text-xs text-walnut/50">{o.fulfillment_method === "delivery" ? "Delivery" : "Pickup"}: {formatCalendarDate(o.due_date)}</span>}
                     </div>
                   </div>
                   <Link href={`/account/orders/${o.id}`} className="text-xs font-semibold text-walnut hover:underline">View Order</Link>
