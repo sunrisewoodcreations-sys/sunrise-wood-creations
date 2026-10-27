@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addStopOnWayHome } from "@/lib/deliveryChain";
-import { reschedulePickupAppointment, cancelPickupAppointment, sendPickupConfirmation } from "@/lib/pickupScheduling";
+import { sendDeliveryOnTheWayEmail } from "@/lib/email";
+import { shouldNotify } from "@/lib/notify";
+import { issueInvoiceForOrder } from "@/lib/invoice";
+import { getAvailabilitySettings, reschedulePickupAppointment, cancelPickupAppointment, sendPickupConfirmation } from "@/lib/pickupScheduling";
 
 // Admin-side appointment management — reuses the exact same
 // reschedule/cancel functions the customer-facing token routes
@@ -42,8 +45,28 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   if (action === "mark_completed") {
+    const { data: appt } = await admin.from("pickup_appointments").select("appointment_type, order_id").eq("id", params.id).maybeSingle();
     const { error } = await admin.from("pickup_appointments").update({ status: "completed" }).eq("id", params.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+    // A completed delivery finishes the order the same way "Picked up"
+    // does: paid in full, status updated, final invoice emailed.
+    if (appt?.appointment_type === "delivery" && appt.order_id) {
+      const { data: order } = await admin
+        .from("orders")
+        .select("*, profiles:customer_id(email, full_name, has_real_email, notify_invoices, notify_order_updates)")
+        .eq("id", appt.order_id)
+        .maybeSingle();
+      if (order && order.status !== "picked_up") {
+        await admin.from("orders").update({ status: "picked_up", amount_paid_cents: Math.max(order.amount_paid_cents || 0, order.price_cents || 0) }).eq("id", order.id);
+        order.amount_paid_cents = Math.max(order.amount_paid_cents || 0, order.price_cents || 0);
+        try {
+          await issueInvoiceForOrder(order, (order as any).profiles);
+        } catch (err) {
+          console.error("Invoice generation failed:", err);
+        }
+      }
+    }
     return NextResponse.json({ ok: true });
   }
 
@@ -62,14 +85,45 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   // Deliveries only: tap when you leave. The customer sees "on our way"
   // (status only, no location) on their appointment page.
   if (action === "on_my_way" || action === "clear_on_my_way") {
-    const { data: appt } = await admin.from("pickup_appointments").select("appointment_type, status").eq("id", params.id).maybeSingle();
+    const { data: appt } = await admin.from("pickup_appointments").select("appointment_type, status, on_my_way_at, appointment_time, order_id").eq("id", params.id).maybeSingle();
     if (!appt) return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
     if (appt.appointment_type !== "delivery") return NextResponse.json({ error: "\"On my way\" is only for deliveries." }, { status: 400 });
     if (appt.status !== "scheduled") return NextResponse.json({ error: "This delivery isn't active." }, { status: 400 });
     const { error } = await admin.from("pickup_appointments")
       .update({ on_my_way_at: action === "on_my_way" ? new Date().toISOString() : null }).eq("id", params.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-    return NextResponse.json({ ok: true });
+
+    // Email the customer once when "On my way" is first tapped.
+    let emailWarning: string | undefined;
+    if (action === "on_my_way" && !appt.on_my_way_at) {
+      try {
+        const { data: order } = await admin
+          .from("orders")
+          .select("id, title, is_demo, delivery_address, pickup_scheduling_token, profiles:customer_id(email, full_name, has_real_email, notify_order_updates)")
+          .eq("id", appt.order_id)
+          .maybeSingle();
+        const customer = (order as any)?.profiles;
+        if (customer?.email && shouldNotify(customer, "order_updates")) {
+          const settings = await getAvailabilitySettings();
+          const [h, m] = String(appt.appointment_time).split(":").map(Number);
+          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.get("host")}`;
+          await sendDeliveryOnTheWayEmail({
+            toEmail: customer.email,
+            customerName: customer.full_name,
+            orderTitle: order!.title,
+            appointmentTimeDisplay: `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`,
+            deliveryAddress: order!.delivery_address || undefined,
+            contactPhone: settings.contact_phone,
+            viewUrl: `${siteUrl}/account/orders/${order!.id}`,
+            forceDemo: typeof order!.is_demo === "boolean" ? order!.is_demo : true
+          });
+        }
+      } catch (err: any) {
+        console.error("On-my-way email failed:", err);
+        emailWarning = err?.message || "Couldn't send the on-my-way email";
+      }
+    }
+    return NextResponse.json({ ok: true, emailWarning });
   }
 
   // "I'm dropping another one on my way home."
