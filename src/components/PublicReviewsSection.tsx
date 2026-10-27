@@ -15,7 +15,7 @@ export default function PublicReviewsSection({ reviews }: { reviews: Review[] })
           {reviews.map(review => (
             <div key={review.id} className="bg-white border border-walnut/10 rounded-xl shadow-sm p-5">
               <div className="text-amber text-base leading-none mb-2">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</div>
-              <p className="text-sm text-walnut/70 mb-3">{review.review_text}</p>
+              {review.review_text && <p className="text-sm text-walnut/70 mb-3">{review.review_text}</p>}
               <div className="text-xs text-walnut/50 font-semibold">— {review.customerFirstName}, {review.productTitle}</div>
             </div>
           ))}

@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
     return NextResponse.json({ error: "Rating must be between 1 and 5" }, { status: 400 });
   }
-  if (!reviewText?.trim()) return NextResponse.json({ error: "Review text is required" }, { status: 400 });
+  // Written text is optional — a star rating on its own is fine.
+  const text = typeof reviewText === "string" ? reviewText.trim() : "";
 
   const eligible = await getEligibleOrderItem(orderItemId, user.id);
   if (!eligible) {
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
   if (existing) {
     const { data: updated, error } = await admin
       .from("product_reviews")
-      .update({ rating, review_text: reviewText.trim(), status: "pending", updated_at: new Date().toISOString() })
+      .update({ rating, review_text: text, status: "pending", updated_at: new Date().toISOString() })
       .eq("id", existing.id)
       .select()
       .maybeSingle();
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
 
   const { data: inserted, error } = await admin
     .from("product_reviews")
-    .insert({ order_item_id: orderItemId, customer_id: user.id, rating, review_text: reviewText.trim(), status: "pending" })
+    .insert({ order_item_id: orderItemId, customer_id: user.id, rating, review_text: text, status: "pending" })
     .select()
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
