@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addStopOnWayHome } from "@/lib/deliveryChain";
 import { sendDeliveryOnTheWayEmail } from "@/lib/email";
+import { easternNow, absMinute } from "@/lib/scheduleCore";
 import { shouldNotify } from "@/lib/notify";
 import { issueInvoiceForOrder } from "@/lib/invoice";
 import { getAvailabilitySettings, reschedulePickupAppointment, cancelPickupAppointment, sendPickupConfirmation } from "@/lib/pickupScheduling";
@@ -84,18 +85,30 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   // Deliveries only: tap when you leave. The customer sees "on our way"
   // (status only, no location) on their appointment page.
-  if (action === "on_my_way" || action === "clear_on_my_way") {
-    const { data: appt } = await admin.from("pickup_appointments").select("appointment_type, status, on_my_way_at, appointment_time, order_id").eq("id", params.id).maybeSingle();
+  if (action === "on_my_way" || action === "clear_on_my_way" || action === "maps_opened") {
+    const { data: appt } = await admin.from("pickup_appointments").select("appointment_type, status, on_my_way_at, appointment_time, appointment_date, block_start_at, order_id").eq("id", params.id).maybeSingle();
     if (!appt) return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
     if (appt.appointment_type !== "delivery") return NextResponse.json({ error: "\"On my way\" is only for deliveries." }, { status: 400 });
     if (appt.status !== "scheduled") return NextResponse.json({ error: "This delivery isn't active." }, { status: 400 });
+    // Opening Google/Apple Maps counts as "I'm leaving" only when it is
+    // around leave time: from 10 minutes before the leave-by time until
+    // 30 minutes after the arrival time. Earlier than that is just looking.
+    if (action === "maps_opened") {
+      if (appt.on_my_way_at) return NextResponse.json({ ok: true, skipped: "already_sent" });
+      const leaveAbs = appt.block_start_at
+        ? absMinute(String(appt.block_start_at).slice(0, 10), String(appt.block_start_at).slice(11, 16))
+        : absMinute(appt.appointment_date, String(appt.appointment_time).slice(0, 5));
+      const arriveAbs = absMinute(appt.appointment_date, String(appt.appointment_time).slice(0, 5));
+      const nowAbs = easternNow().abs;
+      if (nowAbs < leaveAbs - 10 || nowAbs > arriveAbs + 30) return NextResponse.json({ ok: true, skipped: "outside_window" });
+    }
     const { error } = await admin.from("pickup_appointments")
-      .update({ on_my_way_at: action === "on_my_way" ? new Date().toISOString() : null }).eq("id", params.id);
+      .update({ on_my_way_at: action === "clear_on_my_way" ? null : new Date().toISOString() }).eq("id", params.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
     // Email the customer once when "On my way" is first tapped.
     let emailWarning: string | undefined;
-    if (action === "on_my_way" && !appt.on_my_way_at) {
+    if (action !== "clear_on_my_way" && !appt.on_my_way_at) {
       try {
         const { data: order } = await admin
           .from("orders")
