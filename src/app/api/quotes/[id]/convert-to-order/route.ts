@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const orderItems = await buildOrderItemsFromQuote(admin, params.id);
   if (!orderItems) return NextResponse.json({ error: "This quote has no line items to convert" }, { status: 400 });
 
-  const result = await createOrder({ customerId: quote.customer_id, items: orderItems, isDemo: !!adminProfile?.is_demo_account || !!quote.is_demo });
+  const result = await createOrder({ customerId: quote.customer_id, items: orderItems, deliveryAddress: quote.delivery_address, isDemo: !!adminProfile?.is_demo_account || !!quote.is_demo });
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
