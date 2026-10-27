@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createOrder, IncomingOrderItem } from "@/lib/orders";
+import { resolveAndStoreDeliveryAddress } from "@/lib/deliveryAddress";
 import { recordCouponRedemption } from "@/lib/coupons";
 
 export async function POST(req: NextRequest) {
@@ -15,6 +16,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { customerId, dueDate, couponId, couponDiscountCents } = body;
+  const deliveryAddress: string | null = typeof body.deliveryAddress === "string" && body.deliveryAddress.trim() ? body.deliveryAddress.trim() : null;
 
   if (!customerId) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -36,10 +38,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Every item needs a product type and title" }, { status: 400 });
   }
 
-  const result = await createOrder({ customerId, dueDate, items, isDemo: !!adminProfile?.is_demo_account });
+  const result = await createOrder({ customerId, dueDate, items, deliveryAddress, isDemo: !!adminProfile?.is_demo_account });
 
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  // Delivery order: look up the typed address once now (drive time) so the
+  // customer never has to retype it. Best effort; if Google needs a
+  // confirmation the customer is shown the typed address to confirm.
+  if (deliveryAddress && result.order.fulfillment_method === "delivery") {
+    try { await resolveAndStoreDeliveryAddress(result.order.id, deliveryAddress, false); } catch {}
   }
 
   // If a coupon was applied, record the redemption against this exact

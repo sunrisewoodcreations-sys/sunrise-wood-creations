@@ -133,11 +133,6 @@ export default function PickupSchedulingView({
           </div>
         ) : (
           <>
-            {earliestDate && (
-              <p className="text-sm text-walnut/70 mb-3">
-                Your estimated {isDelivery ? "delivery" : "pickup"} date is <strong>{new Date(earliestDate + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</strong>. Pick that day or any day after it.
-              </p>
-            )}
             <div className="mb-4">
               <label className="block text-xs font-semibold text-walnut mb-2">Choose a day</label>
               <div className="grid grid-cols-3 gap-2">
