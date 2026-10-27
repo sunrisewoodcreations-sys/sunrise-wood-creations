@@ -1,3 +1,4 @@
+import Breadcrumb from "@/components/Breadcrumb";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SiteHeader from "@/components/SiteHeader";
@@ -25,7 +26,8 @@ export default async function AccountPurchasesPage() {
       <SiteHeader />
       <div className="max-w-2xl mx-auto px-4 py-10 flex-1 w-full">
         <AccountNav current="/account/purchases" />
-        <h1 className="font-display text-2xl text-walnut mb-1">Previous Purchases</h1>
+        <Breadcrumb items={[{label:"Account",href:"/account"},{label:"Previous purchases"}]} />
+        <h1 className="font-display text-3xl sm:text-4xl text-walnut mb-2">Previous Purchases</h1>
         <p className="text-sm text-walnut/60 mb-6">Everything you've picked up before — reorder any of it in one click.</p>
 
         {(!purchases || purchases.length === 0) ? (

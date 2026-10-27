@@ -1,3 +1,4 @@
+import Breadcrumb from "@/components/Breadcrumb";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SiteHeader from "@/components/SiteHeader";
@@ -26,7 +27,8 @@ export default async function AccountReviewsPage() {
       <SiteHeader />
       <div className="max-w-2xl mx-auto px-4 py-10 flex-1 w-full">
         <AccountNav current="/account/reviews" />
-        <h1 className="font-display text-2xl text-walnut mb-1">My Reviews</h1>
+        <Breadcrumb items={[{label:"Account",href:"/account"},{label:"Reviews"}]} />
+        <h1 className="font-display text-3xl sm:text-4xl text-walnut mb-2">My Reviews</h1>
         <p className="text-sm text-walnut/60 mb-6">Products from your completed orders — share what you thought.</p>
         <MyReviewsList items={items} reviewsByItemId={reviewsByItemId} />
       </div>

@@ -1,3 +1,4 @@
+import Breadcrumb from "@/components/Breadcrumb";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -46,7 +47,8 @@ export default async function AccountQuotesPage() {
       <SiteHeader />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-10 w-full">
         <Link href="/account" className="text-sm text-walnut/60 mb-4 inline-block">← Back to your orders</Link>
-        <h1 className="font-display text-2xl text-walnut mb-1">Your Quotes</h1>
+        <Breadcrumb items={[{label:"Account",href:"/account"},{label:"Quotes"}]} />
+        <h1 className="font-display text-3xl sm:text-4xl text-walnut mb-2">Your Quotes</h1>
         <p className="text-sm text-walnut/60 mb-6">Every quote we've sent you, and any you've accepted or declined.</p>
 
         {quotes.length === 0 ? (

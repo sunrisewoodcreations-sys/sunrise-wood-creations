@@ -1,3 +1,4 @@
+import Breadcrumb from "@/components/Breadcrumb";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -77,7 +78,8 @@ export default async function AccountDashboardPage() {
       <SiteHeader />
       <div className="max-w-2xl mx-auto px-4 py-10 flex-1 w-full">
         <AccountNav current="/account" />
-        <h1 className="font-display text-2xl text-walnut mb-1">Welcome back, {profile?.full_name?.split(" ")[0] || "there"}!</h1>
+        <Breadcrumb items={[{label:"Account"}]} />
+        <h1 className="font-display text-3xl sm:text-4xl text-walnut mb-2">Welcome back, {profile?.full_name?.split(" ")[0] || "there"}!</h1>
         <p className="text-sm text-walnut/60 mb-6">Here's everything happening with your account.</p>
 
         {notifications.length > 0 && (

@@ -1,3 +1,4 @@
+import Breadcrumb from "@/components/Breadcrumb";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -49,7 +50,8 @@ export default async function AccountOrdersPage() {
       <SiteHeader />
       <div className="max-w-2xl mx-auto px-4 py-10 flex-1 w-full">
         <AccountNav current="/account/orders" />
-        <h1 className="font-display text-2xl text-walnut mb-1">Your orders</h1>
+        <Breadcrumb items={[{label:"Account",href:"/account"},{label:"Orders"}]} />
+        <h1 className="font-display text-3xl sm:text-4xl text-walnut mb-2">Your orders</h1>
         <p className="text-sm text-walnut/60 mb-6">Signed in as {user.email}</p>
 
         {(!orders || orders.length === 0) && (
