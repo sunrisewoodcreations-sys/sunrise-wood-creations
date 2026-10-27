@@ -40,7 +40,7 @@ export default function CutListGenerator({
   const [boardLength, setBoardLength] = useState(71);
   const [kerf, setKerf] = useState(0.125);
   const [manualRows, setManualRows] = useState<{ productId: string; qty: string }[]>([
-    { productId: bomReadyProducts[0]?.id || "", qty: "6" }
+    { productId: bomReadyProducts[0]?.id || "", qty: "1" }
   ]);
   const [generated, setGenerated] = useState<{ normalResults: OptimizationResult[]; trimResults: OptimizationResult[]; label: string } | null>(null);
   const [generationError, setGenerationError] = useState("");
