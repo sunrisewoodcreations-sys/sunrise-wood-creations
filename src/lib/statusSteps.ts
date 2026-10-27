@@ -22,8 +22,21 @@ export const CORNHOLE_STEPS = [
   { key: "picked_up", label: "Picked up" }
 ] as const;
 
-export function stepsFor(productType: ProductType) {
-  return productType === "cornhole" ? CORNHOLE_STEPS : STANDARD_STEPS;
+// Orders being delivered use delivery wording for the last two steps. The
+// stored status keys never change (ready_for_pickup / picked_up), only what
+// people read, so everything that keys off the status keeps working.
+export function isDeliveryOrder(fulfillmentMethod?: string | null) {
+  return fulfillmentMethod === "delivery";
+}
+
+export function stepsFor(productType: ProductType, fulfillmentMethod?: string | null) {
+  const base = productType === "cornhole" ? CORNHOLE_STEPS : STANDARD_STEPS;
+  if (!isDeliveryOrder(fulfillmentMethod)) return base;
+  return base.map(s =>
+    s.key === "ready_for_pickup" ? { ...s, label: "Ready for delivery" }
+    : s.key === "picked_up" ? { ...s, label: "Delivered" }
+    : s
+  ) as unknown as typeof base;
 }
 
 export function productLabel(productType: ProductType) {
@@ -36,8 +49,8 @@ export function productLabel(productType: ProductType) {
 }
 
 // Used to build the "Your order has moved to: X" email copy.
-export function statusLabel(productType: ProductType, statusKey: string) {
-  const steps = stepsFor(productType);
+export function statusLabel(productType: ProductType, statusKey: string, fulfillmentMethod?: string | null) {
+  const steps = stepsFor(productType, fulfillmentMethod);
   const match = steps.find(s => s.key === statusKey);
   return match ? match.label : statusKey;
 }

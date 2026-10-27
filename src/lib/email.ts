@@ -330,8 +330,8 @@ async function getContactInfo(): Promise<{ phone?: string; email?: string }> {
 // same function that already defines the account page's own progress
 // bar — so it automatically shows 4 steps for standard products or 7
 // for cornhole, and never shows a step that product doesn't have.
-function progressBarHtml(productType: ProductType, currentStatus: string): string {
-  const steps = stepsFor(productType);
+function progressBarHtml(productType: ProductType, currentStatus: string, fulfillmentMethod?: string | null): string {
+  const steps = stepsFor(productType, fulfillmentMethod);
   const currentIndex = steps.findIndex(s => s.key === currentStatus);
   const n = steps.length;
   // 80% of the row's width is split evenly across the circles, 20% across
@@ -418,6 +418,9 @@ export async function sendOrderStatusEmail(opts: {
   // "delivery" when the scheduling link is for a delivery order, so the
   // wording says delivery instead of pickup.
   schedulingKind?: "pickup" | "delivery";
+  // "delivery" for orders being delivered: changes the wording of the
+  // ready / completed emails and the progress bar labels.
+  fulfillmentMethod?: string | null;
   // Only passed in today by the order-placed confirmation email (see
   // src/lib/orders.ts) — every other status-update call site is left
   // exactly as it was, so this section only ever appears there.
@@ -429,11 +432,17 @@ export async function sendOrderStatusEmail(opts: {
   // it because it just inserted the order and already has it.
   orderNumberDisplay?: string;
 }) {
-  const copy = STATUS_COPY[opts.newStatus];
+  const isDeliveryOrder = opts.fulfillmentMethod === "delivery";
+  const baseCopy = STATUS_COPY[opts.newStatus];
+  const copy = isDeliveryOrder && opts.newStatus === "ready_for_pickup"
+    ? { ...baseCopy, heading: "Ready for Delivery!", body: () => "Your order is finished and ready to be delivered. We'll get a delivery time set up with you." }
+    : isDeliveryOrder && opts.newStatus === "picked_up"
+    ? { ...baseCopy, heading: "Order Delivered — Thank You!", body: () => "Thanks so much for your order — we hope you enjoy it for years to come." }
+    : baseCopy;
   // statusLabel() correctly returns sentence case ("Being built") for its
   // other uses (status badges, the admin dropdown) — title-cased here only,
   // just for this heading, rather than changing that shared function.
-  const titleCasedLabel = statusLabel(opts.productType, opts.newStatus)
+  const titleCasedLabel = statusLabel(opts.productType, opts.newStatus, opts.fulfillmentMethod)
     .split(" ")
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
@@ -446,7 +455,7 @@ export async function sendOrderStatusEmail(opts: {
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 16px 0;">
           <tr>
             <td style="background-color: #F6EBDD; border-radius: 8px; padding: 14px 16px;">
-              <span style="color: #6b4d1a;">Balance to bring at pickup:</span>
+              <span style="color: #6b4d1a;">Balance due at ${isDeliveryOrder ? "delivery" : "pickup"}:</span>
               <strong style="font-size: 18px; color: #A63D2F; display: block; margin-top: 4px;">
                 $${(opts.balanceDueCents / 100).toFixed(2)}
               </strong>
@@ -455,7 +464,7 @@ export async function sendOrderStatusEmail(opts: {
         </table>`
       : `
         <p style="margin: 16px 0 0; color: #3f7a5a; font-weight: bold;">
-          Your balance is fully paid — nothing to bring but yourself!
+          ${isDeliveryOrder ? "Your balance is fully paid — nothing due at delivery!" : "Your balance is fully paid — nothing to bring but yourself!"}
         </p>`
     : "";
 
@@ -478,7 +487,7 @@ export async function sendOrderStatusEmail(opts: {
           </td>
         </tr>
       </table>
-      ${progressBarHtml(opts.productType, opts.newStatus)}
+      ${progressBarHtml(opts.productType, opts.newStatus, opts.fulfillmentMethod)}
       <p style="margin: 20px 0 0;">${escapeHtml(bodyLine)}</p>
       ${balanceHtml}
       ${typeof opts.balanceDueCents !== "number" && typeof opts.priceCents === "number" ? paymentStatusHtml(opts.priceCents, opts.amountPaidCents) : ""}

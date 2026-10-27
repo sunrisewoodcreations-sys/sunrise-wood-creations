@@ -10,7 +10,7 @@ export default async function ManufacturingQueuePage() {
   const [{ data: orders }, { data: orderItems }, { data: proofs }, { data: scheduledPickups }] = await Promise.all([
     supabase
       .from("orders")
-      .select("id, title, product_type, status, production_status, priority, production_date, due_date, customer_id, manual_queue_position, profiles:customer_id(full_name, is_priority_customer)")
+      .select("id, title, product_type, status, fulfillment_method, production_status, priority, production_date, due_date, customer_id, manual_queue_position, profiles:customer_id(full_name, is_priority_customer)")
       .in("production_status", ["building", "assembly", "finishing"])
       .neq("status", "picked_up"),
     supabase.from("order_items").select("order_id, product_id, quantity, title, products:product_id(name, size_details, estimated_build_minutes, image_url)"),
@@ -80,7 +80,8 @@ export default async function ManufacturingQueuePage() {
       buildTimePartiallyTracked: anyMissing && totalBuildMinutes > 0,
       scheduledPickupDate: scheduledPickup?.appointment_date || null,
       scheduledPickupTime: scheduledPickup?.appointment_time || null,
-      productionStatus: o.production_status
+      productionStatus: o.production_status,
+      isDelivery: o.fulfillment_method === "delivery"
     };
   });
 

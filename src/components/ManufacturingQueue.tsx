@@ -31,6 +31,7 @@ type QueueOrder = {
   scheduledPickupDate: string | null;
   scheduledPickupTime: string | null;
   productionStatus: string;
+  isDelivery?: boolean;
 };
 
 function formatBuildTime(minutes: number): string {
@@ -199,7 +200,7 @@ export default function ManufacturingQueue({ orders: initialOrders }: { orders: 
 
               <div className="flex gap-2">
                 {getNextProductionStage(o.productionStatus) && (
-                  <QueueStageAdvanceButton orderId={o.id} currentStage={o.productionStatus} nextStage={getNextProductionStage(o.productionStatus)!} />
+                  <QueueStageAdvanceButton orderId={o.id} currentStage={o.productionStatus} nextStage={getNextProductionStage(o.productionStatus)!} isDelivery={o.isDelivery} />
                 )}
                 <Link href="/admin/cutlist" className="flex-1">
                   <button className="w-full border border-[#1E3A5F]/20 text-[#1E3A5F] rounded-md px-3 py-2 text-xs font-semibold hover:bg-cream">

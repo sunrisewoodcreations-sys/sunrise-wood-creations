@@ -53,7 +53,7 @@ function QueueSection({ emoji, title, orders, todayStr }: { emoji: string; title
                   <td className="px-4 py-3 text-[#1E3A5F]/70">{order.profiles?.full_name}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusColor(order.status)}`}>
-                      {statusLabel(order.product_type as ProductType, order.status)}
+                      {statusLabel(order.product_type as ProductType, order.status, order.fulfillment_method)}
                     </span>
                   </td>
                   <td className={`px-4 py-3 font-mono ${isOverdue ? "text-ember font-semibold" : "text-[#1E3A5F]/70"}`}>

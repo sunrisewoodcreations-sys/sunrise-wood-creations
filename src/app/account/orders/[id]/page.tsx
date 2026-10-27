@@ -72,13 +72,14 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           </div>
           {isPickedUp ? (
             <span className="inline-block text-xs font-semibold px-3 py-1.5 rounded-full bg-sage/20 text-sage mb-2">
-              Picked up
+              {order.fulfillment_method === "delivery" ? "Delivered" : "Picked up"}
               {statusTimestamps["picked_up"] && (
                 <> · {new Date(statusTimestamps["picked_up"]).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })}, {new Date(statusTimestamps["picked_up"]).toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" })} ET</>
               )}
             </span>
           ) : (
             <CompactProgressTracker
+              fulfillmentMethod={order.fulfillment_method}
               productType={order.product_type as ProductType}
               currentStatus={order.status}
               statusTimestamps={statusTimestamps}
@@ -88,7 +89,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
           {order.due_date && (
             <p className="text-sm text-walnut/60 mb-4">
-              Estimated pickup date: {formatCalendarDate(order.due_date, "long")}
+              Estimated {order.fulfillment_method === "delivery" ? "delivery" : "pickup"} date: {formatCalendarDate(order.due_date, "long")}
             </p>
           )}
 

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { stepsFor, ProductType } from "@/lib/statusSteps";
 
-export default function StatusUpdater({ orderId, productType, currentStatus }: {
+export default function StatusUpdater({ orderId, productType, currentStatus, fulfillmentMethod }: {
+  fulfillmentMethod?: string | null;
   orderId: string;
   productType: ProductType;
   currentStatus: string;
@@ -14,7 +15,7 @@ export default function StatusUpdater({ orderId, productType, currentStatus }: {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
-  const steps = stepsFor(productType);
+  const steps = stepsFor(productType, fulfillmentMethod);
 
   async function handleChange(newStatus: string) {
     await applyStatus(newStatus);

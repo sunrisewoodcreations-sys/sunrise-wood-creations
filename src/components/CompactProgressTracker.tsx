@@ -13,13 +13,15 @@ function formatStamp(iso: string) {
 export default function CompactProgressTracker({
   productType,
   currentStatus,
-  statusTimestamps
+  statusTimestamps,
+  fulfillmentMethod
 }: {
+  fulfillmentMethod?: string | null;
   productType: ProductType;
   currentStatus: string;
   statusTimestamps?: Record<string, string>;
 }) {
-  const steps = stepsFor(productType);
+  const steps = stepsFor(productType, fulfillmentMethod);
   const currentIndex = steps.findIndex(s => s.key === currentStatus);
 
   return (

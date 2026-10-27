@@ -218,7 +218,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
                   <td className="px-4 py-3 text-[#1E3A5F]/70">{order.size_details}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusColor(order.status)}`}>
-                      {statusLabel(order.product_type as ProductType, order.status)}
+                      {statusLabel(order.product_type as ProductType, order.status, order.fulfillment_method)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right text-[#1E3A5F]/70">
@@ -267,7 +267,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
               </Link>
               <div className="text-xs text-[#1E3A5F]/60 mb-2">{new Date(order.created_at).toLocaleDateString()}</div>
               <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusColor(order.status)}`}>
-                {statusLabel(order.product_type as ProductType, order.status)}
+                {statusLabel(order.product_type as ProductType, order.status, order.fulfillment_method)}
               </span>
               <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[#1E3A5F]/10 text-sm">
                 <div>

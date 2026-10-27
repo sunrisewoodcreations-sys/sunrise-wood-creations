@@ -526,7 +526,7 @@ export default async function AdminOrdersPage({
                     {new Date(order.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3.5">
-                    <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
+                    <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} fulfillmentMethod={order.fulfillment_method} />
                   </td>
                   <td className="px-4 py-3.5 font-mono">
                     {order.due_date ? (
@@ -628,7 +628,7 @@ export default async function AdminOrdersPage({
               </Link>
 
               <span className={`inline-block px-3 py-1.5 rounded-full text-sm font-bold whitespace-nowrap ${statusColor(order.status)}`}>
-                {statusLabel(order.product_type as ProductType, order.status)}
+                {statusLabel(order.product_type as ProductType, order.status, order.fulfillment_method)}
               </span>
               <span className={`inline-block ml-1.5 px-3 py-1.5 rounded-full text-sm font-bold whitespace-nowrap ${WORKFLOW_STYLES[workflowStageByOrderId.get(order.id) as WorkflowStage]}`}>
                 {WORKFLOW_LABELS[workflowStageByOrderId.get(order.id) as WorkflowStage]}
@@ -665,7 +665,7 @@ export default async function AdminOrdersPage({
 
               <div className="mt-3 pt-3 border-t border-[#1E3A5F]/10">
                 <div className="mb-2">
-                  <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} />
+                  <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} fulfillmentMethod={order.fulfillment_method} />
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Link
