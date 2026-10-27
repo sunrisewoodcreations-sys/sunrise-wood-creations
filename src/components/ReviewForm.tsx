@@ -72,7 +72,6 @@ export default function ReviewForm({
       >
         {status === "loading" ? "Submitting..." : initialRating ? "Update Rating" : "Submit Rating"}
       </button>
-      <p className="text-xs text-walnut/50">Ratings and reviews are checked before appearing publicly, usually within a day or two.</p>
     </form>
   );
 }
