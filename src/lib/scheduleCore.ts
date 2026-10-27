@@ -137,6 +137,18 @@ export type SlotConfig = {
   daysAhead: number;
 };
 
+// Open hours for one specific date. Weekdays use the admin settings.
+// Saturday and Sunday are always open 8:00-22:00 (pickups and deliveries),
+// and Fridays pickups run until 22:00 (deliveries keep the normal hours).
+export const WEEKEND_START = "08:00";
+export const LATE_END = "22:00";
+export function hoursFor(cfg: Pick<SlotConfig, "kind" | "startTime" | "endTime">, dateStr: string): { startTime: string; endTime: string; open: boolean } {
+  const wd = weekdayOf(dateStr);
+  if (wd === 0 || wd === 6) return { startTime: WEEKEND_START, endTime: LATE_END, open: true };
+  if (wd === 5 && cfg.kind === "pickup") return { startTime: cfg.startTime, endTime: LATE_END, open: true };
+  return { startTime: cfg.startTime, endTime: cfg.endTime, open: false };
+}
+
 export function blockFor(cfg: Pick<SlotConfig, "kind" | "driveMinutes" | "slotLengthMinutes" | "minutesAtCustomer" | "bufferAfterMinutes">, arrival: number): Block {
   const t: TripTimes = { minutesAtCustomer: cfg.minutesAtCustomer, bufferAfterMinutes: cfg.bufferAfterMinutes, slotLengthMinutes: cfg.slotLengthMinutes };
   return cfg.kind === "delivery" ? deliveryBlock(arrival, cfg.driveMinutes, t) : pickupBlock(arrival, t);
@@ -146,11 +158,13 @@ export function blockFor(cfg: Pick<SlotConfig, "kind" | "driveMinutes" | "slotLe
 // re-check at booking time.
 export function isSlotOpen(cfg: SlotConfig, dateStr: string, time: string, ignoreBlock?: Block): boolean {
   if (cfg.blockedDates.has(dateStr)) return false;
-  if (!cfg.availableDays.includes(weekdayOf(dateStr))) return false;
+  const hrs = hoursFor(cfg, dateStr);
+  const wd = weekdayOf(dateStr);
+  if (!cfg.availableDays.includes(wd) && !(wd === 0 || wd === 6)) return false;
 
   const tm = timeToMinutes(time);
-  const start = timeToMinutes(cfg.startTime);
-  const end = timeToMinutes(cfg.endTime);
+  const start = timeToMinutes(hrs.startTime);
+  const end = timeToMinutes(hrs.endTime);
   // Customer-facing time must sit on the slot grid and inside open hours,
   // and the visit itself must finish before closing.
   if ((tm - start) % cfg.slotLengthMinutes !== 0) return false;
@@ -175,10 +189,11 @@ export type DaySlots = { date: string; times: string[] };
 
 export function computeSlots(cfg: SlotConfig, ignoreBlock?: Block): DaySlots[] {
   const days: DaySlots[] = [];
-  const start = timeToMinutes(cfg.startTime);
-  const end = timeToMinutes(cfg.endTime);
   for (let i = 0; i <= cfg.daysAhead; i++) {
     const dateStr = addDays(cfg.todayStr, i);
+    const hrs = hoursFor(cfg, dateStr);
+    const start = timeToMinutes(hrs.startTime);
+    const end = timeToMinutes(hrs.endTime);
     const times: string[] = [];
     for (let m = start; m < end; m += cfg.slotLengthMinutes) {
       const t = minutesToTime(m);
