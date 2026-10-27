@@ -1199,6 +1199,47 @@ export async function sendPickupReminderEmail(opts: {
   });
 }
 
+export async function sendDeliveryOnTheWayEmail(opts: {
+  toEmail: string;
+  customerName: string;
+  orderTitle: string;
+  appointmentTimeDisplay: string;
+  deliveryAddress?: string;
+  contactPhone?: string;
+  viewUrl: string;
+  forceDemo?: boolean;
+}) {
+  const html = shell({
+    preheader: "We're on our way with your delivery",
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">Hi ${escapeHtml(opts.customerName)},</p>
+      <p style="margin: 0 0 16px;">
+        Good news — we're on our way with your delivery of <strong>${escapeHtml(opts.orderTitle)}</strong>!
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
+        <tr>
+          <td style="background-color: #F6EBDD; border-radius: 8px; padding: 16px;">
+            <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; font-family: Georgia, serif;">Scheduled arrival: ${opts.appointmentTimeDisplay}</div>
+            ${opts.deliveryAddress ? `<div style="margin-top: 10px; color: #74655B; font-size: 14px;">Delivering to: ${escapeHtml(opts.deliveryAddress)}</div>` : ""}
+          </td>
+        </tr>
+      </table>
+      <p style="margin: 0; font-size: 13px; color: #8a7a6b;">Please make sure someone is available to receive it.${opts.contactPhone ? ` Questions? Call ${escapeHtml(opts.contactPhone)}.` : ""}</p>
+    `,
+    buttonText: "View Your Order",
+    buttonUrl: opts.viewUrl
+  });
+
+  return sendViaResend({
+    emailType: "sendDeliveryOnTheWayEmail",
+    forceDemo: opts.forceDemo,
+    from: FROM,
+    to: opts.toEmail,
+    subject: `We're on our way with ${opts.orderTitle}`,
+    html
+  });
+}
+
 // Simple {{token}} substitution — the admin writes the subject/heading/body
 // themselves in the campaign builder, and this fills in the dynamic parts
 // per recipient. Nothing about a specific coupon or customer is hardcoded
