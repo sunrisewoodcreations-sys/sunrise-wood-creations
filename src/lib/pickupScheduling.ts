@@ -334,7 +334,7 @@ export async function cancelPickupAppointment(appointmentId: string): Promise<{ 
 // use this to get the scheduling URL and fold it into that one email
 // (see sendOrderStatusEmail's schedulingUrl option) instead of sending
 // a second, separate scheduling email.
-export async function getOrCreatePickupSchedulingUrl(orderId: string, siteUrl: string): Promise<{ ok: true; url: string } | { ok: false; reason: "not_eligible" | "no_email"; error?: string }> {
+export async function getOrCreatePickupSchedulingUrl(orderId: string, siteUrl: string, opts: { force?: boolean } = {}): Promise<{ ok: true; url: string } | { ok: false; reason: "not_eligible" | "no_email"; error?: string }> {
   const admin = createAdminClient();
 
   const { data: order } = await admin
@@ -361,7 +361,17 @@ export async function getOrCreatePickupSchedulingUrl(orderId: string, siteUrl: s
     if (order.pickup_scheduling_token && !order.pickup_scheduling_token_used_at) {
       return { ok: true, url: `${siteUrl}/pickup/schedule/${order.pickup_scheduling_token}` };
     }
-    return { ok: false, reason: "not_eligible" };
+    // Only when the admin deliberately re-sends the email: there is no
+    // active appointment (checked above), so give the customer a fresh
+    // link to book again instead of leaving the button out.
+    if (!opts.force) return { ok: false, reason: "not_eligible" };
+    const freshToken = crypto.randomBytes(24).toString("hex");
+    const { error: freshError } = await admin.from("orders").update({
+      pickup_scheduling_token: freshToken,
+      pickup_scheduling_token_used_at: null
+    }).eq("id", orderId);
+    if (freshError) return { ok: false, reason: "not_eligible", error: freshError.message };
+    return { ok: true, url: `${siteUrl}/pickup/schedule/${freshToken}` };
   }
 
   const customer = (order as any).profiles;
