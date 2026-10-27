@@ -4,7 +4,7 @@ import { DEFAULT_SITE_CONTENT, SiteContent, PRODUCT_ORDER } from "@/lib/siteCont
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import GuestChatWidget from "@/components/GuestChatWidget";
-import ProductCard from "@/components/ProductCard";
+import ProductTile from "@/components/ProductTile";
 import TrackedLink from "@/components/TrackedLink";
 import HeroCarousel from "@/components/HeroCarousel";
 import OurWorkSection from "@/components/OurWorkSection";
@@ -18,6 +18,14 @@ export const metadata: Metadata = {
     "Handcrafted, made-to-order cornhole boards, wooden signs, planter boxes, and cutting boards built in Michigan. Request a custom order today.",
   alternates: { canonical: "/" }
 };
+
+const iconProps = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+const WHY_ICONS = [
+  <svg key="pin" {...iconProps}><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>,
+  <svg key="clock" {...iconProps}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>,
+  <svg key="pencil" {...iconProps}><path d="M4 20l4-1L19 8l-3-3L5 16z" /><path d="M14 7l3 3" /></svg>,
+  <svg key="star" {...iconProps}><path d="M12 3l2.6 5.5 6 .8-4.4 4.2 1.1 6L12 16.6 6.7 19.5l1.1-6L3.4 9.3l6-.8z" /></svg>
+];
 
 export default async function HomePage() {
   const supabase = createClient();
@@ -76,8 +84,17 @@ export default async function HomePage() {
       <SiteHeader />
       <main>
 
-      <section className="text-center px-6 pt-8 pb-2 sm:pt-12 md:pt-14 bg-gradient-to-b from-sawdust to-cream">
-        <div className="mb-8 sm:mb-10">
+      <div className="flex items-center justify-center gap-3 px-4 py-3.5 bg-cream text-walnut">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-shrink-0">
+          <path d="M3 21l7-7M14 4l6 6-9 9-6-6z" /><path d="M13 7l4 4" />
+        </svg>
+        <p className="font-bold text-[13px] sm:text-sm tracking-wide uppercase leading-snug">
+          Handmade in Michigan. Built to order, one piece at a time.
+        </p>
+      </div>
+
+      <section className="text-center px-6 pt-0 pb-2 sm:pt-6 md:pt-8 bg-gradient-to-b from-sawdust to-cream">
+        <div className="mb-8 sm:mb-10 -mx-6 sm:mx-0">
           <HeroCarousel slides={content.hero.carouselSlides} label="Featured Sunrise Wood Creations projects" />
         </div>
         <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-walnut font-semibold mb-3 sm:mb-4 whitespace-pre-line">
@@ -114,30 +131,31 @@ export default async function HomePage() {
       <section id="products" className="max-w-5xl mx-auto px-6 py-10 sm:py-14 md:py-20 scroll-mt-20">
         <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-2">What we build</h2>
         <p className="text-center text-walnut/70 mb-8 sm:mb-10">Every piece is made to order.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6">
           {visibleProducts.map(p => (
-            <ProductCard
+            <ProductTile
               key={p.slug}
               slug={p.slug}
               name={p.name}
               shortDesc={p.shortDesc}
               imageUrl={p.images?.[0]?.src ?? null}
-              featured={p.slug === "planter-boxes"}
             />
           ))}
         </div>
       </section>
 
-      <section id="about" className="bg-sawdust/60 px-6 py-10 sm:py-14 md:py-20 scroll-mt-20">
+      <section id="about" className="bg-walnut px-6 py-10 sm:py-14 md:py-20 scroll-mt-20">
         <div className="max-w-4xl mx-auto">
-          <h2 className="font-display text-2xl md:text-3xl text-walnut text-center mb-8 sm:mb-10">{content.whyUs.heading}</h2>
+          <h2 className="font-display text-2xl md:text-3xl text-cream text-center mb-8 sm:mb-10">{content.whyUs.heading}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
-            {content.whyUs.items.map(item => (
-              <div key={item.title} className="flex gap-3">
-                <span className="flex-shrink-0 w-2 h-2 rounded-full bg-accent mt-2.5" aria-hidden="true" />
+            {content.whyUs.items.map((item, i) => (
+              <div key={item.title} className="flex gap-3.5 items-start">
+                <span className="flex-shrink-0 w-11 h-11 rounded-full border-[1.5px] border-amber text-amber flex items-center justify-center" aria-hidden="true">
+                  {WHY_ICONS[i % WHY_ICONS.length]}
+                </span>
                 <div>
-                  <h3 className="font-display text-lg text-walnut mb-1">{item.title}</h3>
-                  <p className="text-sm text-walnut/70">{item.description}</p>
+                  <h3 className="font-bold text-[15px] tracking-wide uppercase text-amber mb-1">{item.title}</h3>
+                  <p className="text-sm text-cream/80 leading-relaxed">{item.description}</p>
                 </div>
               </div>
             ))}
