@@ -435,7 +435,7 @@ export async function sendOrderStatusEmail(opts: {
   const isDeliveryOrder = opts.fulfillmentMethod === "delivery";
   const baseCopy = STATUS_COPY[opts.newStatus];
   const copy = isDeliveryOrder && opts.newStatus === "ready_for_pickup"
-    ? { ...baseCopy, heading: "Ready for Delivery!", body: () => "Your order is finished and ready to be delivered. We'll get a delivery time set up with you." }
+    ? { ...baseCopy, heading: "Ready for Delivery!", body: () => "Your order is finished and ready to be delivered." }
     : isDeliveryOrder && opts.newStatus === "picked_up"
     ? { ...baseCopy, heading: "Order Delivered — Thank You!", body: () => "Thanks so much for your order — we hope you enjoy it for years to come." }
     : baseCopy;
