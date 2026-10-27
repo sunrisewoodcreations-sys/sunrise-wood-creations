@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendReviewRequestForOrder } from "@/lib/reviewRequest";
 import { issueInvoiceForOrder, generateInvoicePdfForOrder } from "@/lib/invoice";
 import { sendOrderStatusEmail } from "@/lib/email";
 import { shouldNotify } from "@/lib/notify";
@@ -130,6 +131,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     } catch (err) {
       console.error("Invoice generation failed:", err);
     }
+    await sendReviewRequestForOrder(order.id, process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.get("host")}`);
   }
 
   return NextResponse.json({ ok: true });

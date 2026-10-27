@@ -1213,7 +1213,7 @@ export async function sendReviewRequestEmail(opts: {
     bodyHtml: `
       <p style="margin: 0 0 16px;">Hi ${escapeHtml(opts.customerName)},</p>
       <p style="margin: 0 0 16px;">
-        It's been a day since your order was ${opts.delivered ? "delivered" : "picked up"} — we hope you're loving it! Would you take a minute to rate it?
+        Thank you for your order! Now that it has been ${opts.delivered ? "delivered" : "picked up"}, would you take a minute to rate it?
       </p>
       <ul style="margin: 0 0 16px; padding-left: 20px; color: #1E3A5F;">${list}</ul>
       <p style="margin: 0; font-size: 13px; color: #8a7a6b;">Your review helps other customers and means a lot to a small family shop. Thank you!</p>

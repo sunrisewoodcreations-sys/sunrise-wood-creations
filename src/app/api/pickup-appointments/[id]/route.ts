@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { addStopOnWayHome } from "@/lib/deliveryChain";
 import { sendDeliveryOnTheWayEmail } from "@/lib/email";
 import { easternNow, absMinute } from "@/lib/scheduleCore";
+import { sendReviewRequestForOrder } from "@/lib/reviewRequest";
 import { shouldNotify } from "@/lib/notify";
 import { issueInvoiceForOrder } from "@/lib/invoice";
 import { getAvailabilitySettings, reschedulePickupAppointment, cancelPickupAppointment, sendPickupConfirmation } from "@/lib/pickupScheduling";
@@ -66,6 +67,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         } catch (err) {
           console.error("Invoice generation failed:", err);
         }
+        await sendReviewRequestForOrder(order.id, process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.get("host")}`);
       }
     }
     return NextResponse.json({ ok: true });
