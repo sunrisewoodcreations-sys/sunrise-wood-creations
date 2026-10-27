@@ -44,7 +44,7 @@ export default function MyReviewsList({
           <div key={item.id} className="bg-white border border-walnut/10 rounded-xl shadow-sm p-4">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="font-semibold text-walnut">{item.title}</div>
-              {existing && (
+              {existing && existing.status === "approved" && (
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor[existing.status]}`}>
                   {statusLabel[existing.status]}
                 </span>
