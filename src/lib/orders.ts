@@ -32,6 +32,8 @@ export async function createOrder(opts: {
   dueDate?: string | null;
   items: IncomingOrderItem[];
   isDemo?: boolean;
+  // Verified delivery address, when known (a converted quote carries one).
+  deliveryAddress?: string | null;
 }): Promise<{ ok: true; order: any } | { ok: false; error: string; status: number }> {
   const admin = createAdminClient();
   const initialStatus = "order_placed";
@@ -105,9 +107,20 @@ export async function createOrder(opts: {
     finalDueDate = addDaysToDateStr(today, 2);
   }
 
+  // An order with a "Delivery fee" line is a delivery order. This is what
+  // switches the wording to "Ready for delivery", the delivery scheduling
+  // flow, and the delivery emails, so it must be set here at creation.
+  const deliveryLine = normalizedItems.find(it => it.title === "Delivery fee");
+  const isDeliveryOrder = !!deliveryLine;
+  // Manual orders keep the address inside the line's note ("To <address> (12.4 mi)").
+  const addressFromLine = deliveryLine?.sizeDetails?.match(/^To (.+?)(?: \(\d+(?:\.\d+)? mi\))?$/)?.[1] || null;
+  const deliveryAddress = (opts.deliveryAddress && opts.deliveryAddress.trim()) || addressFromLine || null;
+
   const { data: order, error } = await admin
     .from("orders")
     .insert({
+      fulfillment_method: isDeliveryOrder ? "delivery" : "pickup",
+      delivery_address: isDeliveryOrder ? deliveryAddress : null,
       customer_id: opts.customerId,
       product_type: orderProductType,
       title: orderTitle,
