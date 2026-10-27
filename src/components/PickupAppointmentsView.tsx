@@ -15,7 +15,8 @@ type Appointment = {
   internal_notes: string | null;
   appointment_type: "pickup" | "delivery";
   on_my_way_at: string | null;
-  orders: { id: string; title: string; product_type: string; delivery_address: string | null; profiles: { full_name: string; phone: string | null } } | null;
+  block_start_at?: string | null;
+  orders: { id: string; title: string; product_type: string; delivery_address: string | null; delivery_drive_minutes?: number | null; profiles: { full_name: string; phone: string | null } } | null;
 };
 type StopCandidate = { id: string; title: string; customerName: string; address: string };
 type BlockedTime = { id: string; blocked_date: string; start_time: string; end_time: string; reason: string | null };
@@ -134,9 +135,29 @@ export default function PickupAppointmentsView({ appointments, slotsByAppointmen
               <span className={`font-bold ${a.appointment_type === "delivery" ? "text-ember" : "text-sage"}`}>{a.appointment_type === "delivery" ? "DELIVERY" : "PICKUP"}</span> · {a.orders?.title} · {new Date(a.appointment_date + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} at {formatTimeDisplay(a.appointment_time)}
               {a.orders?.profiles?.phone && <> · {a.orders.profiles.phone}</>}
             </div>
-            {a.appointment_type === "delivery" && a.orders?.delivery_address && (
-              <div className="text-xs text-[#1E3A5F]/70 mt-0.5">📍 {a.orders.delivery_address}</div>
-            )}
+            {a.appointment_type === "delivery" && (() => {
+              const leave = a.block_start_at ? String(a.block_start_at).slice(11, 16) : null;
+              const addr = a.orders?.delivery_address;
+              const q = addr ? encodeURIComponent(addr) : "";
+              return (
+                <>
+                  <div className="text-xs mt-1 text-[#1E3A5F]">
+                    {leave && <>🚗 Leave by <strong>{formatTimeDisplay(leave)}</strong> · </>}
+                    Arrive <strong>{formatTimeDisplay(a.appointment_time)}</strong>
+                    {a.orders?.delivery_drive_minutes ? <> · {a.orders.delivery_drive_minutes} min drive</> : null}
+                  </div>
+                  {addr && (
+                    <div className="text-xs text-[#1E3A5F]/70 mt-0.5">
+                      📍 {addr}
+                      <div className="flex gap-2 mt-1">
+                        <a href={`https://www.google.com/maps/dir/?api=1&destination=${q}`} target="_blank" rel="noopener noreferrer" className="px-2.5 py-1 rounded-full bg-[#1E3A5F] text-white font-semibold">Google Maps</a>
+                        <a href={`https://maps.apple.com/?daddr=${q}`} target="_blank" rel="noopener noreferrer" className="px-2.5 py-1 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold">Apple Maps</a>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
           <span className={`text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap ${a.on_my_way_at ? "bg-ember text-white" : a.status === "arrived" ? "bg-[#1E3A5F] text-white" : "bg-sage/20 text-sage"}`}>
             {a.on_my_way_at ? "On my way" : a.status === "arrived" ? "Arrived" : "Scheduled"}
