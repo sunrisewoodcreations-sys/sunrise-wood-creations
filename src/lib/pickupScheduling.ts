@@ -89,15 +89,20 @@ async function loadScheduleConfig(opts: {
   return { cfg, onVacation };
 }
 
-// onlyDate: customers may only book the order's own estimated pickup /
-// delivery date, nothing earlier and nothing later. Admin views leave it off.
-export type SlotOptions = { kind?: Kind; driveMinutes?: number; excludeAppointmentId?: string; onlyDate?: string | null };
+// notBefore: customers can't book earlier than the order's estimated pickup /
+// delivery date (any day on or after it is fine). Admin views leave it off.
+export type SlotOptions = { kind?: Kind; driveMinutes?: number; excludeAppointmentId?: string; notBefore?: string | null };
 
 // Computes real bookable slots for the next `daysAhead` days. One customer
 // per slot, enforced by the actual blocks of time (a delivery blocks the
 // drive there, the visit, the drive home and a buffer; pickups are blocked
 // while you're out), plus blocked days and blocked time ranges.
 export async function getAvailableSlots(daysAhead: number = 21, opts: SlotOptions = {}): Promise<DaySlots[]> {
+  // The window runs from the earliest allowed date, not from today, so an
+  // order due weeks from now still shows its full booking window.
+  if (opts.notBefore) {
+    daysAhead = Math.max(daysAhead, dayNumber(opts.notBefore) - dayNumber(easternNow().dateStr) + daysAhead);
+  }
   const { cfg, onVacation } = await loadScheduleConfig({
     kind: opts.kind || "pickup", driveMinutes: opts.driveMinutes || 0, daysAhead, excludeAppointmentId: opts.excludeAppointmentId
   });
@@ -105,7 +110,7 @@ export async function getAvailableSlots(daysAhead: number = 21, opts: SlotOption
   // resumes automatically once that date arrives.
   if (onVacation) return [];
   const days = computeSlots(cfg);
-  return opts.onlyDate ? days.filter(d => d.date === opts.onlyDate) : days;
+  return opts.notBefore ? days.filter(d => d.date >= opts.notBefore!) : days;
 }
 
 // Whether a specific date+time is still actually bookable right now —
@@ -120,7 +125,7 @@ export async function isSlotStillAvailable(dateStr: string, time: string, opts: 
     kind: opts.kind || "pickup", driveMinutes: opts.driveMinutes || 0, daysAhead, excludeAppointmentId: opts.excludeAppointmentId
   });
   if (onVacation) return false;
-  if (opts.onlyDate && dateStr !== opts.onlyDate) return false;
+  if (opts.notBefore && dateStr < opts.notBefore) return false;
   return isSlotOpen(cfg, dateStr, time);
 }
 
@@ -235,7 +240,7 @@ export async function bookPickupAppointment(opts: {
   // Admin manual bookings may go outside the usual hours/blocked days —
   // the database's no-overlap guard still applies either way.
   skipAvailabilityCheck?: boolean;
-  // Customer bookings: only the order's estimated date is allowed.
+  // Customer bookings: nothing before the order's estimated date.
   restrictToDueDate?: boolean;
 }): Promise<{ ok: true; appointmentId: string } | { ok: false; error: string }> {
   const admin = createAdminClient();
@@ -251,7 +256,7 @@ export async function bookPickupAppointment(opts: {
   }
 
   if (!opts.skipAvailabilityCheck) {
-    const available = await isSlotStillAvailable(opts.dateStr, opts.time, { kind, driveMinutes, onlyDate: opts.restrictToDueDate ? order.due_date : null });
+    const available = await isSlotStillAvailable(opts.dateStr, opts.time, { kind, driveMinutes, notBefore: opts.restrictToDueDate ? order.due_date : null });
     if (!available) return { ok: false, error: CONFLICT_MESSAGE };
   }
 
@@ -290,7 +295,7 @@ export async function reschedulePickupAppointment(opts: {
   const kind: Kind = appt.appointment_type === "delivery" ? "delivery" : "pickup";
   const driveMinutes = (appt as any).orders?.delivery_drive_minutes ?? 0;
 
-  const available = await isSlotStillAvailable(opts.dateStr, opts.time, { kind, driveMinutes, excludeAppointmentId: opts.appointmentId, onlyDate: opts.rescheduledBy === "customer" ? (appt as any).orders?.due_date : null });
+  const available = await isSlotStillAvailable(opts.dateStr, opts.time, { kind, driveMinutes, excludeAppointmentId: opts.appointmentId, notBefore: opts.rescheduledBy === "customer" ? (appt as any).orders?.due_date : null });
   if (!available) return { ok: false, error: CONFLICT_MESSAGE };
 
   const blockCols = await blockColumnsFor(kind, opts.dateStr, opts.time, driveMinutes);

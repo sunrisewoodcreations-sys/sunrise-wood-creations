@@ -26,7 +26,7 @@ export default function PickupSchedulingView({
   kind = "pickup",
   deliveryAddress,
   onMyWayAt,
-  requiredDate
+  earliestDate
 }: {
   apiEndpoint: string;
   orderTitle: string;
@@ -42,8 +42,8 @@ export default function PickupSchedulingView({
   deliveryAddress?: string;
   // Set when the delivery driver has tapped "on my way" for this appointment.
   onMyWayAt?: string | null;
-  // The order's estimated pickup/delivery date. Customers can only book this day.
-  requiredDate?: string;
+  // The order's estimated pickup/delivery date. Customers can't book before it.
+  earliestDate?: string;
 }) {
   const isDelivery = kind === "delivery";
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -126,16 +126,16 @@ export default function PickupSchedulingView({
         ) : availableDays.length === 0 ? (
           <div className="bg-amber/10 border border-amber/30 rounded-lg p-4">
             <p className="text-sm text-walnut/70">
-              {requiredDate
-                ? `No ${isDelivery ? "delivery" : "pickup"} times are open on your scheduled date, ${new Date(requiredDate + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}. Please contact us directly to schedule.`
+              {earliestDate
+                ? `No ${isDelivery ? "delivery" : "pickup"} times are open on or after your estimated date, ${new Date(earliestDate + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}. Please contact us directly to schedule.`
                 : `No ${isDelivery ? "delivery" : "pickup"} times are available right now. Please contact us directly to schedule.`}
             </p>
           </div>
         ) : (
           <>
-            {requiredDate && (
+            {earliestDate && (
               <p className="text-sm text-walnut/70 mb-3">
-                Your estimated {isDelivery ? "delivery" : "pickup"} date is <strong>{new Date(requiredDate + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</strong>. Pick a time that day.
+                Your estimated {isDelivery ? "delivery" : "pickup"} date is <strong>{new Date(earliestDate + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</strong>. Pick that day or any day after it.
               </p>
             )}
             <div className="mb-4">
