@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendOrderStatusEmail } from "@/lib/email";
 import { shouldNotify } from "@/lib/notify";
+import { getOrCreatePickupSchedulingUrl } from "@/lib/pickupScheduling";
 import { ProductType } from "@/lib/statusSteps";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -31,6 +32,19 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     ? (order.price_cents || 0) - (order.amount_paid_cents || 0)
     : undefined;
 
+  // A "ready" email always carries the schedule button (whether or not the
+  // balance is paid) unless the customer already has an active appointment.
+  let schedulingUrl: string | undefined;
+  if (order.status === "ready_for_pickup") {
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.get("host")}`;
+      const r = await getOrCreatePickupSchedulingUrl(order.id, siteUrl, { force: true });
+      if (r.ok) schedulingUrl = r.url;
+    } catch (err) {
+      console.error("Scheduling link for resend failed:", err);
+    }
+  }
+
   try {
     await sendOrderStatusEmail({
       toEmail: customer.email,
@@ -40,7 +54,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       orderId: order.id,
       newStatus: order.status,
       fulfillmentMethod: (order as any).fulfillment_method,
-      balanceDueCents
+      balanceDueCents,
+      schedulingUrl,
+      schedulingKind: (order as any).fulfillment_method === "delivery" ? "delivery" : "pickup"
     });
   } catch (err) {
     console.error("Manual status email failed:", err);
