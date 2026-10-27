@@ -5,7 +5,7 @@ import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statu
 import { formatCalendarDate } from "@/lib/dateDisplay";
 import { formatInvoiceNumber } from "@/lib/invoice";
 import { matchesOrderNumberQuery } from "@/lib/orderDisplay";
-import { getWorkflowStage, WORKFLOW_LABELS, WORKFLOW_STYLES, WorkflowStage } from "@/lib/workflow";
+import { getWorkflowStage, workflowLabel, WORKFLOW_LABELS, WORKFLOW_STYLES, WorkflowStage } from "@/lib/workflow";
 import { getPickupBadgeState, PICKUP_BADGE_LABELS, PICKUP_BADGE_STYLES } from "@/lib/pickupScheduling";
 import { checkMaterialAvailabilityForOrder } from "@/lib/materialPlanning";
 import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
@@ -509,7 +509,7 @@ export default async function AdminOrdersPage({
                       {productLabel(order.product_type as ProductType)} — {order.title}
                     </Link>
                     <span className={`ml-2 inline-block text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${WORKFLOW_STYLES[workflowStageByOrderId.get(order.id) as WorkflowStage]}`}>
-                      {WORKFLOW_LABELS[workflowStageByOrderId.get(order.id) as WorkflowStage]}
+                      {workflowLabel(workflowStageByOrderId.get(order.id) as WorkflowStage, order.fulfillment_method)}
                     </span>
                     {pickupBadgeByOrderId.get(order.id) !== "not_applicable" && (
                       <Link href={`/admin/orders/${order.id}`} className={`ml-1.5 inline-block text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap hover:opacity-80 ${PICKUP_BADGE_STYLES[pickupBadgeByOrderId.get(order.id)!]}`}>
@@ -631,7 +631,7 @@ export default async function AdminOrdersPage({
                 {statusLabel(order.product_type as ProductType, order.status, order.fulfillment_method)}
               </span>
               <span className={`inline-block ml-1.5 px-3 py-1.5 rounded-full text-sm font-bold whitespace-nowrap ${WORKFLOW_STYLES[workflowStageByOrderId.get(order.id) as WorkflowStage]}`}>
-                {WORKFLOW_LABELS[workflowStageByOrderId.get(order.id) as WorkflowStage]}
+                {workflowLabel(workflowStageByOrderId.get(order.id) as WorkflowStage, order.fulfillment_method)}
               </span>
               {pickupBadgeByOrderId.get(order.id) !== "not_applicable" && (
                 <Link href={`/admin/orders/${order.id}`} className={`inline-block ml-1.5 px-3 py-1.5 rounded-full text-sm font-bold whitespace-nowrap ${PICKUP_BADGE_STYLES[pickupBadgeByOrderId.get(order.id)!]}`}>
@@ -641,7 +641,7 @@ export default async function AdminOrdersPage({
 
               <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-[#1E3A5F]/10">
                 <div>
-                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide font-semibold">Pickup date</div>
+                  <div className="text-[10px] text-[#1E3A5F]/50 uppercase tracking-wide font-semibold">{order.fulfillment_method === "delivery" ? "Delivery date" : "Pickup date"}</div>
                   {order.due_date ? (
                     <div className={`text-sm font-mono ${isOverdue || isDueToday ? "text-ember font-semibold" : isDueTomorrow ? "text-[#1E3A5F] font-semibold" : "text-[#1E3A5F]/70"}`}>
                       {isOverdue && "⚠ "}

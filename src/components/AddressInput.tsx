@@ -13,7 +13,8 @@ export default function AddressInput({
   placeholder = "123 Main St, Town, MI 49000",
   className = "w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm",
   required,
-  id
+  id,
+  suggestEndpoint = "/api/address/suggest"
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -23,6 +24,9 @@ export default function AddressInput({
   className?: string;
   required?: boolean;
   id?: string;
+  // Where suggestions come from. Defaults to the admin endpoint; the
+  // customer scheduling page passes its own token-protected one.
+  suggestEndpoint?: string;
 }) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
@@ -37,7 +41,7 @@ export default function AddressInput({
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/address/suggest?q=${encodeURIComponent(q)}`, { signal: controller.signal });
+        const res = await fetch(`${suggestEndpoint}?q=${encodeURIComponent(q)}`, { signal: controller.signal });
         if (!res.ok) { setSuggestions([]); return; }
         const body = await res.json();
         setSuggestions(Array.isArray(body.suggestions) ? body.suggestions : []);
@@ -47,7 +51,7 @@ export default function AddressInput({
       }
     }, 300);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [value]);
+  }, [value, suggestEndpoint]);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {

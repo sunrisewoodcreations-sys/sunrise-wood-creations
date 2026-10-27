@@ -21,7 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   const { dateStr, time } = await req.json();
   if (!dateStr || !time) return NextResponse.json({ error: "Pick a date and time." }, { status: 400 });
 
-  const result = await bookPickupAppointment({ orderId: order.id, dateStr, time, source: "customer_token_link" });
+  const result = await bookPickupAppointment({ orderId: order.id, dateStr, time, source: "customer_token_link", restrictToDueDate: true });
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 });
 
   await admin.from("orders").update({ pickup_scheduling_token_used_at: new Date().toISOString() }).eq("id", order.id);

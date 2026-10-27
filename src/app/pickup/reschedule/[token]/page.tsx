@@ -15,7 +15,7 @@ export default async function PickupReschedulePage({ params }: { params: { token
 
   const { data: appointment } = await admin
     .from("pickup_appointments")
-    .select("id, status, order_id, appointment_type, on_my_way_at, orders:order_id(title, customer_id, delivery_address, delivery_drive_minutes, profiles:customer_id(full_name))")
+    .select("id, status, order_id, appointment_type, on_my_way_at, orders:order_id(title, customer_id, due_date, delivery_address, delivery_drive_minutes, profiles:customer_id(full_name))")
     .eq("reschedule_token", params.token)
     .maybeSingle();
 
@@ -30,8 +30,8 @@ export default async function PickupReschedulePage({ params }: { params: { token
   const alreadyUsed = appointment.status !== "scheduled";
   const isDelivery = appointment.appointment_type === "delivery";
   const availableDays = alreadyUsed ? [] : await getAvailableSlots(21, isDelivery
-    ? { kind: "delivery", driveMinutes: order?.delivery_drive_minutes || 0, excludeAppointmentId: appointment.id }
-    : { excludeAppointmentId: appointment.id });
+    ? { kind: "delivery", driveMinutes: order?.delivery_drive_minutes || 0, excludeAppointmentId: appointment.id, onlyDate: order?.due_date }
+    : { excludeAppointmentId: appointment.id, onlyDate: order?.due_date });
   const settings = await getAvailabilitySettings();
 
   return (
@@ -51,6 +51,7 @@ export default async function PickupReschedulePage({ params }: { params: { token
           availableDays={availableDays}
           heading={isDelivery ? "Reschedule Your Delivery" : "Reschedule Your Pickup"}
           kind={isDelivery ? "delivery" : "pickup"}
+          requiredDate={order?.due_date || undefined}
           deliveryAddress={order?.delivery_address || undefined}
           onMyWayAt={isDelivery && appointment.status === "scheduled" ? appointment.on_my_way_at : null}
           businessAddress={settings.business_address}

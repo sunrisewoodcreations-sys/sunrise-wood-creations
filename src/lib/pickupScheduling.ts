@@ -89,7 +89,9 @@ async function loadScheduleConfig(opts: {
   return { cfg, onVacation };
 }
 
-export type SlotOptions = { kind?: Kind; driveMinutes?: number; excludeAppointmentId?: string };
+// onlyDate: customers may only book the order's own estimated pickup /
+// delivery date, nothing earlier and nothing later. Admin views leave it off.
+export type SlotOptions = { kind?: Kind; driveMinutes?: number; excludeAppointmentId?: string; onlyDate?: string | null };
 
 // Computes real bookable slots for the next `daysAhead` days. One customer
 // per slot, enforced by the actual blocks of time (a delivery blocks the
@@ -102,7 +104,8 @@ export async function getAvailableSlots(daysAhead: number = 21, opts: SlotOption
   // "Disables all scheduling UNTIL a selected return date" — availability
   // resumes automatically once that date arrives.
   if (onVacation) return [];
-  return computeSlots(cfg);
+  const days = computeSlots(cfg);
+  return opts.onlyDate ? days.filter(d => d.date === opts.onlyDate) : days;
 }
 
 // Whether a specific date+time is still actually bookable right now —
@@ -117,6 +120,7 @@ export async function isSlotStillAvailable(dateStr: string, time: string, opts: 
     kind: opts.kind || "pickup", driveMinutes: opts.driveMinutes || 0, daysAhead, excludeAppointmentId: opts.excludeAppointmentId
   });
   if (onVacation) return false;
+  if (opts.onlyDate && dateStr !== opts.onlyDate) return false;
   return isSlotOpen(cfg, dateStr, time);
 }
 
@@ -231,12 +235,14 @@ export async function bookPickupAppointment(opts: {
   // Admin manual bookings may go outside the usual hours/blocked days —
   // the database's no-overlap guard still applies either way.
   skipAvailabilityCheck?: boolean;
+  // Customer bookings: only the order's estimated date is allowed.
+  restrictToDueDate?: boolean;
 }): Promise<{ ok: true; appointmentId: string } | { ok: false; error: string }> {
   const admin = createAdminClient();
 
   // Pickup vs delivery, and the stored one-way drive time, come from the
   // order itself — callers never pass them, so a customer can't tamper.
-  const { data: order } = await admin.from("orders").select("fulfillment_method, delivery_drive_minutes").eq("id", opts.orderId).maybeSingle();
+  const { data: order } = await admin.from("orders").select("fulfillment_method, delivery_drive_minutes, due_date").eq("id", opts.orderId).maybeSingle();
   if (!order) return { ok: false, error: "Order not found." };
   const kind: Kind = order.fulfillment_method === "delivery" ? "delivery" : "pickup";
   const driveMinutes = order.delivery_drive_minutes ?? 0;
@@ -245,7 +251,7 @@ export async function bookPickupAppointment(opts: {
   }
 
   if (!opts.skipAvailabilityCheck) {
-    const available = await isSlotStillAvailable(opts.dateStr, opts.time, { kind, driveMinutes });
+    const available = await isSlotStillAvailable(opts.dateStr, opts.time, { kind, driveMinutes, onlyDate: opts.restrictToDueDate ? order.due_date : null });
     if (!available) return { ok: false, error: CONFLICT_MESSAGE };
   }
 
@@ -278,13 +284,13 @@ export async function reschedulePickupAppointment(opts: {
 
   const { data: appt } = await admin
     .from("pickup_appointments")
-    .select("appointment_type, orders:order_id(delivery_drive_minutes)")
+    .select("appointment_type, orders:order_id(delivery_drive_minutes, due_date)")
     .eq("id", opts.appointmentId).maybeSingle();
   if (!appt) return { ok: false, error: "Appointment not found." };
   const kind: Kind = appt.appointment_type === "delivery" ? "delivery" : "pickup";
   const driveMinutes = (appt as any).orders?.delivery_drive_minutes ?? 0;
 
-  const available = await isSlotStillAvailable(opts.dateStr, opts.time, { kind, driveMinutes, excludeAppointmentId: opts.appointmentId });
+  const available = await isSlotStillAvailable(opts.dateStr, opts.time, { kind, driveMinutes, excludeAppointmentId: opts.appointmentId, onlyDate: opts.rescheduledBy === "customer" ? (appt as any).orders?.due_date : null });
   if (!available) return { ok: false, error: CONFLICT_MESSAGE };
 
   const blockCols = await blockColumnsFor(kind, opts.dateStr, opts.time, driveMinutes);

@@ -1,9 +1,9 @@
-import { WorkflowStage, WORKFLOW_STAGES, WORKFLOW_LABELS } from "@/lib/workflow";
+import { WorkflowStage, WORKFLOW_STAGES, workflowLabel } from "@/lib/workflow";
 
 // Visual progress indicator for the production workflow — shown on
 // every order. Purely presentational; the actual stage is computed
 // elsewhere (getWorkflowStage in lib/workflow.ts) and passed in as a prop.
-export default function WorkflowProgress({ stage }: { stage: WorkflowStage }) {
+export default function WorkflowProgress({ stage, fulfillmentMethod }: { stage: WorkflowStage; fulfillmentMethod?: string | null }) {
   const currentIndex = WORKFLOW_STAGES.indexOf(stage);
 
   return (
@@ -22,7 +22,7 @@ export default function WorkflowProgress({ stage }: { stage: WorkflowStage }) {
                 {isDone ? "✓" : i + 1}
               </div>
               <span className={`text-[10px] mt-1 whitespace-nowrap ${isCurrent ? "font-bold text-[#1E3A5F]" : "text-[#1E3A5F]/50"}`}>
-                {WORKFLOW_LABELS[s]}
+                {workflowLabel(s, fulfillmentMethod)}
               </span>
             </div>
             {i < WORKFLOW_STAGES.length - 1 && (

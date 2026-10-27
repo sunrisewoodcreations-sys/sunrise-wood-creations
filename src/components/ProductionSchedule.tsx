@@ -112,10 +112,10 @@ export function OrderScheduleCard({
         </div>
         <div className="text-[#1E3A5F]/60 truncate mb-1.5">{productLabel(order.product_type as ProductType)} — {order.title}</div>
         <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${PRODUCTION_STATUS_STYLES[order.production_status || "waiting"]}`}>
-          {PRODUCTION_STATUS_LABELS[order.production_status || "waiting"]}
+          {order.production_status === "ready_for_pickup" && order.fulfillment_method === "delivery" ? "Ready for delivery" : PRODUCTION_STATUS_LABELS[order.production_status || "waiting"]}
         </span>
         {!compact && order.due_date && (
-          <div className="text-[10px] text-[#1E3A5F]/50 mt-1">Pickup: {formatCalendarDate(order.due_date)}</div>
+          <div className="text-[10px] text-[#1E3A5F]/50 mt-1">{order.fulfillment_method === "delivery" ? "Delivery" : "Pickup"}: {formatCalendarDate(order.due_date)}</div>
         )}
         {!order.production_date && order.due_date && (
           <button

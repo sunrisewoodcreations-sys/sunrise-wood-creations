@@ -265,7 +265,7 @@ export default function ShopFloorView({ orders }: { orders: BuildOrder[] }) {
                     <div><span className="text-[#1E3A5F]/50">Estimated: </span><span className="font-semibold text-[#1E3A5F]">{o.estimatedBuildMinutes ? `${o.estimatedBuildMinutes}m` : "Not tracked"}</span></div>
                     <div><span className="text-[#1E3A5F]/50">Materials: </span><span className={`font-semibold ${o.materialsAvailable ? "text-sage" : "text-ember"}`}>{o.materialsAvailable ? "Ready" : "Short"}</span></div>
                     <div><span className="text-[#1E3A5F]/50">Due: </span><span className="font-semibold text-[#1E3A5F]">{o.dueDate || "—"}</span></div>
-                    <div><span className="text-[#1E3A5F]/50">Pickup: </span><span className="font-semibold text-[#1E3A5F]">{o.scheduledPickupDate ? `${o.scheduledPickupDate} ${o.scheduledPickupTime}` : "Not scheduled"}</span></div>
+                    <div><span className="text-[#1E3A5F]/50">{o.isDelivery ? "Delivery" : "Pickup"}: </span><span className="font-semibold text-[#1E3A5F]">{o.scheduledPickupDate ? `${o.scheduledPickupDate} ${o.scheduledPickupTime}` : "Not scheduled"}</span></div>
                   </div>
 
                   {o.productionNotes && (
