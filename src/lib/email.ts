@@ -1199,6 +1199,39 @@ export async function sendPickupReminderEmail(opts: {
   });
 }
 
+export async function sendReviewRequestEmail(opts: {
+  toEmail: string;
+  customerName: string;
+  itemTitles: string[];
+  reviewUrl: string;
+  delivered: boolean;
+  forceDemo?: boolean;
+}) {
+  const list = opts.itemTitles.map(t => `<li style="margin: 0 0 4px;">${escapeHtml(t)}</li>`).join("");
+  const html = shell({
+    preheader: "How are you enjoying your order?",
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">Hi ${escapeHtml(opts.customerName)},</p>
+      <p style="margin: 0 0 16px;">
+        It's been a day since your order was ${opts.delivered ? "delivered" : "picked up"} — we hope you're loving it! Would you take a minute to rate it?
+      </p>
+      <ul style="margin: 0 0 16px; padding-left: 20px; color: #1E3A5F;">${list}</ul>
+      <p style="margin: 0; font-size: 13px; color: #8a7a6b;">Your review helps other customers and means a lot to a small family shop. Thank you!</p>
+    `,
+    buttonText: "Rate Your Order",
+    buttonUrl: opts.reviewUrl
+  });
+
+  return sendViaResend({
+    emailType: "sendReviewRequestEmail",
+    forceDemo: opts.forceDemo,
+    from: FROM,
+    to: opts.toEmail,
+    subject: "How are you enjoying your order?",
+    html
+  });
+}
+
 export async function sendDeliveryOnTheWayEmail(opts: {
   toEmail: string;
   customerName: string;
