@@ -325,6 +325,7 @@ export default function AddOrderWithCustomerPicker({
           customerId: effectiveCustomer.id,
           dueDate,
           items: orderItems,
+          deliveryAddress: deliveryDollars > 0 ? delivery.address.trim() : null,
           couponId: appliedCoupon?.couponId || null,
           couponDiscountCents: appliedCoupon?.discountCents || 0
         })

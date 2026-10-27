@@ -41,7 +41,7 @@ export default async function PickupSchedulePage({ params }: { params: { token: 
             apiEndpoint={`/api/pickup/schedule/${params.token}/address`}
             orderTitle={order.title}
             customerName={(order as any).profiles?.full_name || "Customer"}
-            initialAddress={order.delivery_address || (order as any).profiles?.address || ""}
+            initialAddress={order.delivery_address || ""}
           />
         </main>
         <SiteFooter />
