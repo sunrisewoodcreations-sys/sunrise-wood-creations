@@ -22,6 +22,19 @@ type Appointment = {
 type StopCandidate = { id: string; title: string; customerName: string; address: string };
 type BlockedTime = { id: string; blocked_date: string; start_time: string; end_time: string; reason: string | null };
 
+// Opening directions near leave time marks "On my way" and emails the
+// customer (the server decides if it is close enough to leave time).
+function notifyMapsOpened(id: string) {
+  try {
+    fetch(`/api/pickup-appointments/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "maps_opened" }),
+      keepalive: true
+    }).then(() => { try { window.location.reload(); } catch {} }).catch(() => {});
+  } catch {}
+}
+
 function formatTimeDisplay(time: string): string {
   const [h, m] = time.split(":").map(Number);
   const period = h >= 12 ? "PM" : "AM";
@@ -151,8 +164,8 @@ export default function PickupAppointmentsView({ appointments, slotsByAppointmen
                     <div className="text-xs text-[#1E3A5F]/70 mt-0.5">
                       📍 {addr}
                       <div className="flex gap-2 mt-1">
-                        <a href={`https://www.google.com/maps/dir/?api=1&destination=${q}`} target="_blank" rel="noopener noreferrer" className="px-2.5 py-1 rounded-full bg-[#1E3A5F] text-white font-semibold">Google Maps</a>
-                        <a href={`https://maps.apple.com/?daddr=${q}`} target="_blank" rel="noopener noreferrer" className="px-2.5 py-1 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold">Apple Maps</a>
+                        <a href={`https://www.google.com/maps/dir/?api=1&destination=${q}`} target="_blank" rel="noopener noreferrer" onClick={() => notifyMapsOpened(a.id)} className="px-2.5 py-1 rounded-full bg-[#1E3A5F] text-white font-semibold">Google Maps</a>
+                        <a href={`https://maps.apple.com/?daddr=${q}`} target="_blank" rel="noopener noreferrer" onClick={() => notifyMapsOpened(a.id)} className="px-2.5 py-1 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold">Apple Maps</a>
                       </div>
                     </div>
                   )}
