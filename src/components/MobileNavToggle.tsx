@@ -29,7 +29,7 @@ export default function MobileNavToggle({
         onClick={() => setOpen(o => !o)}
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
-        className="p-2.5 -mr-2.5 text-walnut"
+        className="p-2.5 -ml-2.5 lg:-mr-2.5 text-walnut"
       >
         {open ? (
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

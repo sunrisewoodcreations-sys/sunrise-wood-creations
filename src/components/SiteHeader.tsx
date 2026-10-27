@@ -43,8 +43,17 @@ export default async function SiteHeader() {
     .filter(p => p.enabled);
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-10 py-4 border-b border-walnut/10 bg-cream shadow-sm">
-      <Link href="/" className="flex-shrink-0">
+    <header className="sticky top-0 z-40 grid grid-cols-[1fr_auto_1fr] lg:flex items-center lg:justify-between px-4 md:px-10 py-2.5 lg:py-4 border-b border-walnut/10 bg-cream shadow-sm">
+      {/* Phone/tablet: menu button on the left, logo centred, account on the right */}
+      <div className="lg:hidden justify-self-start">
+        <MobileNavToggle
+          primaryLinks={[{ href: "/", label: "Home" }]}
+          products={visibleProducts.map(p => ({ slug: p.slug, name: p.name }))}
+          secondaryLinks={SECONDARY_LINKS}
+          ctaHref="/request-quote"
+        />
+      </div>
+      <Link href="/" className="flex-shrink-0 justify-self-center">
         <Image
           src="/logo-header.png"
           alt="Sunrise Wood Creations"
@@ -69,7 +78,7 @@ export default async function SiteHeader() {
         ))}
       </nav>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 justify-self-end">
         <TrackedLink
           href="/request-quote"
           className="hidden sm:inline-block bg-accent text-white px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
@@ -78,12 +87,6 @@ export default async function SiteHeader() {
         >
           Request a Quote
         </TrackedLink>
-        <MobileNavToggle
-          primaryLinks={[{ href: "/", label: "Home" }]}
-          products={visibleProducts.map(p => ({ slug: p.slug, name: p.name }))}
-          secondaryLinks={SECONDARY_LINKS}
-          ctaHref="/request-quote"
-        />
         {role ? (
           <AccountMenu role={role} name={fullName} />
         ) : (
