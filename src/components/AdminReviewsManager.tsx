@@ -80,7 +80,7 @@ export default function AdminReviewsManager({ reviews }: { reviews: Review[] }) 
                 </div>
                 <div className="text-amber text-base leading-none">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</div>
               </div>
-              <p className="text-sm text-[#1E3A5F]/70 mb-3">{review.review_text}</p>
+              {review.review_text && <p className="text-sm text-[#1E3A5F]/70 mb-3">{review.review_text}</p>}
               <div className="flex gap-2">
                 {review.status !== "approved" && (
                   <button

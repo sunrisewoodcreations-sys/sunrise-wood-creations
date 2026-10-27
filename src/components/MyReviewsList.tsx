@@ -54,7 +54,7 @@ export default function MyReviewsList({
             {existing && !isOpen ? (
               <div className="mt-2">
                 <div className="text-amber text-lg leading-none mb-1">{"★".repeat(existing.rating)}{"☆".repeat(5 - existing.rating)}</div>
-                <p className="text-sm text-walnut/70 mb-2">{existing.review_text}</p>
+                {existing.review_text && <p className="text-sm text-walnut/70 mb-2">{existing.review_text}</p>}
                 <button onClick={() => setOpenItemId(item.id)} className="text-xs font-semibold text-ember hover:underline">
                   Edit review
                 </button>

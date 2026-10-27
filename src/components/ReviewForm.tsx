@@ -61,8 +61,7 @@ export default function ReviewForm({
         value={text}
         onChange={e => setText(e.target.value)}
         rows={4}
-        required
-        placeholder="Tell others about your experience with this piece..."
+        placeholder="Add a written review (optional)..."
         className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm"
       />
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
@@ -71,9 +70,9 @@ export default function ReviewForm({
         disabled={status === "loading"}
         className="bg-accent text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60"
       >
-        {status === "loading" ? "Submitting..." : initialText ? "Update Review" : "Submit Review"}
+        {status === "loading" ? "Submitting..." : initialRating ? "Update Rating" : "Submit Rating"}
       </button>
-      <p className="text-xs text-walnut/50">Reviews are checked before appearing publicly, usually within a day or two.</p>
+      <p className="text-xs text-walnut/50">Ratings and reviews are checked before appearing publicly, usually within a day or two.</p>
     </form>
   );
 }
