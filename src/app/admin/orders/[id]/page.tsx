@@ -15,6 +15,8 @@ import SendInvoiceButton from "@/components/SendInvoiceButton";
 import OrderChat from "@/components/OrderChat";
 import PicketUsageItemForm from "@/components/PicketUsageItemForm";
 import PicketUsageForm from "@/components/PicketUsageForm";
+import PickupProofPhotos from "@/components/PickupProofPhotos";
+import { listProofPhotos } from "@/lib/pickupProof";
 import OrderTimeline from "@/components/OrderTimeline";
 import { getOrderTimeline } from "@/lib/orderTimeline";
 import { productLabel, ProductType } from "@/lib/statusSteps";
@@ -44,6 +46,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
 
   const customer = (order as any).profiles;
   const timelineEvents = await getOrderTimeline(order.id);
+  const proofPhotos = await listProofPhotos(order.id).catch(() => []);
 
   const { data: proofs } = await supabase
     .from("proofs")
@@ -260,6 +263,10 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           ))}
         </div>
       )}
+
+      <div className="mt-6">
+        <PickupProofPhotos orderId={order.id} photos={proofPhotos} isDelivery={(order as any).fulfillment_method === "delivery"} />
+      </div>
 
       <div className="mt-6">
         <OrderChat orderId={order.id} currentUserId={user!.id} isAdmin />
