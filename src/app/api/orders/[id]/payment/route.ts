@@ -21,7 +21,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   // Payment method is only touched when the form sends it, so saving just an
   // amount keeps working. Venmo / Zelle need a transaction number.
   if (paymentMethod !== undefined) {
-    if (paymentMethod !== null && !["cash", "venmo", "zelle"].includes(paymentMethod)) {
+    if (paymentMethod !== null && !["cash", "card", "check", "venmo", "zelle"].includes(paymentMethod)) {
       return NextResponse.json({ error: "Invalid payment method" }, { status: 400 });
     }
     const ref = typeof paymentReference === "string" ? paymentReference.trim().slice(0, 100) : "";
@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: `Enter the ${paymentMethod === "venmo" ? "Venmo" : "Zelle"} transaction number.` }, { status: 400 });
     }
     update.payment_method = paymentMethod;
-    update.payment_reference = paymentMethod === "venmo" || paymentMethod === "zelle" ? ref : null;
+    update.payment_reference = paymentMethod && paymentMethod !== "cash" ? (ref || null) : null;
   }
 
   const admin = createAdminClient();

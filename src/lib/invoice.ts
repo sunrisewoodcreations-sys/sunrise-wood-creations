@@ -209,13 +209,13 @@ async function buildInvoicePdf(opts: {
   }
   metaRow("Status", isPaidInFull ? "Paid in Full" : "Balance Due", metaY, isPaidInFull ? SAGE : EMBER, true);
   // How it was paid, when recorded (and something has been paid).
-  const methodLabel = ({ cash: "Cash", venmo: "Venmo", zelle: "Zelle" } as Record<string, string>)[opts.paymentMethod || ""];
+  const methodLabel = ({ cash: "Cash", card: "Credit/Debit Card", check: "Check", venmo: "Venmo", zelle: "Zelle" } as Record<string, string>)[opts.paymentMethod || ""];
   if (methodLabel && opts.paidCents > 0) {
     metaY -= 17;
     metaRow("Paid By", methodLabel, metaY);
     if (opts.paymentReference) {
       metaY -= 17;
-      metaRow("Transaction #", opts.paymentReference.length > 26 ? opts.paymentReference.slice(0, 26) + "..." : opts.paymentReference, metaY);
+      metaRow(opts.paymentMethod === "check" ? "Check #" : opts.paymentMethod === "card" ? "Reference" : "Transaction #", opts.paymentReference.length > 26 ? opts.paymentReference.slice(0, 26) + "..." : opts.paymentReference, metaY);
     }
   }
 
