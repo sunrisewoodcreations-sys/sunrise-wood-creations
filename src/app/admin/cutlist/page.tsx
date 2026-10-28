@@ -39,7 +39,7 @@ export default async function CutListPage() {
       .select("id, title, product_id, quantity, production_date, production_status, profiles:customer_id(full_name)")
       .eq("product_type", "planter")
       .neq("status", "picked_up")
-      .in("production_date", [todayStr, tomorrowStr]),
+      .gte("production_date", todayStr),
     supabase.from("order_items").select("order_id, product_id, quantity, orders:order_id(production_date, product_type, status, production_status)"),
     supabase.from("saved_cut_lists").select("*").order("created_at", { ascending: false })
   ]);
@@ -109,8 +109,20 @@ export default async function CutListPage() {
     return jobs;
   }
 
+  // Jobs for every upcoming production date, so any day can be picked.
+  const upcomingDates = new Set<string>();
+  (orders || []).forEach((o: any) => { if (o.production_date && o.production_date >= todayStr) upcomingDates.add(o.production_date); });
+  (orderItems || []).forEach((it: any) => {
+    const d = it.orders?.production_date;
+    if (d && d >= todayStr && it.orders?.product_type === "planter") upcomingDates.add(d);
+  });
+  const jobsByDate: Record<string, Job[]> = {};
+  upcomingDates.forEach(d => { jobsByDate[d] = buildJobs(d); });
+
   return (
     <CutListGenerator
+      jobsByDate={jobsByDate}
+      todayStr={todayStr}
       bomReadyProducts={bomReadyProducts}
       bomPartsByProduct={bomPartsByProduct}
       todayJobs={buildJobs(todayStr)}

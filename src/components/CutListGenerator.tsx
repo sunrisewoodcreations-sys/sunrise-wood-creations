@@ -6,7 +6,7 @@ import { optimizeByMaterial, groupIdenticalBoards, mergeParts, OptimizationResul
 import CutDiagram from "@/components/CutDiagram";
 import AdminButton from "@/components/AdminButton";
 
-type Mode = "today" | "tomorrow" | "manual" | "saved";
+type Mode = "today" | "tomorrow" | "day" | "manual" | "saved";
 
 type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; hasBOM: boolean; productionStatus: string; orderStatus: string };
 type BOMPartRow = { part_name: string; length_inches: number; final_length_inches: number | null; quantity_per_unit: number; material_type: string; is_trim: boolean };
@@ -27,18 +27,32 @@ export default function CutListGenerator({
   bomPartsByProduct,
   todayJobs,
   tomorrowJobs,
+  jobsByDate,
+  todayStr,
   savedCutLists
 }: {
   bomReadyProducts: { id: string; name: string }[];
   bomPartsByProduct: Record<string, BOMPartRow[]>;
   todayJobs: Job[];
   tomorrowJobs: Job[];
+  jobsByDate: Record<string, Job[]>;
+  todayStr: string;
   savedCutLists: { id: string; name: string; created_at: string; board_length: number; kerf: number; result_json: any }[];
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("today");
   const [boardLength, setBoardLength] = useState(71);
   const [kerf, setKerf] = useState(0.125);
+  // Default the date picker to the day after tomorrow.
+  const [pickedDate, setPickedDate] = useState(() => {
+    const d = new Date(todayStr + "T12:00:00Z");
+    d.setUTCDate(d.getUTCDate() + 2);
+    return d.toISOString().slice(0, 10);
+  });
+  const pickedJobs = jobsByDate[pickedDate] || [];
+  const pickedLabel = pickedDate
+    ? new Date(pickedDate + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" })
+    : "";
   const [manualRows, setManualRows] = useState<{ productId: string; qty: string }[]>([
     { productId: bomReadyProducts[0]?.id || "", qty: "1" }
   ]);
@@ -173,6 +187,7 @@ export default function CutListGenerator({
         {([
           ["today", `Today's Cut List (${todayJobs.length} job${todayJobs.length === 1 ? "" : "s"})`],
           ["tomorrow", `Tomorrow's Cut List (${tomorrowJobs.length} job${tomorrowJobs.length === 1 ? "" : "s"})`],
+          ["day", "Pick a day"],
           ["manual", "Select products manually"],
           ["saved", "Saved cut lists"]
         ] as const).map(([key, label]) => (
@@ -220,6 +235,33 @@ export default function CutListGenerator({
           )}
           <AdminButton onClick={() => generateFromJobs(mode === "today" ? todayJobs : tomorrowJobs, mode === "today" ? "Today's Cut List" : "Tomorrow's Cut List")} disabled={(mode === "today" ? todayJobs : tomorrowJobs).length === 0}>
             Generate {mode === "today" ? "Today's" : "Tomorrow's"} Cut List
+          </AdminButton>
+        </div>
+      )}
+
+      {mode === "day" && (
+        <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-6 print:hidden">
+          <div className="flex flex-wrap items-end gap-3 mb-3">
+            <div>
+              <label htmlFor="cutlist-day" className="block text-xs font-semibold text-[#1E3A5F]/50 mb-1">Day to cut for</label>
+              <input id="cutlist-day" type="date" min={todayStr} value={pickedDate} onChange={e => { setPickedDate(e.target.value); setGenerationError(""); }} className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+            </div>
+          </div>
+          <div className="text-sm font-semibold text-[#1E3A5F] mb-2">Planter jobs scheduled {pickedLabel || "for that day"}</div>
+          {pickedJobs.length === 0 ? (
+            <p className="text-sm text-[#1E3A5F]/50 mb-3">No planter orders scheduled for this day.</p>
+          ) : (
+            <div className="space-y-1 mb-3">
+              {pickedJobs.map((j, i) => (
+                <div key={i} className="text-sm text-[#1E3A5F]/70 flex justify-between border-b border-[#1E3A5F]/5 py-1">
+                  <span>{j.customerName || j.orderTitle}</span>
+                  <span>{j.quantity} × {j.productName || "Unknown product"} {!j.hasBOM && <span className="text-ember font-semibold">(no parts list)</span>}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <AdminButton onClick={() => generateFromJobs(pickedJobs, `Cut List for ${pickedLabel}`)} disabled={pickedJobs.length === 0}>
+            Generate Cut List for {pickedLabel || "this day"}
           </AdminButton>
         </div>
       )}
