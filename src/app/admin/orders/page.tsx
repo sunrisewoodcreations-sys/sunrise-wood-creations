@@ -519,7 +519,9 @@ export default async function AdminOrdersPage({
                     )}
                   </td>
                   <td className="px-4 py-3.5 text-[#1E3A5F]/70">
-                    {order.profiles?.full_name}
+                    <Link href={`/admin/orders/${order.id}`} className="hover:underline hover:text-[#1E3A5F]">
+                      {order.profiles?.full_name}
+                    </Link>
                   </td>
                   <td className="px-4 py-3.5 font-mono text-[#1E3A5F]/70">
                     {new Date(order.created_at).toLocaleDateString()}
@@ -620,9 +622,9 @@ export default async function AdminOrdersPage({
               }`}
             >
               {/* Most important info first: who it's for, what it is, and its status */}
-              <div className="text-base font-bold text-[#1E3A5F]">
+              <Link href={`/admin/orders/${order.id}`} className="text-base font-bold text-[#1E3A5F] active:underline">
                 {order.profiles?.full_name}
-              </div>
+              </Link>
               <Link href={`/admin/orders/${order.id}`} className="block text-sm text-[#1E3A5F]/70 mb-2 active:underline">
                 {productLabel(order.product_type as ProductType)} — {order.title}
               </Link>
