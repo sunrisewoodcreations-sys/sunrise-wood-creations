@@ -95,6 +95,8 @@ async function buildInvoicePdf(opts: {
   lineItems: InvoiceLineItem[];
   totalCents: number;
   paidCents: number;
+  paymentMethod?: string | null;
+  paymentReference?: string | null;
   contactPhone: string;
   contactEmail: string;
 }): Promise<Buffer> {
@@ -206,6 +208,16 @@ async function buildInvoicePdf(opts: {
     metaY -= 17;
   }
   metaRow("Status", isPaidInFull ? "Paid in Full" : "Balance Due", metaY, isPaidInFull ? SAGE : EMBER, true);
+  // How it was paid, when recorded (and something has been paid).
+  const methodLabel = ({ cash: "Cash", venmo: "Venmo", zelle: "Zelle" } as Record<string, string>)[opts.paymentMethod || ""];
+  if (methodLabel && opts.paidCents > 0) {
+    metaY -= 17;
+    metaRow("Paid By", methodLabel, metaY);
+    if (opts.paymentReference) {
+      metaY -= 17;
+      metaRow("Transaction #", opts.paymentReference.length > 26 ? opts.paymentReference.slice(0, 26) + "..." : opts.paymentReference, metaY);
+    }
+  }
 
   // ===== BILL TO =====
   y -= 50;
@@ -535,6 +547,8 @@ export async function generateInvoicePdfForOrder(
     lineItems,
     totalCents: order.price_cents || 0,
     paidCents: order.amount_paid_cents || 0,
+    paymentMethod: order.payment_method || null,
+    paymentReference: order.payment_reference || null,
     contactPhone: contactInfo.phone,
     contactEmail: contactInfo.email
   });

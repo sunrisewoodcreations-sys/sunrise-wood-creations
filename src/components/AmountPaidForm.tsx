@@ -6,12 +6,18 @@ import { useRouter } from "next/navigation";
 export default function AmountPaidForm({
   orderId,
   priceCents,
-  initialAmountPaidCents
+  initialAmountPaidCents,
+  initialPaymentMethod,
+  initialPaymentReference
 }: {
   orderId: string;
   priceCents: number;
   initialAmountPaidCents: number;
+  initialPaymentMethod?: string | null;
+  initialPaymentReference?: string | null;
 }) {
+  const [method, setMethod] = useState(initialPaymentMethod || "");
+  const [reference, setReference] = useState(initialPaymentReference || "");
   const [amountPaid, setAmountPaid] = useState((initialAmountPaidCents / 100).toFixed(2));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -31,7 +37,12 @@ export default function AmountPaidForm({
     const res = await fetch(`/api/orders/${orderId}/payment`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amountPaidCents: Math.round(paidNumber * 100) })
+      body: JSON.stringify({
+        amountPaidCents: Math.round(paidNumber * 100),
+        // Only sent when a method is chosen (or one was already saved), so
+        // plain amount updates behave exactly as before.
+        ...(method || initialPaymentMethod ? { paymentMethod: method || null, paymentReference: reference } : {})
+      })
     });
 
     setLoading(false);
@@ -71,6 +82,34 @@ export default function AmountPaidForm({
             ${due.toFixed(2)}
           </div>
         </div>
+      </div>
+
+      <div className="mb-3">
+        <label htmlFor="payment-method" className="block text-[#1E3A5F]/50 text-xs mb-1">How they paid</label>
+        <select
+          id="payment-method"
+          value={method}
+          onChange={e => setMethod(e.target.value)}
+          className="border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm bg-white"
+        >
+          <option value="">Not recorded</option>
+          <option value="cash">Cash</option>
+          <option value="venmo">Venmo</option>
+          <option value="zelle">Zelle</option>
+        </select>
+        {(method === "venmo" || method === "zelle") && (
+          <div className="mt-2">
+            <label htmlFor="payment-ref" className="block text-[#1E3A5F]/50 text-xs mb-1">{method === "venmo" ? "Venmo" : "Zelle"} transaction number</label>
+            <input
+              id="payment-ref"
+              value={reference}
+              onChange={e => setReference(e.target.value)}
+              placeholder="Paste or type the transaction number"
+              maxLength={100}
+              className="w-full max-w-xs border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm bg-white"
+            />
+          </div>
+        )}
       </div>
 
       {error && <p className="text-ember text-xs mb-2">{error}</p>}

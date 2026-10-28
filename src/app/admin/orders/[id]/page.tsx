@@ -173,6 +173,8 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           orderId={order.id}
           priceCents={order.price_cents}
           initialAmountPaidCents={order.amount_paid_cents || 0}
+          initialPaymentMethod={(order as any).payment_method || null}
+          initialPaymentReference={(order as any).payment_reference || null}
         />
 
         <div className="flex gap-2 mb-4">
