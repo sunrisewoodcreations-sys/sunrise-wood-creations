@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ClickableRow from "@/components/ClickableRow";
 import { createClient } from "@/lib/supabase/server";
 import { isDemoAccountRequest } from "@/lib/demoMode";
 import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
@@ -503,7 +504,7 @@ export default async function AdminOrdersPage({
                 : "";
 
               return (
-                <tr key={order.id} className={`border-t border-[#1E3A5F]/10 hover:bg-cream/70 transition-colors ${rowBg}`}>
+                <ClickableRow as="tr" key={order.id} href={`/admin/orders/${order.id}`} className={`border-t border-[#1E3A5F]/10 hover:bg-cream/70 transition-colors ${rowBg}`}>
                   <td className="px-4 py-3.5">
                     <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#1E3A5F]">
                       {productLabel(order.product_type as ProductType)} — {order.title}
@@ -518,9 +519,7 @@ export default async function AdminOrdersPage({
                     )}
                   </td>
                   <td className="px-4 py-3.5 text-[#1E3A5F]/70">
-                    <Link href={`/admin/customers/${order.customer_id}`} className="hover:underline hover:text-[#1E3A5F]">
-                      {order.profiles?.full_name}
-                    </Link>
+                    {order.profiles?.full_name}
                   </td>
                   <td className="px-4 py-3.5 font-mono text-[#1E3A5F]/70">
                     {new Date(order.created_at).toLocaleDateString()}
@@ -589,7 +588,7 @@ export default async function AdminOrdersPage({
                       <DeleteOrderButton orderId={order.id} orderTitle={order.title} />
                     </div>
                   </td>
-                </tr>
+                </ClickableRow>
               );
             })}
             {sorted.length === 0 && (
@@ -613,16 +612,17 @@ export default async function AdminOrdersPage({
           const priority = priorityInfo(todayStr, order.due_date, order.status);
 
           return (
-            <div
+            <ClickableRow
               key={order.id}
+              href={`/admin/orders/${order.id}`}
               className={`bg-white border rounded-xl shadow-sm p-4 ${
                 isOverdue ? "border-ember/40 border-l-4 border-l-ember bg-ember/5" : "border-[#1E3A5F]/10"
               }`}
             >
               {/* Most important info first: who it's for, what it is, and its status */}
-              <Link href={`/admin/customers/${order.customer_id}`} className="text-base font-bold text-[#1E3A5F] active:underline">
+              <div className="text-base font-bold text-[#1E3A5F]">
                 {order.profiles?.full_name}
-              </Link>
+              </div>
               <Link href={`/admin/orders/${order.id}`} className="block text-sm text-[#1E3A5F]/70 mb-2 active:underline">
                 {productLabel(order.product_type as ProductType)} — {order.title}
               </Link>
@@ -691,7 +691,7 @@ export default async function AdminOrdersPage({
                   <DeleteOrderButton orderId={order.id} orderTitle={order.title} />
                 </div>
               </div>
-            </div>
+            </ClickableRow>
           );
         })}
         {sorted.length === 0 && (
