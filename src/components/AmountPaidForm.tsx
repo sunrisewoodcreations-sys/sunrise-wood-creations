@@ -94,17 +94,21 @@ export default function AmountPaidForm({
         >
           <option value="">Not recorded</option>
           <option value="cash">Cash</option>
+          <option value="card">Credit / debit card</option>
+          <option value="check">Check</option>
           <option value="venmo">Venmo</option>
           <option value="zelle">Zelle</option>
         </select>
-        {(method === "venmo" || method === "zelle") && (
+        {(method === "venmo" || method === "zelle" || method === "card" || method === "check") && (
           <div className="mt-2">
-            <label htmlFor="payment-ref" className="block text-[#1E3A5F]/50 text-xs mb-1">{method === "venmo" ? "Venmo" : "Zelle"} transaction number</label>
+            <label htmlFor="payment-ref" className="block text-[#1E3A5F]/50 text-xs mb-1">
+              {method === "venmo" ? "Venmo transaction number" : method === "zelle" ? "Zelle transaction number" : method === "check" ? "Check number (optional)" : "Receipt # or last 4 digits (optional)"}
+            </label>
             <input
               id="payment-ref"
               value={reference}
               onChange={e => setReference(e.target.value)}
-              placeholder="Paste or type the transaction number"
+              placeholder={method === "venmo" || method === "zelle" ? "Paste or type the transaction number" : "Optional"}
               maxLength={100}
               className="w-full max-w-xs border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm bg-white"
             />
