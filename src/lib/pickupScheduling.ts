@@ -284,6 +284,9 @@ export async function reschedulePickupAppointment(opts: {
   dateStr: string;
   time: string;
   rescheduledBy: "customer" | "admin";
+  // Admin only: allow any date/time, even outside normal hours (the
+  // no-overlap guard in the database still applies).
+  override?: boolean;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const admin = createAdminClient();
 
@@ -295,8 +298,10 @@ export async function reschedulePickupAppointment(opts: {
   const kind: Kind = appt.appointment_type === "delivery" ? "delivery" : "pickup";
   const driveMinutes = (appt as any).orders?.delivery_drive_minutes ?? 0;
 
-  const available = await isSlotStillAvailable(opts.dateStr, opts.time, { kind, driveMinutes, excludeAppointmentId: opts.appointmentId, notBefore: opts.rescheduledBy === "customer" ? (appt as any).orders?.due_date : null });
-  if (!available) return { ok: false, error: CONFLICT_MESSAGE };
+  if (!(opts.override && opts.rescheduledBy === "admin")) {
+    const available = await isSlotStillAvailable(opts.dateStr, opts.time, { kind, driveMinutes, excludeAppointmentId: opts.appointmentId, notBefore: opts.rescheduledBy === "customer" ? (appt as any).orders?.due_date : null });
+    if (!available) return { ok: false, error: CONFLICT_MESSAGE };
+  }
 
   const blockCols = await blockColumnsFor(kind, opts.dateStr, opts.time, driveMinutes);
   const { error } = await admin

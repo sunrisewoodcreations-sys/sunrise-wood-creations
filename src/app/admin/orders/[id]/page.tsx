@@ -15,6 +15,7 @@ import SendInvoiceButton from "@/components/SendInvoiceButton";
 import OrderChat from "@/components/OrderChat";
 import PicketUsageItemForm from "@/components/PicketUsageItemForm";
 import PicketUsageForm from "@/components/PicketUsageForm";
+import AdminScheduleForm from "@/components/AdminScheduleForm";
 import PickupProofPhotos from "@/components/PickupProofPhotos";
 import { listProofPhotos } from "@/lib/pickupProof";
 import OrderTimeline from "@/components/OrderTimeline";
@@ -46,6 +47,9 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
 
   const customer = (order as any).profiles;
   const timelineEvents = await getOrderTimeline(order.id);
+  const { count: activeAppointmentCount } = await supabase
+    .from("pickup_appointments").select("id", { count: "exact", head: true })
+    .eq("order_id", order.id).in("status", ["scheduled", "arrived"]);
   const proofPhotos = await listProofPhotos(order.id).catch(() => []);
 
   const { data: proofs } = await supabase
@@ -196,6 +200,15 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
             </div>
           )}
         </div>
+
+        {(((order as any).fulfillment_method === "pickup") || ((order as any).fulfillment_method === "delivery")) && order.status !== "picked_up" && (activeAppointmentCount || 0) === 0 && (
+          <AdminScheduleForm
+            orderId={order.id}
+            isDelivery={(order as any).fulfillment_method === "delivery"}
+            needsAddress={!((order as any).delivery_drive_minutes > 0)}
+            initialAddress={(order as any).delivery_address || ""}
+          />
+        )}
       </div>
 
       {order.product_type === "cornhole" && (

@@ -23,11 +23,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const admin = createAdminClient();
-  const { action, dateStr, time, notes, secondOrderId, secondAddress, confirmAddress } = await req.json();
+  const { action, dateStr, time, notes, secondOrderId, secondAddress, confirmAddress, override } = await req.json();
 
   if (action === "reschedule") {
     if (!dateStr || !time) return NextResponse.json({ error: "Pick a date and time." }, { status: 400 });
-    const result = await reschedulePickupAppointment({ appointmentId: params.id, dateStr, time, rescheduledBy: "admin" });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return NextResponse.json({ error: "That date or time isn't valid." }, { status: 400 });
+    const result = await reschedulePickupAppointment({ appointmentId: params.id, dateStr, time, rescheduledBy: "admin", override: override === true });
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 });
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.get("host")}`;
     const confirmResult = await sendPickupConfirmation(params.id, siteUrl, true);

@@ -113,7 +113,7 @@ export default function PickupAppointmentsView({ appointments, slotsByAppointmen
     await handleAction(id, "update_notes", undefined, notesDraft[id] ?? "");
   }
 
-  async function handleAction(id: string, action: string, extra?: { dateStr: string; time: string }, notes?: string) {
+  async function handleAction(id: string, action: string, extra?: { dateStr: string; time: string; override?: boolean }, notes?: string) {
     setBusyId(id);
     setError("");
     const res = await fetch(`/api/pickup-appointments/${id}`, {
@@ -214,9 +214,22 @@ export default function PickupAppointmentsView({ appointments, slotsByAppointmen
                 </div>
               </>
             )}
+            <div className="border-t border-[#1E3A5F]/10 pt-3 mb-3">
+              <div className="text-xs font-semibold text-[#1E3A5F] mb-1.5">Or pick any day and time (even outside your normal hours)</div>
+              <div className="flex flex-wrap items-end gap-3">
+                <div>
+                  <label htmlFor={`rs-date-${a.id}`} className="block text-[10px] text-[#1E3A5F]/60 mb-0.5">Date</label>
+                  <input id={`rs-date-${a.id}`} type="date" value={rescheduleDate} onChange={e => setRescheduleDate(e.target.value)} className="border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm bg-white" />
+                </div>
+                <div>
+                  <label htmlFor={`rs-time-${a.id}`} className="block text-[10px] text-[#1E3A5F]/60 mb-0.5">Time</label>
+                  <input id={`rs-time-${a.id}`} type="time" value={rescheduleTime} onChange={e => setRescheduleTime(e.target.value)} className="border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm bg-white" />
+                </div>
+              </div>
+            </div>
             <div className="flex gap-2">
               <button
-                onClick={() => handleAction(a.id, "reschedule", { dateStr: rescheduleDate, time: rescheduleTime })}
+                onClick={() => handleAction(a.id, "reschedule", { dateStr: rescheduleDate, time: rescheduleTime, override: true })}
                 disabled={!rescheduleDate || !rescheduleTime || isBusy}
                 className="bg-[#1E3A5F] text-white rounded-md px-3 py-1.5 text-xs font-semibold disabled:opacity-60"
               >
