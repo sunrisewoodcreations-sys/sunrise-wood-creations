@@ -36,6 +36,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   if (mode === "already_scheduled") {
     if (!dateStr || !time) return NextResponse.json({ error: "Pick a date and time." }, { status: 400 });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return NextResponse.json({ error: "That date or time isn't valid." }, { status: 400 });
 
     // Delivery: the address (and so the drive time) must be on the order
     // first. Pass `address` here to enter it for the customer.
