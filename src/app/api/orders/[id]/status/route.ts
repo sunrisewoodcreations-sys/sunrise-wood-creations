@@ -107,6 +107,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           fulfillmentMethod: order.fulfillment_method,
           schedulingKind: order.fulfillment_method === "delivery" ? "delivery" : "pickup"
         });
+        // The invoice went out attached to this email — record it so the
+        // order page shows "Emailed" instead of "Not yet emailed".
+        if (invoicePdfBuffer && invoiceNumber != null) {
+          await admin.from("invoices")
+            .update({ sent_at: new Date().toISOString() })
+            .eq("order_id", order.id)
+            .eq("invoice_number", invoiceNumber);
+        }
       } catch (err) {
         console.error("Status-update email failed to send:", err);
       }
