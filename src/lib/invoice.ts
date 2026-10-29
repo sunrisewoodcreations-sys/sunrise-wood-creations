@@ -489,15 +489,20 @@ export async function reserveBuiltUnitForOrder(admin: ReturnType<typeof createAd
 
 // Used when an order is deleted: puts set-aside pieces back on the shelf.
 export async function releaseReservedStock(admin: ReturnType<typeof createAdminClient>, order: any): Promise<void> {
+  // Already handed to the customer: nothing goes back on the shelf.
+  if (["picked_up", "completed"].includes(order.status)) return;
   const lines = await loadStockLines(admin, order);
   for (const line of lines) {
-    if (line.reserved <= 0) continue;
+    // Orders that were fully covered under the older all-at-once rule have
+    // stock_deducted set but no per-line count, so give back the full quantity.
+    const back = order.stock_deducted ? Math.max(line.reserved, line.quantity) : line.reserved;
+    if (back <= 0) continue;
     const { data: product } = await admin.from("products").select("stock_quantity").eq("id", line.product_id).maybeSingle();
     if (!product) continue;
     const old = product.stock_quantity || 0;
-    await admin.from("products").update({ stock_quantity: old + line.reserved }).eq("id", line.product_id);
+    await admin.from("products").update({ stock_quantity: old + back }).eq("id", line.product_id);
     await admin.from("product_stock_adjustments").insert({
-      product_id: line.product_id, old_quantity: old, new_quantity: old + line.reserved,
+      product_id: line.product_id, old_quantity: old, new_quantity: old + back,
       reason: `Order deleted, stock returned: ${order.title || order.id}`
     });
   }
