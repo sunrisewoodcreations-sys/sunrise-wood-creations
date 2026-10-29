@@ -275,6 +275,23 @@ export default function AddOrderWithCustomerPicker({
       setError("Every item needs a title/description.");
       return;
     }
+    // Pop-up warning when the shelf can't cover everything on this order.
+    const shortages: string[] = [];
+    const seenProducts = new Set<string>();
+    items.forEach(it => {
+      if (!it.selectedProductId || seenProducts.has(it.selectedProductId)) return;
+      seenProducts.add(it.selectedProductId);
+      const prod = products.find(pr => pr.id === it.selectedProductId);
+      if (!prod || prod.stock_quantity == null) return;
+      const needed = items.filter(o => o.selectedProductId === it.selectedProductId)
+        .reduce((sum, o) => sum + (Math.max(1, Math.round(Number(o.quantity)) || 1)), 0);
+      if (needed > prod.stock_quantity) {
+        shortages.push(`${prod.name}: you need ${needed}, you have ${prod.stock_quantity} on hand — ${needed - prod.stock_quantity} still to build.`);
+      }
+    });
+    if (shortages.length > 0 && !window.confirm(`Not enough stock on hand for this order:\n\n${shortages.join("\n")}\n\nThe ones on hand will be set aside for this customer and the rest go on the cut list. Place the order anyway?`)) {
+      return;
+    }
     setLoading(true);
     setError("");
     try {

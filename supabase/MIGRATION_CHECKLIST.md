@@ -66,6 +66,7 @@ anything already in place.
 - [ ] `migrations_production_capacity.sql` — daily production capacity settings
 - [ ] `migrations_shop_floor.sql` — build timers, progress photos, per-product checklists
 - [ ] `migrations_default_low_stock_threshold.sql` — low-stock alert level defaults to 2 (and raises existing 0s to 2)
+- [ ] `migrations_stock_reservations.sql` — set stock aside for an order when it is placed (partial reservations)
 
 ---
 

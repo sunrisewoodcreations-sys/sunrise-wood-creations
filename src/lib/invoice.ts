@@ -401,64 +401,105 @@ async function buildInvoicePdf(opts: {
 // and right at order creation (new — so an order that's already fully
 // in stock skips straight to Ready for Pickup instead of waiting for a
 // deposit or manual status change).
+type StockLine = { kind: "item" | "order"; id: string; product_id: string; quantity: number; reserved: number };
+
+async function loadStockLines(admin: ReturnType<typeof createAdminClient>, order: any): Promise<StockLine[]> {
+  const { data: orderItems } = await admin.from("order_items").select("*").eq("order_id", order.id);
+  if (orderItems && orderItems.length > 0) {
+    return orderItems.filter((it: any) => it.product_id).map((it: any) => ({
+      kind: "item" as const, id: it.id, product_id: it.product_id,
+      quantity: it.quantity || 1, reserved: it.stock_reserved_qty || 0
+    }));
+  }
+  if (order.product_id) {
+    const { data: fresh } = await admin.from("orders").select("stock_reserved_qty").eq("id", order.id).maybeSingle();
+    return [{ kind: "order", id: order.id, product_id: order.product_id, quantity: order.quantity || 1, reserved: (fresh as any)?.stock_reserved_qty || 0 }];
+  }
+  return [];
+}
+
+// Sets stock aside for an order the moment it is placed — as many pieces as
+// are on the shelf, even if that is only part of the order (order of 3, 2 on
+// hand: the 2 come off the shelf now, stock shows 0, 1 is left to build).
+// Optionally limited to one product. Returns whether anything was set aside.
+export async function reserveStockForOrder(
+  admin: ReturnType<typeof createAdminClient>,
+  order: any,
+  onlyProductId?: string
+): Promise<boolean> {
+  let reservedAny = false;
+  const lines = await loadStockLines(admin, order);
+  for (const line of lines) {
+    if (onlyProductId && line.product_id !== onlyProductId) continue;
+    const need = line.quantity - line.reserved;
+    if (need <= 0) continue;
+    const { data: product } = await admin.from("products").select("stock_quantity").eq("id", line.product_id).maybeSingle();
+    const stock = product?.stock_quantity || 0;
+    const take = Math.min(stock, need);
+    if (take <= 0) continue;
+    // Record the reservation first; if that fails (e.g. migration not run),
+    // leave stock alone rather than lose track of it.
+    const { error: lineErr } = await admin
+      .from(line.kind === "item" ? "order_items" : "orders")
+      .update({ stock_reserved_qty: line.reserved + take }).eq("id", line.id);
+    if (lineErr) { console.error("Stock reservation failed:", lineErr.message); continue; }
+    await admin.from("products").update({ stock_quantity: stock - take }).eq("id", line.product_id);
+    await admin.from("product_stock_adjustments").insert({
+      product_id: line.product_id, old_quantity: stock, new_quantity: stock - take,
+      reason: `Set aside for order: ${order.title || order.id}`
+    });
+    await checkAndSendLowStockAlert(admin, line.product_id);
+    reservedAny = true;
+  }
+  return reservedAny;
+}
+
+// Marks the order Ready for Pickup once every linked line is fully set aside.
+// Returns true if the order is (now) fully covered.
+export async function markOrderReadyIfCovered(admin: ReturnType<typeof createAdminClient>, order: any): Promise<boolean> {
+  if (order.stock_deducted) return true;
+  const lines = await loadStockLines(admin, order);
+  if (lines.length === 0 || !lines.every(l => l.reserved >= l.quantity)) return false;
+  await admin.from("orders").update({ status: "ready_for_pickup", stock_deducted: true }).eq("id", order.id);
+  order.status = "ready_for_pickup";
+  order.stock_deducted = true;
+  // No scheduling email here — the caller sends the single "ready" email
+  // (with the scheduling link folded in). See getOrCreatePickupSchedulingUrl().
+  return true;
+}
+
+// Used at order creation and invoice time: set aside whatever is on hand,
+// and skip straight to Ready only if the whole order is covered.
 export async function checkStockAndAutoMarkReady(admin: ReturnType<typeof createAdminClient>, order: any): Promise<void> {
   if (order.stock_deducted) return;
+  await reserveStockForOrder(admin, order);
+  await markOrderReadyIfCovered(admin, order);
+}
 
-  const { data: orderItems } = await admin
-    .from("order_items")
-    .select("id, product_id, title, quantity, unit_price_cents")
-    .eq("order_id", order.id);
+// One finished piece goes straight to a specific order (no change to shelf stock).
+// Returns false if that order has no unfilled line for the product.
+export async function reserveBuiltUnitForOrder(admin: ReturnType<typeof createAdminClient>, order: any, productId: string): Promise<boolean> {
+  const lines = await loadStockLines(admin, order);
+  const line = lines.find(l => l.product_id === productId && l.reserved < l.quantity);
+  if (!line) return false;
+  const { error } = await admin.from(line.kind === "item" ? "order_items" : "orders")
+    .update({ stock_reserved_qty: line.reserved + 1 }).eq("id", line.id);
+  return !error;
+}
 
-  const hasLineItems = orderItems && orderItems.length > 0;
-
-  if (hasLineItems) {
-    const linkedItems = orderItems!.filter(it => it.product_id);
-    if (linkedItems.length > 0) {
-      const { data: productRows } = await admin
-        .from("products")
-        .select("id, stock_quantity")
-        .in("id", linkedItems.map(it => it.product_id));
-
-      const stockById: Record<string, number> = {};
-      (productRows || []).forEach((p: any) => { stockById[p.id] = p.stock_quantity || 0; });
-
-      const allInStock = linkedItems.every(it => (stockById[it.product_id] || 0) >= it.quantity);
-
-      if (allInStock) {
-        for (const it of linkedItems) {
-          await admin
-            .from("products")
-            .update({ stock_quantity: stockById[it.product_id] - it.quantity })
-            .eq("id", it.product_id);
-          await checkAndSendLowStockAlert(admin, it.product_id);
-        }
-        await admin.from("orders").update({ status: "ready_for_pickup", stock_deducted: true }).eq("id", order.id);
-        order.status = "ready_for_pickup";
-        order.stock_deducted = true;
-        // No scheduling email sent here — the caller that's about to
-        // send its own "your order is ready" email (order creation, or
-        // a manual/automatic status change) folds the scheduling link
-        // into that single email instead, so the customer gets one
-        // email, not two. See getOrCreatePickupSchedulingUrl().
-      }
-    }
-  } else if (order.product_id) {
-    // Legacy single-item order with no order_items rows.
-    const { data: product } = await admin
-      .from("products")
-      .select("stock_quantity")
-      .eq("id", order.product_id)
-      .maybeSingle();
-
-    const neededQty = order.quantity || 1;
-    if (product && (product.stock_quantity || 0) >= neededQty) {
-      await admin.from("products").update({ stock_quantity: product.stock_quantity - neededQty }).eq("id", order.product_id);
-      await checkAndSendLowStockAlert(admin, order.product_id);
-      await admin.from("orders").update({ status: "ready_for_pickup", stock_deducted: true }).eq("id", order.id);
-      order.status = "ready_for_pickup";
-      order.stock_deducted = true;
-      // See the note above — no scheduling email sent here either.
-    }
+// Used when an order is deleted: puts set-aside pieces back on the shelf.
+export async function releaseReservedStock(admin: ReturnType<typeof createAdminClient>, order: any): Promise<void> {
+  const lines = await loadStockLines(admin, order);
+  for (const line of lines) {
+    if (line.reserved <= 0) continue;
+    const { data: product } = await admin.from("products").select("stock_quantity").eq("id", line.product_id).maybeSingle();
+    if (!product) continue;
+    const old = product.stock_quantity || 0;
+    await admin.from("products").update({ stock_quantity: old + line.reserved }).eq("id", line.product_id);
+    await admin.from("product_stock_adjustments").insert({
+      product_id: line.product_id, old_quantity: old, new_quantity: old + line.reserved,
+      reason: `Order deleted, stock returned: ${order.title || order.id}`
+    });
   }
 }
 
