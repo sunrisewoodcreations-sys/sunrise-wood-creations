@@ -56,6 +56,8 @@ export default function CutListGenerator({
   const [manualRows, setManualRows] = useState<{ productId: string; qty: string }[]>([
     { productId: bomReadyProducts[0]?.id || "", qty: "1" }
   ]);
+  // Finished products this cut list makes — saved with it so the Home Screen can offer "Add to stock".
+  const [genItems, setGenItems] = useState<{ productId: string; name: string; quantity: number }[]>([]);
   const [generated, setGenerated] = useState<{ normalResults: OptimizationResult[]; trimResults: OptimizationResult[]; label: string } | null>(null);
   const [generationError, setGenerationError] = useState("");
   const [listName, setListName] = useState("");
@@ -76,7 +78,7 @@ export default function CutListGenerator({
       const parts = (bomPartsByProduct[j.productId!] || []).map(toBOMPart);
       return parts.map(p => ({ ...p, quantityPerUnit: p.quantityPerUnit * j.quantity }));
     });
-    runOptimization(mergeParts(partLists), label);
+    runOptimization(mergeParts(partLists), label, jobs.map(j => ({ productId: j.productId!, name: j.productName || "Product", quantity: j.quantity })));
 
     // Generating a real cut list means production is starting on these
     // orders — mark each one Building, same status the Production
@@ -134,11 +136,21 @@ export default function CutListGenerator({
       const parts = (bomPartsByProduct[r.productId] || []).map(toBOMPart);
       return parts.map(p => ({ ...p, quantityPerUnit: p.quantityPerUnit * Number(r.qty) }));
     });
-    runOptimization(mergeParts(partLists), "Manual selection");
+    runOptimization(mergeParts(partLists), "Manual selection", validRows.map(r => ({
+      productId: r.productId,
+      name: bomReadyProducts.find(p => p.id === r.productId)?.name || "Product",
+      quantity: Number(r.qty)
+    })));
   }
 
-  function runOptimization(allParts: BOMPart[], label: string) {
+  function runOptimization(allParts: BOMPart[], label: string, items: { productId: string; name: string; quantity: number }[] = []) {
     setGenerationError("");
+    const merged = new Map<string, { productId: string; name: string; quantity: number }>();
+    items.forEach(i => {
+      const cur = merged.get(i.productId);
+      if (cur) cur.quantity += i.quantity; else merged.set(i.productId, { ...i });
+    });
+    setGenItems(Array.from(merged.values()));
     const normalParts = allParts.filter(p => !p.isTrim);
     const trimParts = allParts.filter(p => p.isTrim);
     setGenerated({
@@ -156,11 +168,14 @@ export default function CutListGenerator({
     const res = await fetch("/api/cutlist/saved", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, boardLength, kerf, resultJson: generated })
+      body: JSON.stringify({
+        name, boardLength, kerf,
+        resultJson: genItems.length > 0 ? { ...generated, inventory: { status: "pending", items: genItems } } : generated
+      })
     });
     setSaving(false);
     if (res.ok) {
-      setSaveMessage("Saved.");
+      setSaveMessage(genItems.length > 0 ? "Saved. It now shows on your Home Screen under \"Ready to add to inventory\"." : "Saved.");
       setListName("");
       router.refresh();
     }
@@ -319,7 +334,7 @@ export default function CutListGenerator({
         <div>
           <div className="print:hidden flex flex-wrap items-center gap-2 mb-6 bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
             <input value={listName} onChange={e => setListName(e.target.value)} placeholder="Name this cut list (optional)" className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm flex-1 min-w-[200px]" />
-            <AdminButton onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save this cut list"}</AdminButton>
+            <AdminButton onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save & send to Home Screen"}</AdminButton>
             <AdminButton variant="secondary" onClick={() => window.print()}>Print / Save as PDF</AdminButton>
             {saveMessage && <span className="text-sm font-semibold text-sage">{saveMessage}</span>}
           </div>

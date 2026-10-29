@@ -257,7 +257,7 @@ export default function PicketPlanner({
               <div className="print:hidden flex flex-wrap items-center gap-2 mb-6 bg-white border border-walnut/10 rounded-xl shadow-sm p-4">
                 <label htmlFor={`${uid}-name`} className="sr-only">Name for this cut list</label>
                 <input id={`${uid}-name`} value={listName} onChange={e => setListName(e.target.value)} placeholder="Name this cut list (optional)" className={`${fieldClass} flex-1 min-w-[200px]`} />
-                <AdminButton onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save this cut list"}</AdminButton>
+                <AdminButton onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save & send to Home Screen"}</AdminButton>
                 <AdminButton variant="secondary" onClick={() => window.print()}>Print / Save as PDF</AdminButton>
                 {saveMessage && <span role="status" className="text-sm font-semibold text-walnut">{saveMessage}</span>}
               </div>
