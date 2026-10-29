@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { reserveStockForOrder, markOrderReadyIfCovered, reserveBuiltUnitForOrder } from "@/lib/invoice";
+import { assignUnitToLine } from "@/lib/builtUnits";
 
 // Orders that are still waiting on finished stock. Cancelled, completed,
 // already-ready and already-picked-up orders are never touched.
@@ -16,11 +17,12 @@ const asReady = (o: any): ReadyOrder => ({ id: o.id, title: o.title, customerNam
 // A finished piece built FOR a specific customer's order: it is set aside for
 // that order (shelf stock does not change). When every piece of that order is
 // set aside, the order is marked Ready. Returns { used, ready }.
-export async function giveBuiltUnitToOrder(admin: ReturnType<typeof createAdminClient>, orderId: string, productId: string) {
+export async function giveBuiltUnitToOrder(admin: ReturnType<typeof createAdminClient>, orderId: string, productId: string, unit: { id: string | null; costCents: number }) {
   const order = await loadOrder(admin, orderId);
   if (!order || order.stock_deducted || !WAITING_STATUSES.includes(order.status)) return { used: false, ready: null as ReadyOrder | null };
-  const used = await reserveBuiltUnitForOrder(admin, order, productId);
-  if (!used) return { used: false, ready: null };
+  const line = await reserveBuiltUnitForOrder(admin, order, productId);
+  if (!line) return { used: false, ready: null };
+  await assignUnitToLine(admin, unit, order.id, { kind: line.kind, id: line.id, product_id: line.product_id });
   const covered = await markOrderReadyIfCovered(admin, order);
   return { used: true, ready: covered ? asReady(order) : null };
 }

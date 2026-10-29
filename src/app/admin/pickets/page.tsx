@@ -10,13 +10,19 @@ export default async function PicketsPage() {
   const [
     { data: purchases },
     { data: planterProducts },
-    { data: usageAllocations }
+    { data: usageAllocations },
+    { data: builtUnits }
   ] = await Promise.all([
     supabase.from("picket_purchases").select("*").order("purchased_at", { ascending: true }).order("created_at", { ascending: true }),
     supabase.from("products").select("id, name, pickets_per_unit").eq("product_type", "planter").gt("pickets_per_unit", 0),
     supabase.from("picket_usage_allocations")
       .select("id, quantity, created_at, order_id, purchase_id, orders:order_id(title, product_type), picket_purchases:purchase_id(purchased_at)")
       .order("created_at", { ascending: false })
+      .limit(30),
+    // Pieces built (pickets come out when a piece is built). Empty if the table isn't set up yet.
+    supabase.from("built_units")
+      .select("id, cost_cents, pickets_used, built_at, order_id, products:product_id(name), orders:order_id(title)")
+      .order("built_at", { ascending: false })
       .limit(30)
   ]);
 
@@ -136,6 +142,39 @@ export default async function PicketsPage() {
           </div>
         )}
       </div>
+
+      {builtUnits && builtUnits.length > 0 && (
+        <div className="mt-8">
+          <h2 className="font-display text-lg text-[#1E3A5F] mb-2">Pieces built</h2>
+          <p className="text-xs text-[#1E3A5F]/50 mb-3">Pickets come out of inventory when a piece is built. Each piece keeps the cost of its own pickets.</p>
+          <div className="overflow-x-auto bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-[#1E3A5F] text-white text-xs uppercase tracking-wide">
+                  <th className="text-left px-4 py-3">Piece</th>
+                  <th className="text-right px-4 py-3">Pickets</th>
+                  <th className="text-right px-4 py-3">Cost</th>
+                  <th className="text-left px-4 py-3">Status</th>
+                  <th className="text-left px-4 py-3">Built</th>
+                </tr>
+              </thead>
+              <tbody>
+                {builtUnits.map((u: any) => (
+                  <tr key={u.id} className="border-t border-[#1E3A5F]/10">
+                    <td className="px-4 py-3 text-[#1E3A5F]">{u.products?.name || "Deleted product"}</td>
+                    <td className="px-4 py-3 text-right text-[#1E3A5F]/70">{u.pickets_used || "—"}</td>
+                    <td className="px-4 py-3 text-right text-[#1E3A5F]/70">${(u.cost_cents / 100).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-[#1E3A5F]/70">
+                      {u.order_id ? <Link href={`/admin/orders/${u.order_id}`} className="font-semibold text-[#1E3A5F] hover:underline">For {u.orders?.title || "an order"}</Link> : "On the shelf"}
+                    </td>
+                    <td className="px-4 py-3 text-[#1E3A5F]/50 text-xs font-mono">{new Date(u.built_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {usageAllocations && usageAllocations.length > 0 && (
         <div className="mt-8">

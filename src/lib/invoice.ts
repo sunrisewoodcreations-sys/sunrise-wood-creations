@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendInvoiceEmail, sendLowStockAlert } from "@/lib/email";
 import { shouldNotify } from "@/lib/notify";
 import { productLabel, ProductType } from "@/lib/statusSteps";
+import { claimShelfUnitsForLine, releaseUnitsFromOrder } from "@/lib/builtUnits";
 import { SALES_TAX_RATE } from "@/lib/tax";
 
 // Same brand palette already used in the redesigned customer emails —
@@ -444,6 +445,7 @@ export async function reserveStockForOrder(
       .update({ stock_reserved_qty: line.reserved + take }).eq("id", line.id);
     if (lineErr) { console.error("Stock reservation failed:", lineErr.message); continue; }
     await admin.from("products").update({ stock_quantity: stock - take }).eq("id", line.product_id);
+    await claimShelfUnitsForLine(admin, order.id, { kind: line.kind, id: line.id, product_id: line.product_id }, take);
     await admin.from("product_stock_adjustments").insert({
       product_id: line.product_id, old_quantity: stock, new_quantity: stock - take,
       reason: `Set aside for order: ${order.title || order.id}`
@@ -477,20 +479,21 @@ export async function checkStockAndAutoMarkReady(admin: ReturnType<typeof create
 }
 
 // One finished piece goes straight to a specific order (no change to shelf stock).
-// Returns false if that order has no unfilled line for the product.
-export async function reserveBuiltUnitForOrder(admin: ReturnType<typeof createAdminClient>, order: any, productId: string): Promise<boolean> {
+// Returns that order line, or null if the order has no unfilled line for the product.
+export async function reserveBuiltUnitForOrder(admin: ReturnType<typeof createAdminClient>, order: any, productId: string): Promise<StockLine | null> {
   const lines = await loadStockLines(admin, order);
   const line = lines.find(l => l.product_id === productId && l.reserved < l.quantity);
-  if (!line) return false;
+  if (!line) return null;
   const { error } = await admin.from(line.kind === "item" ? "order_items" : "orders")
     .update({ stock_reserved_qty: line.reserved + 1 }).eq("id", line.id);
-  return !error;
+  return error ? null : line;
 }
 
 // Used when an order is deleted: puts set-aside pieces back on the shelf.
 export async function releaseReservedStock(admin: ReturnType<typeof createAdminClient>, order: any): Promise<void> {
   // Already handed to the customer: nothing goes back on the shelf.
   if (["picked_up", "completed"].includes(order.status)) return;
+  await releaseUnitsFromOrder(admin, order.id);
   const lines = await loadStockLines(admin, order);
   for (const line of lines) {
     // Orders that were fully covered under the older all-at-once rule have

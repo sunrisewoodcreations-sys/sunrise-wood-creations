@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { markOldestWaitingOrderReady, giveBuiltUnitToOrder } from "@/lib/inventoryFulfillment";
+import { recordBuiltUnit } from "@/lib/builtUnits";
 
 type Item = { productId: string; name: string; quantity: number; added?: number; orderId?: string };
 
@@ -57,6 +58,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const undo = () => supabase.from("saved_cut_lists").update({ result_json: list.result_json }).eq("id", list.id);
   const admin = createAdminClient();
   const target = items[idx].orderId;
+  // The piece is built now: its pickets come out of inventory and it remembers its cost.
+  let unit: { id: string | null; costCents: number; warning?: string } = { id: null, costCents: 0 };
+  try { unit = await recordBuiltUnit(admin, productId); } catch (err) { console.error("Recording built piece failed:", err); }
   let order = null as { id: string; title: string; customerName: string | null } | null;
   let toOrder = false;
 
@@ -64,7 +68,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (target) {
       // Built for a specific customer: it goes straight to THEIR order (shelf
       // stock doesn't change). Their order turns Ready once every piece is in.
-      const r = await giveBuiltUnitToOrder(admin, target, productId);
+      const r = await giveBuiltUnitToOrder(admin, target, productId, unit);
       toOrder = r.used;
       order = r.ready;
     }
@@ -112,5 +116,5 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     notified = { title: order.title, customerName: order.customerName, emailed };
   }
 
-  return NextResponse.json({ ok: true, notified, toOrder, toOrderName: toOrder ? (order?.customerName ?? null) : null });
+  return NextResponse.json({ ok: true, notified, toOrder, toOrderName: toOrder ? (order?.customerName ?? null) : null, warning: unit.warning ?? null });
 }

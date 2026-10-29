@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { syncProductCosts } from "@/lib/picketCost";
+import { syncProductCosts, checkPicketLowAlert } from "@/lib/picketCost";
+import { recordBuiltUnit, removeShelfUnits } from "@/lib/builtUnits";
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -80,7 +81,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     });
   }
 
+  // Adding stock here counts as building those pieces: their pickets come out of
+  // inventory automatically (pickets-per-unit × amount). Lowering stock removes
+  // pieces from the shelf and puts their pickets back (for testing / corrections).
+  const admin = createAdminClient();
+  let warning: string | null = null;
+  if (stockChanged && existingProduct) {
+    const delta = newStock - (existingProduct.stock_quantity ?? 0);
+    try {
+      if (delta > 0) {
+        for (let i = 0; i < delta; i++) {
+          const unit = await recordBuiltUnit(admin, params.id);
+          if (unit.warning) warning = unit.warning;
+        }
+      } else if (delta < 0) {
+        await removeShelfUnits(admin, params.id, -delta);
+      }
+    } catch (err) {
+      console.error("Adjusting pickets for stock change failed:", err);
+    }
+  }
+
   // Pallet-based products get their cost from pickets × current pallet price.
-  await syncProductCosts(createAdminClient());
-  return NextResponse.json({ ok: true });
+  await syncProductCosts(admin);
+  await checkPicketLowAlert(admin);
+  return NextResponse.json({ ok: true, warning });
 }
