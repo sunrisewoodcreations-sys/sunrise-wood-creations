@@ -1,6 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
-type Purchase = { remaining_quantity: number; cost_per_picket_cents: number };
+type Purchase = { remaining_quantity: number; cost_per_picket_cents: number; total_cost_cents?: number; quantity?: number };
+
+// Exact per-picket price: pallet total ÷ pallet size (falls back to the stored rounded price).
+export const exactPicketPrice = (p: Purchase) => (p.quantity && p.total_cost_cents != null ? p.total_cost_cents / p.quantity : p.cost_per_picket_cents);
 
 // What the NEXT unit of a product costs in pickets, following the same
 // oldest-pallet-first order the site uses when pickets are actually used:
@@ -17,7 +20,7 @@ export function unitCostCents(fifo: Purchase[], allNewestPrice: number | null, p
     if (left <= 0) break;
     if (p.remaining_quantity <= 0) continue;
     const take = Math.min(p.remaining_quantity, left);
-    cost += take * p.cost_per_picket_cents;
+    cost += take * exactPicketPrice(p);
     left -= take;
   }
   if (left > 0) {
@@ -33,12 +36,12 @@ export async function syncProductCosts(admin: ReturnType<typeof createAdminClien
   try {
     const { data: purchases } = await admin
       .from("picket_purchases")
-      .select("remaining_quantity, cost_per_picket_cents, purchased_at, created_at")
+      .select("remaining_quantity, cost_per_picket_cents, total_cost_cents, quantity, purchased_at, created_at")
       .order("purchased_at", { ascending: true })
       .order("created_at", { ascending: true });
     const all = (purchases || []) as any[];
     if (all.length === 0) return;
-    const newest = all[all.length - 1].cost_per_picket_cents as number;
+    const newest = exactPicketPrice(all[all.length - 1]);
 
     const { data: products } = await admin.from("products").select("id, cost_cents, pickets_per_unit").gt("pickets_per_unit", 0);
     for (const p of (products || []) as any[]) {

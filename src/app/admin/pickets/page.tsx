@@ -21,7 +21,7 @@ export default async function PicketsPage() {
   ]);
 
   const totalRemaining = (purchases || []).reduce((s: number, p: any) => s + p.remaining_quantity, 0);
-  const totalValueRemainingCents = (purchases || []).reduce((s: number, p: any) => s + p.remaining_quantity * p.cost_per_picket_cents, 0);
+  const totalValueRemainingCents = (purchases || []).reduce((s: number, p: any) => s + (p.quantity > 0 ? (p.remaining_quantity / p.quantity) * p.total_cost_cents : p.remaining_quantity * p.cost_per_picket_cents), 0);
 
   // Same 50-picket warning line already used on the Dashboard — reused
   // here rather than a second, different threshold, so "low" means the

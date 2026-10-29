@@ -25,7 +25,7 @@ export async function consumePicketsFifo(
 
   const { data: purchases, error } = await admin
     .from("picket_purchases")
-    .select("id, remaining_quantity, cost_per_picket_cents")
+    .select("id, remaining_quantity, cost_per_picket_cents, total_cost_cents, quantity")
     .gt("remaining_quantity", 0)
     .order("purchased_at", { ascending: true })
     .order("created_at", { ascending: true });
@@ -48,7 +48,9 @@ export async function consumePicketsFifo(
   for (const purchase of purchases || []) {
     if (remaining <= 0) break;
     const takeFromThis = Math.min(purchase.remaining_quantity, remaining);
-    totalCostCents += takeFromThis * purchase.cost_per_picket_cents;
+    // Exact price (pallet total ÷ pallet size), not the rounded-to-the-cent one,
+    // so a whole pallet always adds up to exactly what was paid for it.
+    totalCostCents += takeFromThis * (purchase.quantity > 0 ? purchase.total_cost_cents / purchase.quantity : purchase.cost_per_picket_cents);
     remaining -= takeFromThis;
     updates.push({ id: purchase.id, newRemaining: purchase.remaining_quantity - takeFromThis });
     allocations.push({ purchase_id: purchase.id, quantity: takeFromThis });
@@ -74,5 +76,6 @@ export async function consumePicketsFifo(
   }
 
   await syncProductCosts(admin);
+  totalCostCents = Math.round(totalCostCents);
   return { ok: true, totalCostCents };
 }
