@@ -66,3 +66,24 @@ export async function claimShelfUnitsForLine(admin: Admin, orderId: string, line
 export async function releaseUnitsFromOrder(admin: Admin, orderId: string) {
   await admin.from("built_units").update({ order_id: null, order_item_id: null }).eq("order_id", orderId);
 }
+
+// Stock was reduced on the Products page: remove that many pieces from the
+// shelf (newest built first) and put their pickets back on the pallets they came
+// from. Only pieces with a record can give pickets back; returns how many did.
+export async function removeShelfUnits(admin: Admin, productId: string, count: number): Promise<number> {
+  if (count <= 0) return 0;
+  const { data: units } = await admin.from("built_units").select("id, allocations")
+    .eq("product_id", productId).is("order_id", null).order("built_at", { ascending: false }).limit(count);
+  let removed = 0;
+  for (const u of (units || []) as any[]) {
+    for (const a of (u.allocations || []) as { purchase_id: string; quantity: number }[]) {
+      const { data: p } = await admin.from("picket_purchases").select("remaining_quantity, quantity").eq("id", a.purchase_id).maybeSingle();
+      if (!p) continue; // that pallet was deleted
+      const back = Math.min((p as any).quantity, (p as any).remaining_quantity + a.quantity);
+      await admin.from("picket_purchases").update({ remaining_quantity: back }).eq("id", a.purchase_id);
+    }
+    await admin.from("built_units").delete().eq("id", u.id);
+    removed++;
+  }
+  return removed;
+}

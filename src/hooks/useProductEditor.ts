@@ -92,8 +92,14 @@ export function useProductEditor(product: Product, bomParts?: BOMPartsInput) {
     setLoading(false);
 
     if (productRes.ok && partsRes.ok) {
-      setEditing(false);
+      const saved = await productRes.clone().json().catch(() => ({}));
       router.refresh();
+      if (saved.warning) {
+        // Saved, but tell them pickets couldn't be taken out; keep the editor open.
+        setError(saved.warning);
+      } else {
+        setEditing(false);
+      }
     } else {
       const failedRes = !productRes.ok ? productRes : partsRes;
       const body = await failedRes.json().catch(() => ({}));

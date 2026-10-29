@@ -1,4 +1,4 @@
-import { recordBuiltUnit, claimShelfUnitsForLine, assignUnitToLine, releaseUnitsFromOrder } from "../src/lib/builtUnits";
+import { removeShelfUnits, recordBuiltUnit, claimShelfUnitsForLine, assignUnitToLine, releaseUnitsFromOrder } from "../src/lib/builtUnits";
 
 function fake(db: Record<string, any[]>) {
   let n = 0;
@@ -9,6 +9,7 @@ function fake(db: Record<string, any[]>) {
       const run = () => {
         const hit = rows.filter(r => filters.every(f => f(r))).slice(0, lim);
         if (mode === "update") hit.forEach(r => Object.assign(r, patch));
+        if (mode === "delete") hit.forEach(r => rows.splice(rows.indexOf(r), 1));
         return { data: hit, error: null };
       };
       const b: any = {
@@ -18,6 +19,7 @@ function fake(db: Record<string, any[]>) {
         is(c: string, v: any) { filters.push(r => (r[c] ?? null) === v); return b; },
         in(c: string, v: any[]) { filters.push(r => v.includes(r[c])); return b; },
         update(p: any) { mode = "update"; patch = p; return b; },
+        delete() { mode = "delete"; return b; },
         insert(r: any) { const row = { id: `id${++n}`, ...r }; rows.push(row); return Object.assign(Promise.resolve({ error: null }), { select() { return { single: () => Promise.resolve({ data: row, error: null }) }; } }); },
         maybeSingle() { return Promise.resolve({ data: run().data[0] ?? null, error: null }); },
         single() { return Promise.resolve({ data: run().data[0] ?? null, error: null }); },
@@ -62,6 +64,18 @@ const t = (name: string, ok: boolean) => { if (!ok) { fails++; console.log("FAIL
   db.picket_purchases.forEach((p: any) => (p.remaining_quantity = 3));
   const u3 = await recordBuiltUnit(a, "p");
   t("short on pickets → warning, automatic cost, none taken", !!u3.warning && u3.costCents === 2500 && db.picket_purchases[1].remaining_quantity === 3);
+  // Lowering stock on the Products page puts pickets back on the pallet they came from.
+  const db2: any = {
+    products: [{ id: "p", pickets_per_unit: 8, cost_cents: 0 }],
+    picket_purchases: [{ id: "b", remaining_quantity: 560, cost_per_picket_cents: 300, total_cost_cents: 168000, quantity: 560, purchased_at: "2026-02-01", created_at: "2" }],
+    built_units: [], orders: [], order_items: []
+  };
+  const a2 = fake(db2);
+  await recordBuiltUnit(a2, "p"); await recordBuiltUnit(a2, "p"); await recordBuiltUnit(a2, "p");
+  t("3 pieces built → 24 pickets used", db2.picket_purchases[0].remaining_quantity === 536);
+  const removed = await removeShelfUnits(a2, "p", 2);
+  t("removing 2 gives 16 pickets back", removed === 2 && db2.picket_purchases[0].remaining_quantity === 552 && db2.built_units.length === 1);
+  t("never exceeds the pallet size", (await removeShelfUnits(a2, "p", 5)) === 1 && db2.picket_purchases[0].remaining_quantity === 560);
   if (fails) { console.log(fails, "failed"); process.exit(1); }
   console.log("All built-unit tests passed.");
 })();
