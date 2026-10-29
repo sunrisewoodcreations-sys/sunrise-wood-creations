@@ -1,4 +1,5 @@
 import { releaseReservedStock } from "@/lib/invoice";
+import { syncProductCosts } from "@/lib/picketCost";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -35,6 +36,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     }
   }
   await admin.from("picket_usage_allocations").delete().eq("order_id", params.id);
+  await syncProductCosts(admin);
 
   // Clean up everything that references this order first — several
   // tables built up over time may not all have automatic cascade-delete

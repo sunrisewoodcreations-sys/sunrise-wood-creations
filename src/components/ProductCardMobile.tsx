@@ -53,7 +53,11 @@ export default function ProductCardMobile({
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Cost ($)</label>
-              <input value={e.costPrice} onChange={ev => e.setCostPrice(ev.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2.5 text-sm" />
+              {e.productType === "planter" && Number(e.picketsPerUnit) > 0 ? (
+                <p className="text-sm text-[#1E3A5F]/70 py-2">Automatic: pickets per unit × current pallet price</p>
+              ) : (
+                <input value={e.costPrice} onChange={ev => e.setCostPrice(ev.target.value)} className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2.5 text-sm" />
+              )}
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#1E3A5F]/60 mb-1">Stock</label>

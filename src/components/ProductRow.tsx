@@ -39,7 +39,11 @@ export default function ProductRow({
           <input value={e.price} onChange={ev => e.setPrice(ev.target.value)} className="w-20 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
         </td>
         <td className="px-4 py-3 text-right">
-          <input value={e.costPrice} onChange={ev => e.setCostPrice(ev.target.value)} className="w-20 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
+          {e.productType === "planter" && Number(e.picketsPerUnit) > 0 ? (
+            <span title="Set automatically: pickets per unit × current pallet price" className="text-xs text-[#1E3A5F]/60">Auto</span>
+          ) : (
+            <input value={e.costPrice} onChange={ev => e.setCostPrice(ev.target.value)} className="w-20 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm text-right" />
+          )}
         </td>
         <td className="px-4 py-3 text-right text-[#1E3A5F]/40">—</td>
         <td className="px-4 py-3 text-right">
