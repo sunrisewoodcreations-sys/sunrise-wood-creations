@@ -40,3 +40,22 @@ export async function markOldestWaitingOrderReady(
   }
   return null;
 }
+
+// For a plan line tied to a specific order: once every unit on that order is
+// built, deducts its stock and marks THAT order Ready (same all-or-nothing rule).
+export async function markSpecificOrderReady(
+  admin: ReturnType<typeof createAdminClient>,
+  orderId: string
+): Promise<ReadyOrder | null> {
+  const { data: order } = await admin
+    .from("orders")
+    .select("*, profiles:customer_id(full_name)")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (!order || (order as any).stock_deducted || !WAITING_STATUSES.includes((order as any).status)) return null;
+  await checkStockAndAutoMarkReady(admin, order);
+  if ((order as any).stock_deducted) {
+    return { id: order.id, title: (order as any).title, customerName: (order as any).profiles?.full_name ?? null };
+  }
+  return null;
+}

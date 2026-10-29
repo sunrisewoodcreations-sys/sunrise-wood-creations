@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export type PendingBatch = {
   id: string;
   name: string;
   createdAt: string;
-  items: { productId: string; name: string; quantity: number; added?: number }[];
+  items: { productId: string; name: string; quantity: number; added?: number; orderId?: string; customerName?: string; orderTitle?: string }[];
 };
 
 function Batch({ batch }: { batch: PendingBatch }) {
@@ -56,20 +57,27 @@ function Batch({ batch }: { batch: PendingBatch }) {
       <div className="text-sm font-semibold text-walnut">{batch.name}</div>
       <div className="text-xs text-walnut/60 mb-2">Saved {new Date(batch.createdAt).toLocaleDateString()}</div>
       <ul className="space-y-2 mb-3">
-        {batch.items.flatMap(i =>
+        {batch.items.flatMap((i, itemIndex) =>
           Array.from({ length: i.quantity }, (_, u) => {
             const done = u < (i.added ?? 0);
             // Only the next unfinished unit of each product is clickable, so the
             // count can never jump ahead or be typed in.
-            const key = `${i.productId}-${u}`;
+            const key = `${itemIndex}-${u}`;
             return (
               <li key={key} className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm text-walnut">{i.name}{i.quantity > 1 ? ` — #${u + 1} of ${i.quantity}` : ""}</span>
+                <span className="text-sm text-walnut">
+                  {i.name}{i.quantity > 1 ? ` — #${u + 1} of ${i.quantity}` : ""}
+                  {i.orderId ? (
+                    <> · for <Link href={`/admin/orders/${i.orderId}`} className="font-semibold underline">{i.customerName || i.orderTitle || "this order"}</Link></>
+                  ) : (
+                    <span className="text-walnut/60"> · stock (goes to the oldest waiting order)</span>
+                  )}
+                </span>
                 {done ? (
                   <span className="text-sm font-semibold text-sage">✓ Added</span>
                 ) : (
                   <button type="button" disabled={!!busy}
-                    onClick={() => send({ action: "add", productId: i.productId }, key)}
+                    onClick={() => send({ action: "add", itemIndex }, key)}
                     className="bg-accent text-white px-3 py-1.5 rounded-md text-sm font-semibold disabled:opacity-60">
                     {busy === key ? "Adding..." : "Add to stock"}
                   </button>
@@ -94,7 +102,7 @@ export default function PendingInventoryBatches({ batches }: { batches: PendingB
   return (
     <section aria-labelledby="ready-inventory" className="mb-10 sm:mb-8">
       <h2 id="ready-inventory" className="font-display text-lg text-[#1E3A5F] mb-1">Ready to add to inventory ({batches.length})</h2>
-      <p className="text-xs text-walnut/60 mb-3">Saved from the Picket Planner. Once the pieces are built, press Add to stock for each piece as it's finished (one at a time). The oldest waiting order for that product is then marked ready and the customer is emailed.</p>
+      <p className="text-xs text-walnut/60 mb-3">Saved from the Picket Planner. Once the pieces are built, press Add to stock for each piece as it's finished (one at a time). A customer's order is marked ready and emailed once all of its pieces are added. The oldest waiting order for that product is then marked ready and the customer is emailed.</p>
       <ul className="bg-white border-2 border-accent/30 rounded-xl shadow-sm divide-y divide-walnut/10">
         {batches.map(b => <Batch key={b.id} batch={b} />)}
       </ul>

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { markOldestWaitingOrderReady } from "@/lib/inventoryFulfillment";
+import { markOldestWaitingOrderReady, markSpecificOrderReady } from "@/lib/inventoryFulfillment";
 
-type Item = { productId: string; name: string; quantity: number; added?: number };
+type Item = { productId: string; name: string; quantity: number; added?: number; orderId?: string };
 
 // POST { action: "add", productId }
 //   Adds ONE unit of a product to stock (logged in product_stock_adjustments),
@@ -34,11 +34,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ ok: true });
   }
 
-  const productId = String(body.productId || "");
-  const quantity = 1; // always one unit at a time (each piece finishes separately)
   const items: Item[] = inv.items;
-  const idx = items.findIndex(i => i.productId === productId);
-  if (idx < 0) return NextResponse.json({ error: "That product isn't part of this plan." }, { status: 400 });
+  const idx = Number.isInteger(body.itemIndex) ? body.itemIndex : -1;
+  const productId = idx >= 0 && items[idx] ? items[idx].productId : "";
+  const quantity = 1; // always one unit at a time (each piece finishes separately)
+  if (idx < 0 || !items[idx]) return NextResponse.json({ error: "That product isn't part of this plan." }, { status: 400 });
   if ((items[idx].added ?? 0) >= items[idx].quantity) {
     return NextResponse.json({ error: "All of those were already added." }, { status: 409 });
   }
@@ -73,7 +73,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // Oldest waiting order for this product → Ready, and email the customer.
   let notified: { title: string; customerName: string | null; emailed: boolean } | null = null;
   try {
-    const order = await markOldestWaitingOrderReady(createAdminClient(), productId);
+    const admin = createAdminClient();
+    const target = items[idx].orderId;
+    let order = null;
+    if (target) {
+      // Tied to a customer's order: it only becomes Ready once EVERY unit
+      // on that order has been added (e.g. both planters).
+      const orderDone = newItems.filter(i => i.orderId === target).every(i => (i.added ?? 0) >= i.quantity);
+      if (orderDone) order = await markSpecificOrderReady(admin, target);
+    } else {
+      // Manual selection: goes to the oldest waiting order for that product.
+      order = await markOldestWaitingOrderReady(admin, productId);
+    }
     if (order) {
       let emailed = false;
       try {

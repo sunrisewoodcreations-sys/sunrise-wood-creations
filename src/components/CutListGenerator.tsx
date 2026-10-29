@@ -57,7 +57,7 @@ export default function CutListGenerator({
     { productId: bomReadyProducts[0]?.id || "", qty: "1" }
   ]);
   // Finished products this cut list makes — saved with it so the Home Screen can offer "Add to stock".
-  const [genItems, setGenItems] = useState<{ productId: string; name: string; quantity: number }[]>([]);
+  const [genItems, setGenItems] = useState<{ productId: string; name: string; quantity: number; orderId?: string; customerName?: string; orderTitle?: string }[]>([]);
   const [autoSent, setAutoSent] = useState(false);
   const [generated, setGenerated] = useState<{ normalResults: OptimizationResult[]; trimResults: OptimizationResult[]; label: string } | null>(null);
   const [generationError, setGenerationError] = useState("");
@@ -79,7 +79,7 @@ export default function CutListGenerator({
       const parts = (bomPartsByProduct[j.productId!] || []).map(toBOMPart);
       return parts.map(p => ({ ...p, quantityPerUnit: p.quantityPerUnit * j.quantity }));
     });
-    runOptimization(mergeParts(partLists), label, jobs.map(j => ({ productId: j.productId!, name: j.productName || "Product", quantity: j.quantity })));
+    runOptimization(mergeParts(partLists), label, jobs.map(j => ({ productId: j.productId!, name: j.productName || "Product", quantity: j.quantity, orderId: j.orderId, customerName: j.customerName || undefined, orderTitle: j.orderTitle })));
 
     // Generating a real cut list means production is starting on these
     // orders — mark each one Building, same status the Production
@@ -144,12 +144,15 @@ export default function CutListGenerator({
     })));
   }
 
-  function runOptimization(allParts: BOMPart[], label: string, items: { productId: string; name: string; quantity: number }[] = []) {
+  function runOptimization(allParts: BOMPart[], label: string, items: { productId: string; name: string; quantity: number; orderId?: string; customerName?: string; orderTitle?: string }[] = []) {
     setGenerationError("");
-    const merged = new Map<string, { productId: string; name: string; quantity: number }>();
+    const merged = new Map<string, { productId: string; name: string; quantity: number; orderId?: string; customerName?: string; orderTitle?: string }>();
     items.forEach(i => {
-      const cur = merged.get(i.productId);
-      if (cur) cur.quantity += i.quantity; else merged.set(i.productId, { ...i });
+      // Items for a real order stay separate so each goes to that customer;
+      // manual-selection items (no order) are combined per product.
+      const key = i.orderId ? `${i.orderId}:${i.productId}` : i.productId;
+      const cur = merged.get(key);
+      if (cur) cur.quantity += i.quantity; else merged.set(key, { ...i });
     });
     const mergedItems = Array.from(merged.values());
     setGenItems(mergedItems);
