@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { markOldestWaitingOrderReady, markSpecificOrderReady } from "@/lib/inventoryFulfillment";
+import { markOldestWaitingOrderReady, giveBuiltUnitToOrder } from "@/lib/inventoryFulfillment";
 
 type Item = { productId: string; name: string; quantity: number; added?: number; orderId?: string };
 
@@ -54,56 +54,63 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "This one was already handled." }, { status: 409 });
   }
 
-  const { data: product } = await supabase
-    .from("products").select("stock_quantity, low_stock_threshold").eq("id", productId).maybeSingle();
   const undo = () => supabase.from("saved_cut_lists").update({ result_json: list.result_json }).eq("id", list.id);
-  if (!product) { await undo(); return NextResponse.json({ error: "Product not found." }, { status: 404 }); }
+  const admin = createAdminClient();
+  const target = items[idx].orderId;
+  let order = null as { id: string; title: string; customerName: string | null } | null;
+  let toOrder = false;
 
-  const oldQty = product.stock_quantity ?? 0;
-  const newQty = oldQty + quantity;
-  const patch: any = { stock_quantity: newQty };
-  if (newQty > (product.low_stock_threshold ?? 0)) patch.low_stock_alert_sent = false;
-  const { error: upErr } = await supabase.from("products").update(patch).eq("id", productId);
-  if (upErr) { await undo(); return NextResponse.json({ error: upErr.message }, { status: 400 }); }
-  await supabase.from("product_stock_adjustments").insert({
-    product_id: productId, old_quantity: oldQty, new_quantity: newQty,
-    reason: `Built from saved plan: ${list.name}`
-  });
-
-  // Oldest waiting order for this product → Ready, and email the customer.
-  let notified: { title: string; customerName: string | null; emailed: boolean } | null = null;
   try {
-    const admin = createAdminClient();
-    const target = items[idx].orderId;
-    let order = null;
     if (target) {
-      // Tied to a customer's order: it only becomes Ready once EVERY unit
-      // on that order has been added (e.g. both planters).
-      const orderDone = newItems.filter(i => i.orderId === target).every(i => (i.added ?? 0) >= i.quantity);
-      if (orderDone) order = await markSpecificOrderReady(admin, target);
-    } else {
-      // Manual selection: goes to the oldest waiting order for that product.
-      order = await markOldestWaitingOrderReady(admin, productId);
-    }
-    if (order) {
-      let emailed = false;
-      try {
-        // Same route the order page uses: sends the "ready for pickup/delivery"
-        // email with invoice + scheduling link. Forward the admin's session.
-        const r = await fetch(`${req.nextUrl.origin}/api/orders/${order.id}/status`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", cookie: req.headers.get("cookie") || "" },
-          body: JSON.stringify({ status: "ready_for_pickup" })
-        });
-        emailed = r.ok;
-      } catch (err) {
-        console.error("Ready email trigger failed:", err);
-      }
-      notified = { title: order.title, customerName: order.customerName, emailed };
+      // Built for a specific customer: it goes straight to THEIR order (shelf
+      // stock doesn't change). Their order turns Ready once every piece is in.
+      const r = await giveBuiltUnitToOrder(admin, target, productId);
+      toOrder = r.used;
+      order = r.ready;
     }
   } catch (err) {
-    console.error("Oldest-order fulfillment failed:", err);
+    console.error("Giving piece to order failed:", err);
   }
 
-  return NextResponse.json({ ok: true, notified });
+  if (!toOrder) {
+    // Manual selection (or the order no longer needs it): add to shelf stock.
+    const { data: product } = await supabase
+      .from("products").select("stock_quantity, low_stock_threshold").eq("id", productId).maybeSingle();
+    if (!product) { await undo(); return NextResponse.json({ error: "Product not found." }, { status: 404 }); }
+    const oldQty = product.stock_quantity ?? 0;
+    const newQty = oldQty + quantity;
+    const patch: any = { stock_quantity: newQty };
+    if (newQty > (product.low_stock_threshold ?? 0)) patch.low_stock_alert_sent = false;
+    const { error: upErr } = await supabase.from("products").update(patch).eq("id", productId);
+    if (upErr) { await undo(); return NextResponse.json({ error: upErr.message }, { status: 400 }); }
+    await supabase.from("product_stock_adjustments").insert({
+      product_id: productId, old_quantity: oldQty, new_quantity: newQty,
+      reason: `Built from saved plan: ${list.name}`
+    });
+    try {
+      order = await markOldestWaitingOrderReady(admin, productId);
+    } catch (err) {
+      console.error("Oldest-order fulfillment failed:", err);
+    }
+  }
+
+  // Order became Ready → email the customer through the existing status route
+  // (ready email with invoice + scheduling link). Forward the admin's session.
+  let notified: { title: string; customerName: string | null; emailed: boolean } | null = null;
+  if (order) {
+    let emailed = false;
+    try {
+      const r = await fetch(`${req.nextUrl.origin}/api/orders/${order.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", cookie: req.headers.get("cookie") || "" },
+        body: JSON.stringify({ status: "ready_for_pickup" })
+      });
+      emailed = r.ok;
+    } catch (err) {
+      console.error("Ready email trigger failed:", err);
+    }
+    notified = { title: order.title, customerName: order.customerName, emailed };
+  }
+
+  return NextResponse.json({ ok: true, notified, toOrder, toOrderName: toOrder ? (order?.customerName ?? null) : null });
 }

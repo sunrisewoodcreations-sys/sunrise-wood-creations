@@ -164,7 +164,7 @@ export default async function AdminOrdersPage({
 
   const { data: savedProducts } = await supabase
     .from("products")
-    .select("id, product_type, name, size_details, price_cents, estimated_build_minutes")
+    .select("id, product_type, name, size_details, price_cents, estimated_build_minutes, stock_quantity")
     .order("name");
 
   const orderIds = orders.map((o: any) => o.id);

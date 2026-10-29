@@ -8,7 +8,7 @@ import AdminButton from "@/components/AdminButton";
 
 type Mode = "today" | "tomorrow" | "day" | "manual" | "saved";
 
-type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; hasBOM: boolean; productionStatus: string; orderStatus: string };
+type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; orderedQuantity?: number; hasBOM: boolean; productionStatus: string; orderStatus: string };
 type BOMPartRow = { part_name: string; length_inches: number; final_length_inches: number | null; quantity_per_unit: number; material_type: string; is_trim: boolean };
 
 function toBOMPart(row: BOMPartRow): BOMPart {
@@ -59,13 +59,45 @@ export default function CutListGenerator({
   // Finished products this cut list makes — saved with it so the Home Screen can offer "Add to stock".
   const [genItems, setGenItems] = useState<{ productId: string; name: string; quantity: number; orderId?: string; customerName?: string; orderTitle?: string }[]>([]);
   const [autoSent, setAutoSent] = useState(false);
-  const [generated, setGenerated] = useState<{ normalResults: OptimizationResult[]; trimResults: OptimizationResult[]; label: string } | null>(null);
+  const [generated, setGenerated] = useState<{ generatedKey?: string; jobSig?: string[]; normalResults: OptimizationResult[]; trimResults: OptimizationResult[]; label: string } | null>(null);
   const [generationError, setGenerationError] = useState("");
   const [listName, setListName] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
-  async function generateFromJobs(jobs: Job[], label: string) {
+  const tomorrowStr = (() => { const d = new Date(todayStr + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })();
+
+  // A day's cut list that was already generated for these same orders: view it
+  // instead of generating again. Orders added later make it generate-able again.
+  function alreadyGenerated(dateKey: string, jobs: Job[]) {
+    const live = jobs.filter(j => j.quantity > 0);
+    if (live.length === 0) return null;
+    return savedCutLists.find(l => {
+      const r = l.result_json;
+      if (r?.generatedKey !== `orders:${dateKey}` || !Array.isArray(r.jobSig)) return false;
+      return live.every(j => r.jobSig.includes(`${j.orderId}:${j.productId}`));
+    }) || null;
+  }
+
+  function GenerateOrView({ dateKey, jobs, label, buttonText }: { dateKey: string; jobs: Job[]; label: string; buttonText: string }) {
+    const done = alreadyGenerated(dateKey, jobs);
+    if (done) {
+      return (
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm font-semibold text-sage">✓ Already generated for these orders.</span>
+          <AdminButton variant="secondary" onClick={() => openSaved(done)}>View cut list</AdminButton>
+        </div>
+      );
+    }
+    return <AdminButton onClick={() => generateFromJobs(jobs, label, dateKey)} disabled={jobs.length === 0}>{buttonText}</AdminButton>;
+  }
+
+  async function generateFromJobs(allJobs: Job[], label: string, dateKey: string) {
+    const jobs = allJobs.filter(j => j.quantity > 0);
+    if (allJobs.length > 0 && jobs.length === 0) {
+      setGenerationError("Nothing to build for these orders — their pieces are already set aside from stock.");
+      return;
+    }
     const missing = jobs.filter(j => !j.hasBOM);
     if (missing.length > 0) {
       setGenerationError(`${missing.length} order(s) don't have a parts list defined yet (e.g. ${missing[0].productName || missing[0].orderTitle}). Add parts to that product on the Products page first.`);
@@ -79,7 +111,7 @@ export default function CutListGenerator({
       const parts = (bomPartsByProduct[j.productId!] || []).map(toBOMPart);
       return parts.map(p => ({ ...p, quantityPerUnit: p.quantityPerUnit * j.quantity }));
     });
-    runOptimization(mergeParts(partLists), label, jobs.map(j => ({ productId: j.productId!, name: j.productName || "Product", quantity: j.quantity, orderId: j.orderId, customerName: j.customerName || undefined, orderTitle: j.orderTitle })));
+    runOptimization(mergeParts(partLists), label, jobs.map(j => ({ productId: j.productId!, name: j.productName || "Product", quantity: j.quantity, orderId: j.orderId, customerName: j.customerName || undefined, orderTitle: j.orderTitle })), { generatedKey: `orders:${dateKey}`, jobSig: jobs.map(j => `${j.orderId}:${j.productId}`) });
 
     // Generating a real cut list means production is starting on these
     // orders — mark each one Building, same status the Production
@@ -144,7 +176,7 @@ export default function CutListGenerator({
     })));
   }
 
-  function runOptimization(allParts: BOMPart[], label: string, items: { productId: string; name: string; quantity: number; orderId?: string; customerName?: string; orderTitle?: string }[] = []) {
+  function runOptimization(allParts: BOMPart[], label: string, items: { productId: string; name: string; quantity: number; orderId?: string; customerName?: string; orderTitle?: string }[] = [], meta?: { generatedKey: string; jobSig: string[] }) {
     setGenerationError("");
     const merged = new Map<string, { productId: string; name: string; quantity: number; orderId?: string; customerName?: string; orderTitle?: string }>();
     items.forEach(i => {
@@ -160,6 +192,7 @@ export default function CutListGenerator({
     const normalParts = allParts.filter(p => !p.isTrim);
     const trimParts = allParts.filter(p => p.isTrim);
     const result = {
+      ...(meta || {}),
       normalResults: optimizeByMaterial(normalParts, boardLength, kerf),
       trimResults: optimizeByMaterial(trimParts, boardLength, kerf),
       label
@@ -263,14 +296,12 @@ export default function CutListGenerator({
               {(mode === "today" ? todayJobs : tomorrowJobs).map((j, i) => (
                 <div key={i} className="text-sm text-[#1E3A5F]/70 flex justify-between border-b border-[#1E3A5F]/5 py-1">
                   <span>{j.customerName || j.orderTitle}</span>
-                  <span>{j.quantity} × {j.productName || "Unknown product"} {!j.hasBOM && <span className="text-ember font-semibold">(no parts list)</span>}</span>
+                  <span>{j.quantity} × {j.productName || "Unknown product"} {j.orderedQuantity != null && j.orderedQuantity !== j.quantity && <span className="text-[#1E3A5F]/60">(ordered {j.orderedQuantity}, {j.orderedQuantity - j.quantity} covered by stock{j.quantity === 0 ? " — nothing to build" : ""}) </span>}{!j.hasBOM && <span className="text-ember font-semibold">(no parts list)</span>}</span>
                 </div>
               ))}
             </div>
           )}
-          <AdminButton onClick={() => generateFromJobs(mode === "today" ? todayJobs : tomorrowJobs, mode === "today" ? "Today's Cut List" : "Tomorrow's Cut List")} disabled={(mode === "today" ? todayJobs : tomorrowJobs).length === 0}>
-            Generate {mode === "today" ? "Today's" : "Tomorrow's"} Cut List
-          </AdminButton>
+          <GenerateOrView dateKey={mode === "today" ? todayStr : tomorrowStr} jobs={mode === "today" ? todayJobs : tomorrowJobs} label={mode === "today" ? "Today's Cut List" : "Tomorrow's Cut List"} buttonText={`Generate ${mode === "today" ? "Today's" : "Tomorrow's"} Cut List`} />
         </div>
       )}
 
@@ -290,14 +321,12 @@ export default function CutListGenerator({
               {pickedJobs.map((j, i) => (
                 <div key={i} className="text-sm text-[#1E3A5F]/70 flex justify-between border-b border-[#1E3A5F]/5 py-1">
                   <span>{j.customerName || j.orderTitle}</span>
-                  <span>{j.quantity} × {j.productName || "Unknown product"} {!j.hasBOM && <span className="text-ember font-semibold">(no parts list)</span>}</span>
+                  <span>{j.quantity} × {j.productName || "Unknown product"} {j.orderedQuantity != null && j.orderedQuantity !== j.quantity && <span className="text-[#1E3A5F]/60">(ordered {j.orderedQuantity}, {j.orderedQuantity - j.quantity} covered by stock{j.quantity === 0 ? " — nothing to build" : ""}) </span>}{!j.hasBOM && <span className="text-ember font-semibold">(no parts list)</span>}</span>
                 </div>
               ))}
             </div>
           )}
-          <AdminButton onClick={() => generateFromJobs(pickedJobs, `Cut List for ${pickedLabel}`)} disabled={pickedJobs.length === 0}>
-            Generate Cut List for {pickedLabel || "this day"}
-          </AdminButton>
+          <GenerateOrView dateKey={pickedDate} jobs={pickedJobs} label={`Cut List for ${pickedLabel}`} buttonText={`Generate Cut List for ${pickedLabel || "this day"}`} />
         </div>
       )}
 

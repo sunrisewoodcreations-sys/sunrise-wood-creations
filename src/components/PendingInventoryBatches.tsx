@@ -34,6 +34,8 @@ function Batch({ batch }: { batch: PendingBatch }) {
           setNote(data.notified.emailed
             ? `Added. ${who} ("${data.notified.title}") was marked ready and they were emailed.`
             : `Added. ${who} ("${data.notified.title}") was marked ready, but the email may not have sent — check that order.`);
+        } else if (data.toOrder) {
+          setNote("Set aside for that customer's order. It's marked ready and they're emailed once all of its pieces are added.");
         } else {
           setNote("Added to stock. No waiting order needed it.");
         }

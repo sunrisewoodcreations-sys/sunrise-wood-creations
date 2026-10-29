@@ -14,7 +14,7 @@ const PRODUCT_TYPES = [
 ];
 
 type Customer = { id: string; full_name: string; email: string; address?: string | null };
-type SavedProduct = { id: string; product_type: string; name: string; size_details: string | null; price_cents: number; estimated_build_minutes: number | null };
+type SavedProduct = { id: string; product_type: string; name: string; size_details: string | null; price_cents: number; estimated_build_minutes: number | null; stock_quantity?: number | null };
 
 type LineItem = {
   productType: string;
@@ -275,6 +275,23 @@ export default function AddOrderWithCustomerPicker({
       setError("Every item needs a title/description.");
       return;
     }
+    // Pop-up warning when the shelf can't cover everything on this order.
+    const shortages: string[] = [];
+    const seenProducts = new Set<string>();
+    items.forEach(it => {
+      if (!it.selectedProductId || seenProducts.has(it.selectedProductId)) return;
+      seenProducts.add(it.selectedProductId);
+      const prod = products.find(pr => pr.id === it.selectedProductId);
+      if (!prod || prod.stock_quantity == null) return;
+      const needed = items.filter(o => o.selectedProductId === it.selectedProductId)
+        .reduce((sum, o) => sum + (Math.max(1, Math.round(Number(o.quantity)) || 1)), 0);
+      if (needed > prod.stock_quantity) {
+        shortages.push(`${prod.name}: you need ${needed}, you have ${prod.stock_quantity} on hand — ${needed - prod.stock_quantity} still to build.`);
+      }
+    });
+    if (shortages.length > 0 && !window.confirm(`Not enough stock on hand for this order:\n\n${shortages.join("\n")}\n\nThe ones on hand will be set aside for this customer and the rest go on the cut list. Place the order anyway?`)) {
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -489,6 +506,22 @@ export default function AddOrderWithCustomerPicker({
                         />
                       </div>
                     </div>
+                    {(() => {
+                      // Advisory only: counts every line for the same product together.
+                      if (!item.selectedProductId) return null;
+                      const prod = products.find(pr => pr.id === item.selectedProductId);
+                      if (!prod || prod.stock_quantity == null) return null;
+                      const needed = items
+                        .filter(o => o.selectedProductId === item.selectedProductId)
+                        .reduce((sum, o) => sum + (Math.max(1, Math.round(Number(o.quantity)) || 1)), 0);
+                      if (needed <= prod.stock_quantity) return null;
+                      const short = needed - prod.stock_quantity;
+                      return (
+                        <p role="status" className="mt-2 text-xs font-semibold text-amber-900 bg-amber-50 border border-amber-300 rounded-md px-3 py-2">
+                          Not enough stock for this order: you need {needed} but only {prod.stock_quantity} {prod.stock_quantity === 1 ? "is" : "are"} in stock. You'll need to build {short} more — the cut list will cover just those {short}.
+                        </p>
+                      );
+                    })()}
                     <div className="grid grid-cols-4 gap-2 mt-2 items-end">
                       <div>
                         <label className="block text-[11px] font-semibold text-[#1E3A5F] mb-1">Total price ($)</label>

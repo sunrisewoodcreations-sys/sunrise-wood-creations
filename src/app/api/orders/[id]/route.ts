@@ -1,3 +1,4 @@
+import { releaseReservedStock } from "@/lib/invoice";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -38,6 +39,13 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   // Clean up everything that references this order first — several
   // tables built up over time may not all have automatic cascade-delete
   // configured, so we clear them explicitly rather than rely on that.
+  // Put any stock that was set aside for this order back on the shelf.
+  try {
+    const { data: orderRow } = await admin.from("orders").select("*").eq("id", params.id).maybeSingle();
+    if (orderRow) await releaseReservedStock(admin, orderRow);
+  } catch (err) {
+    console.error("Releasing reserved stock failed:", err);
+  }
   await admin.from("proofs").delete().eq("order_id", params.id);
   await admin.from("order_items").delete().eq("order_id", params.id);
   await admin.from("order_messages").delete().eq("order_id", params.id);
