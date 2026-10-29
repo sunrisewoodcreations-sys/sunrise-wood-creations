@@ -119,6 +119,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: "/admin/production-capacity", label: "Production Capacity" },
         { href: "/admin/cutlist", label: "Cut List Generator" },
         { href: "/admin/material-planning", label: "Material Planning" },
+        { href: "/admin/picket-planner", label: "Picket Planner" },
         { href: "/admin/production-analytics", label: "Production Analytics" },
         { href: "/admin/designs", label: "Designs" }
       ]
