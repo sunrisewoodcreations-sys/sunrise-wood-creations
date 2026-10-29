@@ -32,15 +32,15 @@ export default async function CutListPage() {
     { data: orderItems },
     { data: savedCutLists }
   ] = await Promise.all([
-    supabase.from("products").select("id, name").eq("product_type", "planter"),
+    supabase.from("products").select("id, name, stock_quantity").eq("product_type", "planter"),
     supabase.from("product_bom_parts").select("*"),
     supabase
       .from("orders")
-      .select("id, title, product_id, quantity, production_date, production_status, profiles:customer_id(full_name)")
+      .select("id, title, product_id, quantity, production_date, production_status, created_at, stock_deducted, profiles:customer_id(full_name)")
       .eq("product_type", "planter")
       .neq("status", "picked_up")
       .gte("production_date", todayStr),
-    supabase.from("order_items").select("order_id, product_id, quantity, orders:order_id(production_date, product_type, status, production_status)"),
+    supabase.from("order_items").select("order_id, product_id, quantity, orders:order_id(production_date, product_type, status, production_status, created_at, stock_deducted)"),
     supabase.from("saved_cut_lists").select("*").order("created_at", { ascending: false })
   ]);
 
@@ -58,7 +58,7 @@ export default async function CutListPage() {
   // legacy single-item orders (orders.product_id) and multi-item orders
   // (order_items.product_id), matching how the rest of the app already
   // handles this split.
-  type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; hasBOM: boolean; productionStatus: string; orderStatus: string };
+  type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; orderedQuantity: number; createdAt?: string; stockDeducted?: boolean; hasBOM: boolean; productionStatus: string; orderStatus: string };
 
   function buildJobs(dateStrToMatch: string): Job[] {
     const jobs: Job[] = [];
@@ -77,12 +77,14 @@ export default async function CutListPage() {
       const product = (products || []).find(p => p.id === it.product_id);
       const order = (orders || []).find(o => o.id === it.order_id) as any;
       jobs.push({
+        createdAt: it.orders?.created_at || "", stockDeducted: !!it.orders?.stock_deducted,
         orderId: it.order_id,
         orderTitle: order?.profiles?.full_name || product?.name || "Order item",
         customerName: order?.profiles?.full_name || "",
         productId: it.product_id,
         productName: product?.name || null,
         quantity: it.quantity || 1,
+        orderedQuantity: it.quantity || 1,
         hasBOM: productIdsWithParts.has(it.product_id),
         productionStatus: it.orders?.production_status || "waiting",
         orderStatus: it.orders?.status || "order_placed"
@@ -94,12 +96,14 @@ export default async function CutListPage() {
       if (orderIdsWithItems.has(o.id)) return; // already counted above via order_items
       const product = (products || []).find(p => p.id === o.product_id);
       jobs.push({
+        createdAt: o.created_at || "", stockDeducted: !!o.stock_deducted,
         orderId: o.id,
         orderTitle: o.title,
         customerName: o.profiles?.full_name || "Unknown",
         productId: o.product_id,
         productName: product?.name || null,
         quantity: o.quantity || 1,
+        orderedQuantity: o.quantity || 1,
         hasBOM: productIdsWithParts.has(o.product_id),
         productionStatus: o.production_status || "waiting",
         orderStatus: o.status || "order_placed"
@@ -118,6 +122,26 @@ export default async function CutListPage() {
   });
   const jobsByDate: Record<string, Job[]> = {};
   upcomingDates.forEach(d => { jobsByDate[d] = buildJobs(d); });
+
+  // Only build what's actually short. Stock on hand covers the oldest orders
+  // first; orders whose stock was already set aside need nothing built. So
+  // "need 3, have 2" gives a cut list for just 1.
+  const availableStock: Record<string, number> = {};
+  (products || []).forEach((p: any) => { availableStock[p.id] = p.stock_quantity ?? 0; });
+  const allJobs = Object.values(jobsByDate).flat()
+    .sort((a, b) => (a.createdAt || "").localeCompare(b.createdAt || ""));
+  const seen = new Set<string>();
+  allJobs.forEach(j => {
+    // The same job object can appear under one date only, but guard anyway.
+    const key = `${j.orderId}:${j.productId}:${j.createdAt}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    if (!j.productId) return;
+    if (j.stockDeducted) { j.quantity = 0; return; }
+    const covered = Math.min(availableStock[j.productId] ?? 0, j.orderedQuantity);
+    availableStock[j.productId] = (availableStock[j.productId] ?? 0) - covered;
+    j.quantity = j.orderedQuantity - covered;
+  });
 
   return (
     <CutListGenerator

@@ -8,7 +8,7 @@ import AdminButton from "@/components/AdminButton";
 
 type Mode = "today" | "tomorrow" | "day" | "manual" | "saved";
 
-type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; hasBOM: boolean; productionStatus: string; orderStatus: string };
+type Job = { orderId: string; orderTitle: string; customerName: string; productId: string | null; productName: string | null; quantity: number; orderedQuantity?: number; hasBOM: boolean; productionStatus: string; orderStatus: string };
 type BOMPartRow = { part_name: string; length_inches: number; final_length_inches: number | null; quantity_per_unit: number; material_type: string; is_trim: boolean };
 
 function toBOMPart(row: BOMPartRow): BOMPart {
@@ -65,7 +65,12 @@ export default function CutListGenerator({
   const [saveMessage, setSaveMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
-  async function generateFromJobs(jobs: Job[], label: string) {
+  async function generateFromJobs(allJobs: Job[], label: string) {
+    const jobs = allJobs.filter(j => j.quantity > 0);
+    if (allJobs.length > 0 && jobs.length === 0) {
+      setGenerationError("Everything for these orders is already covered by stock on hand, so there is nothing to build.");
+      return;
+    }
     const missing = jobs.filter(j => !j.hasBOM);
     if (missing.length > 0) {
       setGenerationError(`${missing.length} order(s) don't have a parts list defined yet (e.g. ${missing[0].productName || missing[0].orderTitle}). Add parts to that product on the Products page first.`);
@@ -263,7 +268,7 @@ export default function CutListGenerator({
               {(mode === "today" ? todayJobs : tomorrowJobs).map((j, i) => (
                 <div key={i} className="text-sm text-[#1E3A5F]/70 flex justify-between border-b border-[#1E3A5F]/5 py-1">
                   <span>{j.customerName || j.orderTitle}</span>
-                  <span>{j.quantity} × {j.productName || "Unknown product"} {!j.hasBOM && <span className="text-ember font-semibold">(no parts list)</span>}</span>
+                  <span>{j.quantity} × {j.productName || "Unknown product"} {j.orderedQuantity != null && j.orderedQuantity !== j.quantity && <span className="text-[#1E3A5F]/60">(ordered {j.orderedQuantity}, {j.orderedQuantity - j.quantity} covered by stock{j.quantity === 0 ? " — nothing to build" : ""}) </span>}{!j.hasBOM && <span className="text-ember font-semibold">(no parts list)</span>}</span>
                 </div>
               ))}
             </div>
@@ -290,7 +295,7 @@ export default function CutListGenerator({
               {pickedJobs.map((j, i) => (
                 <div key={i} className="text-sm text-[#1E3A5F]/70 flex justify-between border-b border-[#1E3A5F]/5 py-1">
                   <span>{j.customerName || j.orderTitle}</span>
-                  <span>{j.quantity} × {j.productName || "Unknown product"} {!j.hasBOM && <span className="text-ember font-semibold">(no parts list)</span>}</span>
+                  <span>{j.quantity} × {j.productName || "Unknown product"} {j.orderedQuantity != null && j.orderedQuantity !== j.quantity && <span className="text-[#1E3A5F]/60">(ordered {j.orderedQuantity}, {j.orderedQuantity - j.quantity} covered by stock{j.quantity === 0 ? " — nothing to build" : ""}) </span>}{!j.hasBOM && <span className="text-ember font-semibold">(no parts list)</span>}</span>
                 </div>
               ))}
             </div>

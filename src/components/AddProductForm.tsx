@@ -21,7 +21,7 @@ export default function AddProductForm() {
   const [price, setPrice] = useState("");
   const [costPrice, setCostPrice] = useState("");
   const [stockQuantity, setStockQuantity] = useState("0");
-  const [lowStockThreshold, setLowStockThreshold] = useState("0");
+  const [lowStockThreshold, setLowStockThreshold] = useState("2");
   const [picketsPerUnit, setPicketsPerUnit] = useState("0");
   const [estimatedBuildMinutes, setEstimatedBuildMinutes] = useState("");
   const [partRows, setPartRows] = useState<BOMPartRow[]>([emptyPartRow()]);

@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       price_cents: Math.round(Number(priceCents) * 100) || 0,
       cost_cents: Math.round(Number(costCents) * 100) || 0,
       stock_quantity: Math.max(0, Math.round(Number(stockQuantity)) || 0),
-      low_stock_threshold: Math.max(0, Math.round(Number(lowStockThreshold)) || 0),
+      low_stock_threshold: lowStockThreshold === undefined || lowStockThreshold === "" ? 2 : Math.max(0, Math.round(Number(lowStockThreshold)) || 0),
       pickets_per_unit: Math.max(0, Math.round(Number(picketsPerUnit)) || 0),
       estimated_build_minutes: estimatedBuildMinutes?.toString().trim() ? Math.max(0, Math.round(Number(estimatedBuildMinutes))) : null
     })
