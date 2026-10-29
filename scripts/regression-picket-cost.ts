@@ -9,4 +9,6 @@ t("skips empty pallet", unitCostCents([{ remaining_quantity: 0, cost_per_picket_
 t("short stock priced at newest pallet", unitCostCents([{ remaining_quantity: 3, cost_per_picket_cents: 200 }], 300, 8) === 3 * 200 + 5 * 300);
 t("no pallets logged → null", unitCostCents([], null, 8) === null);
 t("zero pickets → null", unitCostCents([{ remaining_quantity: 10, cost_per_picket_cents: 200 }], 200, 0) === null);
+// A whole $1800 pallet of 560 adds up to exactly $1800 (no rounding drift).
+t("whole pallet = exactly what was paid", unitCostCents([{ remaining_quantity: 560, cost_per_picket_cents: 321, total_cost_cents: 180000, quantity: 560 }], 321, 560) === 180000);
 if (fails) process.exit(1); console.log("All picket-cost tests passed.");
