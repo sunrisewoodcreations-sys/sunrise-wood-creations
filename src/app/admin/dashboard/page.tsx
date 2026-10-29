@@ -6,6 +6,7 @@ import SendInvoiceButton from "@/components/SendInvoiceButton";
 import SendStatusEmailButton from "@/components/SendStatusEmailButton";
 import { formatCalendarDate } from "@/lib/dateDisplay";
 import { getMaterialRequirements } from "@/lib/materialPlanning";
+import PendingInventoryBatches, { PendingBatch } from "@/components/PendingInventoryBatches";
 
 // Same Eastern-time helpers already duplicated across the other report
 // pages in this app — kept local here too, rather than touching any
@@ -295,6 +296,17 @@ export default async function DashboardPage() {
   // demo-scoped data (no is_demo column on either table, since these
   // are site-wide content, not per-customer records), so this
   // deliberately isn't threaded into the demo-filtered Promise.all above.
+  // Saved picket plans waiting to be added to finished-goods inventory.
+  // Safe if the table is missing (returns null data rather than throwing).
+  const { data: savedLists } = await supabase
+    .from("saved_cut_lists")
+    .select("id, name, created_at, result_json")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  const pendingBatches: PendingBatch[] = (savedLists || [])
+    .filter((l: any) => l.result_json?.inventory?.status === "pending" && Array.isArray(l.result_json.inventory.items))
+    .map((l: any) => ({ id: l.id, name: l.name, createdAt: l.created_at, items: l.result_json.inventory.items }));
+
   const [{ count: pendingReviewsCount }, { count: pendingFaqCount }] = await Promise.all([
     supabase.from("product_reviews").select("id", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("faq_questions").select("id", { count: "exact", head: true }).eq("status", "pending")
@@ -639,6 +651,8 @@ export default async function DashboardPage() {
           plus cedar pickets (moved here from the old general summary
           grid, same calculation). This is the one place the full
           product list appears — no longer repeated at the bottom too. */}
+      <PendingInventoryBatches batches={pendingBatches} />
+
       <h2 id="inventory" className="font-display text-lg text-[#1E3A5F] mb-3 scroll-mt-4">Inventory</h2>
       <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm overflow-hidden mb-10 sm:mb-8">
         <div className="p-4 border-b border-[#1E3A5F]/10 flex flex-wrap items-center justify-between gap-3">

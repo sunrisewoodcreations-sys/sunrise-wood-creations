@@ -60,11 +60,23 @@ export default function PicketPlanner({
           name: listName.trim() || `${label} — ${new Date().toLocaleDateString()}`,
           boardLength: plan.boardLength,
           kerf: plan.kerf,
-          resultJson: { normalResults: plan.normalResults, trimResults: plan.trimResults, label }
+          resultJson: {
+            normalResults: plan.normalResults,
+            trimResults: plan.trimResults,
+            label,
+            // Shows up on the Home Screen as "Ready to add to inventory"
+            // until it's added (or dismissed).
+            inventory: {
+              status: "pending",
+              items: plan.lines
+                .filter(l => l.totalUnits > 0)
+                .map(l => ({ productId: l.id, name: l.name, quantity: l.totalUnits }))
+            }
+          }
         })
       });
       if (res.ok) {
-        setSaveMessage("Saved. Find it under Saved cut lists on the Cut List Generator page.");
+        setSaveMessage("Saved. It now shows on your Home Screen under \"Ready to add to inventory\" — press the button there once the pieces are built.");
         setListName("");
         router.refresh();
       } else {
