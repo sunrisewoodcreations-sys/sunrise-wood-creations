@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { syncProductCosts } from "@/lib/picketCost";
+import { checkPicketLowAlert, syncProductCosts } from "@/lib/picketCost";
 
 type ConsumeResult =
   | { ok: true; totalCostCents: number }
@@ -76,6 +76,7 @@ export async function consumePicketsFifo(
   }
 
   await syncProductCosts(admin);
+  await checkPicketLowAlert(admin);
   totalCostCents = Math.round(totalCostCents);
   return { ok: true, totalCostCents };
 }

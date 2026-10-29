@@ -885,6 +885,29 @@ export async function sendLowStockAlert(opts: {
   });
 }
 
+export async function sendPicketLowAlert(opts: { remaining: number; threshold: number }) {
+  const html = shell({
+    preheader: `Pickets running low: ${opts.remaining} left`,
+    bodyHtml: `
+      <p style="margin: 0 0 16px;">
+        You're down to <strong>${opts.remaining}</strong> pickets across all your pallets
+        (your alert line is ${opts.threshold}), and there's no other pallet logged.
+      </p>
+      <p style="margin: 0;">Time to pick up another pallet. Log it as soon as you buy it so costs switch over correctly.</p>
+    `,
+    buttonText: "Open Picket inventory",
+    buttonUrl: `${SITE_URL}/admin/pickets`
+  });
+
+  return sendViaResend({
+    emailType: "sendPicketLowAlert",
+    from: FROM,
+    to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
+    subject: `Pickets running low: ${opts.remaining} left`,
+    html
+  });
+}
+
 export async function sendQuoteRequestNotice(opts: {
   name: string;
   email: string;
