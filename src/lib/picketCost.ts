@@ -1,4 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendPicketLowAlert } from "@/lib/email";
+
+export const PICKET_LOW_THRESHOLD = 50;
+export const PICKET_FIRST_WARNING = 100;
 
 type Purchase = { remaining_quantity: number; cost_per_picket_cents: number; total_cost_cents?: number; quantity?: number };
 
@@ -52,5 +56,26 @@ export async function syncProductCosts(admin: ReturnType<typeof createAdminClien
     }
   } catch (err) {
     console.error("Syncing product costs failed:", err);
+  }
+}
+
+// Two warnings: first when total pickets across ALL pallets reach 100 or fewer,
+// second at 50 or fewer (a second logged pallet keeps the total higher, so no
+// email). Each level sends once per dip and re-arms after restocking.
+export async function checkPicketLowAlert(admin: ReturnType<typeof createAdminClient>): Promise<void> {
+  try {
+    const { data, error } = await admin.from("picket_purchases").select("id, remaining_quantity, low_alert_level");
+    if (error || !data || data.length === 0) return; // column missing / nothing logged yet
+    const total = data.reduce((s: number, p: any) => s + (p.remaining_quantity || 0), 0);
+    const last = Math.max(...data.map((p: any) => p.low_alert_level || 0));
+    const current = total <= PICKET_LOW_THRESHOLD ? 2 : total <= PICKET_FIRST_WARNING ? 1 : 0;
+    if (current === last) return;
+    if (current > last) {
+      await sendPicketLowAlert({ remaining: total, threshold: current === 2 ? PICKET_LOW_THRESHOLD : PICKET_FIRST_WARNING, second: current === 2 });
+    }
+    // Up = warned just now; down = restocked, re-armed without an email.
+    await admin.from("picket_purchases").update({ low_alert_level: current }).in("id", data.map((p: any) => p.id));
+  } catch (err) {
+    console.error("Picket low alert failed:", err);
   }
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { syncProductCosts } from "@/lib/picketCost";
+import { checkPicketLowAlert, syncProductCosts } from "@/lib/picketCost";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
@@ -60,7 +60,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  await syncProductCosts(createAdminClient());
+  { const a = createAdminClient(); await syncProductCosts(a); await checkPicketLowAlert(a); }
   return NextResponse.json({ ok: true });
 }
 
@@ -100,6 +100,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  await syncProductCosts(createAdminClient());
+  { const a = createAdminClient(); await syncProductCosts(a); await checkPicketLowAlert(a); }
   return NextResponse.json({ ok: true });
 }
