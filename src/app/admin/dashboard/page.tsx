@@ -454,6 +454,8 @@ export default async function DashboardPage() {
       <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Dashboard</h1>
       <p className="text-sm text-[#1E3A5F]/60 mb-6">Your daily command center — today's priorities first.</p>
 
+      <PendingInventoryBatches batches={pendingBatches} />
+
       {/* ============================================================
           1. NEEDS ATTENTION — everything requiring action, first.
           The strip below is a quick-glance, all-clickable summary;
@@ -651,8 +653,6 @@ export default async function DashboardPage() {
           plus cedar pickets (moved here from the old general summary
           grid, same calculation). This is the one place the full
           product list appears — no longer repeated at the bottom too. */}
-      <PendingInventoryBatches batches={pendingBatches} />
-
       <h2 id="inventory" className="font-display text-lg text-[#1E3A5F] mb-3 scroll-mt-4">Inventory</h2>
       <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm overflow-hidden mb-10 sm:mb-8">
         <div className="p-4 border-b border-[#1E3A5F]/10 flex flex-wrap items-center justify-between gap-3">

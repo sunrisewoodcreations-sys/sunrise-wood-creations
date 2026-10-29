@@ -58,6 +58,7 @@ export default function CutListGenerator({
   ]);
   // Finished products this cut list makes — saved with it so the Home Screen can offer "Add to stock".
   const [genItems, setGenItems] = useState<{ productId: string; name: string; quantity: number }[]>([]);
+  const [autoSent, setAutoSent] = useState(false);
   const [generated, setGenerated] = useState<{ normalResults: OptimizationResult[]; trimResults: OptimizationResult[]; label: string } | null>(null);
   const [generationError, setGenerationError] = useState("");
   const [listName, setListName] = useState("");
@@ -150,14 +151,30 @@ export default function CutListGenerator({
       const cur = merged.get(i.productId);
       if (cur) cur.quantity += i.quantity; else merged.set(i.productId, { ...i });
     });
-    setGenItems(Array.from(merged.values()));
+    const mergedItems = Array.from(merged.values());
+    setGenItems(mergedItems);
+    setAutoSent(mergedItems.length > 0);
     const normalParts = allParts.filter(p => !p.isTrim);
     const trimParts = allParts.filter(p => p.isTrim);
-    setGenerated({
+    const result = {
       normalResults: optimizeByMaterial(normalParts, boardLength, kerf),
       trimResults: optimizeByMaterial(trimParts, boardLength, kerf),
       label
-    });
+    };
+    setGenerated(result);
+    // Put it on the Home Screen right away so it can be added to stock later,
+    // whether or not there are orders for it yet.
+    if (mergedItems.length > 0) {
+      fetch("/api/cutlist/saved", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${label} — ${new Date().toLocaleDateString()}`,
+          boardLength, kerf,
+          resultJson: { ...result, inventory: { status: "pending", items: mergedItems } }
+        })
+      }).then(() => router.refresh()).catch(() => null);
+    }
     setSaveMessage("");
   }
 
@@ -170,12 +187,12 @@ export default function CutListGenerator({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name, boardLength, kerf,
-        resultJson: genItems.length > 0 ? { ...generated, inventory: { status: "pending", items: genItems } } : generated
+        resultJson: genItems.length > 0 && !autoSent ? { ...generated, inventory: { status: "pending", items: genItems } } : generated
       })
     });
     setSaving(false);
     if (res.ok) {
-      setSaveMessage(genItems.length > 0 ? "Saved. It now shows on your Home Screen under \"Ready to add to inventory\"." : "Saved.");
+      setSaveMessage(genItems.length > 0 && !autoSent ? "Saved. It now shows on your Home Screen under \"Ready to add to inventory\"." : "Saved.");
       setListName("");
       router.refresh();
     }
@@ -334,8 +351,9 @@ export default function CutListGenerator({
         <div>
           <div className="print:hidden flex flex-wrap items-center gap-2 mb-6 bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4">
             <input value={listName} onChange={e => setListName(e.target.value)} placeholder="Name this cut list (optional)" className="border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm flex-1 min-w-[200px]" />
-            <AdminButton onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save & send to Home Screen"}</AdminButton>
+            <AdminButton onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save this cut list"}</AdminButton>
             <AdminButton variant="secondary" onClick={() => window.print()}>Print / Save as PDF</AdminButton>
+            {autoSent && <span className="text-sm font-semibold text-sage">On your Home Screen — add to stock there.</span>}
             {saveMessage && <span className="text-sm font-semibold text-sage">{saveMessage}</span>}
           </div>
 
