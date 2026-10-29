@@ -31,18 +31,25 @@ export default function QuoteRequestForm({ initialProductType = "" }: { initialP
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/quote-requests", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, phone, productType, dimensions, woodType, budget, timeline, description })
-    });
+    // If the connection drops, fetch itself throws. Without this, the
+    // button stayed on "Sending..." (disabled) forever with no message.
+    try {
+      const res = await fetch("/api/quote-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, phone, productType, dimensions, woodType, budget, timeline, description })
+      });
 
-    setLoading(false);
-    if (res.ok) {
-      setDone(true);
-    } else {
-      const body = await res.json().catch(() => ({}));
-      setError(body.error || "Something went wrong. Try again in a moment.");
+      if (res.ok) {
+        setDone(true);
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error || "Something went wrong. Try again in a moment.");
+      }
+    } catch {
+      setError("Couldn't reach us. Check your connection and try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -104,7 +111,7 @@ export default function QuoteRequestForm({ initialProductType = "" }: { initialP
           className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm"
         />
       </div>
-      {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
       <button
         type="submit"
         disabled={loading}

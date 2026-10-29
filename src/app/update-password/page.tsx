@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function UpdatePasswordPage() {
+  const uid = useId();
   const router = useRouter();
   const supabase = createClient();
   const [password, setPassword] = useState("");
@@ -100,15 +101,16 @@ export default function UpdatePasswordPage() {
     <main className="min-h-screen bg-cream flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white border border-walnut/10 rounded-xl p-8">
         <h1 className="font-display text-2xl text-walnut mb-1">Set your password</h1>
-        <p className="text-sm text-walnut/60 mb-6">Choose a password for your account.</p>
+        <p className="text-sm text-walnut/70 mb-6">Choose a password for your account.</p>
 
         {!ready ? (
-          <p className="text-sm text-walnut/60">Checking your link...</p>
+          <p className="text-sm text-walnut/70">Checking your link...</p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-walnut mb-1">New password</label>
+              <label htmlFor={`${uid}-new`} className="block text-xs font-semibold text-walnut mb-1">New password</label>
               <input
+                id={`${uid}-new`}
                 type={showPassword ? "text" : "password"}
                 required
                 value={password}
@@ -117,8 +119,9 @@ export default function UpdatePasswordPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-walnut mb-1">Confirm password</label>
+              <label htmlFor={`${uid}-confirm`} className="block text-xs font-semibold text-walnut mb-1">Confirm password</label>
               <input
+                id={`${uid}-confirm`}
                 type={showPassword ? "text" : "password"}
                 required
                 value={confirm}
@@ -135,7 +138,7 @@ export default function UpdatePasswordPage() {
               />
               Show password
             </label>
-            {error && <p className="text-sm text-red-700">{error}</p>}
+            {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
             <button
               type="submit"
               disabled={loading}

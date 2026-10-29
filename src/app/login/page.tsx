@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { useDialogBehavior } from "@/lib/useDialogBehavior";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +13,8 @@ export default function LoginPage() {
 
   const [mode, setMode] = useState<"login" | "forgot">("login");
   const [showContactModal, setShowContactModal] = useState(false);
+  const contactDialogRef = useRef<HTMLDivElement>(null);
+  useDialogBehavior(showContactModal, () => setShowContactModal(false), contactDialogRef);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -110,7 +113,7 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              {error && <p className="text-sm text-red-700">{error}</p>}
+              {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
 
               <button
                 type="submit"
@@ -173,13 +176,20 @@ export default function LoginPage() {
 
       {showContactModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50">
-          <div className="bg-white rounded-xl p-6 max-w-sm w-full">
-            <h2 className="font-display text-xl text-walnut mb-2">Accounts start with an order</h2>
+          <div
+            ref={contactDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="contact-dialog-title"
+            tabIndex={-1}
+            className="bg-white rounded-xl p-6 max-w-sm w-full"
+          >
+            <h2 id="contact-dialog-title" className="font-display text-xl text-walnut mb-2">Accounts start with an order</h2>
             <p className="text-sm text-walnut/70 mb-4">
               We set up your account once you&apos;ve placed an order with us. Reach out and we&apos;ll get you started.
             </p>
-            <p className="text-sm font-semibold text-walnut mb-1">Phone: (269) 762-1460</p>
-            <p className="text-sm font-semibold text-walnut mb-5">Email: sunrisewoodcreations@gmail.com</p>
+            <p className="text-sm font-semibold text-walnut mb-1">Phone: <a href="tel:2697621460" className="underline">(269) 762-1460</a></p>
+            <p className="text-sm font-semibold text-walnut mb-5">Email: <a href="mailto:sunrisewoodcreations@gmail.com" className="underline break-all">sunrisewoodcreations@gmail.com</a></p>
             <button
               onClick={() => setShowContactModal(false)}
               className="w-full bg-accent text-white py-2 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
