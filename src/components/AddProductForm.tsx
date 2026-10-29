@@ -121,7 +121,11 @@ export default function AddProductForm() {
         </div>
         <div>
           <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Your cost ($)</label>
-          <input value={costPrice} onChange={e => setCostPrice(e.target.value)} placeholder="20" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+          {productType === "planter" && Number(picketsPerUnit) > 0 ? (
+            <p className="text-sm text-[#1E3A5F]/70 py-2">Automatic: pickets per unit × current pallet price</p>
+          ) : (
+            <input value={costPrice} onChange={e => setCostPrice(e.target.value)} placeholder="20" className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm" />
+          )}
         </div>
         <div>
           <label className="block text-xs font-semibold text-[#1E3A5F] mb-1">Stock on hand</label>
