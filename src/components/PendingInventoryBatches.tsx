@@ -39,6 +39,7 @@ function Batch({ batch }: { batch: PendingBatch }) {
         } else {
           setNote("Added to stock. No waiting order needed it.");
         }
+        if (data.warning) setError(data.warning);
         router.refresh();
         setBusy("");
         return;

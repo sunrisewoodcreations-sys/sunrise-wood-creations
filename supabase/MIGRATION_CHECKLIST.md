@@ -68,6 +68,7 @@ anything already in place.
 - [ ] `migrations_default_low_stock_threshold.sql` — low-stock alert level defaults to 2 (and raises existing 0s to 2)
 - [ ] `migrations_stock_reservations.sql` — set stock aside for an order when it is placed (partial reservations)
 - [ ] `migrations_picket_low_alert.sql` — remembers which pickets-running-low email (100 and 50) was sent
+- [ ] `migrations_built_units.sql` — pickets come out when a piece is built; each piece remembers its cost
 
 ---
 

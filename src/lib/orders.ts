@@ -156,34 +156,9 @@ export async function createOrder(opts: {
     console.error("Couldn't save order items:", itemsError.message);
   }
 
-  // Auto-log picket usage for any item linked to a saved product that
-  // has a default "pickets per unit" set — no manual entry needed.
-  const productIds = [...new Set((insertedItems || []).map((it: any) => it.product_id).filter(Boolean))];
-  if (productIds.length > 0) {
-    const { data: linkedProducts } = await admin
-      .from("products")
-      .select("id, pickets_per_unit")
-      .in("id", productIds);
-
-    const picketsPerUnitByProduct: Record<string, number> = {};
-    (linkedProducts || []).forEach((p: any) => { picketsPerUnitByProduct[p.id] = p.pickets_per_unit || 0; });
-
-    for (const item of insertedItems || []) {
-      const perUnit = item.product_id ? picketsPerUnitByProduct[item.product_id] || 0 : 0;
-      if (perUnit > 0) {
-        const neededQty = perUnit * item.quantity;
-        const result = await consumePicketsFifo(admin, neededQty, order.id, item.id);
-        if (result.ok) {
-          await admin.from("order_items").update({
-            pickets_used: neededQty,
-            material_cost_cents: result.totalCostCents
-          }).eq("id", item.id);
-        } else {
-          console.error(`Auto picket consumption failed for item ${item.id}:`, result.error);
-        }
-      }
-    }
-  }
+  // Pickets are NOT taken out at order time. They come out when a piece is
+  // built (Add to stock on the Home Screen), and each built piece's cost is
+  // attached to the order when the piece is set aside for it — see builtUnits.ts.
 
   // If there's already enough stock on hand to cover this order, skip
   // straight to Ready for Pickup instead of waiting for a deposit or a

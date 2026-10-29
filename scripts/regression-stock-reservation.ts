@@ -5,15 +5,17 @@ function fake(db: Record<string, any[]>) {
   return {
     from(t: string) {
       let rows = db[t] || (db[t] = []);
-      let mode = "select"; let patch: any = null; const filters: ((r: any) => boolean)[] = [];
+      let lim = Infinity; let mode = "select"; let patch: any = null; const filters: ((r: any) => boolean)[] = [];
       const run = () => {
-        const hit = rows.filter(r => filters.every(f => f(r)));
+        const hit = rows.filter(r => filters.every(f => f(r))).slice(0, lim);
         if (mode === "update") { hit.forEach(r => Object.assign(r, patch)); return { data: hit, error: null }; }
         return { data: hit, error: null };
       };
       const b: any = {
         select() { return b; }, order() { return b; },
         eq(c: string, v: any) { filters.push(r => r[c] === v); return b; },
+        is(c: string, v: any) { filters.push(r => (r[c] ?? null) === v); return b; },
+        limit(n: number) { lim = n; return b; },
         in(c: string, v: any[]) { filters.push(r => v.includes(r[c])); return b; },
         update(p: any) { mode = "update"; patch = p; return b; },
         insert(r: any) { rows.push(r); return Promise.resolve({ error: null }); },
@@ -38,7 +40,7 @@ const t = (name: string, ok: boolean) => { if (!ok) { fails++; console.log("FAIL
   t("not ready with 1 still to build", !(await markOrderReadyIfCovered(a, order)) && order.status === "order_placed");
   t("adjustment logged", db.product_stock_adjustments.length === 1);
   // Build the last piece for this customer: no shelf change, order becomes ready.
-  t("built unit goes to order", await reserveBuiltUnitForOrder(a, order, "p"));
+  t("built unit goes to order", !!(await reserveBuiltUnitForOrder(a, order, "p")));
   t("now ready", await markOrderReadyIfCovered(a, order) && order.status === "ready_for_pickup" && order.stock_deducted === true);
   t("shelf stock still 0", db.products[0].stock_quantity === 0);
   t("no more to give", !(await reserveBuiltUnitForOrder(a, order, "p")));
