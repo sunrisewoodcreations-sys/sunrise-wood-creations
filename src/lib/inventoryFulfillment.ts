@@ -17,7 +17,7 @@ const asReady = (o: any): ReadyOrder => ({ id: o.id, title: o.title, customerNam
 // A finished piece built FOR a specific customer's order: it is set aside for
 // that order (shelf stock does not change). When every piece of that order is
 // set aside, the order is marked Ready. Returns { used, ready }.
-export async function giveBuiltUnitToOrder(admin: ReturnType<typeof createAdminClient>, orderId: string, productId: string, unit: { id: string | null; costCents: number }) {
+export async function giveBuiltUnitToOrder(admin: ReturnType<typeof createAdminClient>, orderId: string, productId: string, unit: { id: string | null; costCents: number; pickets?: number }) {
   const order = await loadOrder(admin, orderId);
   if (!order || order.stock_deducted || !WAITING_STATUSES.includes(order.status)) return { used: false, ready: null as ReadyOrder | null };
   const line = await reserveBuiltUnitForOrder(admin, order, productId);

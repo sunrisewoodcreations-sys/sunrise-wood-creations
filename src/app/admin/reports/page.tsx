@@ -43,27 +43,29 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
   });
 
   if (orderIds.length === 0) {
-    return { revenue: 0, cost: 0, profit: 0, materialsCost: 0 };
+    return { revenue: 0, cost: 0, profit: 0, materialsCost: 0, picketsUsed: 0 };
   }
 
   const { data: orders } = await supabase
     .from("orders")
-    .select("id, quantity, price_cents, material_cost_cents, products:product_id(cost_cents)")
+    .select("id, quantity, price_cents, material_cost_cents, pickets_used, products:product_id(cost_cents)")
     .in("id", orderIds);
 
   const { data: items } = await supabase
     .from("order_items")
-    .select("order_id, quantity, unit_price_cents, material_cost_cents, products:product_id(cost_cents)")
+    .select("order_id, quantity, unit_price_cents, material_cost_cents, pickets_used, products:product_id(cost_cents)")
     .in("order_id", orderIds);
 
   const orderIdsWithItems = new Set((items || []).map((it: any) => it.order_id));
   let materialsCostCents = 0;
+  let picketsUsed = 0;
 
   let revenueCents = 0;
   let costCents = 0;
 
   (items || []).forEach((it: any) => {
     revenueCents += (it.unit_price_cents || 0) * (it.quantity || 1);
+    picketsUsed += it.pickets_used || 0;
     if (it.material_cost_cents != null) {
       costCents += it.material_cost_cents;
       materialsCostCents += it.material_cost_cents;
@@ -75,6 +77,7 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
   (orders || []).forEach((o: any) => {
     if (orderIdsWithItems.has(o.id)) return;
     revenueCents += o.price_cents || 0;
+    picketsUsed += o.pickets_used || 0;
     if (o.material_cost_cents != null) {
       costCents += o.material_cost_cents;
       materialsCostCents += o.material_cost_cents;
@@ -87,7 +90,8 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
     revenue: revenueCents / 100,
     cost: costCents / 100,
     profit: (revenueCents - costCents) / 100,
-    materialsCost: materialsCostCents / 100
+    materialsCost: materialsCostCents / 100,
+    picketsUsed
   };
 }
 
@@ -153,9 +157,10 @@ export default async function ReportsPage() {
       </p>
 
       <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">{quarterLabel}</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <SummaryBox label="Profit" value={`$${quarterTotals.profit.toFixed(2)}`} color={quarterTotals.profit >= 0 ? "text-sage" : "text-ember"} />
-        <SummaryBox label="Pickets used" value={`-$${quarterTotals.materialsCost.toFixed(2)}`} color="text-ember" />
+        <SummaryBox label="Pickets used (sold)" value={`${quarterTotals.picketsUsed}`} />
+        <SummaryBox label="Pickets cost" value={`-$${quarterTotals.materialsCost.toFixed(2)}`} color="text-ember" />
         <SummaryBox label="Sales tax owed (6% MI)" value={`$${quarterTax.salesTax.toFixed(2)}`} color="text-ember" />
         <SummaryBox label={`Michigan income tax (${michiganPercent}%)`} value={`$${quarterTax.michiganTax.toFixed(2)}`} color="text-ember" />
         <SummaryBox label={`Federal income tax (${federalPercent}%)`} value={`$${quarterTax.federalTax.toFixed(2)}`} color="text-ember" />
@@ -163,9 +168,10 @@ export default async function ReportsPage() {
       </div>
 
       <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">Year to date ({year})</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <SummaryBox label="Profit" value={`$${yearTotals.profit.toFixed(2)}`} color={yearTotals.profit >= 0 ? "text-sage" : "text-ember"} />
-        <SummaryBox label="Pickets used" value={`-$${yearTotals.materialsCost.toFixed(2)}`} color="text-ember" />
+        <SummaryBox label="Pickets used (sold)" value={`${yearTotals.picketsUsed}`} />
+        <SummaryBox label="Pickets cost" value={`-$${yearTotals.materialsCost.toFixed(2)}`} color="text-ember" />
         <SummaryBox label="Sales tax owed (6% MI)" value={`$${yearTax.salesTax.toFixed(2)}`} color="text-ember" />
         <SummaryBox label={`Michigan income tax (${michiganPercent}%)`} value={`$${yearTax.michiganTax.toFixed(2)}`} color="text-ember" />
         <SummaryBox label={`Federal income tax (${federalPercent}%)`} value={`$${yearTax.federalTax.toFixed(2)}`} color="text-ember" />
