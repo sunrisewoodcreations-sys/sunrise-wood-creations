@@ -69,18 +69,22 @@ export default function CutDiagram({
       </div>
       {onCutChange && (
         <div className="mt-2 flex flex-wrap items-center gap-2 print:hidden">
-          <button
-            type="button"
-            onClick={() => onCutChange(allDone ? 0 : cut + nextBatch)}
-            aria-pressed={allDone}
-            className={`min-h-[44px] px-4 rounded-md text-sm font-semibold border ${allDone ? "bg-sage text-white border-sage" : "bg-white text-[#1E3A5F] border-[#1E3A5F]/30"}`}
-          >
-            {count === 1
-              ? (allDone ? "✓ Cut — tap to undo" : "Tap when cut")
-              : allDone
-                ? `✓ All ${count} cut — tap to undo`
+          {allDone ? (
+            // Finished: locked, nothing more to tap.
+            <div className="min-h-[44px] px-4 rounded-md text-sm font-semibold bg-sage text-white inline-flex items-center">
+              {count === 1 ? "✓ Cut" : `✓ All ${count} cut`}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onCutChange(cut + nextBatch)}
+              className="min-h-[44px] px-4 rounded-md text-sm font-semibold border bg-white text-[#1E3A5F] border-[#1E3A5F]/30"
+            >
+              {count === 1
+                ? "Tap when cut"
                 : `${cut} of ${count} cut — tap after cutting ${nextBatch === 1 ? "1" : `${nextBatch}${nextBatch < step ? " (the last ones)" : ""}`}`}
-          </button>
+            </button>
+          )}
           {count > 1 && cut > 0 && !allDone && (
             <button type="button" onClick={() => onCutChange(Math.max(0, cut - undoBy))} className="min-h-[44px] px-3 rounded-md text-sm font-semibold border border-[#1E3A5F]/20 text-[#1E3A5F]/70">
               {undoBy === 1 ? "Undo one" : `Undo ${undoBy}`}
