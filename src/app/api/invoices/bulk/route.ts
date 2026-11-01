@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { invoiceFileName } from "@/lib/invoiceNames";
 import JSZip from "jszip";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -87,7 +88,7 @@ export async function GET(req: NextRequest) {
   // quarter belongs in this quarter's bundle.
   const { data: invoices, error } = await admin
     .from("invoices")
-    .select("*, orders:order_id(title)")
+    .select("*, orders:order_id(title, profiles:customer_id(full_name))")
     .eq("paid_in_full", true)
     .gte("created_at", range.start.toISOString())
     .lt("created_at", range.end.toISOString())
@@ -111,7 +112,7 @@ export async function GET(req: NextRequest) {
       const buffer = Buffer.from(await res.arrayBuffer());
       const orderTitle = (inv as any).orders?.title || "order";
       const safeTitle = orderTitle.replace(/[^a-z0-9\-_ ]/gi, "").trim().replace(/\s+/g, "-");
-      zip.file(`invoice-${inv.invoice_year}-${inv.invoice_number}-${safeTitle}.pdf`, buffer);
+      zip.file(invoiceFileName(inv.invoice_year, inv.invoice_number, (inv as any).orders?.profiles?.full_name || safeTitle), buffer);
     } catch {
       // Skip any invoice whose PDF can't be fetched rather than failing the whole batch.
     }

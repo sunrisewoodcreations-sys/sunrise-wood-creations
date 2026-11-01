@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { invoiceDownloadUrl } from "@/lib/invoiceNames";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SiteHeader from "@/components/SiteHeader";
@@ -99,7 +100,7 @@ export default async function AccountOrdersPage() {
 
                   <div className="flex flex-col items-start sm:items-end gap-2 flex-shrink-0">
                     {invoice?.pdf_url && (
-                      <a href={invoice.pdf_url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-ember hover:underline whitespace-nowrap">
+                      <a href={invoiceDownloadUrl(invoice.pdf_url, invoice.invoice_year, invoice.invoice_number, profile?.full_name)} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-ember hover:underline whitespace-nowrap">
                         Download invoice
                       </a>
                     )}

@@ -205,7 +205,7 @@ export async function createOrder(opts: {
         // order_number migration hasn't been run yet), this is undefined
         // and the email looks it up itself and, failing that, just leaves
         // the line out. Display only: nothing identifies an order by it.
-        orderNumberDisplay: formatOrderNumber(order.order_number, order.is_demo) ?? undefined,
+        orderNumberDisplay: formatOrderNumber(order.order_number, order.is_demo, order.order_year) ?? undefined,
         // This single change is also what closes the gap for the public,
         // no-login "accept this quote" link (src/app/api/quotes/token/
         // [token]/accept/route.ts): that route has no logged-in session

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { invoiceDownloadUrl } from "@/lib/invoiceNames";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatInvoiceNumber } from "@/lib/invoice";
@@ -235,7 +236,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
                   <td className="px-4 py-3">
                     {invoice?.pdf_url ? (
                       <a
-                        href={invoice.pdf_url}
+                        href={invoiceDownloadUrl(invoice.pdf_url, invoice.invoice_year, invoice.invoice_number, customer.full_name)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs font-semibold text-ember hover:underline"
@@ -285,7 +286,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
               </div>
               {invoice?.pdf_url && (
                 <a
-                  href={invoice.pdf_url}
+                  href={invoiceDownloadUrl(invoice.pdf_url, invoice.invoice_year, invoice.invoice_number, customer.full_name)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block mt-3 text-xs font-semibold text-ember active:underline"
