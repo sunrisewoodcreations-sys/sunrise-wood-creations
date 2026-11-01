@@ -4,7 +4,8 @@ import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminButton from "@/components/AdminButton";
 import CutDiagram from "@/components/CutDiagram";
-import { groupIdenticalBoards, BOMPart, OptimizationResult } from "@/lib/cutlistOptimizer";
+import { groupIdenticalBoards, boardGroupKey, BOMPart, OptimizationResult } from "@/lib/cutlistOptimizer";
+import { useCutProgress } from "@/lib/useCutProgress";
 import { planFromPickets, Plan, DEFAULT_BOARD_LENGTH, DEFAULT_KERF } from "@/lib/picketPlanner";
 
 type PlannerProduct = { id: string; name: string; parts: BOMPart[] };
@@ -25,6 +26,7 @@ export default function PicketPlanner({
     () => Object.fromEntries(products.map(p => [p.id, { checked: false, ratio: "1" }]))
   );
   const [plan, setPlan] = useState<Plan | null>(null);
+  const cuts = useCutProgress();
   const [error, setError] = useState("");
   const [listName, setListName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -45,6 +47,7 @@ export default function PicketPlanner({
     if (requests.some(r => !(r.ratio >= 1))) { setError("Each ticked product needs a ratio of 1 or more."); setPlan(null); return; }
     setError("");
     setPlan(planFromPickets(products, requests, pickets, boardLength, kerf));
+    cuts.load(null);
   }
 
   async function handleSave() {
@@ -64,6 +67,7 @@ export default function PicketPlanner({
             normalResults: plan.normalResults,
             trimResults: plan.trimResults,
             label,
+            cutProgress: cuts.progress,
             // Shows up on the Home Screen as "Ready to add to inventory"
             // until it's added (or dismissed).
             inventory: {
@@ -76,6 +80,8 @@ export default function PicketPlanner({
         })
       });
       if (res.ok) {
+        const j = await res.json().catch(() => null);
+        if (j?.id) cuts.attach(j.id);
         setSaveMessage("Saved. It now shows on your Home Screen under \"Ready to add to inventory\" — press the button there once the pieces are built.");
         setListName("");
         router.refresh();
@@ -265,7 +271,7 @@ export default function PicketPlanner({
               <h3 className="text-lg font-bold text-walnut mb-2">Cut list — standard parts</h3>
               {plan.normalResults.length === 0 || plan.normalResults.every(r => r.boards.length === 0)
                 ? <p className="text-sm text-walnut/70 mb-6">No standard parts in this plan.</p>
-                : plan.normalResults.map((r, i) => <ResultSection key={i} result={r} />)}
+                : plan.normalResults.map((r, i) => <ResultSection key={i} result={r} progress={cuts.progress} onCut={cuts.setCount} />)}
 
               <div className="my-8 border-t-2 border-dashed border-amber pt-2 print:break-before-page">
                 <p className="text-xs font-semibold text-walnut uppercase tracking-wide">⚠ Separate list below — trim pieces, final-cut after assembly. Never mix with the parts above.</p>
@@ -273,7 +279,7 @@ export default function PicketPlanner({
               <h3 className="text-lg font-bold text-walnut mb-2">Cut list — trim (final-cut after assembly)</h3>
               {plan.trimResults.length === 0 || plan.trimResults.every(r => r.boards.length === 0)
                 ? <p className="text-sm text-walnut/70">No trim parts in this plan.</p>
-                : plan.trimResults.map((r, i) => <ResultSection key={i} result={r} isTrim />)}
+                : plan.trimResults.map((r, i) => <ResultSection key={i} result={r} isTrim progress={cuts.progress} onCut={cuts.setCount} />)}
             </>
           )}
         </div>
@@ -282,10 +288,18 @@ export default function PicketPlanner({
   );
 }
 
-function ResultSection({ result, isTrim }: { result: OptimizationResult; isTrim?: boolean }) {
+function ResultSection({ result, isTrim, progress, onCut }: { result: OptimizationResult; isTrim?: boolean; progress: Record<string, number>; onCut: (key: string, n: number) => void }) {
+  const groups = groupIdenticalBoards(result.boards);
+  const totalToCut = groups.reduce((s, g) => s + g.count, 0);
+  const cutSoFar = groups.reduce((s, g) => s + Math.min(progress[boardGroupKey(!!isTrim, result.materialType, g.board)] || 0, g.count), 0);
   return (
     <div className="mb-8">
       <h4 className="text-sm font-bold mb-2 uppercase tracking-wide text-walnut/70">Material: {result.materialType}</h4>
+      {totalToCut > 0 && (
+        <p className={`text-sm font-semibold mb-3 ${cutSoFar >= totalToCut ? "text-sage" : "text-walnut"}`} aria-live="polite">
+          {cutSoFar >= totalToCut ? "✓ Everything here is cut" : `Cut so far: ${cutSoFar} of ${totalToCut} pickets`}
+        </p>
+      )}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="bg-white border border-walnut/10 rounded-lg p-3 text-center"><div className="text-2xl font-display text-walnut">{result.totalBoards}</div><div className="text-xs text-walnut/70">Pickets required</div></div>
         <div className="bg-white border border-walnut/10 rounded-lg p-3 text-center"><div className="text-2xl font-display text-walnut">{result.wastePercent.toFixed(1)}%</div><div className="text-xs text-walnut/70">Waste</div></div>
@@ -294,7 +308,10 @@ function ResultSection({ result, isTrim }: { result: OptimizationResult; isTrim?
       {isTrim && result.boards.length > 0 && <p className="text-xs text-walnut/70 mb-2 italic">Rough-cut to the lengths shown, then final-trim after assembly.</p>}
       {result.boards.length === 0
         ? <p className="text-sm text-walnut/70">No pickets needed.</p>
-        : groupIdenticalBoards(result.boards).map((group, i) => <CutDiagram key={i} board={group.board} index={i} count={group.count} />)}
+        : groups.map((group, i) => {
+          const key = boardGroupKey(!!isTrim, result.materialType, group.board);
+          return <CutDiagram key={i} board={group.board} index={i} count={group.count} cutCount={progress[key] || 0} onCutChange={n => onCut(key, n)} />;
+        })}
     </div>
   );
 }

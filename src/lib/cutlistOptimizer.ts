@@ -128,3 +128,10 @@ export function groupIdenticalBoards(boards: Board[]): { board: Board; count: nu
   }
   return Array.from(groups.values());
 }
+
+// Stable id for one "cut this pattern N times" group, used to remember how
+// many of them have been cut. Same material + same pieces = same key.
+export function boardGroupKey(isTrim: boolean, materialType: string, board: Board): string {
+  const signature = [...board.pieces].map(p => `${p.partName}:${p.length}`).sort().join("|");
+  return `${isTrim ? "trim" : "std"}~${materialType}~${signature}`;
+}

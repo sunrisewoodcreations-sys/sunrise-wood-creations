@@ -19,24 +19,24 @@ export async function POST(req: NextRequest) {
   // (same name and same products/quantities) is still waiting.
   const inv = resultJson?.inventory;
   if (inv?.status === "pending") {
-    const { data: existing } = await supabase.from("saved_cut_lists").select("result_json").eq("name", name.trim());
+    const { data: existing } = await supabase.from("saved_cut_lists").select("id, result_json").eq("name", name.trim());
     const sig = JSON.stringify((inv.items || []).map((i: any) => [i.productId, i.quantity, i.orderId ?? null]));
-    const dup = (existing || []).some((e: any) =>
+    const dup = (existing || []).find((e: any) =>
       e.result_json?.inventory?.status === "pending" &&
       JSON.stringify((e.result_json.inventory.items || []).map((i: any) => [i.productId, i.quantity, i.orderId ?? null])) === sig);
-    if (dup) return NextResponse.json({ ok: true, duplicate: true });
+    if (dup) return NextResponse.json({ ok: true, duplicate: true, id: dup.id });
   }
 
-  const { error } = await supabase.from("saved_cut_lists").insert({
+  const { data: inserted, error } = await supabase.from("saved_cut_lists").insert({
     name: name.trim(),
     board_length: boardLength,
     kerf,
     result_json: resultJson
-  });
+  }).select("id").single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, id: inserted?.id });
 }

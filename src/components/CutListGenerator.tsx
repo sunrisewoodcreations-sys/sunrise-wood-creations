@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { optimizeByMaterial, groupIdenticalBoards, mergeParts, OptimizationResult, BOMPart } from "@/lib/cutlistOptimizer";
+import { optimizeByMaterial, groupIdenticalBoards, boardGroupKey, mergeParts, OptimizationResult, BOMPart } from "@/lib/cutlistOptimizer";
+import { useCutProgress } from "@/lib/useCutProgress";
 import CutDiagram from "@/components/CutDiagram";
 import AdminButton from "@/components/AdminButton";
 
@@ -40,6 +41,7 @@ export default function CutListGenerator({
   savedCutLists: { id: string; name: string; created_at: string; board_length: number; kerf: number; result_json: any }[];
 }) {
   const router = useRouter();
+  const cuts = useCutProgress();
   const [mode, setMode] = useState<Mode>("today");
   const [boardLength, setBoardLength] = useState(71);
   const [kerf, setKerf] = useState(0.125);
@@ -198,6 +200,7 @@ export default function CutListGenerator({
       label
     };
     setGenerated(result);
+    cuts.load(null);
     // Put it on the Home Screen right away so it can be added to stock later,
     // whether or not there are orders for it yet.
     if (mergedItems.length > 0) {
@@ -209,7 +212,7 @@ export default function CutListGenerator({
           boardLength, kerf,
           resultJson: { ...result, inventory: { status: "pending", items: mergedItems } }
         })
-      }).then(() => router.refresh()).catch(() => null);
+      }).then(r => r.json()).then(j => { if (j?.id) cuts.attach(j.id); router.refresh(); }).catch(() => null);
     }
     setSaveMessage("");
   }
@@ -223,11 +226,13 @@ export default function CutListGenerator({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name, boardLength, kerf,
-        resultJson: genItems.length > 0 && !autoSent ? { ...generated, inventory: { status: "pending", items: genItems } } : generated
+        resultJson: { ...(genItems.length > 0 && !autoSent ? { ...generated, inventory: { status: "pending", items: genItems } } : generated), cutProgress: cuts.progress }
       })
     });
     setSaving(false);
     if (res.ok) {
+      const j = await res.json().catch(() => null);
+      if (j?.id) cuts.attach(j.id);
       setSaveMessage(genItems.length > 0 && !autoSent ? "Saved. It now shows on your Home Screen under \"Ready to add to inventory\"." : "Saved.");
       setListName("");
       router.refresh();
@@ -239,10 +244,11 @@ export default function CutListGenerator({
     router.refresh();
   }
 
-  function openSaved(list: { board_length: number; kerf: number; result_json: any; name: string }) {
+  function openSaved(list: { id?: string; board_length: number; kerf: number; result_json: any; name: string }) {
     setBoardLength(list.board_length);
     setKerf(list.kerf);
     setGenerated({ normalResults: list.result_json.normalResults, trimResults: list.result_json.trimResults, label: list.name });
+    cuts.load(list.id ?? null, list.result_json.cutProgress);
     setMode("saved");
   }
 
@@ -396,7 +402,7 @@ export default function CutListGenerator({
 
           <h3 className="text-lg font-bold text-[#1E3A5F] mb-2">Cut List — Standard Parts</h3>
           {generated.normalResults.length === 0 ? <p className="text-sm text-[#1E3A5F]/50 mb-6">No standard parts in this list.</p> :
-            generated.normalResults.map((result, i) => <ResultSection key={i} result={result} />)}
+            generated.normalResults.map((result, i) => <ResultSection key={i} result={result} progress={cuts.progress} onCut={cuts.setCount} />)}
 
           <div className="my-8 border-t-2 border-dashed border-amber pt-2 print:break-before-page">
             <p className="text-xs font-semibold text-amber uppercase tracking-wide">⚠ Separate list below — trim pieces, final-cut after assembly. Never mix with the parts above.</p>
@@ -404,17 +410,25 @@ export default function CutListGenerator({
 
           <h3 className="text-lg font-bold text-amber mb-2">Cut List — Trim (final-cut after assembly)</h3>
           {generated.trimResults.length === 0 ? <p className="text-sm text-[#1E3A5F]/50">No trim parts in this list.</p> :
-            generated.trimResults.map((result, i) => <ResultSection key={i} result={result} isTrim />)}
+            generated.trimResults.map((result, i) => <ResultSection key={i} result={result} isTrim progress={cuts.progress} onCut={cuts.setCount} />)}
         </div>
       )}
     </div>
   );
 }
 
-function ResultSection({ result, isTrim }: { result: OptimizationResult; isTrim?: boolean }) {
+function ResultSection({ result, isTrim, progress, onCut }: { result: OptimizationResult; isTrim?: boolean; progress: Record<string, number>; onCut: (key: string, n: number) => void }) {
+  const groups = groupIdenticalBoards(result.boards);
+  const totalToCut = groups.reduce((s, g) => s + g.count, 0);
+  const cutSoFar = groups.reduce((s, g) => s + Math.min(progress[boardGroupKey(!!isTrim, result.materialType, g.board)] || 0, g.count), 0);
   return (
     <div className="mb-8">
       <h4 className="text-sm font-bold mb-2 uppercase tracking-wide text-[#1E3A5F]/60">Material: {result.materialType}</h4>
+      {totalToCut > 0 && (
+        <p className={`text-sm font-semibold mb-3 ${cutSoFar >= totalToCut ? "text-sage" : "text-[#1E3A5F]"}`} aria-live="polite">
+          {cutSoFar >= totalToCut ? "✓ Everything here is cut" : `Cut so far: ${cutSoFar} of ${totalToCut} boards`}
+        </p>
+      )}
       {result.oversizedParts.length > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-3 text-sm text-red-700">
           {result.oversizedParts.length} part(s) are longer than your stock length and were excluded:
@@ -428,7 +442,10 @@ function ResultSection({ result, isTrim }: { result: OptimizationResult; isTrim?
       </div>
       {isTrim && result.boards.length > 0 && <p className="text-xs text-[#1E3A5F]/50 mb-2 italic">Rough-cut to the lengths shown, then final-trim after assembly.</p>}
       {result.boards.length === 0 ? <p className="text-sm text-[#1E3A5F]/50">No boards needed.</p> :
-        groupIdenticalBoards(result.boards).map((group, i) => <CutDiagram key={i} board={group.board} index={i} count={group.count} />)}
+        groups.map((group, i) => {
+          const key = boardGroupKey(!!isTrim, result.materialType, group.board);
+          return <CutDiagram key={i} board={group.board} index={i} count={group.count} cutCount={progress[key] || 0} onCutChange={n => onCut(key, n)} />;
+        })}
     </div>
   );
 }

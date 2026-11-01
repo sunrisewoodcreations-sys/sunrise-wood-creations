@@ -2,9 +2,18 @@ import { Board } from "@/lib/cutlistOptimizer";
 
 const COLORS = ["#1E3A5F", "#D9603A", "#7A9B76", "#8B6F47", "#C9A876", "#5A4530"];
 
-export default function CutDiagram({ board, index, count = 1 }: { board: Board; index: number; count?: number }) {
+export default function CutDiagram({
+  board, index, count = 1, cutCount = 0, onCutChange
+}: {
+  board: Board; index: number; count?: number;
+  // How many of these boards are already cut, and the handler that makes the
+  // diagram tappable. Without a handler it is a plain, read-only diagram.
+  cutCount?: number; onCutChange?: (n: number) => void;
+}) {
+  const cut = Math.min(cutCount, count);
+  const allDone = cut >= count;
   return (
-    <div className="mb-4 print:break-inside-avoid">
+    <div className={`mb-4 print:break-inside-avoid rounded-lg ${onCutChange && allDone ? "bg-sage/10 ring-1 ring-sage/40 p-2 -mx-2" : onCutChange ? "p-2 -mx-2" : ""}`}>
       <div className="flex items-center justify-between mb-1">
         <span className="text-sm font-semibold text-[#1E3A5F]">
           Board {index + 1}
@@ -53,6 +62,30 @@ export default function CutDiagram({ board, index, count = 1 }: { board: Board; 
           </span>
         ))}
       </div>
+      {onCutChange && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 print:hidden">
+          <button
+            type="button"
+            onClick={() => onCutChange(allDone ? 0 : cut + 1)}
+            aria-pressed={allDone}
+            className={`min-h-[44px] px-4 rounded-md text-sm font-semibold border ${allDone ? "bg-sage text-white border-sage" : "bg-white text-[#1E3A5F] border-[#1E3A5F]/30"}`}
+          >
+            {count === 1
+              ? (allDone ? "✓ Cut — tap to undo" : "Tap when cut")
+              : allDone
+                ? `✓ All ${count} cut — tap to undo`
+                : `Cut ${cut} of ${count} — tap when you cut one`}
+          </button>
+          {count > 1 && cut > 0 && !allDone && (
+            <button type="button" onClick={() => onCutChange(cut - 1)} className="min-h-[44px] px-3 rounded-md text-sm font-semibold border border-[#1E3A5F]/20 text-[#1E3A5F]/70">
+              Undo one
+            </button>
+          )}
+        </div>
+      )}
+      {!onCutChange ? null : (
+        <div className="hidden print:block text-xs text-[#1E3A5F]/60 mt-1">{allDone ? "✓ cut" : `Cut ${cut} of ${count}`}</div>
+      )}
     </div>
   );
 }
