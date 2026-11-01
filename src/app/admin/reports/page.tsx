@@ -159,6 +159,7 @@ export default async function ReportsPage() {
 
       <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">{quarterLabel}</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <SummaryBox label="Total sales" value={`$${quarterTotals.revenue.toFixed(2)}`} />
         <SummaryBox label="Profit" value={`$${quarterTotals.profit.toFixed(2)}`} color={quarterTotals.profit >= 0 ? "text-sage" : "text-ember"} />
         <SummaryBox label="Pickets used (sold)" value={`${quarterTotals.picketsUsed}`} />
         <SummaryBox label="Pickets cost" value={`-$${quarterTotals.materialsCost.toFixed(2)}`} color="text-ember" />
@@ -170,6 +171,7 @@ export default async function ReportsPage() {
 
       <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">Year to date ({year})</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <SummaryBox label="Total sales" value={`$${yearTotals.revenue.toFixed(2)}`} />
         <SummaryBox label="Profit" value={`$${yearTotals.profit.toFixed(2)}`} color={yearTotals.profit >= 0 ? "text-sage" : "text-ember"} />
         <SummaryBox label="Pickets used (sold)" value={`${yearTotals.picketsUsed}`} />
         <SummaryBox label="Pickets cost" value={`-$${yearTotals.materialsCost.toFixed(2)}`} color="text-ember" />
