@@ -136,6 +136,12 @@ export default async function ReportsPage() {
       <div className="flex items-center justify-between mb-1">
         <h1 className="font-display text-2xl text-[#1E3A5F] mb-1">Reports</h1>
         <Link
+          href="/admin/reports/year-over-year"
+          className="border border-[#1E3A5F]/30 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold mr-2"
+        >
+          This year vs last year
+        </Link>
+        <Link
           href="/admin/report-settings"
           className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-1.5 hover:bg-cream"
         >

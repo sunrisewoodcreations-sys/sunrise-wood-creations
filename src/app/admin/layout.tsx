@@ -144,7 +144,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     {
       label: "Reports",
       links: [
-        { href: "/admin/reports", label: "Reports" }
+        { href: "/admin/reports", label: "Reports" },
+        { href: "/admin/reports/year-over-year", label: "This Year vs Last Year" }
       ]
     },
     {
