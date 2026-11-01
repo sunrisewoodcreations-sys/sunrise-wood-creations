@@ -310,7 +310,7 @@ function ResultSection({ result, isTrim, progress, onCut }: { result: Optimizati
         ? <p className="text-sm text-walnut/70">No pickets needed.</p>
         : groups.map((group, i) => {
           const key = boardGroupKey(!!isTrim, result.materialType, group.board);
-          return <CutDiagram key={i} board={group.board} index={i} count={group.count} cutCount={progress[key] || 0} onCutChange={n => onCut(key, n)} />;
+          return <CutDiagram key={i} board={group.board} index={i} count={group.count} cutCount={progress[key] || 0} onCutChange={n => onCut(key, n)} step={isTrim ? 1 : 4} />;
         })}
     </div>
   );
