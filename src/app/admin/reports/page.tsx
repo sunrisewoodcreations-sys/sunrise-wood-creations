@@ -157,6 +157,22 @@ export default async function ReportsPage() {
         Based on orders actually picked up, dated by when they were picked up — same rule used everywhere else.
       </p>
 
+      <h2 className="font-display text-lg text-[#1E3A5F] mb-1">Sales by item (detailed PDF)</h2>
+      <p className="text-sm text-[#1E3A5F]/60 mb-4">
+        See how much of each item sold, and the same tax breakdown, for any custom time period.
+      </p>
+
+      <div className="mb-8 bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5">
+        <div className="flex flex-wrap gap-2">
+          <a href="/api/reports/sales-by-item?period=today" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Today</a>
+          <a href="/api/reports/sales-by-item?period=this_week" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This week</a>
+          <a href="/api/reports/sales-by-item?period=this_month" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This month</a>
+          <a href="/api/reports/sales-by-item?period=this_quarter" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This quarter</a>
+          <a href="/api/reports/sales-by-item?period=this_year" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This year</a>
+          <a href="/api/reports/sales-by-item?period=lifetime" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Lifetime</a>
+        </div>
+      </div>
+
       <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">{quarterLabel}</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <SummaryBox label="Total sales" value={`$${quarterTotals.revenue.toFixed(2)}`} />
@@ -186,22 +202,6 @@ export default async function ReportsPage() {
         control in Report Settings. Profit is after the 6% sales tax is taken out. It only reflects items with a cost entered in Products, or picket usage
         logged on planter orders. Confirm exact amounts with your tax preparer.
       </p>
-
-      <h2 className="font-display text-lg text-[#1E3A5F] mb-1">Sales by item (detailed PDF)</h2>
-      <p className="text-sm text-[#1E3A5F]/60 mb-4">
-        See how much of each item sold, and the same tax breakdown, for any custom time period.
-      </p>
-
-      <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5">
-        <div className="flex flex-wrap gap-2">
-          <a href="/api/reports/sales-by-item?period=today" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Today</a>
-          <a href="/api/reports/sales-by-item?period=this_week" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This week</a>
-          <a href="/api/reports/sales-by-item?period=this_month" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This month</a>
-          <a href="/api/reports/sales-by-item?period=this_quarter" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This quarter</a>
-          <a href="/api/reports/sales-by-item?period=this_year" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">This year</a>
-          <a href="/api/reports/sales-by-item?period=lifetime" className="border border-[#1E3A5F]/20 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-cream">Lifetime</a>
-        </div>
-      </div>
     </div>
   );
 }
