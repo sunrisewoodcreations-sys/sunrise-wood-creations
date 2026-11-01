@@ -7,6 +7,7 @@ import { sendOrderStatusEmail } from "@/lib/email";
 import { shouldNotify } from "@/lib/notify";
 import { getOrCreatePickupSchedulingUrl } from "@/lib/pickupScheduling";
 import { ProductType } from "@/lib/statusSteps";
+import { settleOrderOnSale } from "@/lib/inventoryFulfillment";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -122,6 +123,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   if (status === "picked_up") {
+    // Count the pickets and cost for everything on this order now that it's sold.
+    await settleOrderOnSale(admin, order);
     if ((order.amount_paid_cents || 0) < (order.price_cents || 0)) {
       await admin.from("orders").update({ amount_paid_cents: order.price_cents }).eq("id", order.id);
       order.amount_paid_cents = order.price_cents;
