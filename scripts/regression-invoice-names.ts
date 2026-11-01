@@ -8,11 +8,12 @@ t("search matches many spellings", () => {
   for (const q of ["SWC-2026-1100", "swc20261100", "#2026-1100", "2026-1100", "20261100", "1100"]) assert.ok(matchesOrderNumberQuery(q, 1100, false, 2026), q);
   assert.ok(!matchesOrderNumberQuery("11", 1100, false, 2026));
 });
-t("invoice file name", () => assert.equal(invoiceFileName(2026, 1100, "Jane / Smith"), "Sunrise Wood Creations - Invoice 2026-1100 - Jane Smith.pdf"));
-t("invoice file name without customer", () => assert.equal(invoiceFileName(2026, 1100, null), "Sunrise Wood Creations - Invoice 2026-1100.pdf"));
+t("invoice file name", () => assert.equal(invoiceFileName(2026, 1100, "Jane / Smith"), "Sunrise-Wood-Creations_Invoice-2026-1100_Jane-Smith.pdf"));
+t("invoice file name without customer", () => assert.equal(invoiceFileName(2026, 1100, null), "Sunrise-Wood-Creations_Invoice-2026-1100.pdf"));
+t("accents and punctuation", () => assert.equal(invoiceFileName(2026, 5, "  José O'Brien & Sons "), "Sunrise-Wood-Creations_Invoice-2026-5_Jose-O-Brien-Sons.pdf"));
 t("download url", () => {
   const u = invoiceDownloadUrl("https://x.supabase.co/storage/v1/object/public/invoices/a.pdf", 2026, 1100, "Jane Smith");
-  assert.ok(u.endsWith("?download=Sunrise%20Wood%20Creations%20-%20Invoice%202026-1100%20-%20Jane%20Smith.pdf"));
+  assert.ok(u.endsWith("?download=Sunrise-Wood-Creations_Invoice-2026-1100_Jane-Smith.pdf"));
   assert.equal(invoiceDownloadUrl(u, 2026, 1100, "Jane Smith"), u);
   assert.equal(invoiceDownloadUrl(null, 2026, 1, "x"), "");
 });
