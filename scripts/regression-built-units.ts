@@ -1,4 +1,3 @@
-import { settleOrderOnSale } from "../src/lib/inventoryFulfillment";
 import { removeShelfUnits, recordBuiltUnit, claimShelfUnitsForLine, assignUnitToLine, releaseUnitsFromOrder } from "../src/lib/builtUnits";
 
 function fake(db: Record<string, any[]>) {
@@ -77,20 +76,6 @@ const t = (name: string, ok: boolean) => { if (!ok) { fails++; console.log("FAIL
   const removed = await removeShelfUnits(a2, "p", 2);
   t("removing 2 gives 16 pickets back", removed === 2 && db2.picket_purchases[0].remaining_quantity === 552 && db2.built_units.length === 1);
   t("never exceeds the pallet size", (await removeShelfUnits(a2, "p", 5)) === 1 && db2.picket_purchases[0].remaining_quantity === 560);
-  // An order marked picked up that was never built/set aside still gets its pickets and cost.
-  const db3: any = {
-    products: [{ id: "p", stock_quantity: 0, pickets_per_unit: 9, cost_cents: 2893, low_stock_threshold: 0 }],
-    picket_purchases: [{ id: "b", remaining_quantity: 560, cost_per_picket_cents: 321, total_cost_cents: 180000, quantity: 560, purchased_at: "2026-02-01", created_at: "2" }],
-    built_units: [], product_stock_adjustments: [],
-    orders: [{ id: "o", title: "T", status: "picked_up", stock_deducted: false, material_cost_cents: null, pickets_used: null }],
-    order_items: [{ id: "i", order_id: "o", product_id: "p", quantity: 2, stock_reserved_qty: 0, material_cost_cents: null, pickets_used: null }]
-  };
-  const a3 = fake(db3);
-  await settleOrderOnSale(a3, db3.orders[0]);
-  t("sold order counts its pickets (2 × 9)", db3.order_items[0].pickets_used === 18 && db3.picket_purchases[0].remaining_quantity === 542);
-  t("sold order records its cost (18 × $1800/560)", db3.order_items[0].material_cost_cents === 5786);
-  await settleOrderOnSale(a3, db3.orders[0]);
-  t("running it again changes nothing", db3.order_items[0].pickets_used === 18 && db3.picket_purchases[0].remaining_quantity === 542);
   if (fails) { console.log(fails, "failed"); process.exit(1); }
   console.log("All built-unit tests passed.");
 })();

@@ -402,9 +402,9 @@ async function buildInvoicePdf(opts: {
 // and right at order creation (new — so an order that's already fully
 // in stock skips straight to Ready for Pickup instead of waiting for a
 // deposit or manual status change).
-export type StockLine = { kind: "item" | "order"; id: string; product_id: string; quantity: number; reserved: number };
+type StockLine = { kind: "item" | "order"; id: string; product_id: string; quantity: number; reserved: number };
 
-export async function loadStockLines(admin: ReturnType<typeof createAdminClient>, order: any): Promise<StockLine[]> {
+async function loadStockLines(admin: ReturnType<typeof createAdminClient>, order: any): Promise<StockLine[]> {
   const { data: orderItems } = await admin.from("order_items").select("*").eq("order_id", order.id);
   if (orderItems && orderItems.length > 0) {
     return orderItems.filter((it: any) => it.product_id).map((it: any) => ({

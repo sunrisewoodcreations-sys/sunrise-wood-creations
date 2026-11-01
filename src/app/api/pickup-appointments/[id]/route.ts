@@ -1,4 +1,3 @@
-import { settleOrderOnSale } from "@/lib/inventoryFulfillment";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -63,7 +62,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         .eq("id", appt.order_id)
         .maybeSingle();
       if (order && order.status !== "picked_up") {
-        await settleOrderOnSale(admin, order);
         await admin.from("orders").update({ status: "picked_up", amount_paid_cents: Math.max(order.amount_paid_cents || 0, order.price_cents || 0) }).eq("id", order.id);
         order.amount_paid_cents = Math.max(order.amount_paid_cents || 0, order.price_cents || 0);
         try {
