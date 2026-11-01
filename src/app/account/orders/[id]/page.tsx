@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { invoiceDownloadUrl } from "@/lib/invoiceNames";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import SiteHeader from "@/components/SiteHeader";
@@ -32,6 +33,8 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     .order("sent_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  const { data: invoiceCustomer } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
 
   const { data: invoices } = await supabase
     .from("invoices")
@@ -123,7 +126,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
               {invoices.map((inv: any) => (
                 <a
                   key={inv.id}
-                  href={inv.pdf_url}
+                  href={invoiceDownloadUrl(inv.pdf_url, inv.invoice_year, inv.invoice_number, (invoiceCustomer as any)?.full_name)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold text-center hover:bg-cream"

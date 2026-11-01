@@ -93,6 +93,7 @@ async function buildInvoicePdf(opts: {
   dueDate?: string | null;
   customerName: string;
   customerEmail?: string;
+  deliveryAddress?: string | null;
   lineItems: InvoiceLineItem[];
   totalCents: number;
   paidCents: number;
@@ -228,6 +229,15 @@ async function buildInvoicePdf(opts: {
   if (opts.customerEmail) {
     y -= 16;
     page.drawText(opts.customerEmail, { x: marginX, y, size: 10, font, color: GRAY });
+  }
+  // Delivery orders: show where it's going.
+  if (opts.deliveryAddress) {
+    y -= 22;
+    page.drawText("DELIVER TO", { x: marginX, y, size: 9, font: bold, color: GRAY });
+    for (const line of wrapText(opts.deliveryAddress, metaLabelX - marginX - 20, font, 10, 3)) {
+      y -= 14;
+      page.drawText(line, { x: marginX, y, size: 10, font, color: WALNUT });
+    }
   }
   y -= 46;
 
@@ -593,6 +603,7 @@ export async function generateInvoicePdfForOrder(
     dueDate: order.due_date,
     customerName: customer.full_name,
     customerEmail: customer.email,
+    deliveryAddress: order.fulfillment_method === "delivery" && order.delivery_address ? String(order.delivery_address).trim() : null,
     lineItems,
     totalCents: order.price_cents || 0,
     paidCents: order.amount_paid_cents || 0,

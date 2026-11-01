@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { invoiceDownloadUrl } from "@/lib/invoiceNames";
 import ClickableRow from "@/components/ClickableRow";
 import { createClient } from "@/lib/supabase/server";
 import { isDemoAccountRequest } from "@/lib/demoMode";
@@ -151,7 +152,7 @@ export default async function AdminOrdersPage({
       o.id?.toLowerCase().includes(q) ||
       // The customer-facing order number ("SWC-1004", "1004", ...). The
       // id match above stays, so old 8-character codes still work.
-      matchesOrderNumberQuery(query, o.order_number, o.is_demo)
+      matchesOrderNumberQuery(query, o.order_number, o.is_demo, o.order_year)
     );
   }
 
@@ -566,7 +567,7 @@ export default async function AdminOrdersPage({
                   <td className="px-4 py-3.5">
                     {invoice?.pdf_url ? (
                       <a
-                        href={invoice.pdf_url}
+                        href={invoiceDownloadUrl(invoice.pdf_url, invoice.invoice_year, invoice.invoice_number, order.profiles?.full_name)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs font-semibold text-ember hover:underline"
@@ -678,7 +679,7 @@ export default async function AdminOrdersPage({
                   </Link>
                   {invoice?.pdf_url && (
                     <a
-                      href={invoice.pdf_url}
+                      href={invoiceDownloadUrl(invoice.pdf_url, invoice.invoice_year, invoice.invoice_number, order.profiles?.full_name)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 min-w-[100px] text-center border border-ember/30 text-ember px-3 py-2.5 rounded-md text-sm font-semibold"

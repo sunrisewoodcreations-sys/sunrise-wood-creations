@@ -69,6 +69,7 @@ anything already in place.
 - [ ] `migrations_stock_reservations.sql` — set stock aside for an order when it is placed (partial reservations)
 - [ ] `migrations_picket_low_alert.sql` — remembers which pickets-running-low email (100 and 50) was sent
 - [ ] `migrations_built_units.sql` — pickets come out when a piece is built; each piece remembers its cost
+- [ ] `migrations_order_number_per_year.sql` — order numbers include the year and start at 1100 each year (SWC-2026-1100)
 
 ---
 

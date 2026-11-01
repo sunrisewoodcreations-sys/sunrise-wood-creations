@@ -11,26 +11,29 @@ import { productLabel, ProductType } from "./statusSteps";
 // use up a real customer's number). Returns null for anything that isn't
 // a clearly valid number + a clearly boolean demo flag, so a caller can
 // leave the line out instead of ever showing a wrong or misleading label.
-export function formatOrderNumber(orderNumber: unknown, isDemo: unknown): string | null {
+export function formatOrderNumber(orderNumber: unknown, isDemo: unknown, orderYear?: unknown): string | null {
   if (typeof orderNumber !== "number" || !Number.isInteger(orderNumber) || orderNumber < 1) return null;
-  if (isDemo === false) return `SWC-${orderNumber}`;
-  if (isDemo === true) return `DEMO-${orderNumber}`;
-  return null;
+  const prefix = isDemo === false ? "SWC" : isDemo === true ? "DEMO" : null;
+  if (!prefix) return null;
+  // With a year, it reads like an invoice number: "SWC-2026-1100".
+  // Without one (the order_year column doesn't exist yet), the old format.
+  if (typeof orderYear === "number" && Number.isInteger(orderYear) && orderYear > 2000) return `${prefix}-${orderYear}-${orderNumber}`;
+  return `${prefix}-${orderNumber}`;
 }
 
 // Admin order search: does what was typed match this order's number?
-// Accepts "SWC-1004", "swc1004", "#SWC-1004", or just "1004" (and the
-// DEMO- equivalents). Exact match only, on purpose, so typing "10" does
-// not match every order numbered 10xx. The admin search keeps its
-// existing matching on customer, title, and order id as well, so old
-// 8-character codes still find their order.
-export function matchesOrderNumberQuery(query: string, orderNumber: unknown, isDemo: unknown): boolean {
-  const display = formatOrderNumber(orderNumber, isDemo);
+// Accepts "SWC-2026-1100", "swc20261100", "#2026-1100", or just "1100"
+// (and the DEMO- equivalents). Exact match only, on purpose, so typing
+// "11" does not match every order numbered 11xx. The admin search keeps
+// its existing matching on customer, title, and order id as well.
+export function matchesOrderNumberQuery(query: string, orderNumber: unknown, isDemo: unknown, orderYear?: unknown): boolean {
+  const display = formatOrderNumber(orderNumber, isDemo, orderYear);
   if (!display) return false;
   const q = String(query || "").trim().toLowerCase().replace(/^#/, "").replace(/\s+/g, "");
   if (!q) return false;
   const shown = display.toLowerCase();
-  return q === shown || q === shown.replace("-", "") || q === String(orderNumber);
+  const noPrefix = shown.replace(/^[a-z]+-/, "");
+  return q === shown || q === shown.replace(/-/g, "") || q === noPrefix || q === noPrefix.replace("-", "") || q === String(orderNumber);
 }
 
 // Matches the "+ 1 more item" / "+ 3 more items" tail that

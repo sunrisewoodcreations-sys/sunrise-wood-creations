@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { productLabel, statusLabel, stepsFor, ProductType } from "./statusSteps";
 import { emailProductName, formatOrderNumber } from "./orderDisplay";
+import { invoiceFileName } from "./invoiceNames";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -112,6 +113,10 @@ function escapeHtml(s: string) {
 async function lookupOrderNumberDisplay(orderId: string): Promise<string | null> {
   try {
     const admin = createAdminClient();
+    // order_year only exists after the per-year numbering migration; if
+    // that column isn't there yet, fall back to the number without a year.
+    const withYear = await admin.from("orders").select("order_number, is_demo, order_year").eq("id", orderId).maybeSingle();
+    if (!withYear.error) return formatOrderNumber(withYear.data?.order_number, withYear.data?.is_demo, withYear.data?.order_year);
     const { data } = await admin.from("orders").select("order_number, is_demo").eq("id", orderId).maybeSingle();
     return formatOrderNumber(data?.order_number, data?.is_demo);
   } catch {
@@ -498,7 +503,7 @@ export async function sendOrderStatusEmail(opts: {
   });
 
   const attachments = opts.invoicePdfBuffer && opts.invoiceNumber && opts.invoiceYear
-    ? [{ filename: `invoice-${opts.invoiceYear}-${opts.invoiceNumber}.pdf`, content: opts.invoicePdfBuffer.toString("base64") }]
+    ? [{ filename: invoiceFileName(opts.invoiceYear, opts.invoiceNumber, opts.customerName), content: opts.invoicePdfBuffer.toString("base64") }]
     : undefined;
 
   return sendViaResend({
@@ -705,7 +710,7 @@ export async function sendInvoiceEmail(opts: {
       : `Invoice #${displayNumber} — Sunrise Wood Creations`,
     html,
     attachments: [
-      { filename: `invoice-${displayNumber}.pdf`, content: opts.pdfBuffer.toString("base64") }
+      { filename: invoiceFileName(opts.invoiceYear, opts.invoiceNumber, opts.customerName), content: opts.pdfBuffer.toString("base64") }
     ]
   });
 }

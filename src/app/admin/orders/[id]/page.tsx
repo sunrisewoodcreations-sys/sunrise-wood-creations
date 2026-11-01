@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { invoiceDownloadUrl } from "@/lib/invoiceNames";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatInvoiceNumber } from "@/lib/invoice";
@@ -264,7 +265,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               </div>
               {inv.pdf_url ? (
                 <a
-                  href={inv.pdf_url}
+                  href={invoiceDownloadUrl(inv.pdf_url, inv.invoice_year, inv.invoice_number, customer.full_name)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs font-semibold text-ember hover:underline"
