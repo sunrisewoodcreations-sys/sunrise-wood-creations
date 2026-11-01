@@ -8,7 +8,7 @@ export type Line = { kind: "item" | "order"; id: string; product_id: string };
 // first) and remember what they cost. If there aren't enough pickets logged,
 // the piece still counts, priced at the product's automatic cost, and a warning
 // comes back so it can be shown.
-export async function recordBuiltUnit(admin: Admin, productId: string): Promise<{ id: string | null; costCents: number; warning?: string }> {
+export async function recordBuiltUnit(admin: Admin, productId: string): Promise<{ id: string | null; costCents: number; pickets: number; warning?: string }> {
   const { data: product } = await admin.from("products").select("pickets_per_unit, cost_cents").eq("id", productId).maybeSingle();
   const per = (product as any)?.pickets_per_unit || 0;
   let costCents = (product as any)?.cost_cents || 0;
@@ -23,22 +23,27 @@ export async function recordBuiltUnit(admin: Admin, productId: string): Promise<
     .insert({ product_id: productId, cost_cents: costCents, pickets_used: allocations.length ? per : 0, allocations })
     .select("id").single();
   if (error) console.error("Recording built unit failed:", error.message);
-  return { id: (data as any)?.id ?? null, costCents, warning };
+  return { id: (data as any)?.id ?? null, costCents, pickets: allocations.length ? per : 0, warning };
 }
 
-async function addCostToLine(admin: Admin, line: Line, cents: number) {
-  if (cents === 0) return;
+// Adds a piece's pickets and cost to the order line, so the order page's
+// "Pickets used" and the Reports' materials cost move as soon as a piece is set aside for it.
+async function addCostToLine(admin: Admin, line: Line, cents: number, pickets = 0) {
+  if (cents === 0 && pickets === 0) return;
   const table = line.kind === "item" ? "order_items" : "orders";
-  const { data } = await admin.from(table).select("material_cost_cents").eq("id", line.id).maybeSingle();
-  await admin.from(table).update({ material_cost_cents: ((data as any)?.material_cost_cents || 0) + cents }).eq("id", line.id);
+  const { data } = await admin.from(table).select("material_cost_cents, pickets_used").eq("id", line.id).maybeSingle();
+  await admin.from(table).update({
+    material_cost_cents: ((data as any)?.material_cost_cents || 0) + cents,
+    pickets_used: ((data as any)?.pickets_used || 0) + pickets
+  }).eq("id", line.id);
 }
 
 // A specific built piece goes to a specific order line: its cost becomes that line's material cost.
-export async function assignUnitToLine(admin: Admin, unit: { id: string | null; costCents: number }, orderId: string, line: Line) {
+export async function assignUnitToLine(admin: Admin, unit: { id: string | null; costCents: number; pickets?: number }, orderId: string, line: Line) {
   if (unit.id) {
     await admin.from("built_units").update({ order_id: orderId, order_item_id: line.kind === "item" ? line.id : null }).eq("id", unit.id);
   }
-  await addCostToLine(admin, line, unit.costCents);
+  await addCostToLine(admin, line, unit.costCents, unit.pickets || 0);
 }
 
 // `count` pieces come off the shelf for an order: the oldest unclaimed built
@@ -46,19 +51,22 @@ export async function assignUnitToLine(admin: Admin, unit: { id: string | null; 
 // that existed before this tracking) is priced at the product's automatic cost.
 export async function claimShelfUnitsForLine(admin: Admin, orderId: string, line: Line, count: number) {
   if (count <= 0) return;
-  const { data: units } = await admin.from("built_units").select("id, cost_cents")
+  const { data: units } = await admin.from("built_units").select("id, cost_cents, pickets_used")
     .eq("product_id", line.product_id).is("order_id", null).order("built_at", { ascending: true }).limit(count);
   let cents = 0;
+  let pickets = 0;
   for (const u of (units || []) as any[]) {
     cents += u.cost_cents || 0;
+    pickets += u.pickets_used || 0;
     await admin.from("built_units").update({ order_id: orderId, order_item_id: line.kind === "item" ? line.id : null }).eq("id", u.id);
   }
   const short = count - (units || []).length;
   if (short > 0) {
-    const { data: product } = await admin.from("products").select("cost_cents").eq("id", line.product_id).maybeSingle();
+    const { data: product } = await admin.from("products").select("cost_cents, pickets_per_unit").eq("id", line.product_id).maybeSingle();
     cents += short * ((product as any)?.cost_cents || 0);
+    pickets += short * ((product as any)?.pickets_per_unit || 0);
   }
-  await addCostToLine(admin, line, cents);
+  await addCostToLine(admin, line, cents, pickets);
 }
 
 // An order was deleted and its pieces go back on the shelf: they become

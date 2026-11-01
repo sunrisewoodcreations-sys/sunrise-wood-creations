@@ -59,7 +59,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const admin = createAdminClient();
   const target = items[idx].orderId;
   // The piece is built now: its pickets come out of inventory and it remembers its cost.
-  let unit: { id: string | null; costCents: number; warning?: string } = { id: null, costCents: 0 };
+  let unit: { id: string | null; costCents: number; pickets?: number; warning?: string } = { id: null, costCents: 0 };
   try { unit = await recordBuiltUnit(admin, productId); } catch (err) { console.error("Recording built piece failed:", err); }
   let order = null as { id: string; title: string; customerName: string | null } | null;
   let toOrder = false;

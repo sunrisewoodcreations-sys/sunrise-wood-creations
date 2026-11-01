@@ -50,14 +50,14 @@ const t = (name: string, ok: boolean) => { if (!ok) { fails++; console.log("FAIL
   t("second piece all from new pallet: 8×$3 = $24", u2.costCents === 2400 && db.picket_purchases[1].remaining_quantity === 549);
   // Piece 1 built for a customer's order line:
   await assignUnitToLine(a, u1, "o", { kind: "item", id: "i", product_id: "p" });
-  t("order line gets piece 1's cost", db.order_items[0].material_cost_cents === 1900 && db.built_units[0].order_id === "o");
+  t("order line gets piece 1's cost and pickets", db.order_items[0].material_cost_cents === 1900 && db.order_items[0].pickets_used === 8 && db.built_units[0].order_id === "o");
   // Piece 2 sat on the shelf, then an order sets it aside:
   await claimShelfUnitsForLine(a, "o", { kind: "item", id: "i", product_id: "p" }, 1);
-  t("shelf piece's own cost added later", db.order_items[0].material_cost_cents === 1900 + 2400);
+  t("shelf piece's cost and pickets added later", db.order_items[0].material_cost_cents === 1900 + 2400 && db.order_items[0].pickets_used === 16);
   // Stock with no record is priced at the product's automatic cost.
   db.products[0].cost_cents = 2500;
   await claimShelfUnitsForLine(a, "o", { kind: "item", id: "i", product_id: "p" }, 1);
-  t("unrecorded stock uses automatic cost", db.order_items[0].material_cost_cents === 1900 + 2400 + 2500);
+  t("unrecorded stock uses automatic cost and 8 pickets", db.order_items[0].material_cost_cents === 1900 + 2400 + 2500 && db.order_items[0].pickets_used === 24);
   await releaseUnitsFromOrder(a, "o");
   t("deleting order puts pieces back on shelf with their cost", db.built_units.every((x: any) => x.order_id === null) && db.built_units[1].cost_cents === 2400);
   // Not enough pickets logged: piece still counts, warns, nothing taken.
