@@ -59,6 +59,22 @@ export default async function YearOverYearPage() {
         <Link href="/admin/reports" className="border border-[#1E3A5F]/30 text-[#1E3A5F] px-3 py-1.5 rounded-md text-xs font-semibold">← Reports</Link>
       </div>
       <p className="text-sm text-[#1E3A5F]/60 mb-6">Your sales so far this year next to the exact same dates last year, by month and by week.</p>
+      <h2 className="font-display text-lg text-[#1E3A5F] mb-1">Sales by size: this year vs last year (PDF)</h2>
+      <p className="text-sm text-[#1E3A5F]/60 mb-4">
+        Pick your dates. The PDF shows each planter size next to the same dates last year, and whether it went up or down.
+      </p>
+      <form method="get" action="/api/reports/planter-comparison" className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-5 mb-8 flex flex-wrap items-end gap-4">
+        <label className="text-xs text-[#1E3A5F]/60">
+          <span className="block mb-1">From</span>
+          <input type="date" name="start" required defaultValue={`${today.slice(0, 4)}-01-01`} className="border border-[#1E3A5F]/20 rounded-md px-2 py-1.5 text-sm text-[#1E3A5F]" />
+        </label>
+        <label className="text-xs text-[#1E3A5F]/60">
+          <span className="block mb-1">To</span>
+          <input type="date" name="end" required defaultValue={today} className="border border-[#1E3A5F]/20 rounded-md px-2 py-1.5 text-sm text-[#1E3A5F]" />
+        </label>
+        <button type="submit" className="bg-[#1E3A5F] text-white px-4 py-2 rounded-md text-xs font-semibold">Download PDF</button>
+      </form>
+
       <YearOverYearReport today={today} pickedUp={pickedUp} placed={placed} />
     </div>
   );

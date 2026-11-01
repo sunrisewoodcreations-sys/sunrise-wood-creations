@@ -89,7 +89,8 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
   return {
     revenue: revenueCents / 100,
     cost: costCents / 100,
-    profit: (revenueCents - costCents) / 100,
+    // Profit excludes the 6% sales tax (prices are tax-inclusive)
+    profit: (revenueCents / (1 + SALES_TAX_RATE) - costCents) / 100,
     materialsCost: materialsCostCents / 100,
     picketsUsed
   };
@@ -128,7 +129,7 @@ export default async function ReportsPage() {
     const salesTax = totals.revenue - totals.revenue / (1 + SALES_TAX_RATE);
     const michiganTax = totals.profit > 0 ? totals.profit * (michiganPercent / 100) : 0;
     const federalTax = totals.profit > 0 ? totals.profit * (federalPercent / 100) : 0;
-    const takeHome = totals.profit - salesTax - michiganTax - federalTax;
+    const takeHome = totals.profit - michiganTax - federalTax;
     return { salesTax, michiganTax, federalTax, takeHome };
   }
 
@@ -158,6 +159,7 @@ export default async function ReportsPage() {
 
       <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">{quarterLabel}</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <SummaryBox label="Total sales" value={`$${quarterTotals.revenue.toFixed(2)}`} />
         <SummaryBox label="Profit" value={`$${quarterTotals.profit.toFixed(2)}`} color={quarterTotals.profit >= 0 ? "text-sage" : "text-ember"} />
         <SummaryBox label="Pickets used (sold)" value={`${quarterTotals.picketsUsed}`} />
         <SummaryBox label="Pickets cost" value={`-$${quarterTotals.materialsCost.toFixed(2)}`} color="text-ember" />
@@ -169,6 +171,7 @@ export default async function ReportsPage() {
 
       <h2 className="text-sm font-semibold text-[#1E3A5F]/70 uppercase tracking-wide mb-2">Year to date ({year})</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <SummaryBox label="Total sales" value={`$${yearTotals.revenue.toFixed(2)}`} />
         <SummaryBox label="Profit" value={`$${yearTotals.profit.toFixed(2)}`} color={yearTotals.profit >= 0 ? "text-sage" : "text-ember"} />
         <SummaryBox label="Pickets used (sold)" value={`${yearTotals.picketsUsed}`} />
         <SummaryBox label="Pickets cost" value={`-$${yearTotals.materialsCost.toFixed(2)}`} color="text-ember" />
@@ -180,7 +183,7 @@ export default async function ReportsPage() {
 
       <p className="text-xs text-[#1E3A5F]/40 mb-6">
         Sales tax and Michigan income tax use real statutory rates. Federal income tax is a planning estimate you
-        control in Report Settings. Profit only reflects items with a cost entered in Products, or picket usage
+        control in Report Settings. Profit is after the 6% sales tax is taken out. It only reflects items with a cost entered in Products, or picket usage
         logged on planter orders. Confirm exact amounts with your tax preparer.
       </p>
 

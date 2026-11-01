@@ -176,13 +176,13 @@ export async function GET(req: NextRequest) {
       qty: v.qty,
       revenue: v.revenueCents / 100,
       cost: v.costCents / 100,
-      profit: (v.revenueCents - v.costCents) / 100
+      profit: (v.revenueCents / (1 + SALES_TAX_RATE) - v.costCents) / 100
     }))
     .sort((a, b) => b.revenue - a.revenue);
 
   const grandRevenue = rows.reduce((sum, r) => sum + r.revenue, 0);
   const grandCost = rows.reduce((sum, r) => sum + r.cost, 0);
-  const grandProfit = grandRevenue - grandCost;
+  const grandProfit = grandRevenue / (1 + SALES_TAX_RATE) - grandCost; // excludes sales tax
   const grandQty = rows.reduce((sum, r) => sum + r.qty, 0);
 
   const salesTaxOwed = grandRevenue - grandRevenue / (1 + SALES_TAX_RATE);
