@@ -288,13 +288,13 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
       qty: v.qty,
       revenue: v.revenueCents / 100,
       cost: v.costCents / 100,
-      profit: (v.revenueCents - v.costCents) / 100
+      profit: (v.revenueCents / (1 + SALES_TAX_RATE) - v.costCents) / 100
     }))
     .sort((a, b) => b.revenue - a.revenue);
 
   const totalRevenue = rows.reduce((s, r) => s + r.revenue, 0);
   const totalCost = rows.reduce((s, r) => s + r.cost, 0);
-  const totalProfit = totalRevenue - totalCost;
+  const totalProfit = totalRevenue / (1 + SALES_TAX_RATE) - totalCost; // excludes sales tax
   const totalMaterialsCost = totalMaterialsCostCents / 100;
   const salesTaxOwed = totalRevenue - totalRevenue / (1 + SALES_TAX_RATE);
   const michiganPercent = Number(settings.michigan_income_tax_percent) || 4.25;

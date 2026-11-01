@@ -22,7 +22,7 @@ t("month values", months[0].thisValue === 15000 && months[0].lastValue === 8000 
 const weeks = compareByWeek(rows, range, "sales");
 t("46 days → 7 weeks, last is short", weeks.length === 7 && weeks[6].thisYear.start === addDays("2026-01-01", 42) && weeks[6].thisYear.end === "2026-02-15");
 t("week sums equal total", weeks.reduce((s, w) => s + w.thisValue, 0) === 22000 && weeks.reduce((s, w) => s + w.lastValue, 0) === 17000);
-t("profit metric", compareTotal(rows, range, "profit").thisValue === 22000 - 9000);
+t("profit metric excludes 6% sales tax", compareTotal(rows, range, "profit").thisValue === Math.round(22000 / 1.06) - 9000);
 t("orders metric", compareTotal(rows, range, "orders").thisValue === 3);
 t("no last-year data → pct null", compareTotal([rows[0]], range, "sales").pct === null);
 if (fails) process.exit(1); console.log("All year-over-year tests passed.");

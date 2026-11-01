@@ -1,4 +1,5 @@
 // Year-over-year comparison math (pure, no database). Dates are "YYYY-MM-DD".
+import { SALES_TAX_RATE } from "@/lib/tax";
 
 export type SaleRow = { date: string; revenueCents: number; costCents: number };
 export type Metric = "sales" | "profit" | "orders";
@@ -24,7 +25,7 @@ export function valueFor(rows: SaleRow[], r: Range, metric: Metric): number {
   for (const row of rows) {
     if (row.date >= r.start && row.date <= r.end) { revenue += row.revenueCents; cost += row.costCents; count++; }
   }
-  return metric === "sales" ? revenue : metric === "profit" ? revenue - cost : count;
+  return metric === "sales" ? revenue : metric === "profit" ? Math.round(revenue / (1 + SALES_TAX_RATE)) - cost : count;
 }
 
 export type CompareRow = { label: string; thisYear: Range; lastYear: Range; thisValue: number; lastValue: number; diff: number; pct: number | null };
