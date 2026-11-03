@@ -1,11 +1,16 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminButton from "@/components/AdminButton";
 import CutDiagram from "@/components/CutDiagram";
-import { groupIdenticalBoards, BOMPart, OptimizationResult } from "@/lib/cutlistOptimizer";
+import { groupIdenticalBoards, boardGroupKey, BOMPart, OptimizationResult } from "@/lib/cutlistOptimizer";
+import { useCutProgress } from "@/lib/useCutProgress";
 import { planFromPickets, Plan, DEFAULT_BOARD_LENGTH, DEFAULT_KERF } from "@/lib/picketPlanner";
+
+// The last plan is remembered in this browser so it is still here when you
+// leave the page and come back.
+const STORE_KEY = "swc:picket-planner:last:v1";
 
 type PlannerProduct = { id: string; name: string; parts: BOMPart[] };
 
@@ -25,10 +30,60 @@ export default function PicketPlanner({
     () => Object.fromEntries(products.map(p => [p.id, { checked: false, ratio: "1" }]))
   );
   const [plan, setPlan] = useState<Plan | null>(null);
+  const cuts = useCutProgress();
   const [error, setError] = useState("");
   const [listName, setListName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [generatedAt, setGeneratedAt] = useState("");
+  const restored = useRef(false);
+
+  // Bring back the last plan (and which boards are cut) on arrival.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s && s.plan && Array.isArray(s.plan.lines) && Array.isArray(s.plan.normalResults) && Array.isArray(s.plan.trimResults)) {
+          if (typeof s.picketsInput === "string") setPicketsInput(s.picketsInput);
+          if (typeof s.boardLengthInput === "string") setBoardLengthInput(s.boardLengthInput);
+          if (typeof s.kerfInput === "string") setKerfInput(s.kerfInput);
+          if (s.selection && typeof s.selection === "object") {
+            setSelection(cur => Object.fromEntries(Object.keys(cur).map(id => [id, s.selection[id] ?? cur[id]])));
+          }
+          setPlan(s.plan);
+          setGeneratedAt(typeof s.generatedAt === "string" ? s.generatedAt : "");
+          cuts.load(typeof s.savedId === "string" ? s.savedId : null, s.progress);
+        }
+      }
+    } catch {
+      // Storage unavailable or unreadable: just start with an empty planner.
+    }
+    restored.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Remember the plan, the inputs, and cut progress as they change.
+  useEffect(() => {
+    if (!restored.current || !plan) return;
+    try {
+      window.localStorage.setItem(STORE_KEY, JSON.stringify({
+        picketsInput, boardLengthInput, kerfInput, selection, plan, generatedAt,
+        progress: cuts.progress, savedId: cuts.savedId
+      }));
+    } catch {
+      // Storage full or blocked: the plan still works, it just won't be remembered.
+    }
+  }, [plan, picketsInput, boardLengthInput, kerfInput, selection, generatedAt, cuts.progress, cuts.savedId]);
+
+  function clearPlan() {
+    if (!window.confirm("Clear this plan and your cut progress? This can't be undone.")) return;
+    try { window.localStorage.removeItem(STORE_KEY); } catch { /* ignore */ }
+    setPlan(null);
+    setGeneratedAt("");
+    setSaveMessage("");
+    cuts.load(null);
+  }
 
   function calculate() {
     setSaveMessage("");
@@ -43,8 +98,11 @@ export default function PicketPlanner({
       .map(p => ({ id: p.id, ratio: Math.floor(Number(selection[p.id].ratio)) }));
     if (requests.length === 0) { setError("Tick at least one product to build."); setPlan(null); return; }
     if (requests.some(r => !(r.ratio >= 1))) { setError("Each ticked product needs a ratio of 1 or more."); setPlan(null); return; }
+    if (plan && Object.values(cuts.progress).some(n => n > 0) && !window.confirm("You have cut progress on your current plan. Make a new plan and lose that progress?")) return;
     setError("");
     setPlan(planFromPickets(products, requests, pickets, boardLength, kerf));
+    setGeneratedAt(new Date().toLocaleString());
+    cuts.load(null);
   }
 
   async function handleSave() {
@@ -64,6 +122,7 @@ export default function PicketPlanner({
             normalResults: plan.normalResults,
             trimResults: plan.trimResults,
             label,
+            cutProgress: cuts.progress,
             // Shows up on the Home Screen as "Ready to add to inventory"
             // until it's added (or dismissed).
             inventory: {
@@ -76,6 +135,8 @@ export default function PicketPlanner({
         })
       });
       if (res.ok) {
+        const j = await res.json().catch(() => null);
+        if (j?.id) cuts.attach(j.id);
         setSaveMessage("Saved. It now shows on your Home Screen under \"Ready to add to inventory\" — press the button there once the pieces are built.");
         setListName("");
         router.refresh();
@@ -191,7 +252,7 @@ export default function PicketPlanner({
               <div className="mb-2">
                 <h2 className="text-xl font-bold text-walnut">With {plan.picketsAvailable} pickets you can build</h2>
                 <p className="text-xs text-walnut/70">
-                  {plan.boardLength}&quot; pickets · {plan.kerf}&quot; kerf · generated {new Date().toLocaleString()}
+                  {plan.boardLength}&quot; pickets · {plan.kerf}&quot; kerf · generated {generatedAt || new Date().toLocaleString()}
                 </p>
               </div>
 
@@ -259,13 +320,14 @@ export default function PicketPlanner({
                 <input id={`${uid}-name`} value={listName} onChange={e => setListName(e.target.value)} placeholder="Name this cut list (optional)" className={`${fieldClass} flex-1 min-w-[200px]`} />
                 <AdminButton onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save & send to Home Screen"}</AdminButton>
                 <AdminButton variant="secondary" onClick={() => window.print()}>Print / Save as PDF</AdminButton>
+                <AdminButton variant="secondary" onClick={clearPlan}>Clear this plan</AdminButton>
                 {saveMessage && <span role="status" className="text-sm font-semibold text-walnut">{saveMessage}</span>}
               </div>
 
               <h3 className="text-lg font-bold text-walnut mb-2">Cut list — standard parts</h3>
               {plan.normalResults.length === 0 || plan.normalResults.every(r => r.boards.length === 0)
                 ? <p className="text-sm text-walnut/70 mb-6">No standard parts in this plan.</p>
-                : plan.normalResults.map((r, i) => <ResultSection key={i} result={r} />)}
+                : plan.normalResults.map((r, i) => <ResultSection key={i} result={r} progress={cuts.progress} onCut={cuts.setCount} />)}
 
               <div className="my-8 border-t-2 border-dashed border-amber pt-2 print:break-before-page">
                 <p className="text-xs font-semibold text-walnut uppercase tracking-wide">⚠ Separate list below — trim pieces, final-cut after assembly. Never mix with the parts above.</p>
@@ -273,7 +335,7 @@ export default function PicketPlanner({
               <h3 className="text-lg font-bold text-walnut mb-2">Cut list — trim (final-cut after assembly)</h3>
               {plan.trimResults.length === 0 || plan.trimResults.every(r => r.boards.length === 0)
                 ? <p className="text-sm text-walnut/70">No trim parts in this plan.</p>
-                : plan.trimResults.map((r, i) => <ResultSection key={i} result={r} isTrim />)}
+                : plan.trimResults.map((r, i) => <ResultSection key={i} result={r} isTrim progress={cuts.progress} onCut={cuts.setCount} />)}
             </>
           )}
         </div>
@@ -282,10 +344,18 @@ export default function PicketPlanner({
   );
 }
 
-function ResultSection({ result, isTrim }: { result: OptimizationResult; isTrim?: boolean }) {
+function ResultSection({ result, isTrim, progress, onCut }: { result: OptimizationResult; isTrim?: boolean; progress: Record<string, number>; onCut: (key: string, n: number) => void }) {
+  const groups = groupIdenticalBoards(result.boards);
+  const totalToCut = groups.reduce((s, g) => s + g.count, 0);
+  const cutSoFar = groups.reduce((s, g) => s + Math.min(progress[boardGroupKey(!!isTrim, result.materialType, g.board)] || 0, g.count), 0);
   return (
     <div className="mb-8">
       <h4 className="text-sm font-bold mb-2 uppercase tracking-wide text-walnut/70">Material: {result.materialType}</h4>
+      {totalToCut > 0 && (
+        <p className={`text-sm font-semibold mb-3 ${cutSoFar >= totalToCut ? "text-sage" : "text-walnut"}`} aria-live="polite">
+          {cutSoFar >= totalToCut ? "✓ Everything here is cut" : `Cut so far: ${cutSoFar} of ${totalToCut} pickets`}
+        </p>
+      )}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="bg-white border border-walnut/10 rounded-lg p-3 text-center"><div className="text-2xl font-display text-walnut">{result.totalBoards}</div><div className="text-xs text-walnut/70">Pickets required</div></div>
         <div className="bg-white border border-walnut/10 rounded-lg p-3 text-center"><div className="text-2xl font-display text-walnut">{result.wastePercent.toFixed(1)}%</div><div className="text-xs text-walnut/70">Waste</div></div>
@@ -294,7 +364,10 @@ function ResultSection({ result, isTrim }: { result: OptimizationResult; isTrim?
       {isTrim && result.boards.length > 0 && <p className="text-xs text-walnut/70 mb-2 italic">Rough-cut to the lengths shown, then final-trim after assembly.</p>}
       {result.boards.length === 0
         ? <p className="text-sm text-walnut/70">No pickets needed.</p>
-        : groupIdenticalBoards(result.boards).map((group, i) => <CutDiagram key={i} board={group.board} index={i} count={group.count} />)}
+        : groups.map((group, i) => {
+          const key = boardGroupKey(!!isTrim, result.materialType, group.board);
+          return <CutDiagram key={i} board={group.board} index={i} count={group.count} cutCount={progress[key] || 0} onCutChange={n => onCut(key, n)} step={isTrim ? 1 : 4} />;
+        })}
     </div>
   );
 }
