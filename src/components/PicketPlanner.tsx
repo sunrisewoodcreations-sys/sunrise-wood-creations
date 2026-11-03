@@ -1,12 +1,16 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminButton from "@/components/AdminButton";
 import CutDiagram from "@/components/CutDiagram";
 import { groupIdenticalBoards, boardGroupKey, BOMPart, OptimizationResult } from "@/lib/cutlistOptimizer";
 import { useCutProgress } from "@/lib/useCutProgress";
 import { planFromPickets, Plan, DEFAULT_BOARD_LENGTH, DEFAULT_KERF } from "@/lib/picketPlanner";
+
+// The last plan is remembered in this browser so it is still here when you
+// leave the page and come back.
+const STORE_KEY = "swc:picket-planner:last:v1";
 
 type PlannerProduct = { id: string; name: string; parts: BOMPart[] };
 
@@ -31,6 +35,55 @@ export default function PicketPlanner({
   const [listName, setListName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [generatedAt, setGeneratedAt] = useState("");
+  const restored = useRef(false);
+
+  // Bring back the last plan (and which boards are cut) on arrival.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s && s.plan && Array.isArray(s.plan.lines) && Array.isArray(s.plan.normalResults) && Array.isArray(s.plan.trimResults)) {
+          if (typeof s.picketsInput === "string") setPicketsInput(s.picketsInput);
+          if (typeof s.boardLengthInput === "string") setBoardLengthInput(s.boardLengthInput);
+          if (typeof s.kerfInput === "string") setKerfInput(s.kerfInput);
+          if (s.selection && typeof s.selection === "object") {
+            setSelection(cur => Object.fromEntries(Object.keys(cur).map(id => [id, s.selection[id] ?? cur[id]])));
+          }
+          setPlan(s.plan);
+          setGeneratedAt(typeof s.generatedAt === "string" ? s.generatedAt : "");
+          cuts.load(typeof s.savedId === "string" ? s.savedId : null, s.progress);
+        }
+      }
+    } catch {
+      // Storage unavailable or unreadable: just start with an empty planner.
+    }
+    restored.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Remember the plan, the inputs, and cut progress as they change.
+  useEffect(() => {
+    if (!restored.current || !plan) return;
+    try {
+      window.localStorage.setItem(STORE_KEY, JSON.stringify({
+        picketsInput, boardLengthInput, kerfInput, selection, plan, generatedAt,
+        progress: cuts.progress, savedId: cuts.savedId
+      }));
+    } catch {
+      // Storage full or blocked: the plan still works, it just won't be remembered.
+    }
+  }, [plan, picketsInput, boardLengthInput, kerfInput, selection, generatedAt, cuts.progress, cuts.savedId]);
+
+  function clearPlan() {
+    if (!window.confirm("Clear this plan and your cut progress? This can't be undone.")) return;
+    try { window.localStorage.removeItem(STORE_KEY); } catch { /* ignore */ }
+    setPlan(null);
+    setGeneratedAt("");
+    setSaveMessage("");
+    cuts.load(null);
+  }
 
   function calculate() {
     setSaveMessage("");
@@ -45,8 +98,10 @@ export default function PicketPlanner({
       .map(p => ({ id: p.id, ratio: Math.floor(Number(selection[p.id].ratio)) }));
     if (requests.length === 0) { setError("Tick at least one product to build."); setPlan(null); return; }
     if (requests.some(r => !(r.ratio >= 1))) { setError("Each ticked product needs a ratio of 1 or more."); setPlan(null); return; }
+    if (plan && Object.values(cuts.progress).some(n => n > 0) && !window.confirm("You have cut progress on your current plan. Make a new plan and lose that progress?")) return;
     setError("");
     setPlan(planFromPickets(products, requests, pickets, boardLength, kerf));
+    setGeneratedAt(new Date().toLocaleString());
     cuts.load(null);
   }
 
@@ -197,7 +252,7 @@ export default function PicketPlanner({
               <div className="mb-2">
                 <h2 className="text-xl font-bold text-walnut">With {plan.picketsAvailable} pickets you can build</h2>
                 <p className="text-xs text-walnut/70">
-                  {plan.boardLength}&quot; pickets · {plan.kerf}&quot; kerf · generated {new Date().toLocaleString()}
+                  {plan.boardLength}&quot; pickets · {plan.kerf}&quot; kerf · generated {generatedAt || new Date().toLocaleString()}
                 </p>
               </div>
 
@@ -265,6 +320,7 @@ export default function PicketPlanner({
                 <input id={`${uid}-name`} value={listName} onChange={e => setListName(e.target.value)} placeholder="Name this cut list (optional)" className={`${fieldClass} flex-1 min-w-[200px]`} />
                 <AdminButton onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save & send to Home Screen"}</AdminButton>
                 <AdminButton variant="secondary" onClick={() => window.print()}>Print / Save as PDF</AdminButton>
+                <AdminButton variant="secondary" onClick={clearPlan}>Clear this plan</AdminButton>
                 {saveMessage && <span role="status" className="text-sm font-semibold text-walnut">{saveMessage}</span>}
               </div>
 
