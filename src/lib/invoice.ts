@@ -9,7 +9,7 @@ import { claimShelfUnitsForLine, releaseUnitsFromOrder } from "@/lib/builtUnits"
 import { SALES_TAX_RATE } from "@/lib/tax";
 import {
   InvoiceSettings, DEFAULT_INVOICE_SETTINGS, normalizeInvoiceSettings,
-  PAYMENT_METHOD_LABELS, termsLabel, resolveDueDate, daysOverdue
+  PAYMENT_METHOD_LABELS, termsLabel, resolveDueDate, daysOverdue, easternDateString
 } from "@/lib/invoiceSettings";
 
 // Same brand palette already used in the redesigned customer emails —
@@ -707,11 +707,32 @@ export async function generateInvoicePdfForOrder(
   const contactInfo = await getInvoiceContactInfo(admin);
   const invoiceSettings = await getInvoiceSettings(admin);
 
+  // The invoice's Due Date follows the pickup: the scheduled pickup
+  // appointment while the order is still open (else the order's own
+  // estimated date), and the real picked-up / delivered date on the final
+  // invoice once the order is marked picked up.
+  let invoiceDueDate: string | null = order.due_date || null;
+  try {
+    if (["picked_up", "completed"].includes(order.status)) {
+      const { data: ev } = await admin
+        .from("order_status_history").select("created_at").eq("order_id", order.id).eq("status", "picked_up")
+        .order("created_at", { ascending: true }).limit(1).maybeSingle();
+      invoiceDueDate = easternDateString(ev?.created_at ? new Date(ev.created_at) : new Date());
+    } else {
+      const { data: appt } = await admin
+        .from("pickup_appointments").select("appointment_date").eq("order_id", order.id)
+        .in("status", ["scheduled", "arrived"]).order("appointment_date", { ascending: false }).limit(1).maybeSingle();
+      if (appt?.appointment_date) invoiceDueDate = appt.appointment_date;
+    }
+  } catch {
+    // Keep the order's own due date if any lookup fails.
+  }
+
   const pdfBuffer = await buildInvoicePdf({
     invoiceNumber,
     invoiceYear,
     invoiceDate: new Date(order.created_at),
-    dueDate: order.due_date,
+    dueDate: invoiceDueDate,
     customerName: customer.full_name,
     customerEmail: customer.email,
     deliveryAddress: order.fulfillment_method === "delivery" && order.delivery_address ? String(order.delivery_address).trim() : null,
