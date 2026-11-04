@@ -9,7 +9,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 // Every customer-facing email (order updates, invoices, quotes, ...) comes
 // from this one address. It's deliberately a NEW setting name, so the older
 // EMAIL_FROM / EMAIL_FROM_INVOICE values in Vercel can't override it.
-const CUSTOMER_FROM = process.env.EMAIL_FROM_CUSTOMER || "Sunrise Wood Creations <admin@sunrisewoodcreations.com>";
+const CUSTOMER_FROM = process.env.EMAIL_FROM_CUSTOMER || "Sunrise Wood Creations <info@sunrisewoodcreations.com>";
 const FROM = CUSTOMER_FROM;
 const FROM_INVOICE = CUSTOMER_FROM;
 // That address has no mailbox, so replies are sent here instead.
