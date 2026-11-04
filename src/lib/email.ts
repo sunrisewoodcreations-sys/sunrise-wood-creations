@@ -6,8 +6,14 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.EMAIL_FROM || "Sunrise Wood Creations <orders@sunrisewoodcreations.com>";
-const FROM_INVOICE = process.env.EMAIL_FROM_INVOICE || "Sunrise Wood Creations <invoice@sunrisewoodcreations.com>";
+// Every customer-facing email (order updates, invoices, quotes, ...) comes
+// from this one address. It's deliberately a NEW setting name, so the older
+// EMAIL_FROM / EMAIL_FROM_INVOICE values in Vercel can't override it.
+const CUSTOMER_FROM = process.env.EMAIL_FROM_CUSTOMER || "Sunrise Wood Creations <admin@sunrisewoodcreations.com>";
+const FROM = CUSTOMER_FROM;
+const FROM_INVOICE = CUSTOMER_FROM;
+// That address has no mailbox, so replies are sent here instead.
+const REPLY_TO = process.env.EMAIL_REPLY_TO || "sunrisewoodcreations@gmail.com";
 const FROM_ADMIN_REPORT = process.env.EMAIL_FROM_ADMIN_REPORT || "Sunrise Wood Creations <reports@sunrisewoodcreations.com>";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com";
 const DEMO_TEST_EMAIL = process.env.DEMO_TEST_EMAIL || "";
@@ -40,7 +46,8 @@ async function sendViaResend(
     forceDemo?: boolean;
   }
 ) {
-  const { emailType, orderId, forceDemo, ...resendPayload } = payload;
+  const { emailType, orderId, forceDemo, replyTo, ...rest } = payload;
+  const resendPayload = { ...rest, replyTo: replyTo || REPLY_TO };
 
   let isDemoSender = false;
   try {
