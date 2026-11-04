@@ -502,11 +502,40 @@ export async function sendOrderStatusEmail(opts: {
     buttonUrl: opts.schedulingUrl || `${SITE_URL}/account/orders/${opts.orderId}`
   });
 
-  const attachments = opts.invoicePdfBuffer && opts.invoiceNumber && opts.invoiceYear
-    ? [{ filename: invoiceFileName(opts.invoiceYear, opts.invoiceNumber, opts.customerName), content: opts.invoicePdfBuffer.toString("base64") }]
+  // The "Order placed" and "Ready for pickup" emails always carry the
+  // invoice. Callers that already built the PDF pass it in; every other
+  // path (an order that was ready the moment it was placed, the manual
+  // "Send email" button, ...) gets it generated here, reusing the order's
+  // one existing invoice number (or creating the first one). If anything
+  // goes wrong the email still goes out, just without the attachment.
+  let pdfBuffer = opts.invoicePdfBuffer;
+  let pdfNumber = opts.invoiceNumber;
+  let pdfYear = opts.invoiceYear;
+  let generatedHere = false;
+  if (!pdfBuffer && ["order_placed", "ready_for_pickup"].includes(opts.newStatus)) {
+    try {
+      const admin = createAdminClient();
+      const { data: orderRow } = await admin.from("orders").select("*").eq("id", opts.orderId).maybeSingle();
+      if (orderRow) {
+        const { generateInvoicePdfForOrder } = await import("./invoice");
+        const result = await generateInvoicePdfForOrder(orderRow, { full_name: opts.customerName, email: opts.toEmail });
+        if (result) {
+          pdfBuffer = result.pdfBuffer;
+          pdfNumber = result.invoiceNumber;
+          pdfYear = result.invoiceYear;
+          generatedHere = true;
+        }
+      }
+    } catch (err) {
+      console.error("Couldn't attach invoice to status email:", err);
+    }
+  }
+
+  const attachments = pdfBuffer && pdfNumber && pdfYear
+    ? [{ filename: invoiceFileName(pdfYear, pdfNumber, opts.customerName), content: pdfBuffer.toString("base64") }]
     : undefined;
 
-  return sendViaResend({
+  const sent = await sendViaResend({
     emailType: "sendOrderStatusEmail",
     orderId: (opts as any).orderId,
     forceDemo: opts.forceDemo,
@@ -516,6 +545,16 @@ export async function sendOrderStatusEmail(opts: {
     html,
     ...(attachments ? { attachments } : {})
   });
+
+  // Record that the invoice went out so the order page shows "Emailed".
+  if (generatedHere && attachments && pdfNumber != null) {
+    try {
+      await createAdminClient().from("invoices")
+        .update({ sent_at: new Date().toISOString() })
+        .eq("order_id", opts.orderId).eq("invoice_number", pdfNumber);
+    } catch {}
+  }
+  return sent;
 }
 
 

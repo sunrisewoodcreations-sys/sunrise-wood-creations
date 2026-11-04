@@ -55,6 +55,8 @@ export interface SiteContent {
   // brand new site_settings row (or one saved before this field
   // existed) never accidentally locks visitors out.
   websiteStatus?: "coming_soon" | "live";
+  // Invoice payment methods / instructions / terms (see lib/invoiceSettings.ts).
+  invoice?: { paymentMethods?: string[]; paymentInstructions?: string; termsDays?: number | null };
   hero: {
     heading: string;
     subheading: string;

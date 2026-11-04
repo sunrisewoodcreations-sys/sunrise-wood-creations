@@ -314,6 +314,23 @@ export default async function DashboardPage() {
 
   const allOrders = orders || [];
 
+  // --- This year: order count and how long invoice -> picked up/delivered takes ---
+  // The invoice date is the order's created date (what the invoice shows).
+  // Picked up / delivered is the "picked_up" status change.
+  const yearStartIso = easternMidnightUtc(year, 1, 1).toISOString();
+  const { data: pickedUpYearEvents } = await supabase
+    .from("order_status_history").select("order_id, created_at").eq("status", "picked_up").gte("created_at", yearStartIso);
+  const ordersThisYear = allOrders.filter(o => o.created_at >= yearStartIso);
+  const pickedUpAtByOrder = new Map<string, string>();
+  for (const e of (pickedUpYearEvents || []) as any[]) {
+    if (!pickedUpAtByOrder.has(e.order_id) || e.created_at < pickedUpAtByOrder.get(e.order_id)!) pickedUpAtByOrder.set(e.order_id, e.created_at);
+  }
+  const daysToFinish = ordersThisYear
+    .filter(o => pickedUpAtByOrder.has(o.id))
+    .map(o => Math.max(0, (new Date(pickedUpAtByOrder.get(o.id)!).getTime() - new Date(o.created_at).getTime()) / 86400000));
+  const completedThisYear = daysToFinish.length;
+  const avgDaysToFinish = completedThisYear ? daysToFinish.reduce((a, c) => a + c, 0) / completedThisYear : null;
+
   // --- Summary card calculations ---
   const newOrders = allOrders.filter(o => o.status === "order_placed").length;
   const readyForPickup = allOrders.filter(o => o.status === "ready_for_pickup").length;
@@ -545,6 +562,24 @@ export default async function DashboardPage() {
         <SummaryCard label="Ready for pickup" value={readyForPickup} color="text-sage" href="/admin/orders?filter=ready_pickup" icon="check-circle" tint="bg-sage/15 text-sage" />
         <SummaryCard label="Due this week" value={dueThisWeek} href="/admin/orders?filter=due_week" icon="clock-alert" tint="bg-amber/20 text-amber" />
         <SummaryCard label="Sales this month" value={`$${(salesThisMonthCents / 100).toFixed(2)}`} color="text-sage" href="/admin/reports" icon="trending-up" tint="bg-sage/15 text-sage" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <SummaryCard
+          label={`Orders in ${year}`}
+          value={ordersThisYear.length}
+          subValue={`${completedThisYear} picked up / delivered`}
+          href="/admin/orders"
+          icon="layers"
+          tint="bg-[#1E3A5F]/10 text-[#1E3A5F]"
+        />
+        <SummaryCard
+          label="Invoice to pickup / delivery"
+          value={avgDaysToFinish === null ? "—" : `${avgDaysToFinish.toFixed(1)} days`}
+          subValue={completedThisYear ? `average over ${completedThisYear} order${completedThisYear === 1 ? "" : "s"} in ${year}` : `no finished orders in ${year} yet`}
+          icon="clock-alert"
+          tint="bg-amber/20 text-amber"
+        />
       </div>
 
       <div className="bg-white border border-[#1E3A5F]/10 rounded-xl shadow-sm p-4 mb-10 sm:mb-8">

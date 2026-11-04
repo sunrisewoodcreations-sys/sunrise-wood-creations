@@ -7,6 +7,10 @@ import { shouldNotify } from "@/lib/notify";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 import { claimShelfUnitsForLine, releaseUnitsFromOrder } from "@/lib/builtUnits";
 import { SALES_TAX_RATE } from "@/lib/tax";
+import {
+  InvoiceSettings, DEFAULT_INVOICE_SETTINGS, normalizeInvoiceSettings,
+  PAYMENT_METHOD_LABELS, termsLabel, resolveDueDate, daysOverdue, easternDateString
+} from "@/lib/invoiceSettings";
 
 // Same brand palette already used in the redesigned customer emails —
 // kept as the single source of truth for both, rather than a separate
@@ -41,6 +45,18 @@ async function getInvoiceContactInfo(admin: ReturnType<typeof createAdminClient>
     // Fall through to the defaults below.
   }
   return { phone: DEFAULT_CONTACT_PHONE, email: DEFAULT_CONTACT_EMAIL };
+}
+
+// Payment methods / instructions / default terms set in Admin > Invoice
+// Settings. Any failure just means "no extras" — the invoice then looks
+// exactly as it did before these settings existed.
+async function getInvoiceSettings(admin: ReturnType<typeof createAdminClient>): Promise<InvoiceSettings> {
+  try {
+    const { data } = await admin.from("site_settings").select("data").eq("id", 1).single();
+    return normalizeInvoiceSettings((data?.data as any)?.invoice);
+  } catch {
+    return DEFAULT_INVOICE_SETTINGS;
+  }
 }
 
 // Single source of truth for displaying an invoice number as
@@ -86,7 +102,7 @@ async function checkAndSendLowStockAlert(admin: ReturnType<typeof createAdminCli
   }
 }
 
-async function buildInvoicePdf(opts: {
+export async function buildInvoicePdf(opts: {
   invoiceNumber: number;
   invoiceYear: number;
   invoiceDate: Date;
@@ -101,7 +117,11 @@ async function buildInvoicePdf(opts: {
   paymentReference?: string | null;
   contactPhone: string;
   contactEmail: string;
+  settings?: InvoiceSettings;
+  // Test hook only: lets a script pretend it's a different day.
+  now?: Date;
 }): Promise<Buffer> {
+  const settings = opts.settings || DEFAULT_INVOICE_SETTINGS;
   const doc = await PDFDocument.create();
   const page = doc.addPage([612, 792]);
   const font = await doc.embedFont(StandardFonts.Helvetica);
@@ -151,6 +171,39 @@ async function buildInvoicePdf(opts: {
       lines[maxLines - 1] = lastLine + "…";
     }
     return lines.slice(0, maxLines);
+  }
+
+  // Wraps free text (keeping the person's own line breaks), hard-breaking
+  // any single word too long for the width, and cutting off with an
+  // ellipsis after maxLines so it can never run off its card.
+  function wrapParagraphs(text: string, maxWidth: number, useFont: typeof font, size: number, maxLines: number): string[] {
+    const out: string[] = [];
+    for (const para of text.split("\n")) {
+      if (!para.trim()) { out.push(""); continue; }
+      let current = "";
+      for (let word of para.split(/\s+/).filter(Boolean)) {
+        while (useFont.widthOfTextAtSize(word, size) > maxWidth) {
+          let cut = word.length - 1;
+          while (cut > 1 && useFont.widthOfTextAtSize(word.slice(0, cut), size) > maxWidth) cut--;
+          if (current) { out.push(current); current = ""; }
+          out.push(word.slice(0, cut));
+          word = word.slice(cut);
+        }
+        const test = current ? `${current} ${word}` : word;
+        if (!current || useFont.widthOfTextAtSize(test, size) <= maxWidth) current = test;
+        else { out.push(current); current = word; }
+      }
+      if (current) out.push(current);
+    }
+    while (out.length && out[out.length - 1] === "") out.pop();
+    if (out.length > maxLines) {
+      const kept = out.slice(0, maxLines);
+      let last = kept[maxLines - 1];
+      while (last.length > 0 && useFont.widthOfTextAtSize(last + "…", size) > maxWidth) last = last.slice(0, -1);
+      kept[maxLines - 1] = last + "…";
+      return kept;
+    }
+    return out;
   }
 
   // ===== HEADER =====
@@ -203,15 +256,30 @@ async function buildInvoicePdf(opts: {
   // etc.), not a separate invented payment-terms date. Since this is a
   // pay-at-pickup business with no net-terms invoicing, this date
   // already represents when final payment is expected.
-  if (opts.dueDate) {
-    const [dy, dm, dd] = opts.dueDate.split("-").map(Number);
+  // Default payment terms (Admin > Invoice Settings) only fill in a due
+  // date when the order has none of its own; the order's date always wins.
+  const dueYmd = resolveDueDate(opts.dueDate, opts.invoiceDate, settings.termsDays);
+  const overdueDays = daysOverdue(dueYmd, opts.totalCents - opts.paidCents, opts.now);
+  const termsText = termsLabel(settings.termsDays);
+  if (termsText) {
+    metaRow("Terms", termsText, metaY); metaY -= 17;
+  }
+  if (dueYmd) {
+    const [dy, dm, dd] = dueYmd.split("-").map(Number);
     const dueDateObj = new Date(Date.UTC(dy, dm - 1, dd, 12));
-    metaRow("Due Date", dueDateObj.toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric", month: "long", day: "numeric" }), metaY);
+    metaRow("Due Date", dueDateObj.toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric", month: "long", day: "numeric" }), metaY, overdueDays > 0 ? EMBER : undefined, overdueDays > 0);
     metaY -= 17;
   }
-  metaRow("Status", isPaidInFull ? "Paid in Full" : "Balance Due", metaY, isPaidInFull ? SAGE : EMBER, true);
+  metaRow("Status", isPaidInFull ? "Paid in Full" : overdueDays > 0 ? "Overdue" : "Balance Due", metaY, isPaidInFull ? SAGE : EMBER, true);
+  // A red tag beside the INVOICE heading so an overdue invoice is obvious at a glance.
+  if (overdueDays > 0) {
+    const tag = `OVERDUE  ·  ${overdueDays} DAY${overdueDays === 1 ? "" : "S"}`;
+    const tagW = bold.widthOfTextAtSize(tag, 9.5) + 20;
+    page.drawRectangle({ x: marginX + 120, y: y - 5, width: tagW, height: 22, color: EMBER });
+    page.drawText(tag, { x: marginX + 130, y: y + 2, size: 9.5, font: bold, color: WHITE });
+  }
   // How it was paid, when recorded (and something has been paid).
-  const methodLabel = ({ cash: "Cash", card: "Credit/Debit Card", check: "Check", venmo: "Venmo", zelle: "Zelle" } as Record<string, string>)[opts.paymentMethod || ""];
+  const methodLabel = PAYMENT_METHOD_LABELS[opts.paymentMethod || ""];
   if (methodLabel && opts.paidCents > 0) {
     metaY -= 17;
     metaRow("Paid By", methodLabel, metaY);
@@ -274,7 +342,20 @@ async function buildInvoicePdf(opts: {
   // original had an equivalent single-page cap ("if (y < 140) break")
   // sized for its shorter totals section — this is the same safeguard,
   // recalibrated for the new, taller totals/notes sections.
-  const minYForItems = 350;
+  // "How to pay" card: sits to the left of the totals box (empty space
+  // today), only when something is enabled AND there's a balance left.
+  // Computed up front so a tall card can make the item list stop earlier.
+  const totalsBoxWidth = 260;
+  const totalsBoxHeight = 24 * 4 + 16 + 10 + 34;
+  const payCardWidth = (rightEdge - totalsBoxWidth) - 20 - marginX;
+  const payMethodNames = settings.paymentMethods.map(k => PAYMENT_METHOD_LABELS[k]).filter(Boolean);
+  const showPayCard = !isPaidInFull && (payMethodNames.length > 0 || !!settings.paymentInstructions);
+  const payMethodLines = payMethodNames.length ? wrapParagraphs(payMethodNames.join("  ·  "), payCardWidth - 28, bold, 10, 3) : [];
+  const payInstrLines = settings.paymentInstructions ? wrapParagraphs(settings.paymentInstructions, payCardWidth - 28, font, 9.5, 9) : [];
+  const payCardHeight = showPayCard
+    ? Math.max(totalsBoxHeight, 14 + 14 + (payMethodLines.length ? 16 + payMethodLines.length * 13 : 0) + (payInstrLines.length ? 10 + 14 + payInstrLines.length * 12.5 : 0) + 12)
+    : 0;
+  const minYForItems = 350 + Math.max(0, payCardHeight - totalsBoxHeight);
   let itemsShown = 0;
 
   function unitAndLineCents(item: InvoiceLineItem, qty: number): { unitPriceCents: number; lineAmountCents: number } {
@@ -339,7 +420,7 @@ async function buildInvoicePdf(opts: {
   // Taller rows than before, both for the "much more visually prominent"
   // requirement and to help the page feel balanced rather than sparse.
   y -= 26;
-  const totalsBoxWidth = 260;
+  const totalsTopY = y;
   const totalsBoxX = rightEdge - totalsBoxWidth;
   const totalsRowH = 24;
   const dueBoxHeight = 34;
@@ -348,7 +429,7 @@ async function buildInvoicePdf(opts: {
   // Amount Due band below them, sized to actually contain both — computed
   // directly, rather than reusing the same running "ty" cursor for the
   // due band, which is what caused it to overlap Amount Paid before.
-  const totalsBoxHeight = totalsRowH * 4 + 16 + dueGap + dueBoxHeight;
+  // (totalsBoxHeight is computed above, next to the payment card.)
   page.drawRectangle({ x: totalsBoxX, y: y - totalsBoxHeight + totalsRowH, width: totalsBoxWidth, height: totalsBoxHeight, color: CREAM });
 
   let ty = y;
@@ -371,7 +452,36 @@ async function buildInvoicePdf(opts: {
   const dueTextY = dueBoxBottom + (dueBoxHeight - 13) / 2 + 2;
   page.drawText("Amount Due", { x: totalsBoxX + 14, y: dueTextY, size: 14, font: bold, color: WHITE });
   rightAlignedText(`$${due.toFixed(2)}`, rightEdge - 14, dueTextY, 16, bold, WHITE);
-  y = dueBoxBottom - 54;
+  // ===== HOW TO PAY (left of the totals) =====
+  let lowestBottom = dueBoxBottom;
+  if (showPayCard) {
+    const cardTop = totalsTopY + totalsRowH; // same top edge as the totals box
+    const cardBottom = cardTop - payCardHeight;
+    page.drawRectangle({ x: marginX, y: cardBottom, width: payCardWidth, height: payCardHeight, color: CREAM });
+    let cy = cardTop - 22;
+    page.drawText("HOW TO PAY", { x: marginX + 14, y: cy, size: 9, font: bold, color: GRAY });
+    if (payMethodLines.length) {
+      cy -= 18;
+      page.drawText("We accept", { x: marginX + 14, y: cy, size: 8.5, font, color: GRAY });
+      for (const line of payMethodLines) {
+        cy -= 13;
+        page.drawText(line, { x: marginX + 14, y: cy, size: 10, font: bold, color: WALNUT });
+      }
+    }
+    if (payInstrLines.length) {
+      cy -= 18;
+      for (const line of payInstrLines) {
+        page.drawText(line, { x: marginX + 14, y: cy, size: 9.5, font, color: WALNUT });
+        cy -= 12.5;
+      }
+    }
+    // The totals box's cream background reaches a little below the red bar;
+    // that margin is already accounted for in the page spacing, so a card
+    // the same height as the totals box moves nothing down.
+    const totalsRectBottom = totalsTopY + totalsRowH - totalsBoxHeight;
+    lowestBottom = Math.min(lowestBottom, cardBottom + (dueBoxBottom - totalsRectBottom));
+  }
+  y = lowestBottom - 54;
 
   // ===== NOTES =====
   // No dedicated per-invoice notes field exists in the data model today
@@ -595,12 +705,34 @@ export async function generateInvoicePdfForOrder(
       }];
 
   const contactInfo = await getInvoiceContactInfo(admin);
+  const invoiceSettings = await getInvoiceSettings(admin);
+
+  // The invoice's Due Date follows the pickup: the scheduled pickup
+  // appointment while the order is still open (else the order's own
+  // estimated date), and the real picked-up / delivered date on the final
+  // invoice once the order is marked picked up.
+  let invoiceDueDate: string | null = order.due_date || null;
+  try {
+    if (["picked_up", "completed"].includes(order.status)) {
+      const { data: ev } = await admin
+        .from("order_status_history").select("created_at").eq("order_id", order.id).eq("status", "picked_up")
+        .order("created_at", { ascending: true }).limit(1).maybeSingle();
+      invoiceDueDate = easternDateString(ev?.created_at ? new Date(ev.created_at) : new Date());
+    } else {
+      const { data: appt } = await admin
+        .from("pickup_appointments").select("appointment_date").eq("order_id", order.id)
+        .in("status", ["scheduled", "arrived"]).order("appointment_date", { ascending: false }).limit(1).maybeSingle();
+      if (appt?.appointment_date) invoiceDueDate = appt.appointment_date;
+    }
+  } catch {
+    // Keep the order's own due date if any lookup fails.
+  }
 
   const pdfBuffer = await buildInvoicePdf({
     invoiceNumber,
     invoiceYear,
     invoiceDate: new Date(order.created_at),
-    dueDate: order.due_date,
+    dueDate: invoiceDueDate,
     customerName: customer.full_name,
     customerEmail: customer.email,
     deliveryAddress: order.fulfillment_method === "delivery" && order.delivery_address ? String(order.delivery_address).trim() : null,
@@ -610,7 +742,8 @@ export async function generateInvoicePdfForOrder(
     paymentMethod: order.payment_method || null,
     paymentReference: order.payment_reference || null,
     contactPhone: contactInfo.phone,
-    contactEmail: contactInfo.email
+    contactEmail: contactInfo.email,
+    settings: invoiceSettings
   });
 
   const filename = `invoice-${invoiceYear}-${invoiceNumber}-${order.id}.pdf`;
