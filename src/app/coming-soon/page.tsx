@@ -24,7 +24,7 @@ export default async function ComingSoonPage() {
         src="/logo-full.png"
         alt="Sunrise Wood Creations"
         width={1000}
-        height={1000}
+        height={865}
         priority
         className="w-40 sm:w-56 h-auto mx-auto mb-6"
       />

@@ -225,9 +225,9 @@ function shell(opts: {
               <img
                 src="${process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com"}/logo-header.png"
                 alt="Sunrise Wood Creations"
-                width="150"
-                height="40"
-                style="height: 40px; width: auto; max-width: 150px; border: 0; display: inline-block;"
+                width="92"
+                height="80"
+                style="height: 80px; width: auto; max-width: 92px; border: 0; display: inline-block;"
               >
             </td>
           </tr>

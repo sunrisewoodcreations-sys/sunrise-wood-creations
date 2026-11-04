@@ -45,7 +45,7 @@ export default async function OpengraphImage() {
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logoBase64} width={620} height={314} alt="" style={{ objectFit: "contain", marginBottom: 20 }} />
+        <img src={logoBase64} width={480} height={415} alt="" style={{ objectFit: "contain", marginBottom: 20 }} />
         <div
           style={{
             fontSize: 62,

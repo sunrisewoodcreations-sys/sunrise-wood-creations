@@ -181,9 +181,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Image
             src="/logo-header.png"
             alt="Sunrise Wood Creations"
-            width={900}
-            height={455}
-            className="h-10 w-auto mb-4"
+            width={600}
+            height={519}
+            className="h-24 w-auto mb-4"
           />
         </Link>
         <div className="text-white font-display text-base mb-8 break-words leading-snug">Hello, {firstName}</div>

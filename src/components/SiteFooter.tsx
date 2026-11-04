@@ -20,9 +20,9 @@ export default async function SiteFooter() {
             <Image
               src="/logo-header.png"
               alt="Sunrise Wood Creations"
-              width={900}
-              height={455}
-              className="h-16 w-auto mx-auto sm:mx-0 mb-3"
+              width={600}
+              height={519}
+              className="h-28 w-auto mx-auto sm:mx-0 mb-3"
             />
             <p className="text-cream/70 leading-relaxed">Handmade in Michigan.<br />Built to order.</p>
             <nav aria-label="Footer" className="mt-3 flex flex-wrap justify-center sm:justify-start gap-x-5 text-cream/80">
