@@ -53,9 +53,9 @@ export default function AdminMobileNav({
             <Image
               src="/logo-header.png"
               alt="Sunrise Wood Creations"
-              width={900}
-              height={455}
-              className="h-6 w-auto"
+              width={600}
+              height={574}
+              className="h-9 w-auto"
             />
           </Link>
           <span className="font-display text-sm truncate">Hello, {firstName}</span>

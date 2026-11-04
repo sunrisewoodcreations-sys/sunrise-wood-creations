@@ -43,15 +43,15 @@ export default async function SiteHeader() {
     .filter(p => p.enabled);
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-10 py-4 border-b border-walnut/10 bg-cream shadow-sm">
+    <header className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-10 py-2 border-b border-walnut/10 bg-cream shadow-sm">
       <Link href="/" className="flex-shrink-0">
         <Image
           src="/logo-header.png"
           alt="Sunrise Wood Creations"
-          width={900}
-          height={455}
+          width={600}
+          height={574}
           priority
-          className="h-12 md:h-16 w-auto"
+          className="h-14 md:h-[72px] w-auto"
         />
       </Link>
 

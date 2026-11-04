@@ -162,7 +162,7 @@ async function buildInvoicePdf(opts: {
   try {
     const logoBytes = fs.readFileSync(path.join(process.cwd(), "public", "logo-header.png"));
     const logoImage = await doc.embedPng(logoBytes);
-    const logoHeight = 52;
+    const logoHeight = 88;
     logoWidth = (logoImage.width / logoImage.height) * logoHeight;
     page.drawImage(logoImage, { x: marginX, y: height - headerHeight / 2 - logoHeight / 2, width: logoWidth, height: logoHeight });
   } catch {
