@@ -21,7 +21,7 @@ export default async function SiteFooter() {
               src="/logo-header.png"
               alt="Sunrise Wood Creations"
               width={600}
-              height={574}
+              height={519}
               className="h-28 w-auto mx-auto sm:mx-0 mb-3"
             />
             <p className="text-cream/70 leading-relaxed">Handmade in Michigan.<br />Built to order.</p>

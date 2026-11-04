@@ -58,7 +58,7 @@ export default function LoginPage() {
             src="/logo-header.png"
             alt="Sunrise Wood Creations"
             width={600}
-            height={574}
+            height={519}
             priority
             className="h-32 w-auto mx-auto mb-6"
           />
