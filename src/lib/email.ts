@@ -14,7 +14,8 @@ const FROM = CUSTOMER_FROM;
 const FROM_INVOICE = CUSTOMER_FROM;
 // That address has no mailbox, so replies are sent here instead.
 const REPLY_TO = process.env.EMAIL_REPLY_TO || "sunrisewoodcreations@gmail.com";
-const FROM_ADMIN_REPORT = process.env.EMAIL_FROM_ADMIN_REPORT || "Sunrise Wood Creations <reports@sunrisewoodcreations.com>";
+// Internal reports use the same single sender too — nothing sends from any other address.
+const FROM_ADMIN_REPORT = CUSTOMER_FROM;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com";
 const DEMO_TEST_EMAIL = process.env.DEMO_TEST_EMAIL || "";
 
