@@ -496,6 +496,7 @@ export async function sendOrderStatusEmail(opts: {
       <p style="margin: 20px 0 0;">${escapeHtml(bodyLine)}</p>
       ${balanceHtml}
       ${typeof opts.balanceDueCents !== "number" && typeof opts.priceCents === "number" ? paymentStatusHtml(opts.priceCents, opts.amountPaidCents) : ""}
+      ${opts.newStatus === "order_placed" ? `<p style="margin: 20px 0 0; font-size: 12px; line-height: 1.5; color: #8a7a6b;">Tip: if this email landed in your Promotions or Updates tab, drag it to Primary and tap "Yes" so you never miss an update on your order.</p>` : ""}
       ${opts.schedulingUrl ? `<p style="margin: 16px 0 0;">${opts.schedulingKind === "delivery" ? "Confirm your delivery address and pick a day and time that works for you, right from your phone, no login needed." : "Pick a day and time that works for you, right from your phone, no login needed."}</p>` : ""}
     `,
     buttonText: opts.schedulingUrl ? (opts.schedulingKind === "delivery" ? "Schedule My Delivery" : "Schedule My Pickup") : "View Your Order",
