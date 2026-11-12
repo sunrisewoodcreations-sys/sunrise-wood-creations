@@ -16,6 +16,7 @@ const FROM_INVOICE = CUSTOMER_FROM;
 const REPLY_TO = process.env.EMAIL_REPLY_TO || "sunrisewoodcreations@gmail.com";
 // Internal reports use the same single sender too — nothing sends from any other address.
 const FROM_ADMIN_REPORT = CUSTOMER_FROM;
+import { orderViewUrl } from "@/lib/orderLink";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com";
 const DEMO_TEST_EMAIL = process.env.DEMO_TEST_EMAIL || "";
 
@@ -507,7 +508,7 @@ export async function sendOrderStatusEmail(opts: {
       ${opts.schedulingUrl ? `<p style="margin: 16px 0 0;">${opts.schedulingKind === "delivery" ? "Confirm your delivery address and pick a day and time that works for you, right from your phone, no login needed." : "Pick a day and time that works for you, right from your phone, no login needed."}</p>` : ""}
     `,
     buttonText: opts.schedulingUrl ? (opts.schedulingKind === "delivery" ? "Schedule My Delivery" : "Schedule My Pickup") : "View Your Order",
-    buttonUrl: opts.schedulingUrl || `${SITE_URL}/account/orders/${opts.orderId}`
+    buttonUrl: opts.schedulingUrl || orderViewUrl(SITE_URL, opts.orderId)
   });
 
   // The "Order placed" and "Ready for pickup" emails always carry the

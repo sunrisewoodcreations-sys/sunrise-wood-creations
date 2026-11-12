@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { orderViewUrl } from "@/lib/orderLink";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addStopOnWayHome } from "@/lib/deliveryChain";
@@ -131,7 +132,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             appointmentTimeDisplay: `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`,
             deliveryAddress: order!.delivery_address || undefined,
             contactPhone: settings.contact_phone,
-            viewUrl: `${siteUrl}/account/orders/${order!.id}`,
+            viewUrl: orderViewUrl(siteUrl, order!.id),
             forceDemo: typeof order!.is_demo === "boolean" ? order!.is_demo : true
           });
         }

@@ -15,6 +15,7 @@ export default function PublicQuoteView({
   expirationDate,
   revisionNumber,
   convertedOrderId,
+  convertedOrderUrl,
   items,
   subtotalCents,
   discountCents,
@@ -32,6 +33,7 @@ export default function PublicQuoteView({
   expirationDate: string;
   revisionNumber: number;
   convertedOrderId: string | null;
+  convertedOrderUrl?: string | null;
   items: QuoteItem[];
   subtotalCents: number;
   discountCents: number;
@@ -44,7 +46,7 @@ export default function PublicQuoteView({
   const [confirming, setConfirming] = useState<"accept" | "decline" | null>(initialAction);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<{ type: "accepted"; orderId: string } | { type: "declined" } | null>(null);
+  const [result, setResult] = useState<{ type: "accepted"; orderId: string; orderUrl?: string } | { type: "declined" } | null>(null);
 
   const isFinal = ["accepted", "declined"].includes(status) || result != null;
   const canRespond = !isExpired && !isFinal;
@@ -63,7 +65,7 @@ export default function PublicQuoteView({
 
     setConfirming(null);
     if (action === "accept") {
-      setResult({ type: "accepted", orderId: body.orderId });
+      setResult({ type: "accepted", orderId: body.orderId, orderUrl: body.orderUrl });
     } else {
       setResult({ type: "declined" });
     }
@@ -131,7 +133,7 @@ export default function PublicQuoteView({
         {result?.type === "accepted" && (
           <div className="bg-sage/10 border border-sage/30 rounded-lg p-4 mb-4">
             <p className="text-sm font-semibold text-walnut mb-2">Thank you! Your order has been created.</p>
-            <a href={`/account/orders/${result.orderId}`} className="inline-block bg-walnut text-cream px-5 py-2.5 rounded-md text-sm font-semibold">
+            <a href={result.orderUrl || `/account/orders/${result.orderId}`} className="inline-block bg-walnut text-cream px-5 py-2.5 rounded-md text-sm font-semibold">
               View your order
             </a>
             <p className="text-xs text-walnut/50 mt-2">If you're not already logged in, you'll be asked to log in first.</p>
@@ -146,7 +148,7 @@ export default function PublicQuoteView({
         {status === "accepted" && convertedOrderId && !result && (
           <div className="bg-sage/10 border border-sage/30 rounded-lg p-4 mb-4">
             <p className="text-sm font-semibold text-walnut mb-2">This quote was accepted and converted into an order.</p>
-            <a href={`/account/orders/${convertedOrderId}`} className="inline-block bg-walnut text-cream px-5 py-2.5 rounded-md text-sm font-semibold">
+            <a href={convertedOrderUrl || `/account/orders/${convertedOrderId}`} className="inline-block bg-walnut text-cream px-5 py-2.5 rounded-md text-sm font-semibold">
               View your order
             </a>
           </div>

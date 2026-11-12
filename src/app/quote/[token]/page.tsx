@@ -5,6 +5,7 @@ import { formatQuoteNumberWithRevision } from "@/lib/quote";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PublicQuoteView from "@/components/PublicQuoteView";
+import { signOrderToken } from "@/lib/orderLink";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false }
@@ -58,6 +59,7 @@ export default async function PublicQuotePage({
           expirationDate={quote.expiration_date}
           revisionNumber={quote.revision_number}
           convertedOrderId={quote.converted_order_id}
+          convertedOrderUrl={quote.converted_order_id ? `/order/${signOrderToken(quote.converted_order_id)}` : null}
           items={(items || []).map((it: any) => ({
             title: it.title,
             description: it.description,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { signOrderToken } from "@/lib/orderLink";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildOrderItemsFromQuote } from "@/lib/quote";
 import { createOrder } from "@/lib/orders";
@@ -34,5 +35,5 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   await admin.from("quotes").update({ status: "accepted", converted_order_id: result.order.id }).eq("id", quote.id);
   await admin.from("orders").update({ quote_id: quote.id }).eq("id", result.order.id);
 
-  return NextResponse.json({ ok: true, orderId: result.order.id });
+  return NextResponse.json({ ok: true, orderId: result.order.id, orderUrl: `/order/${signOrderToken(result.order.id)}` });
 }
