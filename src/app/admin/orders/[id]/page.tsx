@@ -89,6 +89,12 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
 
   // Keep the earliest time each status was reached, in case a status
   // ever gets logged more than once.
+  const { data: paymentRows } = await supabase
+    .from("order_payments")
+    .select("id, amount_cents, method, reference, paid_at")
+    .eq("order_id", params.id)
+    .order("paid_at", { ascending: true });
+  const payments = (paymentRows || []) as any[];
   const statusTimestamps: Record<string, string> = {};
   (history || []).forEach((h: any) => {
     if (!statusTimestamps[h.status]) {
@@ -178,8 +184,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           orderId={order.id}
           priceCents={order.price_cents}
           initialAmountPaidCents={order.amount_paid_cents || 0}
-          initialPaymentMethod={(order as any).payment_method || null}
-          initialPaymentReference={(order as any).payment_reference || null}
+          payments={payments}
         />
 
         <div className="flex gap-2 mb-4">

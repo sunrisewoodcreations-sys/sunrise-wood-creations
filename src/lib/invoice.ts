@@ -1,4 +1,5 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { paymentLinesForInvoice } from "@/lib/payments";
 import fs from "fs";
 import path from "path";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -115,6 +116,8 @@ export async function buildInvoicePdf(opts: {
   paidCents: number;
   paymentMethod?: string | null;
   paymentReference?: string | null;
+  // Each payment (amount + method). When present, replaces the single "Paid By" line.
+  payments?: { amount_cents: number; method: string | null; reference: string | null }[];
   contactPhone: string;
   contactEmail: string;
   settings?: InvoiceSettings;
@@ -278,14 +281,22 @@ export async function buildInvoicePdf(opts: {
     page.drawRectangle({ x: marginX + 120, y: y - 5, width: tagW, height: 22, color: EMBER });
     page.drawText(tag, { x: marginX + 130, y: y + 2, size: 9.5, font: bold, color: WHITE });
   }
-  // How it was paid, when recorded (and something has been paid).
-  const methodLabel = PAYMENT_METHOD_LABELS[opts.paymentMethod || ""];
-  if (methodLabel && opts.paidCents > 0) {
-    metaY -= 17;
-    metaRow("Paid By", methodLabel, metaY);
-    if (opts.paymentReference) {
+  // How it was paid, when recorded (and something has been paid). Several
+  // payments each get their own row: "Venmo #abc   $100.00".
+  if (opts.paidCents > 0 && opts.payments && opts.payments.length > 0) {
+    for (const line of paymentLinesForInvoice(opts.payments, PAYMENT_METHOD_LABELS)) {
       metaY -= 17;
-      metaRow(opts.paymentMethod === "check" ? "Check #" : opts.paymentMethod === "card" ? "Reference" : "Transaction #", opts.paymentReference.length > 26 ? opts.paymentReference.slice(0, 26) + "..." : opts.paymentReference, metaY);
+      metaRow(`Paid: ${line.label}`, `$${(line.cents / 100).toFixed(2)}`, metaY);
+    }
+  } else {
+    const methodLabel = PAYMENT_METHOD_LABELS[opts.paymentMethod || ""];
+    if (methodLabel && opts.paidCents > 0) {
+      metaY -= 17;
+      metaRow("Paid By", methodLabel, metaY);
+      if (opts.paymentReference) {
+        metaY -= 17;
+        metaRow(opts.paymentMethod === "check" ? "Check #" : opts.paymentMethod === "card" ? "Reference" : "Transaction #", opts.paymentReference.length > 26 ? opts.paymentReference.slice(0, 26) + "..." : opts.paymentReference, metaY);
+      }
     }
   }
 
@@ -728,6 +739,9 @@ export async function generateInvoicePdfForOrder(
     // Keep the order's own due date if any lookup fails.
   }
 
+  const { data: payData } = await admin.from("order_payments").select("amount_cents, method, reference").eq("order_id", order.id).order("paid_at", { ascending: true });
+  const paymentRows = payData && payData.length > 0 ? payData : undefined;
+
   const pdfBuffer = await buildInvoicePdf({
     invoiceNumber,
     invoiceYear,
@@ -741,6 +755,7 @@ export async function generateInvoicePdfForOrder(
     paidCents: order.amount_paid_cents || 0,
     paymentMethod: order.payment_method || null,
     paymentReference: order.payment_reference || null,
+    payments: paymentRows,
     contactPhone: contactInfo.phone,
     contactEmail: contactInfo.email,
     settings: invoiceSettings

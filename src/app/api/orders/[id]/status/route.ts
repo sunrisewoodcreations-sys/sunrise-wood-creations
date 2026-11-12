@@ -131,6 +131,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   if (status === "picked_up") {
     if ((order.amount_paid_cents || 0) < (order.price_cents || 0)) {
+      // Marking picked up settles the balance. Record the remainder as its
+      // own payment (method left blank) so the payment list adds up.
+      const remainder = (order.price_cents || 0) - (order.amount_paid_cents || 0);
+      await admin.from("order_payments").insert({ order_id: order.id, amount_cents: remainder, method: null, reference: null });
       await admin.from("orders").update({ amount_paid_cents: order.price_cents }).eq("id", order.id);
       order.amount_paid_cents = order.price_cents;
     }

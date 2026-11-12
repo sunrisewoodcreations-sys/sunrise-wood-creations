@@ -2,61 +2,38 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import PaymentEntry from "@/components/PaymentEntry";
+
+const LABELS: Record<string, string> = { cash: "Cash", card: "Credit / debit card", check: "Check", venmo: "Venmo", zelle: "Zelle" };
+
+export interface PaymentRow { id: string; amount_cents: number; method: string | null; reference: string | null; paid_at: string }
 
 export default function AmountPaidForm({
-  orderId,
-  priceCents,
-  initialAmountPaidCents,
-  initialPaymentMethod,
-  initialPaymentReference
+  orderId, priceCents, initialAmountPaidCents, payments
 }: {
   orderId: string;
   priceCents: number;
   initialAmountPaidCents: number;
-  initialPaymentMethod?: string | null;
-  initialPaymentReference?: string | null;
+  payments: PaymentRow[];
 }) {
-  const [method, setMethod] = useState(initialPaymentMethod || "");
-  const [reference, setReference] = useState(initialPaymentReference || "");
-  const [amountPaid, setAmountPaid] = useState((initialAmountPaidCents / 100).toFixed(2));
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
   const router = useRouter();
+  const [error, setError] = useState("");
+  const [adding, setAdding] = useState(false);
 
   const total = priceCents / 100;
-  const paidNumber = parseFloat(amountPaid) || 0;
-  const due = total - paidNumber;
+  const paid = initialAmountPaidCents / 100;
+  const due = total - paid;
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
+  async function remove(id: string) {
+    if (!window.confirm("Remove this payment?")) return;
     setError("");
-    setSaved(false);
-
-    const res = await fetch(`/api/orders/${orderId}/payment`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        amountPaidCents: Math.round(paidNumber * 100),
-        // Only sent when a method is chosen (or one was already saved), so
-        // plain amount updates behave exactly as before.
-        ...(method || initialPaymentMethod ? { paymentMethod: method || null, paymentReference: reference } : {})
-      })
-    });
-
-    setLoading(false);
-    if (res.ok) {
-      setSaved(true);
-      router.refresh();
-    } else {
-      const body = await res.json().catch(() => ({}));
-      setError(body.error || "Couldn't save that.");
-    }
+    const res = await fetch(`/api/orders/${orderId}/payments?paymentId=${id}`, { method: "DELETE" });
+    if (res.ok) router.refresh();
+    else setError((await res.json().catch(() => ({}))).error || "Couldn't remove that.");
   }
 
   return (
-    <form onSubmit={handleSave} className="bg-cream border border-[#1E3A5F]/10 rounded-lg p-4 mt-4">
+    <div className="bg-cream border border-[#1E3A5F]/10 rounded-lg p-4 mt-4">
       <div className="grid grid-cols-3 gap-4 mb-3 text-sm">
         <div>
           <div className="text-[#1E3A5F]/50 text-xs mb-1">Total</div>
@@ -64,68 +41,47 @@ export default function AmountPaidForm({
         </div>
         <div>
           <div className="text-[#1E3A5F]/50 text-xs mb-1">Amount paid</div>
-          <div className="flex items-center gap-1">
-            <span className="text-[#1E3A5F]/60">$</span>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={amountPaid}
-              onChange={e => setAmountPaid(e.target.value)}
-              className="w-24 border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm"
-            />
-          </div>
+          <div className="font-semibold text-[#1E3A5F]">${paid.toFixed(2)}</div>
         </div>
         <div>
           <div className="text-[#1E3A5F]/50 text-xs mb-1">Still owed</div>
-          <div className={`font-semibold ${due > 0 ? "text-ember" : "text-sage"}`}>
-            ${due.toFixed(2)}
-          </div>
+          <div className={`font-semibold ${due > 0 ? "text-ember" : "text-sage"}`}>${due.toFixed(2)}</div>
         </div>
       </div>
 
-      <div className="mb-3">
-        <label htmlFor="payment-method" className="block text-[#1E3A5F]/50 text-xs mb-1">How they paid</label>
-        <select
-          id="payment-method"
-          value={method}
-          onChange={e => setMethod(e.target.value)}
-          className="border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm bg-white"
-        >
-          <option value="">Not recorded</option>
-          <option value="cash">Cash</option>
-          <option value="card">Credit / debit card</option>
-          <option value="check">Check</option>
-          <option value="venmo">Venmo</option>
-          <option value="zelle">Zelle</option>
-        </select>
-        {(method === "venmo" || method === "zelle" || method === "card" || method === "check") && (
-          <div className="mt-2">
-            <label htmlFor="payment-ref" className="block text-[#1E3A5F]/50 text-xs mb-1">
-              {method === "venmo" ? "Venmo transaction number" : method === "zelle" ? "Zelle transaction number" : method === "check" ? "Check number (optional)" : "Receipt # or last 4 digits (optional)"}
-            </label>
-            <input
-              id="payment-ref"
-              value={reference}
-              onChange={e => setReference(e.target.value)}
-              placeholder={method === "venmo" || method === "zelle" ? "Paste or type the transaction number" : "Optional"}
-              maxLength={100}
-              className="w-full max-w-xs border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm bg-white"
-            />
-          </div>
-        )}
-      </div>
+      {payments.length > 0 ? (
+        <ul className="mb-3 divide-y divide-[#1E3A5F]/10 border border-[#1E3A5F]/10 rounded-md bg-white text-sm">
+          {payments.map(p => (
+            <li key={p.id} className="flex items-center justify-between gap-3 px-3 py-2">
+              <div className="min-w-0">
+                <span className="font-semibold text-[#1E3A5F]">${(p.amount_cents / 100).toFixed(2)}</span>
+                <span className="text-[#1E3A5F]/70"> · {LABELS[p.method || ""] || "Method not recorded"}</span>
+                {p.reference && <span className="text-[#1E3A5F]/50 text-xs"> · #{p.reference}</span>}
+                <div className="text-[#1E3A5F]/40 text-xs">{new Date(p.paid_at).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", year: "numeric" })}</div>
+              </div>
+              <button type="button" onClick={() => remove(p.id)} className="text-xs text-ember shrink-0">Remove</button>
+            </li>
+          ))}
+        </ul>
+      ) : paid > 0 ? (
+        <p className="text-xs text-[#1E3A5F]/50 mb-3">${paid.toFixed(2)} paid (no payment details recorded).</p>
+      ) : null}
 
       {error && <p className="text-ember text-xs mb-2">{error}</p>}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-[#1E3A5F] text-white px-4 py-1.5 rounded-md text-xs font-semibold disabled:opacity-60"
-      >
-        {loading ? "Saving..." : "Save payment"}
-      </button>
-      {saved && <span className="text-sage text-xs ml-2 font-semibold">Saved</span>}
-    </form>
+      {adding ? (
+        <PaymentEntry
+          orderId={orderId}
+          defaultAmount={due > 0 ? due.toFixed(2) : ""}
+          buttonLabel="Save payment"
+          onSaved={() => { setAdding(false); router.refresh(); }}
+          onCancel={() => setAdding(false)}
+        />
+      ) : (
+        <button type="button" onClick={() => setAdding(true)} className="bg-[#1E3A5F] text-white px-4 py-1.5 rounded-md text-xs font-semibold">
+          + Add payment
+        </button>
+      )}
+    </div>
   );
 }

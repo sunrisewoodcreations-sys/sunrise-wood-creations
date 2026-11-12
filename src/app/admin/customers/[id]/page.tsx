@@ -52,6 +52,9 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
     .order("name");
 
   const orderList = orders || [];
+  const { data: customerPayments } = orderList.length
+    ? await supabase.from("order_payments").select("id, order_id, amount_cents, method, reference, paid_at").in("order_id", orderList.map((o: any) => o.id)).order("paid_at", { ascending: true })
+    : { data: [] as any[] };
   const orderIds = orderList.map((o: any) => o.id);
 
   const { data: invoices } = orderIds.length > 0
@@ -116,6 +119,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
       <CustomerQuickActions
         orders={orderList}
+        payments={(customerPayments || []) as any[]}
         customerEmail={customer.email}
         customerName={customer.full_name}
         hasRealEmail={customer.has_real_email !== false}
