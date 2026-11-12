@@ -26,7 +26,8 @@ export default function PickupSchedulingView({
   kind = "pickup",
   deliveryAddress,
   onMyWayAt,
-  earliestDate
+  earliestDate,
+  hideLocationUntilBooked
 }: {
   apiEndpoint: string;
   orderTitle: string;
@@ -44,6 +45,9 @@ export default function PickupSchedulingView({
   onMyWayAt?: string | null;
   // The order's estimated pickup/delivery date. Customers can't book before it.
   earliestDate?: string;
+  // First-time scheduling link: don't show the shop's pickup address until
+  // they've actually booked a time (or already have one).
+  hideLocationUntilBooked?: boolean;
 }) {
   const isDelivery = kind === "delivery";
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -106,7 +110,7 @@ export default function PickupSchedulingView({
           </div>
         )}
 
-        {!isDelivery && (businessAddress || pickupInstructions) && (
+        {!isDelivery && (businessAddress || pickupInstructions) && (!hideLocationUntilBooked || booked || alreadyUsed) && (
           <div className="bg-cream border border-walnut/10 rounded-lg p-4 mb-4">
             <div className="text-xs font-semibold text-walnut/50 uppercase mb-1">Pickup Location</div>
             {businessAddress && <div className="text-sm font-semibold text-walnut">{businessAddress}</div>}

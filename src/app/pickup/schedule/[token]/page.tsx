@@ -71,6 +71,7 @@ export default async function PickupSchedulePage({ params }: { params: { token: 
           kind={isDelivery ? "delivery" : "pickup"}
           earliestDate={order.due_date || undefined}
           deliveryAddress={order.delivery_address || undefined}
+          hideLocationUntilBooked
           businessAddress={settings.business_address}
           pickupInstructions={settings.pickup_instructions}
           successMessage="A confirmation email with the full details is on its way to you."
