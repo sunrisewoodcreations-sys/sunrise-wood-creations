@@ -7,6 +7,7 @@ import ProgressTracker from "@/components/ProgressTracker";
 import StatusUpdater from "@/components/StatusUpdater";
 import SendProofForm from "@/components/SendProofForm";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
+import PrivateNoteForm from "@/components/PrivateNoteForm";
 import AmountPaidForm from "@/components/AmountPaidForm";
 import EditOrderDateForm from "@/components/EditOrderDateForm";
 import EditDueDateForm from "@/components/EditDueDateForm";
@@ -67,6 +68,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
       })()
     : null;
   const apptKind = (apptRow as any)?.appointment_type === "delivery" || order.fulfillment_method === "delivery" ? "Delivery" : "Pickup";
+  const { data: privateNoteRow } = await supabase.from("order_private_notes").select("note").eq("order_id", order.id).maybeSingle();
   const proofPhotos = await listProofPhotos(order.id).catch(() => []);
 
   const { data: proofs } = await supabase
@@ -203,7 +205,9 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           payments={payments}
         />
 
-        <div className="flex gap-2 mb-4">
+        <PrivateNoteForm orderId={order.id} initialNote={privateNoteRow?.note || ""} />
+
+        <div className="flex gap-2 mb-4 mt-4">
           <SendStatusEmailButton orderId={order.id} />
           <SendInvoiceButton orderId={order.id} />
         </div>
