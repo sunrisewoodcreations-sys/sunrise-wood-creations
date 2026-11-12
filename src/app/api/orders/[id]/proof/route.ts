@@ -35,7 +35,10 @@ function ensureWatermarkFontConfig(): void {
 async function watermarkImage(original: Buffer, text: string): Promise<Buffer> {
   ensureWatermarkFontConfig();
 
-  const image = sharp(original);
+  // Keep proofs a sensible size: fix phone rotation and cap at 1600px so the
+  // customer's page and email load fast even if the original was huge.
+  const resized = await sharp(original).rotate().resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true }).toBuffer();
+  const image = sharp(resized);
   const metadata = await image.metadata();
   const width = metadata.width || 1000;
   const height = metadata.height || 1000;
