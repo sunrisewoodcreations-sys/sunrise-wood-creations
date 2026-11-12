@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { proofTitleFromItems } from "@/lib/bagSets";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -19,6 +20,9 @@ export default async function PublicProofPage({ params }: { params: { token: str
   if (!proof) notFound();
 
   const order = (proof as any).orders;
+  // Show only the boards in the proof's name — bags don't get a proof.
+  const { data: proofItems } = await supabase.from("order_items").select("title").eq("order_id", proof.order_id).order("created_at", { ascending: true });
+  const proofTitle = proofTitleFromItems((proofItems || []).map((i: any) => i.title), order?.title || "");
 
   return (
     <div>
@@ -31,7 +35,7 @@ export default async function PublicProofPage({ params }: { params: { token: str
       <div className="min-h-[70vh] flex items-center justify-center px-4 py-16 bg-cream">
         <div className="w-full max-w-lg bg-white border border-walnut/10 rounded-xl p-8">
           <h1 className="font-display text-2xl text-walnut mb-1">Design proof</h1>
-          <p className="text-sm text-walnut/60 mb-6">{order?.title}</p>
+          <p className="text-sm text-walnut/60 mb-6">{proofTitle}</p>
 
           {proof.status !== "pending" ? (
             <p className="text-sm bg-sage/10 text-sage font-semibold p-4 rounded-md">

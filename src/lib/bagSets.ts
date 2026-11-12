@@ -21,6 +21,19 @@ export function normalizeBagSets(raw: any): BagSet[] {
 }
 
 // The text that shows on the order and invoice line.
+export const BAG_TITLE_PREFIX = "Cornhole bags";
+
 export function bagLineTitle(set: BagSet): string {
-  return `Cornhole bags — ${set.label}`;
+  return `${BAG_TITLE_PREFIX} — ${set.label}`;
+}
+
+// The name the design proof shows: just the boards, never the bag sets (bags
+// have no proof) or the delivery fee. Falls back to the order's own title.
+export function proofTitleFromItems(itemTitles: string[], fallback: string): string {
+  const boards = itemTitles
+    .map(t => (t || "").trim())
+    .filter(t => t && t !== "Delivery fee" && !t.startsWith(BAG_TITLE_PREFIX));
+  if (boards.length === 0) return fallback;
+  if (boards.length === 1) return boards[0];
+  return `${boards[0]} + ${boards.length - 1} more item${boards.length - 1 === 1 ? "" : "s"}`;
 }
