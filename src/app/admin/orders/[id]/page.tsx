@@ -51,6 +51,22 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
   const { count: activeAppointmentCount } = await supabase
     .from("pickup_appointments").select("id", { count: "exact", head: true })
     .eq("order_id", order.id).in("status", ["scheduled", "arrived"]);
+  // The customer's booked pickup/delivery time, shown right on the order
+  // once the order is ready.
+  const { data: apptRow } = await supabase
+    .from("pickup_appointments")
+    .select("appointment_date, appointment_time, appointment_type, status, rescheduled_by")
+    .eq("order_id", order.id).in("status", ["scheduled", "arrived"])
+    .order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const apptWhen = apptRow
+    ? (() => {
+        const [h, m] = String(apptRow.appointment_time).split(":").map(Number);
+        const day = new Date(`${apptRow.appointment_date}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" });
+        const time = `${h % 12 || 12}:${String(m || 0).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
+        return `${day} at ${time}`;
+      })()
+    : null;
+  const apptKind = (apptRow as any)?.appointment_type === "delivery" || order.fulfillment_method === "delivery" ? "Delivery" : "Pickup";
   const proofPhotos = await listProofPhotos(order.id).catch(() => []);
 
   const { data: proofs } = await supabase
@@ -191,6 +207,18 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           <SendStatusEmailButton orderId={order.id} />
           <SendInvoiceButton orderId={order.id} />
         </div>
+
+        {apptWhen ? (
+          <div className="mb-4 bg-sage/10 border border-sage/30 rounded-md px-3 py-2 text-sm text-[#1E3A5F]">
+            <strong>{apptKind} scheduled:</strong> {apptWhen}
+            {apptRow?.status === "arrived" && <span className="ml-2 text-xs font-semibold text-sage">Customer has arrived</span>}
+            {(apptRow as any)?.rescheduled_by === "customer" && <span className="ml-2 text-xs text-[#1E3A5F]/60">(customer rescheduled)</span>}
+          </div>
+        ) : order.status === "ready_for_pickup" ? (
+          <div className="mb-4 bg-amber/10 border border-amber/30 rounded-md px-3 py-2 text-sm text-[#1E3A5F]">
+            <strong>Ready for {apptKind.toLowerCase()}</strong> — no time scheduled yet.
+          </div>
+        ) : null}
 
         <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} fulfillmentMethod={order.fulfillment_method} />
         <ProgressTracker fulfillmentMethod={order.fulfillment_method} productType={order.product_type as ProductType} currentStatus={order.status} statusTimestamps={statusTimestamps} />
