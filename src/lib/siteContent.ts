@@ -56,6 +56,7 @@ export interface SiteContent {
   // existed) never accidentally locks visitors out.
   websiteStatus?: "coming_soon" | "live";
   // Invoice payment methods / instructions / terms (see lib/invoiceSettings.ts).
+  bagSets?: { label: string; priceCents: number }[];
   invoice?: { paymentMethods?: string[]; paymentInstructions?: string; termsDays?: number | null };
   hero: {
     heading: string;

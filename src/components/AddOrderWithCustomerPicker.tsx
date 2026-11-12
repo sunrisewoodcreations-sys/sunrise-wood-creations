@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import AddressInput from "@/components/AddressInput";
 import OrderDeliveryFields, { OrderDelivery, EMPTY_ORDER_DELIVERY } from "@/components/OrderDeliveryFields";
 import AdminButton from "@/components/AdminButton";
+import { BagSet, bagLineTitle } from "@/lib/bagSets";
 
 const PRODUCT_TYPES = [
   { value: "cornhole", label: "Cornhole boards" },
@@ -41,12 +42,14 @@ function blankLineItem(): LineItem {
 export default function AddOrderWithCustomerPicker({
   customers = [],
   products,
+  bagSets = [],
   fixedCustomerId,
   fixedCustomerName,
   fixedCustomerAddress
 }: {
   customers?: Customer[];
   products: SavedProduct[];
+  bagSets?: BagSet[];
   fixedCustomerId?: string;
   fixedCustomerName?: string;
   fixedCustomerAddress?: string | null;
@@ -189,6 +192,25 @@ export default function AddOrderWithCustomerPicker({
 
   function addItemRow() {
     setItems(prev => [...prev, blankLineItem()]);
+  }
+
+  // One tap adds a bag set as its own line (it shows as its own line on the
+  // invoice). A completely blank last row is reused instead of left empty.
+  function addBagSet(set: BagSet) {
+    const line: LineItem = {
+      productType: "cornhole",
+      title: bagLineTitle(set),
+      sizeDetails: "",
+      price: (set.priceCents / 100).toString(),
+      quantity: "1",
+      selectedProductId: null,
+      unitPriceCents: set.priceCents
+    };
+    setItems(prev => {
+      const last = prev[prev.length - 1];
+      const lastIsBlank = last && !last.title.trim() && !last.price.trim();
+      return lastIsBlank ? [...prev.slice(0, -1), line] : [...prev, line];
+    });
   }
 
   function removeItemRow(index: number) {
@@ -555,6 +577,29 @@ export default function AddOrderWithCustomerPicker({
             >
               + Add another item
             </button>
+            {items.some(it => it.productType === "cornhole") && (
+              <div className="mt-3">
+                <div className="text-[11px] font-semibold text-[#1E3A5F] mb-1">Add cornhole bags to this order</div>
+                {bagSets.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {bagSets.map(set => (
+                      <button
+                        key={set.label}
+                        type="button"
+                        onClick={() => addBagSet(set)}
+                        className="text-xs font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-md px-3 py-2 hover:bg-cream"
+                      >
+                        + {set.label} — ${(set.priceCents / 100).toFixed(2)}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#1E3A5F]/60">
+                    No bag sets yet. <a href="/admin/bag-sets" className="underline font-semibold">Set up your bag sizes and prices</a> and they'll show up here as one-tap buttons.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div>

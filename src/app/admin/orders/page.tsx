@@ -11,6 +11,7 @@ import { getWorkflowStage, workflowLabel, WORKFLOW_LABELS, WORKFLOW_STYLES, Work
 import { getPickupBadgeState, PICKUP_BADGE_LABELS, PICKUP_BADGE_STYLES } from "@/lib/pickupScheduling";
 import { checkMaterialAvailabilityForOrder } from "@/lib/materialPlanning";
 import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
+import { getBagSets } from "@/lib/bagSetsServer";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import SendInvoiceButton from "@/components/SendInvoiceButton";
 import SendStatusEmailButton from "@/components/SendStatusEmailButton";
@@ -121,6 +122,7 @@ export default async function AdminOrdersPage({
 }: {
   searchParams: { q?: string; sort?: string; dir?: string; filter?: string };
 }) {
+  const bagSets = await getBagSets();
   const supabase = createClient();
   const query = searchParams.q?.trim() || "";
   const sortKey = (searchParams.sort as SortKey) || "created_at";
@@ -450,7 +452,7 @@ export default async function AdminOrdersPage({
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-        <AddOrderWithCustomerPicker customers={allCustomers || []} products={savedProducts || []} />
+        <AddOrderWithCustomerPicker customers={allCustomers || []} products={savedProducts || []} bagSets={bagSets} />
 
         <form method="GET" className="flex-1 sm:min-w-[240px]">
           <input
