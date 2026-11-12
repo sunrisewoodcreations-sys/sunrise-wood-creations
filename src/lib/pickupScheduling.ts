@@ -502,12 +502,21 @@ export async function sendPickupConfirmation(appointmentId: string, siteUrl: str
 // about those. Best-effort and silent on failure: the customer's own
 // booking/confirmation has already succeeded by the time this runs, so
 // a failed admin notification should never surface as an error to them.
+// The notes on your calendar entry: what's being picked up, plus their phone.
+export function adminCalendarNotes(items: { title: string; quantity: number }[], orderTitle?: string, phone?: string | null): string {
+  const lines = items
+    .filter(i => i.title && i.title !== "Delivery fee")
+    .map(i => `• ${i.quantity > 1 ? `${i.quantity} × ` : ""}${i.title}`);
+  const body = lines.length > 0 ? lines : orderTitle ? [`• ${orderTitle}`] : [];
+  return ["Picking up:", ...body, ...(phone ? ["", `Phone: ${phone}`] : [])].join("\n");
+}
+
 export async function notifyAdminPickupScheduled(appointmentId: string, isReschedule: boolean): Promise<void> {
   try {
     const admin = createAdminClient();
     const { data: appointment } = await admin
       .from("pickup_appointments")
-      .select("appointment_date, appointment_time, appointment_type, orders:order_id(title, is_demo, delivery_address, profiles:customer_id(full_name, phone))")
+      .select("appointment_date, appointment_time, appointment_type, orders:order_id(id, title, is_demo, delivery_address, profiles:customer_id(full_name, phone))")
       .eq("id", appointmentId)
       .maybeSingle();
     if (!appointment) return;
@@ -518,9 +527,14 @@ export async function notifyAdminPickupScheduled(appointmentId: string, isResche
     const settings = await getAvailabilitySettings();
 
     const isDeliveryAppt = appointment.appointment_type === "delivery";
+    // Your calendar entry is titled with the customer's name so you can tell at
+    // a glance who's coming, and the notes list what they're picking up.
+    const { data: itemRows } = order?.id
+      ? await admin.from("order_items").select("title, quantity").eq("order_id", order.id).order("created_at", { ascending: true })
+      : { data: [] as any[] };
     const calendarEvent = {
-      title: `${isDeliveryAppt ? "Delivery" : "Pickup"}: ${order?.title || "Order"}`,
-      description: [customer?.full_name, customer?.phone].filter(Boolean).join(" · ") || settings.pickup_instructions,
+      title: `${isDeliveryAppt ? "Delivery" : "Pickup"}: ${customer?.full_name || order?.title || "Customer"}`,
+      description: adminCalendarNotes(itemRows || [], order?.title, customer?.phone),
       location: isDeliveryAppt ? (order?.delivery_address || "") : settings.business_address,
       dateStr: appointment.appointment_date,
       timeStr: appointment.appointment_time,
