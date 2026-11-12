@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getNextQuoteNumber } from "@/lib/quote";
+import { findOrCreateCustomerForRequest } from "@/lib/quoteRequestCustomer";
 
 function todayEasternStr(): string {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
@@ -32,20 +33,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { data: request } = await admin.from("quote_requests").select("*").eq("id", params.id).maybeSingle();
   if (!request) return NextResponse.json({ error: "Quote request not found" }, { status: 404 });
 
-  let { data: customer } = await admin.from("profiles").select("id").eq("email", request.email).maybeSingle();
-
-  if (!customer) {
-    const { data: newCustomer, error: customerError } = await admin.auth.admin.createUser({
-      email: request.email,
-      email_confirm: true,
-      user_metadata: { full_name: request.name }
-    });
-    if (customerError || !newCustomer.user) {
-      return NextResponse.json({ error: customerError?.message || "Couldn't create a customer record for this request" }, { status: 400 });
-    }
-    await admin.from("profiles").update({ full_name: request.name, phone: request.phone || null }).eq("id", newCustomer.user.id);
-    customer = { id: newCustomer.user.id };
-  }
+  const found = await findOrCreateCustomerForRequest(admin, request);
+  if (found.error) return NextResponse.json({ error: found.error }, { status: 400 });
+  const customer = { id: found.id };
 
   const todayStr = todayEasternStr();
   const currentYear = Number(todayStr.slice(0, 4));

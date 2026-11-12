@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminButton from "@/components/AdminButton";
 
@@ -9,6 +9,16 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  // Watermark on/off. Remembered on this device, since a designer usually
+  // either always or never watermarks their own work.
+  const [watermark, setWatermark] = useState(true);
+  useEffect(() => {
+    try { if (localStorage.getItem("swc:proof-watermark") === "off") setWatermark(false); } catch {}
+  }, []);
+  function changeWatermark(on: boolean) {
+    setWatermark(on);
+    try { localStorage.setItem("swc:proof-watermark", on ? "on" : "off"); } catch {}
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -16,7 +26,7 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
     const res = await fetch(`/api/orders/${orderId}/proof`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageUrl })
+      body: JSON.stringify({ imageUrl, watermark })
     });
     setLoading(false);
     if (res.ok) {
@@ -44,6 +54,15 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
           {loading ? "Sending..." : "Send proof"}
         </AdminButton>
       </div>
+      <label className="flex items-center gap-3 mt-3 text-sm text-[#1E3A5F] cursor-pointer">
+        <input type="checkbox" className="w-5 h-5" checked={watermark} onChange={e => changeWatermark(e.target.checked)} />
+        <span>
+          Add the "Sunrise Wood Creations" watermark
+          <span className="block text-xs text-[#1E3A5F]/60">
+            {watermark ? "On — the proof is stamped before the customer sees it." : "Off — the image is sent exactly as it is (use this if your designer already watermarked it)."}
+          </span>
+        </span>
+      </label>
       {sent && <p className="text-xs text-sage font-semibold mt-2">Proof sent — customer notified by email.</p>}
     </form>
   );
