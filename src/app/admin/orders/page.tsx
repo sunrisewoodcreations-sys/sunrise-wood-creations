@@ -268,6 +268,11 @@ export default async function AdminOrdersPage({
   // system), not a second status calculation. Only meaningful for
   // pickup orders that are actually ready, but cheap enough to compute
   // for everyone since the function itself already short-circuits.
+  // Private notes ("bags on top", "shipped"...) shown under each order.
+  const { data: noteRows } = orders.length > 0
+    ? await supabase.from("order_private_notes").select("order_id, note").in("order_id", orders.map((o: any) => o.id))
+    : { data: [] as any[] };
+  const privateNoteByOrderId = new Map<string, string>((noteRows || []).map((n: any) => [n.order_id, n.note]));
   const readyPickupOrderIds = orders.filter((o: any) => o.status === "ready_for_pickup" && o.fulfillment_method === "pickup").map((o: any) => o.id);
   const { data: pickupAppointments } = readyPickupOrderIds.length > 0
     ? await supabase.from("pickup_appointments").select("order_id, status, appointment_date, appointment_time, rescheduled_by").in("order_id", readyPickupOrderIds).order("created_at", { ascending: false })
@@ -512,6 +517,9 @@ export default async function AdminOrdersPage({
                     <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#1E3A5F]">
                       {productLabel(order.product_type as ProductType)} — {order.title}
                     </Link>
+                    {privateNoteByOrderId.get(order.id) && (
+                      <div className="text-xs text-[#8a5a00] font-semibold mt-1 whitespace-pre-line">📝 {privateNoteByOrderId.get(order.id)}</div>
+                    )}
                     <span className={`ml-2 inline-block text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${WORKFLOW_STYLES[workflowStageByOrderId.get(order.id) as WorkflowStage]}`}>
                       {workflowLabel(workflowStageByOrderId.get(order.id) as WorkflowStage, order.fulfillment_method)}
                     </span>
@@ -631,6 +639,9 @@ export default async function AdminOrdersPage({
               <Link href={`/admin/orders/${order.id}`} className="block text-sm text-[#1E3A5F]/70 mb-2 active:underline">
                 {productLabel(order.product_type as ProductType)} — {order.title}
               </Link>
+              {privateNoteByOrderId.get(order.id) && (
+                <div className="text-xs text-[#8a5a00] font-semibold mb-2 whitespace-pre-line">📝 {privateNoteByOrderId.get(order.id)}</div>
+              )}
 
               <span className={`inline-block px-3 py-1.5 rounded-full text-sm font-bold whitespace-nowrap ${statusColor(order.status)}`}>
                 {statusLabel(order.product_type as ProductType, order.status, order.fulfillment_method)}
