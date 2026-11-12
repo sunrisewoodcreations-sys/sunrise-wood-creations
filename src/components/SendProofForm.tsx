@@ -101,7 +101,7 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
         <span>
           Add the "Sunrise Wood Creations" watermark
           <span className="block text-xs text-[#1E3A5F]/60">
-            {watermark ? "On — the proof is stamped before the customer sees it." : "Off — the image is sent exactly as it is (use this if your designer already watermarked it)."}
+            {watermark ? "On — the proof is stamped before the customer sees it." : "Off — no watermark is added (use this if your designer already watermarked it). The image is still resized so it loads fast."}
           </span>
         </span>
       </label>
