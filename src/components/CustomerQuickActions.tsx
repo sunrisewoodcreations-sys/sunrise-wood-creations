@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import SendInvoiceButton from "@/components/SendInvoiceButton";
-import AmountPaidForm from "@/components/AmountPaidForm";
+import AmountPaidForm, { PaymentRow } from "@/components/AmountPaidForm";
 import { productLabel, ProductType } from "@/lib/statusSteps";
 
 type OrderOption = {
@@ -17,11 +17,13 @@ type OrderOption = {
 
 export default function CustomerQuickActions({
   orders,
+  payments,
   customerEmail,
   customerName,
   hasRealEmail
 }: {
   orders: OrderOption[];
+  payments: (PaymentRow & { order_id: string })[];
   customerEmail: string;
   customerName: string;
   hasRealEmail: boolean;
@@ -95,6 +97,7 @@ export default function CustomerQuickActions({
               orderId={selectedOrder.id}
               priceCents={selectedOrder.price_cents || 0}
               initialAmountPaidCents={selectedOrder.amount_paid_cents || 0}
+              payments={payments.filter(p => p.order_id === selectedOrder.id)}
             />
           )}
         </div>
