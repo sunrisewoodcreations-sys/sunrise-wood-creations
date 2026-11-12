@@ -1140,6 +1140,8 @@ export async function sendPickupConfirmationEmail(opts: {
   googleCalendarUrl: string;
   outlookCalendarUrl: string;
   appleCalendarUrl: string;
+  // The .ics file contents, attached so one tap adds it to Apple Calendar.
+  calendarIcs?: string;
   isReschedule: boolean;
   forceDemo?: boolean;
   kind?: "pickup" | "delivery";
@@ -1177,6 +1179,7 @@ export async function sendPickupConfirmationEmail(opts: {
         <a href="${opts.outlookCalendarUrl}" style="color: #1E3A5F; font-weight: 600;">Outlook</a> &nbsp;·&nbsp;
         <a href="${opts.appleCalendarUrl}" style="color: #1E3A5F; font-weight: 600;">Apple Calendar</a>
       </p>
+      ${opts.calendarIcs ? `<p style="margin: -8px 0 16px; font-size: 12px; color: #8a7a6b;">On an iPhone or Mac, you can also tap the attached <strong>appointment.ics</strong> file to add it to Apple Calendar.</p>` : ""}
       <p style="margin: 0; font-size: 13px; color: #8a7a6b;">Need a different time? Use the button below.</p>
     `,
     buttonText: `Reschedule ${Noun}`,
@@ -1192,7 +1195,8 @@ export async function sendPickupConfirmationEmail(opts: {
     subject: opts.isReschedule
       ? `${Noun} rescheduled: ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`
       : `${Noun} confirmed: ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
-    html
+    html,
+    ...(opts.calendarIcs ? { attachments: [{ filename: "appointment.ics", content: Buffer.from(opts.calendarIcs, "utf8").toString("base64") }] } : {})
   });
 }
 
@@ -1212,7 +1216,7 @@ export async function sendPickupScheduledAdminAlert(opts: {
   customerPhone?: string;
   appointmentDateDisplay: string;
   appointmentTimeDisplay: string;
-  googleCalendarUrl: string;
+  calendarIcs: string;
   isReschedule: boolean;
   forceDemo?: boolean;
   kind?: "pickup" | "delivery";
@@ -1237,9 +1241,9 @@ export async function sendPickupScheduledAdminAlert(opts: {
           </td>
         </tr>
       </table>
+      <p style="margin: 0 0 16px; font-size: 13px; color: #74655B;">To add this to your Apple Calendar, tap the attached <strong>appointment.ics</strong> file.</p>
     `,
     buttons: [
-      { text: "Add to Google Calendar", url: opts.googleCalendarUrl, color: "#4F7A55" },
       { text: "View Pickup Appointments", url: `${SITE_URL}/admin/pickup-appointments`, color: "#A63D2F" }
     ]
   });
@@ -1250,7 +1254,8 @@ export async function sendPickupScheduledAdminAlert(opts: {
     from: FROM,
     to: process.env.SHOP_NOTIFY_EMAIL || "sunrisewoodcreations@gmail.com",
     subject: `${opts.isReschedule ? `${noun[0].toUpperCase()}${noun.slice(1)} rescheduled` : `New ${noun} scheduled`}: ${opts.orderTitle} — ${opts.appointmentDateDisplay} at ${opts.appointmentTimeDisplay}`,
-    html
+    html,
+    attachments: [{ filename: "appointment.ics", content: Buffer.from(opts.calendarIcs, "utf8").toString("base64") }]
   });
 }
 
