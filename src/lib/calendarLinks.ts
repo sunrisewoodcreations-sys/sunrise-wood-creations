@@ -86,12 +86,12 @@ function icsEscape(text: string): string {
   return text.replace(/[\\;,]/g, m => "\\" + m).replace(/\n/g, "\\n");
 }
 
-// Apple Calendar (and any other .ics-compatible app) via a data: URI —
-// no server-side file storage needed for something this small.
-export function appleCalendarDataUrl(evt: CalendarEventInput): string {
+// The .ics calendar file itself. Attached to emails so one tap adds the
+// appointment to Apple Calendar (or any calendar app that reads .ics).
+export function appointmentIcs(evt: CalendarEventInput): string {
   const start = toUtcCalendarStamp(evt.dateStr, evt.timeStr);
   const end = toUtcCalendarStamp(evt.dateStr, addMinutesToTime(evt.timeStr, evt.durationMinutes));
-  const ics = [
+  return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//Sunrise Wood Creations//Pickup Scheduling//EN",
@@ -106,5 +106,10 @@ export function appleCalendarDataUrl(evt: CalendarEventInput): string {
     "END:VEVENT",
     "END:VCALENDAR"
   ].join("\r\n");
-  return `data:text/calendar;charset=utf8,${encodeURIComponent(ics)}`;
+}
+
+// Apple Calendar (and any other .ics-compatible app) via a data: URI —
+// no server-side file storage needed for something this small.
+export function appleCalendarDataUrl(evt: CalendarEventInput): string {
+  return `data:text/calendar;charset=utf8,${encodeURIComponent(appointmentIcs(evt))}`;
 }

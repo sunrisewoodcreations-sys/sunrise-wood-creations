@@ -4,7 +4,7 @@ import { sendPickupConfirmationEmail, sendPickupSchedulingEmail, sendPickupSched
 import {
   Kind, SlotConfig, DaySlots, absMinute, absToTimestamp, dayNumber, addDays, easternNow, blockFor, computeSlots, isSlotOpen, easternToUtcMs
 } from "@/lib/scheduleCore";
-import { googleCalendarUrl, outlookCalendarUrl, appleCalendarDataUrl } from "@/lib/calendarLinks";
+import { googleCalendarUrl, outlookCalendarUrl, appleCalendarDataUrl, appointmentIcs } from "@/lib/calendarLinks";
 
 export type AvailabilitySettings = {
   id: string;
@@ -484,6 +484,7 @@ export async function sendPickupConfirmation(appointmentId: string, siteUrl: str
       googleCalendarUrl: googleCalendarUrl(calendarEvent),
       outlookCalendarUrl: outlookCalendarUrl(calendarEvent),
       appleCalendarUrl: appleCalendarDataUrl(calendarEvent),
+      calendarIcs: appointmentIcs(calendarEvent),
       isReschedule,
       forceDemo
     });
@@ -516,10 +517,11 @@ export async function notifyAdminPickupScheduled(appointmentId: string, isResche
     const forceDemo = typeof order?.is_demo === "boolean" ? order.is_demo : true;
     const settings = await getAvailabilitySettings();
 
+    const isDeliveryAppt = appointment.appointment_type === "delivery";
     const calendarEvent = {
-      title: `${appointment.appointment_type === "delivery" ? "Delivery" : "Pickup"}: ${order?.title || "Order"}`,
-      description: settings.pickup_instructions,
-      location: settings.business_address,
+      title: `${isDeliveryAppt ? "Delivery" : "Pickup"}: ${order?.title || "Order"}`,
+      description: [customer?.full_name, customer?.phone].filter(Boolean).join(" · ") || settings.pickup_instructions,
+      location: isDeliveryAppt ? (order?.delivery_address || "") : settings.business_address,
       dateStr: appointment.appointment_date,
       timeStr: appointment.appointment_time,
       durationMinutes: settings.slot_length_minutes
@@ -533,7 +535,7 @@ export async function notifyAdminPickupScheduled(appointmentId: string, isResche
       customerPhone: customer?.phone || undefined,
       appointmentDateDisplay: formatDateDisplay(appointment.appointment_date),
       appointmentTimeDisplay: formatTimeDisplay(appointment.appointment_time),
-      googleCalendarUrl: googleCalendarUrl(calendarEvent),
+      calendarIcs: appointmentIcs(calendarEvent),
       isReschedule,
       forceDemo
     });
