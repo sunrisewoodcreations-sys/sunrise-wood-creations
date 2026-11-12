@@ -1,0 +1,16 @@
+import { signOrderToken, verifyOrderToken, orderViewUrl } from "../src/lib/orderLink";
+process.env.ORDER_LINK_SECRET = "test-secret-one";
+let bad = 0;
+const t = (ok: boolean, m: string) => { if (!ok) bad++; console.log((ok ? "PASS " : "FAIL ") + m); };
+const id = "7c1f3e0a-1111-4222-8333-444455556666";
+const tok = signOrderToken(id);
+t(verifyOrderToken(tok) === id, "a genuine link opens its own order");
+t(verifyOrderToken(tok.replace(id, "7c1f3e0a-1111-4222-8333-444455557777")) === null, "changing the order id breaks the link");
+t(verifyOrderToken(tok.slice(0, -1) + (tok.endsWith("a") ? "b" : "a")) === null, "a tampered signature is rejected");
+t(verifyOrderToken(id) === null && verifyOrderToken("") === null && verifyOrderToken(undefined) === null && verifyOrderToken("x.y") === null, "missing/garbage tokens are rejected");
+t(orderViewUrl("https://example.com", id) === `https://example.com/order/${tok}`, "email link format");
+process.env.ORDER_LINK_SECRET = "different-secret";
+t(verifyOrderToken(tok) === null, "links signed with another secret are rejected");
+delete process.env.ORDER_LINK_SECRET; delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+t(orderViewUrl("https://example.com", id) === `https://example.com/account/orders/${id}`, "no secret available: falls back to the normal account link");
+process.exit(bad ? 1 : 0);
