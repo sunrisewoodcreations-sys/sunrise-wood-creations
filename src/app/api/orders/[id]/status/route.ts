@@ -122,10 +122,48 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   if (status === "deposit_received") {
+    // One "Deposit Received" email (same look as Ready for Pickup): total,
+    // paid so far and what's still owed, with the updated invoice attached.
+    // If the customer has opted out of order-update emails, the invoice is
+    // still generated and stored, just not emailed.
+    let invoicePdfBuffer: Buffer | undefined;
+    let invoiceNumber: number | undefined;
+    let invoiceYear: number | undefined;
     try {
-      await issueInvoiceForOrder(order, customer);
+      const result = await generateInvoicePdfForOrder(order, customer);
+      if (result) {
+        invoicePdfBuffer = result.pdfBuffer;
+        invoiceNumber = result.invoiceNumber;
+        invoiceYear = result.invoiceYear;
+      }
     } catch (err) {
       console.error("Invoice generation failed:", err);
+    }
+    if (shouldNotify(customer, "order_updates")) {
+      try {
+        await sendOrderStatusEmail({
+          toEmail: customer.email,
+          customerName: customer.full_name,
+          productType: order.product_type as ProductType,
+          orderTitle: order.title,
+          orderId: order.id,
+          newStatus: status,
+          priceCents: order.price_cents || 0,
+          amountPaidCents: order.amount_paid_cents || 0,
+          invoicePdfBuffer,
+          invoiceNumber,
+          invoiceYear,
+          fulfillmentMethod: order.fulfillment_method
+        });
+        if (invoicePdfBuffer && invoiceNumber != null) {
+          await admin.from("invoices")
+            .update({ sent_at: new Date().toISOString() })
+            .eq("order_id", order.id)
+            .eq("invoice_number", invoiceNumber);
+        }
+      } catch (err) {
+        console.error("Deposit-received email failed to send:", err);
+      }
     }
   }
 

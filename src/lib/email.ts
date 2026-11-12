@@ -140,6 +140,32 @@ async function lookupOrderNumberDisplay(orderId: string): Promise<string | null>
 // separate definition of "paid." Never assumes an order is paid just
 // because it exists: an order with no payment yet correctly shows
 // "Unpaid," not "Paid."
+function depositBreakdownHtml(priceCents: number, paidCentsRaw: number, isDelivery: boolean): string {
+  const total = Math.max(0, Math.round(priceCents));
+  const paid = Math.max(0, Math.round(paidCentsRaw));
+  const balance = total - paid;
+  const money = (c: number) => `$${(Math.max(0, c) / 100).toFixed(2)}`;
+  const row = (label: string, value: string, strong = false, color = "#2E2420") => `
+    <tr>
+      <td style="padding: 5px 0; color: #6b4d1a; font-size: 14px;">${label}</td>
+      <td align="right" style="padding: 5px 0; font-size: ${strong ? 18 : 14}px; font-weight: bold; color: ${color};">${value}</td>
+    </tr>`;
+  const when = isDelivery ? "delivery" : "pickup";
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 16px 0 0;">
+      <tr>
+        <td style="background-color: #F6EBDD; border-radius: 8px; padding: 12px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            ${row("Order total", money(total))}
+            ${row("Paid so far", money(paid), false, "#3f7a5a")}
+            <tr><td colspan="2" style="border-top: 1px solid #e3d3bd; font-size: 0; line-height: 0; height: 6px;">&nbsp;</td></tr>
+            ${balance > 0 ? row(`Balance due at ${when}`, money(balance), true, "#A63D2F") : row("Balance", "Paid in full", true, "#3f7a5a")}
+          </table>
+        </td>
+      </tr>
+    </table>`;
+}
+
 function paymentStatusHtml(priceCents: number, amountPaidCentsRaw?: number): string {
   const total = Math.max(0, Math.round(priceCents));
   const paid = Math.max(0, Math.round(amountPaidCentsRaw || 0));
@@ -482,6 +508,12 @@ export async function sendOrderStatusEmail(opts: {
         </p>`
     : "";
 
+  // Deposit received: show the money picture — total, paid so far, and what
+  // is still owed (or that it's fully paid) — like the ready-for-pickup email.
+  const depositHtml = opts.newStatus === "deposit_received" && typeof opts.priceCents === "number"
+    ? depositBreakdownHtml(opts.priceCents, opts.amountPaidCents || 0, isDeliveryOrder)
+    : "";
+
   const { phone: contactPhone, email: contactEmail } = await getContactInfo();
   const orderNumberDisplay = opts.orderNumberDisplay || await lookupOrderNumberDisplay(opts.orderId);
 
@@ -504,7 +536,8 @@ export async function sendOrderStatusEmail(opts: {
       ${progressBarHtml(opts.productType, opts.newStatus, opts.fulfillmentMethod)}
       <p style="margin: 20px 0 0;">${escapeHtml(bodyLine)}</p>
       ${balanceHtml}
-      ${typeof opts.balanceDueCents !== "number" && typeof opts.priceCents === "number" ? paymentStatusHtml(opts.priceCents, opts.amountPaidCents) : ""}
+      ${depositHtml}
+      ${!depositHtml && typeof opts.balanceDueCents !== "number" && typeof opts.priceCents === "number" ? paymentStatusHtml(opts.priceCents, opts.amountPaidCents) : ""}
       ${opts.schedulingUrl ? `<p style="margin: 16px 0 0;">${opts.schedulingKind === "delivery" ? "Confirm your delivery address and pick a day and time that works for you, right from your phone, no login needed." : "Pick a day and time that works for you, right from your phone, no login needed."}</p>` : ""}
     `,
     buttonText: opts.schedulingUrl ? (opts.schedulingKind === "delivery" ? "Schedule My Delivery" : "Schedule My Pickup") : "View Your Order",
@@ -521,7 +554,7 @@ export async function sendOrderStatusEmail(opts: {
   let pdfNumber = opts.invoiceNumber;
   let pdfYear = opts.invoiceYear;
   let generatedHere = false;
-  if (!pdfBuffer && ["order_placed", "ready_for_pickup"].includes(opts.newStatus)) {
+  if (!pdfBuffer && ["order_placed", "deposit_received", "ready_for_pickup"].includes(opts.newStatus)) {
     try {
       const admin = createAdminClient();
       const { data: orderRow } = await admin.from("orders").select("*").eq("id", opts.orderId).maybeSingle();
