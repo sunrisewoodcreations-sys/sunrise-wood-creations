@@ -160,6 +160,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: "/admin/pickup-settings", label: "Pickup Settings" },
         { href: "/admin/delivery-settings", label: "Delivery Settings" },
         { href: "/admin/invoice-settings", label: "Invoice Settings" },
+        { href: "/admin/bag-sets", label: "Cornhole Bag Sets" },
         { href: "/admin/website-status", label: "Website Status" }
       ]
     },

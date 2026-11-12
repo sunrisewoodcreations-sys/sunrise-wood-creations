@@ -8,6 +8,8 @@ export default function QuoteRow({ quote }: { quote: any }) {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const [creatingCustomer, setCreatingCustomer] = useState(false);
+  const [customerId, setCustomerId] = useState<string | null>(quote.customer_id || null);
 
   async function toggleResponded() {
     await fetch(`/api/quote-requests/${quote.id}`, {
@@ -16,6 +18,20 @@ export default function QuoteRow({ quote }: { quote: any }) {
       body: JSON.stringify({ responded: !quote.responded })
     });
     router.refresh();
+  }
+
+  async function handleCreateCustomer() {
+    setCreatingCustomer(true);
+    setError("");
+    const res = await fetch(`/api/quote-requests/${quote.id}/create-customer`, { method: "POST" });
+    const body = await res.json().catch(() => ({}));
+    setCreatingCustomer(false);
+    if (res.ok) {
+      setCustomerId(body.customerId);
+      router.refresh();
+    } else {
+      setError(body.error || "Couldn't create a customer from this request.");
+    }
   }
 
   async function handleCreateQuote() {
@@ -65,6 +81,15 @@ export default function QuoteRow({ quote }: { quote: any }) {
         </button>
         {quote.responded && (
           <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-sage/20 text-sage">Responded</span>
+        )}
+        {customerId ? (
+          <a href={`/admin/customers/${customerId}`} className="text-xs font-semibold text-sage hover:underline">
+            View customer →
+          </a>
+        ) : (
+          <AdminButton variant="secondary" size="sm" onClick={handleCreateCustomer} disabled={creatingCustomer}>
+            {creatingCustomer ? "Creating..." : "Create Customer"}
+          </AdminButton>
         )}
         {quote.converted_quote_id ? (
           <a href={`/admin/quotes/${quote.converted_quote_id}`} className="text-xs font-semibold text-sage hover:underline">

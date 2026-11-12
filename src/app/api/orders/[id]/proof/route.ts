@@ -68,7 +68,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  const { imageUrl } = await req.json();
+  const { imageUrl, watermark } = await req.json();
+  const applyWatermark = watermark !== false; // default on, as before
   if (!imageUrl?.trim()) {
     return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
   }
@@ -83,6 +84,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   let watermarkedUrl = imageUrl.trim();
   try {
+    if (!applyWatermark) throw new Error("__skip_watermark__");
     const imgRes = await fetch(imageUrl.trim());
     console.log("Image fetch status:", imgRes.status, imgRes.ok);
     if (imgRes.ok) {
@@ -103,8 +105,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         console.log("Watermarked URL:", watermarkedUrl);
       }
     }
-  } catch (err) {
-    console.error("Watermarking failed:", err);
+  } catch (err: any) {
+    if (err?.message !== "__skip_watermark__") console.error("Watermarking failed:", err);
   }
 
   const { data: newProof, error: insertError } = await supabase
