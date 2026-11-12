@@ -55,6 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       newStatus: order.status,
       fulfillmentMethod: (order as any).fulfillment_method,
       balanceDueCents,
+      ...(order.status === "deposit_received" ? { priceCents: order.price_cents || 0, amountPaidCents: order.amount_paid_cents || 0 } : {}),
       schedulingUrl,
       schedulingKind: (order as any).fulfillment_method === "delivery" ? "delivery" : "pickup"
     });
