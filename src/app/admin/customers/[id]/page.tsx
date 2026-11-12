@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatInvoiceNumber } from "@/lib/invoice";
 import { productLabel, statusLabel, statusColor, ProductType } from "@/lib/statusSteps";
 import AddOrderWithCustomerPicker from "@/components/AddOrderWithCustomerPicker";
+import { getBagSets } from "@/lib/bagSetsServer";
 import CustomerNotes from "@/components/CustomerNotes";
 import EditCustomerContactForm from "@/components/EditCustomerContactForm";
 import CustomerQuickActions from "@/components/CustomerQuickActions";
@@ -21,6 +22,7 @@ function StatCard({ label, value, color }: { label: string; value: string; color
 }
 
 export default async function CustomerDetailPage({ params }: { params: { id: string } }) {
+  const bagSets = await getBagSets();
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -105,6 +107,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         </div>
         <AddOrderWithCustomerPicker
           products={savedProducts || []}
+          bagSets={bagSets}
           fixedCustomerId={customer.id}
           fixedCustomerName={customer.full_name}
           fixedCustomerAddress={customer.address}

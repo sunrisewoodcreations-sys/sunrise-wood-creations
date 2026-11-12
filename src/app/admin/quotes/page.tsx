@@ -12,6 +12,18 @@ export default async function QuotesPage({ searchParams }: { searchParams: { tab
     supabase.from("quotes").select("*, profiles:customer_id(full_name, email, phone)").eq("is_demo", isDemoAccount).order("created_at", { ascending: false })
   ]);
 
+  // Which website requests already have a customer record (matched by email).
+  const requestEmails = Array.from(new Set((quoteRequests || []).map((r: any) => String(r.email || "").toLowerCase()).filter(Boolean)));
+  const customerIdByEmail = new Map<string, string>();
+  if (requestEmails.length) {
+    const { data: existingCustomers } = await supabase.from("profiles").select("id, email").eq("role", "customer");
+    (existingCustomers || []).forEach((c: any) => {
+      const e = String(c.email || "").toLowerCase();
+      if (requestEmails.includes(e)) customerIdByEmail.set(e, c.id);
+    });
+  }
+  const requestsWithCustomer = (quoteRequests || []).map((r: any) => ({ ...r, customer_id: customerIdByEmail.get(String(r.email || "").toLowerCase()) || null }));
+
   // The list shows only the latest revision of each quote (same
   // quote_number + quote_year) — older revisions are still fully
   // accessible from that quote's own Revision History, just not
@@ -45,7 +57,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: { tab
   return (
     <QuotesPageTabs
       currentTab={searchParams.tab === "quotes" ? "quotes" : "requests"}
-      quoteRequests={quoteRequests || []}
+      quoteRequests={requestsWithCustomer}
       quotes={quotes}
       searchQuery={searchParams.q || ""}
     />
