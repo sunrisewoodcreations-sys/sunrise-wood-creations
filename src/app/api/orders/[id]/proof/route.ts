@@ -35,7 +35,10 @@ function ensureWatermarkFontConfig(): void {
 async function watermarkImage(original: Buffer, text: string): Promise<Buffer> {
   ensureWatermarkFontConfig();
 
-  const image = sharp(original);
+  // Keep proofs a sensible size: fix phone rotation and cap at 1600px so the
+  // customer's page and email load fast even if the original was huge.
+  const resized = await sharp(original).rotate().resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true }).toBuffer();
+  const image = sharp(resized);
   const metadata = await image.metadata();
   const width = metadata.width || 1000;
   const height = metadata.height || 1000;
@@ -84,12 +87,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   let watermarkedUrl = imageUrl.trim();
   try {
-    if (!applyWatermark) throw new Error("__skip_watermark__");
+    // Already shrunk by the "Choose image" upload on the order page: nothing to do.
+    if (!applyWatermark && /\/proofs\/design-/.test(imageUrl)) throw new Error("__skip_watermark__");
     const imgRes = await fetch(imageUrl.trim());
     console.log("Image fetch status:", imgRes.status, imgRes.ok);
     if (imgRes.ok) {
       const original = Buffer.from(await imgRes.arrayBuffer());
-      const watermarked = await watermarkImage(original, "Sunrise Wood Creations");
+      // Watermark off: still shrink a pasted link (no stamp), so it loads fast.
+      const watermarked = applyWatermark
+        ? await watermarkImage(original, "Sunrise Wood Creations")
+        : await sharp(original).rotate().resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true }).jpeg({ quality: 88 }).toBuffer();
 
       const admin = createAdminClient();
       const filename = `proof-${order.id}-${Date.now()}.jpg`;
