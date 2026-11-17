@@ -1,0 +1,15 @@
+import { validateManualReview, reviewDateToIso, reviewDateDisplay, reviewDateInputValue } from "../src/lib/manualReviews";
+let bad = 0;
+const t = (ok: boolean, m: string) => { if (!ok) { bad++; console.log("FAIL", m); } else console.log("ok  ", m); };
+const good = { name: " Pat Smith ", rating: 5, text: "Great planter!", productLabel: "Planter", date: "2026-03-14" };
+const v = validateManualReview(good);
+t(v.ok && v.value.name === "Pat Smith", "valid review accepted, name trimmed");
+t(!validateManualReview({ ...good, name: "" }).ok, "name required");
+t(!validateManualReview({ ...good, rating: 0 }).ok && !validateManualReview({ ...good, rating: 6 }).ok, "rating 1-5 only");
+t(!validateManualReview({ ...good, text: "  " }).ok, "text required");
+t(!validateManualReview({ ...good, date: "2026-02-31" }).ok && !validateManualReview({ ...good, date: "nope" }).ok, "bad dates rejected");
+t(!validateManualReview({ ...good, date: "2999-01-01" }).ok, "future date rejected");
+const iso = reviewDateToIso("2026-03-14")!;
+t(reviewDateInputValue(iso) === "2026-03-14" && reviewDateDisplay(iso) === "Mar 14, 2026", "date round-trips to the same calendar day in Eastern time");
+t(reviewDateInputValue(reviewDateToIso("2026-07-04")!) === "2026-07-04", "summer date also round-trips");
+process.exit(bad ? 1 : 0);

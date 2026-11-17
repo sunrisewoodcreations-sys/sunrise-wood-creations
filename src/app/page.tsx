@@ -41,8 +41,8 @@ export default async function HomePage() {
 
   const { data: approvedReviews } = await supabase.from("product_reviews").select("*").eq("status", "approved").order("created_at", { ascending: false });
   const reviewList = approvedReviews || [];
-  const reviewItemIds = [...new Set(reviewList.map((r: any) => r.order_item_id))];
-  const reviewCustomerIds = [...new Set(reviewList.map((r: any) => r.customer_id))];
+  const reviewItemIds = [...new Set(reviewList.map((r: any) => r.order_item_id).filter(Boolean))];
+  const reviewCustomerIds = [...new Set(reviewList.map((r: any) => r.customer_id).filter(Boolean))];
   const { data: reviewOrderItems } = reviewItemIds.length > 0
     ? await supabase.from("order_items").select("id, title").in("id", reviewItemIds)
     : { data: [] as any[] };
@@ -57,8 +57,10 @@ export default async function HomePage() {
     id: r.id,
     rating: r.rating,
     review_text: r.review_text,
-    productTitle: reviewItemTitleById[r.order_item_id] || "a custom piece",
-    customerFirstName: (reviewCustomerNameById[r.customer_id] || "A customer").split(" ")[0]
+    isFacebook: r.source === "facebook",
+    dateIso: r.created_at,
+    productTitle: r.source === "facebook" ? (r.product_label || "") : (reviewItemTitleById[r.order_item_id] || "a custom piece"),
+    customerFirstName: (r.source === "facebook" ? (r.reviewer_name || "A customer") : (reviewCustomerNameById[r.customer_id] || "A customer")).split(" ")[0]
   }));
 
   const { data: publicFaqRows } = await supabase

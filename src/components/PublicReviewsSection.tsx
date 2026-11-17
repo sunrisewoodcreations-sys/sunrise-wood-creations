@@ -1,4 +1,6 @@
-type Review = { id: string; rating: number; review_text: string; productTitle: string; customerFirstName: string };
+import { reviewDateDisplay } from "@/lib/manualReviews";
+
+type Review = { id: string; rating: number; review_text: string; productTitle: string; customerFirstName: string; isFacebook?: boolean; dateIso?: string };
 
 export default function PublicReviewsSection({ reviews }: { reviews: Review[] }) {
   // An empty "coming soon" box looks unfinished to visitors, so the whole
@@ -16,7 +18,12 @@ export default function PublicReviewsSection({ reviews }: { reviews: Review[] })
             <div key={review.id} className="bg-white border border-walnut/10 rounded-xl shadow-sm p-5">
               <div className="text-amber text-base leading-none mb-2">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</div>
               {review.review_text && <p className="text-sm text-walnut/70 mb-3">{review.review_text}</p>}
-              <div className="text-xs text-walnut/50 font-semibold">— {review.customerFirstName}, {review.productTitle}</div>
+              <div className="text-xs text-walnut/50 font-semibold">— {review.customerFirstName}{review.productTitle ? `, ${review.productTitle}` : ""}</div>
+              {(review.dateIso || review.isFacebook) && (
+                <div className="text-xs text-walnut/40 mt-1">
+                  {review.dateIso ? reviewDateDisplay(review.dateIso) : ""}{review.dateIso && review.isFacebook ? " · " : ""}{review.isFacebook ? "via Facebook" : ""}
+                </div>
+              )}
             </div>
           ))}
         </div>
