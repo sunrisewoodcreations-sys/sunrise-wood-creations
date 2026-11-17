@@ -151,7 +151,10 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           )}
 
           {pendingProof && (
-            <ProofResponse proofId={pendingProof.id} imageUrl={pendingProof.image_url} />
+            <>
+              {pendingProof.message && <p className="text-sm bg-cream border border-walnut/10 rounded-md p-3 mb-4 whitespace-pre-line">{pendingProof.message}</p>}
+              <ProofResponse proofId={pendingProof.id} imageUrl={pendingProof.image_url} />
+            </>
           )}
 
           <div className="mt-6">

@@ -71,7 +71,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  const { imageUrl, watermark } = await req.json();
+  const { imageUrl, watermark, message } = await req.json();
   const applyWatermark = watermark !== false; // default on, as before
   if (!imageUrl?.trim()) {
     return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
@@ -116,9 +116,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (err?.message !== "__skip_watermark__") console.error("Watermarking failed:", err);
   }
 
+  const proofMessage = typeof message === "string" ? message.trim().slice(0, 1000) : "";
+
   const { data: newProof, error: insertError } = await supabase
     .from("proofs")
-    .insert({ order_id: order.id, image_url: watermarkedUrl })
+    .insert({ order_id: order.id, image_url: watermarkedUrl, message: proofMessage || null })
     .select()
     .single();
 
@@ -141,6 +143,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       orderTitle: order.title,
       orderId: order.id,
       imageUrl: watermarkedUrl,
+      message: proofMessage || undefined,
       respondToken: newProof.respond_token
     });
   }

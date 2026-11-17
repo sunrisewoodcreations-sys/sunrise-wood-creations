@@ -7,6 +7,7 @@ import AdminButton from "@/components/AdminButton";
 export default function SendProofForm({ orderId }: { orderId: string }) {
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   // Watermark on/off. Remembered on this device, since a designer usually
@@ -62,12 +63,13 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
     const res = await fetch(`/api/orders/${orderId}/proof`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageUrl, watermark })
+      body: JSON.stringify({ imageUrl, watermark, message })
     });
     setLoading(false);
     if (res.ok) {
       setSent(true);
       setImageUrl("");
+      setMessage("");
       router.refresh();
     }
   }
@@ -78,6 +80,19 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
       <p className="text-xs text-[#1E3A5F]/60 mb-2">
         Choose the design image (it's shrunk automatically so it uploads fast), or paste a link. The customer gets an email to approve or request changes.
       </p>
+      <div className="mb-3">
+        <label htmlFor="proof-message" className="block text-xs text-[#1E3A5F]/60 mb-1">Note to the customer (optional)</label>
+        <textarea
+          id="proof-message"
+          value={message}
+          onChange={e => setMessage(e.target.value)}
+          rows={3}
+          maxLength={1000}
+          placeholder="e.g. I emailed you the actual design on a small scale"
+          className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm bg-white"
+        />
+        <p className="text-xs text-[#1E3A5F]/50 mt-1">Shown in the proof email and on the proof page.</p>
+      </div>
       <label className="inline-block mb-2 cursor-pointer bg-white border border-[#1E3A5F]/20 text-[#1E3A5F] rounded-md px-4 py-2 text-sm font-semibold">
         {uploading ? "Uploading..." : imageUrl ? "Choose a different image" : "Choose image"}
         <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={e => handleFile(e.target.files?.[0])} />

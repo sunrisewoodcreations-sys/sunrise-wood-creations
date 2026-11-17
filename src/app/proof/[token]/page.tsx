@@ -60,7 +60,10 @@ export default async function PublicProofPage({ params }: { params: { token: str
                 : "You've already submitted feedback on this proof — we'll follow up soon."}
             </p>
           ) : (
-            <ProofPublicResponse token={params.token} imageUrl={proof.image_url} />
+            <>
+              {proof.message && <p className="text-sm bg-cream border border-walnut/10 rounded-md p-3 mb-4 whitespace-pre-line text-walnut/80">{proof.message}</p>}
+              <ProofPublicResponse token={params.token} imageUrl={proof.image_url} />
+            </>
           )}
         </div>
       </div>
