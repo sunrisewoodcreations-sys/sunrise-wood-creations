@@ -3,6 +3,9 @@ import { proofTitleFromItems } from "@/lib/bagSets";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { headers } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
+import { recordProofView } from "@/lib/proofViews";
 import ProofPublicResponse from "@/components/ProofPublicResponse";
 
 export const metadata: Metadata = {
@@ -18,6 +21,19 @@ export default async function PublicProofPage({ params }: { params: { token: str
     .single();
 
   if (!proof) notFound();
+
+  // Note that the customer opened it (not you previewing while signed in).
+  try {
+    const { data: { user } } = await createClient().auth.getUser();
+    let viewerIsAdmin = false;
+    if (user) {
+      const { data: prof } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+      viewerIsAdmin = prof?.role === "admin";
+    }
+    if (!viewerIsAdmin) await recordProofView(supabase, proof as any, headers().get("user-agent"));
+  } catch (err) {
+    console.error("Couldn't record proof view:", err);
+  }
 
   const order = (proof as any).orders;
   // Show only the boards in the proof's name — bags don't get a proof.
@@ -44,7 +60,10 @@ export default async function PublicProofPage({ params }: { params: { token: str
                 : "You've already submitted feedback on this proof — we'll follow up soon."}
             </p>
           ) : (
-            <ProofPublicResponse token={params.token} imageUrl={proof.image_url} />
+            <>
+              {proof.message && <p className="text-sm bg-cream border border-walnut/10 rounded-md p-3 mb-4 whitespace-pre-line text-walnut/80">{proof.message}</p>}
+              <ProofPublicResponse token={params.token} imageUrl={proof.image_url} />
+            </>
           )}
         </div>
       </div>

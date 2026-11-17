@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { proofViewedLabel } from "@/lib/proofViews";
 import { invoiceDownloadUrl } from "@/lib/invoiceNames";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -270,12 +271,18 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                       {p.status === "pending" ? "Awaiting response" : p.status === "approved" ? "Approved" : "Changes requested"}
                     </span>
                   </div>
+                  <div className={`text-xs font-semibold mb-1 ${p.first_viewed_at ? "text-sage" : "text-ember"}`}>
+                    {p.first_viewed_at ? "👁 " : "○ "}{proofViewedLabel(p)}
+                  </div>
                   {p.responded_at && (
                     <div className="text-xs font-mono text-[#1E3A5F]/50 mb-1">
                       {p.status === "approved" ? "Approved" : "Responded"}{" "}
                       {new Date(p.responded_at).toLocaleDateString("en-US", { timeZone: "America/New_York" })} at{" "}
                       {new Date(p.responded_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET
                     </div>
+                  )}
+                  {p.message && (
+                    <p className="text-xs text-[#1E3A5F]/60 mb-1 whitespace-pre-line">Your note: {p.message}</p>
                   )}
                   {p.feedback && (
                     <p className="text-sm bg-cream p-3 rounded-md text-[#1E3A5F]/80">"{p.feedback}"</p>

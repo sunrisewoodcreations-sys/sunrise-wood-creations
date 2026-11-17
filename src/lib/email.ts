@@ -607,6 +607,8 @@ export async function sendProofReadyEmail(opts: {
   orderTitle: string;
   orderId: string;
   imageUrl: string;
+  // Optional note from you, shown in the email and on the proof page.
+  message?: string;
   respondToken: string;
 }) {
   const reviewUrl = `${SITE_URL}/proof/${opts.respondToken}`;
@@ -630,6 +632,7 @@ export async function sendProofReadyEmail(opts: {
       <p style="margin: 0 0 16px;">
         We've attached the design proof for your ${productLabel(opts.productType)}. Take a look, then approve it or let us know what you'd like changed — right from this email. No login needed.
       </p>
+      ${opts.message ? `<p style="margin: 0 0 16px; padding: 12px 14px; background-color: #F6EBDD; border-radius: 8px; white-space: pre-line;">${escapeHtml(opts.message)}</p>` : ""}
     `,
     buttonText: "Approve or request changes",
     buttonUrl: reviewUrl
