@@ -1,3 +1,4 @@
+export {};
 process.env.RESEND_API_KEY = process.env.RESEND_API_KEY || "re_test_dummy";
 const sent: any[] = [];
 globalThis.fetch = (async (input: any, init?: any) => {
