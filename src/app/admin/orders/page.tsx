@@ -240,9 +240,12 @@ export default async function AdminOrdersPage({
   // --- New: pending-proof lookup, for "Waiting on customer" (same
   // definition already used on the Dashboard, kept consistent). ---
   const { data: pendingProofs } = orderIds.length > 0
-    ? await supabase.from("proofs").select("order_id").eq("status", "pending").in("order_id", orderIds)
+    ? await supabase.from("proofs").select("order_id, first_viewed_at").eq("status", "pending").in("order_id", orderIds)
     : { data: [] as any[] };
   const waitingOnCustomerOrderIds = new Set((pendingProofs || []).map((p: any) => p.order_id));
+  // Has the customer opened the proof yet? (only matters while it's pending)
+  const proofViewedByOrderId = new Map<string, boolean>();
+  (pendingProofs || []).forEach((p: any) => { proofViewedByOrderId.set(p.order_id, !!p.first_viewed_at || proofViewedByOrderId.get(p.order_id) === true); });
 
   // Workflow stage per order (src/lib/workflow.ts) — material
   // availability is only checked for orders where it would actually
@@ -517,6 +520,11 @@ export default async function AdminOrdersPage({
                     <Link href={`/admin/orders/${order.id}`} className="font-semibold text-[#1E3A5F]">
                       {productLabel(order.product_type as ProductType)} — {order.title}
                     </Link>
+                    {waitingOnCustomerOrderIds.has(order.id) && (
+                      <div className={`text-xs font-semibold mt-1 ${proofViewedByOrderId.get(order.id) ? "text-sage" : "text-ember"}`}>
+                        {proofViewedByOrderId.get(order.id) ? "👁 Proof viewed — awaiting answer" : "○ Proof not viewed yet"}
+                      </div>
+                    )}
                     {privateNoteByOrderId.get(order.id) && (
                       <div className="text-xs text-[#8a5a00] font-semibold mt-1 whitespace-pre-line">📝 {privateNoteByOrderId.get(order.id)}</div>
                     )}
@@ -639,6 +647,11 @@ export default async function AdminOrdersPage({
               <Link href={`/admin/orders/${order.id}`} className="block text-sm text-[#1E3A5F]/70 mb-2 active:underline">
                 {productLabel(order.product_type as ProductType)} — {order.title}
               </Link>
+              {waitingOnCustomerOrderIds.has(order.id) && (
+                <div className={`text-xs font-semibold mb-2 ${proofViewedByOrderId.get(order.id) ? "text-sage" : "text-ember"}`}>
+                  {proofViewedByOrderId.get(order.id) ? "👁 Proof viewed — awaiting answer" : "○ Proof not viewed yet"}
+                </div>
+              )}
               {privateNoteByOrderId.get(order.id) && (
                 <div className="text-xs text-[#8a5a00] font-semibold mb-2 whitespace-pre-line">📝 {privateNoteByOrderId.get(order.id)}</div>
               )}

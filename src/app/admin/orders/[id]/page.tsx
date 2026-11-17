@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { proofViewedLabel } from "@/lib/proofViews";
 import { invoiceDownloadUrl } from "@/lib/invoiceNames";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -269,6 +270,9 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                     }`}>
                       {p.status === "pending" ? "Awaiting response" : p.status === "approved" ? "Approved" : "Changes requested"}
                     </span>
+                  </div>
+                  <div className={`text-xs font-semibold mb-1 ${p.first_viewed_at ? "text-sage" : "text-ember"}`}>
+                    {p.first_viewed_at ? "👁 " : "○ "}{proofViewedLabel(p)}
                   </div>
                   {p.responded_at && (
                     <div className="text-xs font-mono text-[#1E3A5F]/50 mb-1">

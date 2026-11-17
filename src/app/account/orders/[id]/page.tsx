@@ -1,4 +1,7 @@
 import { notFound, redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { recordProofView } from "@/lib/proofViews";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { invoiceDownloadUrl } from "@/lib/invoiceNames";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -33,6 +36,14 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     .order("sent_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  if (pendingProof) {
+    try {
+      await recordProofView(createAdminClient(), pendingProof as any, headers().get("user-agent"));
+    } catch (err) {
+      console.error("Couldn't record proof view:", err);
+    }
+  }
 
   const { data: invoiceCustomer } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
 
