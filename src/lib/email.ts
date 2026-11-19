@@ -1007,6 +1007,7 @@ export async function sendQuoteRequestNotice(opts: {
   budget?: string;
   timeline?: string;
   description: string;
+  referencePhotoUrl?: string;
 }) {
   const row = (label: string, value?: string) =>
     value ? `<p style="margin: 0 0 6px;"><strong>${label}:</strong> ${escapeHtml(value)}</p>` : "";
@@ -1023,6 +1024,7 @@ export async function sendQuoteRequestNotice(opts: {
       ${row("Wood type", opts.woodType)}
       ${row("Budget", opts.budget)}
       ${row("Timeline", opts.timeline)}
+      ${opts.referencePhotoUrl ? `<p style="margin: 0 0 6px;"><strong>Reference photo:</strong> <a href="${escapeHtml(opts.referencePhotoUrl)}">View photo</a></p><img src="${escapeHtml(opts.referencePhotoUrl)}" alt="Reference photo" width="240" style="max-width: 240px; border-radius: 8px; margin: 4px 0 8px;" />` : ""}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 12px 0 8px;">
         <tr>
           <td style="background-color: #F6EBDD; border-radius: 8px; padding: 14px 16px; font-style: italic; color: #6b4d1a;">

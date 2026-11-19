@@ -39,6 +39,9 @@ export default function QuoteRequestForm({
   const [budget, setBudget] = useState("");
   const [timeline, setTimeline] = useState("Not sure");
   const [description, setDescription] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
@@ -49,6 +52,26 @@ export default function QuoteRequestForm({
   // A standard planter size is enough to quote, so the description is
   // optional there; everything else still needs one.
   const descriptionRequired = !(isPlanter && planterSize && planterSize !== CUSTOM_SIZE);
+
+  async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoBusy(true);
+    setPhotoError("");
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await fetch("/api/quote-requests/photo", { method: "POST", body: fd });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok && body.url) setPhotoUrl(body.url);
+      else setPhotoError(body.error || "Couldn't upload that photo.");
+    } catch {
+      setPhotoError("Couldn't upload that photo. Check your connection and try again.");
+    } finally {
+      setPhotoBusy(false);
+      e.target.value = "";
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,7 +84,7 @@ export default function QuoteRequestForm({
       const res = await fetch("/api/quote-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, productType, dimensions, planterSize: isPlanter ? planterSize : "", woodType, budget, timeline, description })
+        body: JSON.stringify({ name, email, phone, productType, dimensions, planterSize: isPlanter ? planterSize : "", woodType, budget, timeline, description, referencePhotoUrl: photoUrl })
       });
 
       if (res.ok) {
@@ -154,10 +177,23 @@ export default function QuoteRequestForm({
           className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm"
         />
       </div>
+      <div>
+        <label htmlFor={`${uid}-photo`} className="block text-xs font-semibold text-walnut mb-1">Reference photo or logo (optional)</label>
+        <input id={`${uid}-photo`} type="file" accept="image/*" onChange={handlePhoto} disabled={photoBusy} className="block w-full text-sm text-walnut/80" />
+        {photoBusy && <p className="text-xs text-walnut/70 mt-1">Uploading...</p>}
+        {photoError && <p role="alert" className="text-xs text-red-700 mt-1">{photoError}</p>}
+        {photoUrl && (
+          <div className="mt-2 flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photoUrl} alt="Your reference photo" className="h-16 w-16 object-cover rounded-md border border-walnut/15" />
+            <button type="button" onClick={() => setPhotoUrl("")} className="text-xs font-semibold text-accent hover:underline">Remove</button>
+          </div>
+        )}
+      </div>
       {error && <p role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || photoBusy}
         className="bg-accent text-white px-6 py-3 rounded-md text-sm font-semibold disabled:opacity-60"
       >
         {loading ? "Sending..." : "Request a quote"}

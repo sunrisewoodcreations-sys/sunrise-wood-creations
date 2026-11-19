@@ -8,6 +8,12 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { name, email, phone, productType, timeline } = body;
   let { dimensions, woodType, budget, description } = body;
+  // Only accept photos this site itself uploaded (public proofs bucket, quote-ref- files).
+  const refUrl: string = typeof body.referencePhotoUrl === "string" ? body.referencePhotoUrl : "";
+  const referencePhotoUrl =
+    refUrl.startsWith(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/proofs/quote-ref-`) && refUrl.length < 300
+      ? refUrl
+      : null;
   const planterSize: string = body.planterSize || "";
 
   // Wood is fixed per product, and planters have no budget field,
@@ -41,7 +47,8 @@ export async function POST(req: NextRequest) {
     wood_type: woodType?.trim() || null,
     budget: budget?.trim() || null,
     timeline: typeof timeline === "string" ? timeline.trim() || null : null,
-    description: description.trim()
+    description: description.trim(),
+    reference_photo_url: referencePhotoUrl
   });
 
   if (error) {
@@ -58,7 +65,8 @@ export async function POST(req: NextRequest) {
       woodType,
       budget,
       timeline,
-      description: description.trim()
+      description: description.trim(),
+      referencePhotoUrl: referencePhotoUrl || undefined
     });
   } catch (err) {
     console.error("Quote request notice failed to send:", err);

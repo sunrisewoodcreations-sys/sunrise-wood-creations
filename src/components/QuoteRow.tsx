@@ -66,6 +66,12 @@ export default function QuoteRow({ quote }: { quote: any }) {
         {quote.timeline && <div><strong>Timeline:</strong> {quote.timeline}</div>}
       </div>
       <p className="text-sm text-[#1E3A5F]/80 mb-3">{quote.description}</p>
+      {quote.reference_photo_url && (
+        <a href={quote.reference_photo_url} target="_blank" rel="noreferrer" className="inline-block mb-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={quote.reference_photo_url} alt="Customer reference photo" className="h-28 rounded-md border border-[#1E3A5F]/10" />
+        </a>
+      )}
 
       {error && <p className="text-xs text-ember mb-2">{error}</p>}
 
