@@ -27,6 +27,7 @@ export default async function SiteFooter() {
             <p className="text-cream/70 leading-relaxed">Handmade in Michigan.<br />Built to order.</p>
             <nav aria-label="Footer" className="mt-3 flex flex-wrap justify-center sm:justify-start gap-x-5 text-cream/80">
               <Link href="/#products" className="py-2.5 hover:text-cream">Products</Link>
+              <Link href="/products/planter-boxes" className="py-2.5 hover:text-cream">Cedar Planters</Link>
               <Link href="/#about" className="py-2.5 hover:text-cream">About</Link>
               <Link href="/#faq" className="py-2.5 hover:text-cream">FAQ</Link>
               <Link href="/request-quote" className="py-2.5 hover:text-cream">Custom Order</Link>

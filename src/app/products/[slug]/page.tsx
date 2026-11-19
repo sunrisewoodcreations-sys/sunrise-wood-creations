@@ -10,6 +10,10 @@ import TrackedLink from "@/components/TrackedLink";
 import HeroCarousel from "@/components/HeroCarousel";
 import FaqAccordion from "@/components/FaqAccordion";
 import AskQuestionForm from "@/components/AskQuestionForm";
+import { getPlanterSizes, formatPrice, PlanterSize } from "@/lib/planterSizes";
+
+// Prices come live from the products table, so never serve a cached copy.
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return PRODUCT_ORDER.map(slug => ({ slug }));
@@ -136,10 +140,22 @@ const SEO_DESCRIPTIONS: Record<ProductKey, string> = {
   "cutting-boards": "Handcrafted end-grain and edge-grain cutting boards built to order in Michigan, personalized with names, dates, or a short message. Request a quote."
 };
 
+const PLANTER_SEO_TITLE = "Handmade Cedar Planter Boxes in Michigan";
+const PLANTER_SEO_DESCRIPTION =
+  "Handmade cedar planter boxes built to order in Lawrence, MI. Serving Kalamazoo, Paw Paw, South Haven and Southwest Michigan. Standard and custom sizes.";
+
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const content = await getContent();
   const product = content.products[params.slug as ProductKey];
    if (!product || !product.enabled) return {};
+  if (params.slug === "planter-boxes") {
+    return {
+      title: PLANTER_SEO_TITLE,
+      description: PLANTER_SEO_DESCRIPTION,
+      alternates: { canonical: "/products/planter-boxes" },
+      openGraph: { title: PLANTER_SEO_TITLE, description: PLANTER_SEO_DESCRIPTION, url: "/products/planter-boxes", type: "website" }
+    };
+  }
   return {
     title: product.name,
     description: product.description.length >= 120 && product.description.length <= 155
@@ -170,6 +186,11 @@ export default async function ProductPage({ params }: { params: { slug: string }
   const landing = PRODUCT_LANDING_CONTENT[params.slug as ProductKey];
   const isCornhole = params.slug === "cornhole-boards";
   const isPlanter = params.slug === "planter-boxes";
+  const planterSizes: PlanterSize[] = isPlanter ? await getPlanterSizes() : [];
+  const carouselSlides = (product.images?.length ? product.images : DEFAULT_SITE_CONTENT.products[params.slug as ProductKey].images)
+    .map((img, i, arr) => isPlanter
+      ? { ...img, alt: `Handmade cedar planter box built in Lawrence, Michigan by Sunrise Wood Creations (photo ${i + 1} of ${arr.length})` }
+      : img);
 
   // Mirrors the visible "← All products" trail above with no other
   // purpose than giving Google the same two-step path in structured
@@ -187,22 +208,55 @@ export default async function ProductPage({ params }: { params: { slug: string }
     ]
   };
 
+  const planterImages = (product.images || []).map(i => i.src).filter((x): x is string => !!x);
+  const planterSchema = isPlanter && planterSizes.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "Handmade Cedar Planter Box",
+    description: PLANTER_SEO_DESCRIPTION,
+    material: "Cedar",
+    category: "Outdoor planters",
+    brand: { "@type": "Brand", name: "Sunrise Wood Creations" },
+    ...(planterImages.length ? { image: planterImages } : {}),
+    offers: planterSizes.map(sz => ({
+      "@type": "Offer",
+      name: `${sz.label} in. cedar planter box`,
+      price: (sz.priceCents / 100).toFixed(2),
+      priceCurrency: "USD",
+      url: `${siteUrl}/products/planter-boxes`,
+      itemCondition: "https://schema.org/NewCondition",
+      seller: { "@type": "Organization", name: "Sunrise Wood Creations" }
+    }))
+  } : null;
+
   return (
     <div>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
+      {planterSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(planterSchema) }}
+        />
+      )}
       <SiteHeader />
       <main>
       <section className="max-w-5xl mx-auto px-6 py-16">
         <Link href="/" className="text-sm text-walnut/70 mb-4 inline-block">← All products</Link>
         <div className="mb-8 sm:mb-10">
-          <HeroCarousel slides={product.images?.length ? product.images : DEFAULT_SITE_CONTENT.products[params.slug as ProductKey].images} />
+          <HeroCarousel slides={carouselSlides} />
         </div>
-        <h1 className="font-display text-3xl md:text-4xl text-walnut mb-2">{product.name}</h1>
+        <h1 className="font-display text-3xl md:text-4xl text-walnut mb-2">{isPlanter ? "Handmade Cedar Planter Boxes" : product.name}</h1>
         <p className="text-lg text-accent font-medium mb-6">{product.tagline}</p>
-        <p className="text-walnut/70 mb-8 leading-relaxed">{product.description}</p>
+        <p className="text-walnut/70 mb-4 leading-relaxed">{product.description}</p>
+        {isPlanter && (
+          <p className="text-walnut/70 mb-8 leading-relaxed">
+            Sunrise Wood Creations builds handmade cedar planter boxes in Lawrence, Michigan: outdoor wooden flower planters
+            for porches, patios, decks and gardens. Choose a standard size below or request a custom cedar planter built to fit your space.
+          </p>
+        )}
         <div className="flex flex-col sm:flex-row gap-3">
           <TrackedLink
             href={`/request-quote?type=${PRODUCT_KEY_TO_ORDER_TYPE[params.slug as ProductKey]}`}
@@ -283,17 +337,26 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <section className="max-w-4xl mx-auto px-6 pb-14">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="bg-white border border-walnut/10 rounded-xl p-5">
-              <h2 className="font-display text-lg text-walnut mb-1">Standard Sizes</h2>
-              <p className="text-xs text-walnut/70 mb-3">All dimensions in inches, listed as Length × Width × Height.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
-                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">18 × 18 × 18</div>
-                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">36 × 18 × 18</div>
-                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">36 × 18 × 24</div>
-                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">36 × 18 × 30</div>
-                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">48 × 18 × 18</div>
-                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">48 × 18 × 24</div>
-                <div className="bg-cream border border-walnut/10 rounded-md px-3 py-2 text-sm text-walnut font-medium text-center">48 × 18 × 30</div>
-              </div>
+              <h2 className="font-display text-lg text-walnut mb-1">Standard Cedar Planter Sizes</h2>
+              <p className="text-xs text-walnut/70 mb-3">All dimensions in inches, listed as Length × Width × Height. Prices include sales tax.</p>
+              <ul className="divide-y divide-walnut/10 mb-3">
+                {planterSizes.map(sz => (
+                  <li key={sz.key} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <span className="text-walnut font-medium">{sz.label}</span>
+                    <span className="flex items-center gap-3">
+                      <span className="text-walnut font-semibold">{formatPrice(sz.priceCents)}</span>
+                      <TrackedLink
+                        href={`/request-quote?type=planter`}
+                        className="text-accent font-semibold hover:underline"
+                        eventName="request_quote_click"
+                        eventParams={{ location: "planter_size_list", category: "planter-boxes", size: sz.key }}
+                      >
+                        Order
+                      </TrackedLink>
+                    </span>
+                  </li>
+                ))}
+              </ul>
               <p className="text-xs text-walnut/70">
                 Standard planters have approximately 9" of planting depth. Exact depth can vary slightly by design.
               </p>
@@ -305,6 +368,21 @@ export default async function ProductPage({ params }: { params: { slug: string }
               </p>
             </div>
           </div>
+        </section>
+      )}
+
+      {isPlanter && (
+        <section className="max-w-4xl mx-auto px-6 pb-14">
+          <h2 className="font-display text-2xl text-walnut mb-3">Cedar Planter Boxes for Southwest Michigan</h2>
+          <p className="text-walnut/70 leading-relaxed mb-3">
+            We build every cedar planter box by hand in Lawrence, Michigan, for customers in Kalamazoo, Paw Paw, South Haven and
+            throughout Southwest Michigan. Pickup is in Lawrence, and we'll let you know as soon as your planter is ready.
+          </p>
+          <h3 className="font-display text-lg text-walnut mb-1">Need a size that isn't listed?</h3>
+          <p className="text-walnut/70 leading-relaxed">
+            Custom cedar planters are our specialty. <Link href="/request-quote?type=planter" className="text-accent font-semibold hover:underline">Request a custom size</Link> and
+            tell us the space you're filling. You can also see our <Link href="/#gallery" className="text-accent font-semibold hover:underline">finished work</Link> or head back to <Link href="/" className="text-accent font-semibold hover:underline">Sunrise Wood Creations</Link>.
+          </p>
         </section>
       )}
 

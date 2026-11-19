@@ -11,11 +11,13 @@ import OurWorkSection from "@/components/OurWorkSection";
 import PublicReviewsSection from "@/components/PublicReviewsSection";
 import FaqAccordion from "@/components/FaqAccordion";
 import AskQuestionForm from "@/components/AskQuestionForm";
+import Link from "next/link";
+import { getPlanterSizes, formatPrice } from "@/lib/planterSizes";
 
 export const metadata: Metadata = {
-  title: "Custom cornhole boards, wooden signs, planters & cutting boards",
+  title: "Handmade Cedar Planter Boxes & Custom Cornhole Boards | Michigan",
   description:
-    "Handcrafted, made-to-order cornhole boards, wooden signs, planter boxes, and cutting boards built in Michigan. Request a custom order today.",
+    "Handmade cedar planter boxes, custom cornhole boards, wooden signs and cutting boards built to order in Lawrence, Michigan. Serving Southwest Michigan.",
   alternates: { canonical: "/" }
 };
 
@@ -36,6 +38,9 @@ export default async function HomePage() {
   const visibleProducts = PRODUCT_ORDER
     .map(key => ({ slug: key, ...DEFAULT_SITE_CONTENT.products[key], ...content.products?.[key] }))
     .filter(p => p.enabled);
+
+  const planterSizes = await getPlanterSizes();
+  const planterFrom = planterSizes.length ? Math.min(...planterSizes.map(z => z.priceCents)) : null;
 
   const { data: galleryPhotos } = await supabase.from("gallery_photos").select("*").order("sort_order", { ascending: true });
 
@@ -127,6 +132,19 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {visibleProducts.some(p => p.slug === "planter-boxes") && (
+        <section className="max-w-4xl mx-auto px-6 pb-10 sm:pb-14 text-center">
+          <h2 className="font-display text-2xl md:text-3xl text-walnut mb-2">Handmade Cedar Planter Boxes</h2>
+          <p className="text-walnut/70 mb-4">
+            Built by hand in Lawrence, Michigan for porches, patios, decks and gardens across Southwest Michigan, including Kalamazoo, Paw Paw and South Haven.
+            {planterFrom ? ` Standard sizes from ${formatPrice(planterFrom)}, or ask for a custom size.` : " Standard and custom sizes."}
+          </p>
+          <Link href="/products/planter-boxes" className="inline-block text-accent font-semibold hover:underline">
+            See sizes and prices →
+          </Link>
+        </section>
+      )}
 
       <section id="about" className="bg-sawdust/60 px-6 py-10 sm:py-14 md:py-20 scroll-mt-20">
         <div className="max-w-4xl mx-auto">
