@@ -346,7 +346,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
                     <span className="flex items-center gap-3">
                       <span className="text-walnut font-semibold">{formatPrice(sz.priceCents)}</span>
                       <TrackedLink
-                        href={`/request-quote?type=planter`}
+                        href={`/request-quote?type=planter&size=${sz.key}`}
                         className="text-accent font-semibold hover:underline"
                         eventName="request_quote_click"
                         eventParams={{ location: "planter_size_list", category: "planter-boxes", size: sz.key }}

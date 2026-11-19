@@ -11,20 +11,44 @@ const PRODUCT_TYPES = [
   { value: "other", label: "Something else" }
 ];
 
-export default function QuoteRequestForm({ initialProductType = "" }: { initialProductType?: string }) {
+const TIMELINES = ["ASAP", "2 weeks", "3 weeks", "4+ weeks", "Not sure"];
+const CUSTOM_SIZE = "custom";
+const FIXED_WOOD: Record<string, string> = { cornhole: "Baltic birch", planter: "Cedar" };
+
+export type QuotePlanterSize = { key: string; label: string; priceLabel: string };
+
+export default function QuoteRequestForm({
+  initialProductType = "",
+  initialSize = "",
+  planterSizes = []
+}: {
+  initialProductType?: string;
+  initialSize?: string;
+  planterSizes?: QuotePlanterSize[];
+}) {
   const uid = useId();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [productType, setProductType] = useState(initialProductType);
   const [dimensions, setDimensions] = useState("");
+  const [planterSize, setPlanterSize] = useState(
+    initialProductType === "planter" && planterSizes.some(z => z.key === initialSize) ? initialSize : ""
+  );
   const [woodType, setWoodType] = useState("");
   const [budget, setBudget] = useState("");
-  const [timeline, setTimeline] = useState("");
+  const [timeline, setTimeline] = useState("Not sure");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+
+  const isPlanter = productType === "planter";
+  const isCornhole = productType === "cornhole";
+  const fixedWood = FIXED_WOOD[productType];
+  // A standard planter size is enough to quote, so the description is
+  // optional there; everything else still needs one.
+  const descriptionRequired = !(isPlanter && planterSize && planterSize !== CUSTOM_SIZE);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,7 +61,7 @@ export default function QuoteRequestForm({ initialProductType = "" }: { initialP
       const res = await fetch("/api/quote-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, productType, dimensions, woodType, budget, timeline, description })
+        body: JSON.stringify({ name, email, phone, productType, dimensions, planterSize: isPlanter ? planterSize : "", woodType, budget, timeline, description })
       });
 
       if (res.ok) {
@@ -83,27 +107,46 @@ export default function QuoteRequestForm({ initialProductType = "" }: { initialP
             {PRODUCT_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
           </select>
         </div>
+        {isPlanter ? (
+          <div>
+            <label htmlFor={`${uid}-size`} className="block text-xs font-semibold text-walnut mb-1">Size (L × W × H, inches)</label>
+            <select id={`${uid}-size`} value={planterSize} onChange={e => setPlanterSize(e.target.value)} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm">
+              <option value="">Choose a size</option>
+              {planterSizes.map(z => <option key={z.key} value={z.key}>{z.label}{z.priceLabel ? ` — ${z.priceLabel}` : ""}</option>)}
+              <option value={CUSTOM_SIZE}>Custom size (describe below)</option>
+            </select>
+          </div>
+        ) : !isCornhole ? (
+          <div>
+            <label htmlFor={`${uid}-size`} className="block text-xs font-semibold text-walnut mb-1">Size, if you know it</label>
+            <input id={`${uid}-size`} value={dimensions} onChange={e => setDimensions(e.target.value)} placeholder={`e.g. 24"x48"`} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+          </div>
+        ) : null}
         <div>
-          <label htmlFor={`${uid}-size`} className="block text-xs font-semibold text-walnut mb-1">Size, if you know it</label>
-          <input id={`${uid}-size`} value={dimensions} onChange={e => setDimensions(e.target.value)} placeholder={`e.g. 24"x48"`} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+          <label htmlFor={`${uid}-wood`} className="block text-xs font-semibold text-walnut mb-1">Wood type</label>
+          {fixedWood ? (
+            <div id={`${uid}-wood`} className="w-full border border-walnut/10 bg-cream rounded-md px-3 py-2 text-sm text-walnut">{fixedWood}</div>
+          ) : (
+            <input id={`${uid}-wood`} value={woodType} onChange={e => setWoodType(e.target.value)} placeholder="Cedar, oak, no preference..." className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+          )}
         </div>
-        <div>
-          <label htmlFor={`${uid}-wood`} className="block text-xs font-semibold text-walnut mb-1">Wood type (if you have a preference)</label>
-          <input id={`${uid}-wood`} value={woodType} onChange={e => setWoodType(e.target.value)} placeholder="Cedar, oak, no preference..." className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label htmlFor={`${uid}-budget`} className="block text-xs font-semibold text-walnut mb-1">Budget range</label>
-          <input id={`${uid}-budget`} value={budget} onChange={e => setBudget(e.target.value)} placeholder="$100-150" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
-        </div>
+        {!isPlanter && (
+          <div>
+            <label htmlFor={`${uid}-budget`} className="block text-xs font-semibold text-walnut mb-1">Budget range</label>
+            <input id={`${uid}-budget`} value={budget} onChange={e => setBudget(e.target.value)} placeholder="$100-150" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+          </div>
+        )}
         <div>
           <label htmlFor={`${uid}-timeline`} className="block text-xs font-semibold text-walnut mb-1">When do you need it?</label>
-          <input id={`${uid}-timeline`} value={timeline} onChange={e => setTimeline(e.target.value)} placeholder="No rush, or a specific date" className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm" />
+          <select id={`${uid}-timeline`} value={timeline} onChange={e => setTimeline(e.target.value)} className="w-full border border-walnut/15 rounded-md px-3 py-2 text-sm">
+            {TIMELINES.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
         </div>
       </div>
       <div>
-        <label htmlFor={`${uid}-details`} className="block text-xs font-semibold text-walnut mb-1">Tell us what you're picturing</label>
+        <label htmlFor={`${uid}-details`} className="block text-xs font-semibold text-walnut mb-1">{descriptionRequired ? "Tell us what you're picturing" : "Anything else we should know? (optional)"}</label>
         <textarea id={`${uid}-details`}
-          required
+          required={descriptionRequired}
           value={description}
           onChange={e => setDescription(e.target.value)}
           rows={4}
