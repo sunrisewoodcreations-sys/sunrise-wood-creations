@@ -607,6 +607,8 @@ export async function sendProofReadyEmail(opts: {
   orderTitle: string;
   orderId: string;
   imageUrl: string;
+  // Optional second design (e.g. two different boards), same approval.
+  imageUrl2?: string;
   // Optional note from you, shown in the email and on the proof page.
   message?: string;
   respondToken: string;
@@ -614,15 +616,18 @@ export async function sendProofReadyEmail(opts: {
   const reviewUrl = `${SITE_URL}/proof/${opts.respondToken}`;
 
   let attachments: { filename: string; content: string }[] = [];
-  try {
-    const imgRes = await fetch(opts.imageUrl);
-    if (imgRes.ok) {
-      const buffer = Buffer.from(await imgRes.arrayBuffer());
-      const ext = opts.imageUrl.split(".").pop()?.split("?")[0] || "jpg";
-      attachments = [{ filename: `design-proof.${ext}`, content: buffer.toString("base64") }];
+  const proofUrls = [opts.imageUrl, opts.imageUrl2].filter((u): u is string => !!u);
+  for (let i = 0; i < proofUrls.length; i++) {
+    try {
+      const imgRes = await fetch(proofUrls[i]);
+      if (imgRes.ok) {
+        const buffer = Buffer.from(await imgRes.arrayBuffer());
+        const ext = proofUrls[i].split(".").pop()?.split("?")[0] || "jpg";
+        attachments.push({ filename: proofUrls.length > 1 ? `design-proof-${i + 1}.${ext}` : `design-proof.${ext}`, content: buffer.toString("base64") });
+      }
+    } catch {
+      // Attachment is a nice-to-have, not essential — continue without it.
     }
-  } catch {
-    // Attachment is a nice-to-have, not essential — continue without it.
   }
 
   const html = shell({
@@ -630,7 +635,7 @@ export async function sendProofReadyEmail(opts: {
     bodyHtml: `
       <p style="margin: 0 0 16px;">Hi ${opts.customerName},</p>
       <p style="margin: 0 0 16px;">
-        We've attached the design proof for your ${productLabel(opts.productType)}. Take a look, then approve it or let us know what you'd like changed — right from this email. No login needed.
+        We've attached the design proof${opts.imageUrl2 ? "s" : ""} for your ${productLabel(opts.productType)}. Take a look, then approve it or let us know what you'd like changed — right from this email. No login needed.
       </p>
       ${opts.message ? `<p style="margin: 0 0 16px; padding: 12px 14px; background-color: #F6EBDD; border-radius: 8px; white-space: pre-line;">${escapeHtml(opts.message)}</p>` : ""}
     `,

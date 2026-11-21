@@ -2,31 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ProofDesigns from "@/components/ProofDesigns";
 
-export default function ProofResponse({ proofId, imageUrl }: { proofId: string; imageUrl: string }) {
+export default function ProofResponse({
+  imageUrl, imageUrl2, design1, design2, endpoint
+}: { proofId: string; imageUrl: string; imageUrl2?: string | null; design1?: string | null; design2?: string | null; endpoint: string }) {
   const router = useRouter();
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [feedback, setFeedback] = useState("");
-  const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<"approved" | "changes_requested" | null>(null);
-
-  async function respond(decision: "approved" | "changes_requested") {
-    if (decision === "changes_requested" && !showFeedback) {
-      setShowFeedback(true);
-      return;
-    }
-    setLoading(true);
-    const res = await fetch(`/api/proofs/${proofId}/respond`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ decision, feedback })
-    });
-    setLoading(false);
-    if (res.ok) {
-      setDone(decision);
-      router.refresh();
-    }
-  }
 
   if (done) {
     return (
@@ -40,43 +22,17 @@ export default function ProofResponse({ proofId, imageUrl }: { proofId: string; 
 
   return (
     <div className="border border-dashed border-ember bg-ember/5 rounded-lg p-4 mt-4">
-      <h3 className="font-semibold text-walnut text-sm mb-2">Design proof — awaiting your review</h3>
-      <img src={imageUrl} alt="Your design proof" className="rounded-md border border-walnut/10 mb-3 max-w-full" />
-      {!showFeedback ? (
-        <div className="flex gap-2">
-          <button
-            onClick={() => respond("approved")}
-            disabled={loading}
-            className="bg-sage text-white px-4 py-2 rounded-md text-sm font-semibold"
-          >
-            Approve proof
-          </button>
-          <button
-            onClick={() => respond("changes_requested")}
-            disabled={loading}
-            className="border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold"
-          >
-            Request changes
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <textarea
-            value={feedback}
-            onChange={e => setFeedback(e.target.value)}
-            placeholder="Tell us what you'd like changed..."
-            className="w-full border border-walnut/15 rounded-md p-2 text-sm"
-            rows={3}
-          />
-          <button
-            onClick={() => respond("changes_requested")}
-            disabled={loading || !feedback.trim()}
-            className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-50"
-          >
-            Send feedback
-          </button>
-        </div>
-      )}
+      <h3 className="font-semibold text-walnut text-sm mb-2">{imageUrl2 ? "Design proofs — awaiting your review" : "Design proof — awaiting your review"}</h3>
+      <ProofDesigns
+        endpoint={endpoint}
+        imageUrl={imageUrl}
+        imageUrl2={imageUrl2}
+        initial1={design1}
+        initial2={design2}
+        approveLabel="Approve proof"
+        changesLabel="Request changes"
+        onComplete={final => { setDone(final); router.refresh(); }}
+      />
     </div>
   );
 }

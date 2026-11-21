@@ -71,7 +71,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  const { imageUrl, watermark, message } = await req.json();
+  const { imageUrl, imageUrl2, watermark, message } = await req.json();
   const applyWatermark = watermark !== false; // default on, as before
   if (!imageUrl?.trim()) {
     return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
@@ -85,42 +85,50 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
-  let watermarkedUrl = imageUrl.trim();
-  try {
-    // Already shrunk by the "Choose image" upload on the order page: nothing to do.
-    if (!applyWatermark && /\/proofs\/design-/.test(imageUrl)) throw new Error("__skip_watermark__");
-    const imgRes = await fetch(imageUrl.trim());
-    console.log("Image fetch status:", imgRes.status, imgRes.ok);
-    if (imgRes.ok) {
-      const original = Buffer.from(await imgRes.arrayBuffer());
-      // Watermark off: still shrink a pasted link (no stamp), so it loads fast.
-      const watermarked = applyWatermark
-        ? await watermarkImage(original, "Sunrise Wood Creations")
-        : await sharp(original).rotate().resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true }).jpeg({ quality: 88 }).toBuffer();
+  // Runs one image through the same pipeline (optional watermark, resize,
+  // re-upload) and returns the final public URL.
+  async function prepareImage(rawUrl: string): Promise<string> {
+    let finalUrl = rawUrl.trim();
+    try {
+      // Already shrunk by the "Choose image" upload on the order page: nothing to do.
+      if (!applyWatermark && /\/proofs\/design-/.test(rawUrl)) throw new Error("__skip_watermark__");
+      const imgRes = await fetch(rawUrl.trim());
+      console.log("Image fetch status:", imgRes.status, imgRes.ok);
+      if (imgRes.ok) {
+        const original = Buffer.from(await imgRes.arrayBuffer());
+        // Watermark off: still shrink a pasted link (no stamp), so it loads fast.
+        const watermarked = applyWatermark
+          ? await watermarkImage(original, "Sunrise Wood Creations")
+          : await sharp(original).rotate().resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true }).jpeg({ quality: 88 }).toBuffer();
 
-      const admin = createAdminClient();
-      const filename = `proof-${order.id}-${Date.now()}.jpg`;
-      const { error: uploadError } = await admin.storage
-        .from("proofs")
-        .upload(filename, watermarked, { contentType: "image/jpeg", upsert: true });
+        const admin = createAdminClient();
+        const filename = `proof-${order.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+        const { error: uploadError } = await admin.storage
+          .from("proofs")
+          .upload(filename, watermarked, { contentType: "image/jpeg", upsert: true });
 
-      if (uploadError) {
-        console.error("Storage upload failed:", uploadError.message);
-      } else {
-        const { data: publicUrlData } = admin.storage.from("proofs").getPublicUrl(filename);
-        watermarkedUrl = publicUrlData.publicUrl;
-        console.log("Watermarked URL:", watermarkedUrl);
+        if (uploadError) {
+          console.error("Storage upload failed:", uploadError.message);
+        } else {
+          const { data: publicUrlData } = admin.storage.from("proofs").getPublicUrl(filename);
+          finalUrl = publicUrlData.publicUrl;
+        }
       }
+    } catch (err: any) {
+      if (err?.message !== "__skip_watermark__") console.error("Watermarking failed:", err);
     }
-  } catch (err: any) {
-    if (err?.message !== "__skip_watermark__") console.error("Watermarking failed:", err);
+    return finalUrl;
   }
+
+  const watermarkedUrl = await prepareImage(imageUrl);
+  const secondRaw = typeof imageUrl2 === "string" ? imageUrl2.trim() : "";
+  const watermarkedUrl2 = secondRaw ? await prepareImage(secondRaw) : null;
 
   const proofMessage = typeof message === "string" ? message.trim().slice(0, 1000) : "";
 
   const { data: newProof, error: insertError } = await supabase
     .from("proofs")
-    .insert({ order_id: order.id, image_url: watermarkedUrl, message: proofMessage || null })
+    .insert({ order_id: order.id, image_url: watermarkedUrl, image_url_2: watermarkedUrl2, message: proofMessage || null })
     .select()
     .single();
 
@@ -143,6 +151,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       orderTitle: order.title,
       orderId: order.id,
       imageUrl: watermarkedUrl,
+      imageUrl2: watermarkedUrl2 || undefined,
       message: proofMessage || undefined,
       respondToken: newProof.respond_token
     });
