@@ -69,7 +69,7 @@ export default function ProofDesigns({
     const decision = decisions[n];
     const label = two ? `Design ${n}` : "";
     return (
-      <div key={n} className={two ? "mb-5 pb-5 border-b border-walnut/10 last:border-0 last:mb-0 last:pb-0" : ""}>
+      <div key={n} className={two ? "pb-5 border-b border-walnut/10 last:border-0 last:pb-0 sm:border-0 sm:pb-0" : ""}>
         {two && <p className="text-sm font-semibold text-walnut mb-2">{label}</p>}
         <img src={src} alt={two ? `Design proof ${n}` : "Your design proof"} className="rounded-md border border-walnut/10 mb-3 max-w-full" />
         {decision ? (
@@ -116,7 +116,7 @@ export default function ProofDesigns({
   }
 
   return (
-    <div>
+    <div className={two ? "grid grid-cols-1 sm:grid-cols-2 gap-6" : ""}>
       {renderDesign(1, imageUrl)}
       {two && renderDesign(2, imageUrl2!)}
       {error && <p className="text-sm text-red-700 mt-2">{error}</p>}

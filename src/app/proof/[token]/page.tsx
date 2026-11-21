@@ -48,7 +48,7 @@ export default async function PublicProofPage({ params }: { params: { token: str
       <SiteHeader />
       <main>
       <section className="min-h-[60vh] flex items-start justify-center px-4 py-10 sm:py-14 bg-gradient-to-b from-sawdust to-cream">
-        <div className="w-full max-w-lg bg-white border border-walnut/10 rounded-xl p-8">
+        <div className={`w-full ${(proof as any).image_url_2 ? "max-w-3xl" : "max-w-lg"} bg-white border border-walnut/10 rounded-xl p-8`}>
           <h1 className="font-display text-2xl text-walnut mb-1">Design proof</h1>
           <p className="text-sm text-walnut/60 mb-6">{proofTitle}</p>
 

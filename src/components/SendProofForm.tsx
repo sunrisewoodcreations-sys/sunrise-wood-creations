@@ -106,18 +106,13 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
       </label>
       {imageUrl && !uploading && <img src={imageUrl} alt="Design preview" className="block max-h-40 rounded-md border border-[#1E3A5F]/10 mb-2" />}
       {uploadError && <p className="text-xs text-ember mb-2">{uploadError}</p>}
-      <div className="flex gap-2">
-        <input
-          required
-          value={imageUrl}
-          onChange={e => setImageUrl(e.target.value)}
-          placeholder="https://..."
-          className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
-        />
-        <AdminButton type="submit" disabled={loading || uploading || uploading2}>
-          {loading ? "Sending..." : "Send proof"}
-        </AdminButton>
-      </div>
+      <input
+        required
+        value={imageUrl}
+        onChange={e => setImageUrl(e.target.value)}
+        placeholder="https://..."
+        className="w-full border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+      />
       {!showSecond ? (
         <button type="button" onClick={() => setShowSecond(true)} className="text-xs font-semibold text-[#1E3A5F] underline mt-3">
           + Add a second design (two different boards)
@@ -151,6 +146,11 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
           </span>
         </span>
       </label>
+      <div className="mt-4">
+        <AdminButton type="submit" disabled={loading || uploading || uploading2}>
+          {loading ? "Sending..." : showSecond ? "Send both proofs" : "Send proof"}
+        </AdminButton>
+      </div>
       {sent && <p className="text-xs text-sage font-semibold mt-2">Proof sent — customer notified by email.</p>}
     </form>
   );
