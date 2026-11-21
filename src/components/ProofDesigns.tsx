@@ -100,14 +100,14 @@ export default function ProofDesigns({
               disabled={loading}
               className="bg-sage text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60"
             >
-              {two ? `Approve design ${n}` : approveLabel}
+              {two ? `Approve Design ${n}` : approveLabel}
             </button>
             <button
               onClick={() => respond(n, "changes_requested")}
               disabled={loading}
               className="border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold"
             >
-              {two ? `Change design ${n}` : changesLabel}
+              {two ? `Change Design ${n}` : changesLabel}
             </button>
           </div>
         )}
