@@ -17,11 +17,11 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com"),
   title: {
-    default: "Sunrise Wood Creations | Custom cornhole boards, signs, planters & cutting boards",
+    default: "Sunrise Wood Creations | Handmade Cedar Planter Boxes & Custom Cornhole Boards",
     template: "%s | Sunrise Wood Creations"
   },
   description:
-    "Handcrafted custom cornhole boards, wooden signs, planter boxes, and cutting boards, built to order in Michigan.",
+    "Handmade cedar planter boxes, custom cornhole boards, wooden signs and cutting boards, built to order in Lawrence, Michigan.",
   openGraph: {
     type: "website",
     siteName: "Sunrise Wood Creations",
@@ -48,7 +48,10 @@ const localBusinessSchema = {
   "@type": "LocalBusiness",
   name: "Sunrise Wood Creations",
   description:
-    "Handcrafted custom cornhole boards, wooden signs, planter boxes, and cutting boards, built to order in Michigan. Weekend appointments available by request.",
+    "Handmade cedar planter boxes, custom cornhole boards, wooden signs, and cutting boards, built to order in Lawrence, Michigan. Serving Southwest Michigan. Weekend appointments available by request.",
+  areaServed: ["Lawrence", "Paw Paw", "Kalamazoo", "South Haven", "Southwest Michigan"].map(n =>
+    n === "Southwest Michigan" ? { "@type": "AdministrativeArea", name: n } : { "@type": "City", name: `${n}, MI` }
+  ),
   telephone: `+1${DEFAULT_SITE_CONTENT.contact.phone.replace(/\D/g, "")}`,
   email: DEFAULT_SITE_CONTENT.contact.email,
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://sunrisewoodcreations.com",

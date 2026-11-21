@@ -21,11 +21,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const enabledSlugs = PRODUCT_ORDER.filter(slug => content.products?.[slug]?.enabled);
 
   return [
-    { url: SITE_URL, changeFrequency: "monthly", priority: 1 },
+    { url: SITE_URL, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
     ...enabledSlugs.map(slug => ({
       url: `${SITE_URL}/products/${slug}`,
+      lastModified: new Date(),
       changeFrequency: "monthly" as const,
-      priority: 0.8
+      priority: slug === "planter-boxes" ? 0.95 : 0.8
     })),
     { url: `${SITE_URL}/request-quote`, changeFrequency: "monthly", priority: 0.7 }
   ];

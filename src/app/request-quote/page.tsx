@@ -1,6 +1,7 @@
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import QuoteRequestForm from "@/components/QuoteRequestForm";
+import { getPlanterSizes, formatPrice } from "@/lib/planterSizes";
 import GuestChatWidget from "@/components/GuestChatWidget";
 
 export const metadata = {
@@ -9,7 +10,10 @@ export const metadata = {
   alternates: { canonical: "/request-quote" }
 };
 
-export default function RequestQuotePage({ searchParams }: { searchParams: { type?: string } }) {
+export const dynamic = "force-dynamic";
+
+export default async function RequestQuotePage({ searchParams }: { searchParams: { type?: string; size?: string } }) {
+  const sizes = (await getPlanterSizes()).map(z => ({ key: z.key, label: z.label, priceLabel: `${formatPrice(z.priceCents)} (tax incl.)` }));
   return (
     <div>
       <SiteHeader />
@@ -19,7 +23,7 @@ export default function RequestQuotePage({ searchParams }: { searchParams: { typ
         <p className="text-walnut/70 mb-8">
           Tell us what you're picturing — size, wood type, timeline, anything that helps — and we'll get back to you with pricing.
         </p>
-        <QuoteRequestForm initialProductType={searchParams.type} />
+        <QuoteRequestForm initialProductType={searchParams.type} initialSize={searchParams.size} planterSizes={sizes} />
       </section>
       </main>
       <SiteFooter />

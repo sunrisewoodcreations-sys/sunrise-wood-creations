@@ -103,7 +103,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     carouselSlides: [
       { src: null, alt: "Custom cornhole boards built by Sunrise Wood Creations" },
       { src: null, alt: "Personalized wooden sign built by Sunrise Wood Creations" },
-      { src: null, alt: "Cedar planter box built by Sunrise Wood Creations" },
+      { src: null, alt: "Handmade cedar planter box built by Sunrise Wood Creations in Lawrence, Michigan" },
       { src: null, alt: "Custom cutting board built by Sunrise Wood Creations" },
       { src: null, alt: "A finished Sunrise Wood Creations project" }
     ]
@@ -149,10 +149,10 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       shortDesc: "Cedar planters built for porches, gardens, and patios.",
       imageUrl: null,
       images: [
-        { src: null, alt: "Planter boxes built by Sunrise Wood Creations" },
-        { src: null, alt: "Planter boxes built by Sunrise Wood Creations" },
-        { src: null, alt: "Planter boxes built by Sunrise Wood Creations" },
-        { src: null, alt: "Planter boxes built by Sunrise Wood Creations" }
+        { src: null, alt: "Handmade cedar planter box built by Sunrise Wood Creations in Lawrence, Michigan" },
+        { src: null, alt: "Handmade cedar planter box built by Sunrise Wood Creations in Lawrence, Michigan" },
+        { src: null, alt: "Handmade cedar planter box built by Sunrise Wood Creations in Lawrence, Michigan" },
+        { src: null, alt: "Handmade cedar planter box built by Sunrise Wood Creations in Lawrence, Michigan" }
       ]
     },
     "cutting-boards": {
