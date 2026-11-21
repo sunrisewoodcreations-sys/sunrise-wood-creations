@@ -2,34 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import ProofDesigns from "@/components/ProofDesigns";
 
-export default function ProofPublicResponse({ token, imageUrl, imageUrl2 }: { token: string; imageUrl: string; imageUrl2?: string | null }) {
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [feedback, setFeedback] = useState("");
-  const [loading, setLoading] = useState(false);
+export default function ProofPublicResponse({
+  token, imageUrl, imageUrl2, design1, design2
+}: { token: string; imageUrl: string; imageUrl2?: string | null; design1?: string | null; design2?: string | null }) {
   const [done, setDone] = useState<"approved" | "changes_requested" | null>(null);
-  const [error, setError] = useState("");
-
-  async function respond(decision: "approved" | "changes_requested") {
-    if (decision === "changes_requested" && !showFeedback) {
-      setShowFeedback(true);
-      return;
-    }
-    setLoading(true);
-    setError("");
-    const res = await fetch(`/api/proofs/token/${token}/respond`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ decision, feedback })
-    });
-    setLoading(false);
-    if (res.ok) {
-      setDone(decision);
-    } else {
-      const body = await res.json().catch(() => ({}));
-      setError(body.error || "Something went wrong. Please try again.");
-    }
-  }
 
   if (done === "approved") {
     return (
@@ -72,46 +50,13 @@ export default function ProofPublicResponse({ token, imageUrl, imageUrl2 }: { to
   }
 
   return (
-    <div>
-      <img src={imageUrl} alt="Your design proof" className="rounded-md border border-walnut/10 mb-4 max-w-full" />
-      {imageUrl2 && <img src={imageUrl2} alt="Your second design proof" className="rounded-md border border-walnut/10 mb-4 max-w-full" />}
-      {imageUrl2 && <img src={imageUrl2} alt="Your second design proof" className="rounded-md border border-walnut/10 mb-4 max-w-full" />}
-      {!showFeedback ? (
-        <div className="flex gap-2">
-          <button
-            onClick={() => respond("approved")}
-            disabled={loading}
-            className="bg-sage text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-60"
-          >
-            Approve proof
-          </button>
-          <button
-            onClick={() => respond("changes_requested")}
-            disabled={loading}
-            className="border border-walnut text-walnut px-4 py-2 rounded-md text-sm font-semibold"
-          >
-            Need to change something?
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <textarea
-            value={feedback}
-            onChange={e => setFeedback(e.target.value)}
-            placeholder="Tell us what you'd like changed..."
-            className="w-full border border-walnut/15 rounded-md p-2 text-sm"
-            rows={3}
-          />
-          <button
-            onClick={() => respond("changes_requested")}
-            disabled={loading || !feedback.trim()}
-            className="bg-ember text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-50"
-          >
-            Send feedback
-          </button>
-        </div>
-      )}
-      {error && <p className="text-sm text-red-700 mt-2">{error}</p>}
-    </div>
+    <ProofDesigns
+      endpoint={`/api/proofs/token/${token}/respond`}
+      imageUrl={imageUrl}
+      imageUrl2={imageUrl2}
+      initial1={design1}
+      initial2={design2}
+      onComplete={setDone}
+    />
   );
 }
