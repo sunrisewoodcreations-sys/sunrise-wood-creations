@@ -7,6 +7,9 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { recordProofView } from "@/lib/proofViews";
 import ProofPublicResponse from "@/components/ProofPublicResponse";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
+import GuestChatWidget from "@/components/GuestChatWidget";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false }
@@ -42,13 +45,9 @@ export default async function PublicProofPage({ params }: { params: { token: str
 
   return (
     <div>
-      <header className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-walnut/10 bg-cream">
-        <Link href="/" className="font-display text-lg md:text-xl text-walnut font-semibold">
-          Sunrise Wood Creations
-        </Link>
-      </header>
-
-      <div className="min-h-[70vh] flex items-center justify-center px-4 py-16 bg-cream">
+      <SiteHeader />
+      <main>
+      <section className="min-h-[60vh] flex items-start justify-center px-4 py-10 sm:py-14 bg-gradient-to-b from-sawdust to-cream">
         <div className="w-full max-w-lg bg-white border border-walnut/10 rounded-xl p-8">
           <h1 className="font-display text-2xl text-walnut mb-1">Design proof</h1>
           <p className="text-sm text-walnut/60 mb-6">{proofTitle}</p>
@@ -66,12 +65,11 @@ export default async function PublicProofPage({ params }: { params: { token: str
             </>
           )}
         </div>
-      </div>
+      </section>
 
-      <footer className="bg-walnut text-cream text-center py-9 px-6 text-sm">
-        <div>Sunrise Wood Creations</div>
-        <div className="opacity-80 mt-1">(269) 762-1460 · sunrisewoodcreations@gmail.com</div>
-      </footer>
+      </main>
+      <SiteFooter />
+      <GuestChatWidget />
     </div>
   );
 }
