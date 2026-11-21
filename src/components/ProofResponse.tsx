@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function ProofResponse({ proofId, imageUrl }: { proofId: string; imageUrl: string }) {
+export default function ProofResponse({ proofId, imageUrl, imageUrl2 }: { proofId: string; imageUrl: string; imageUrl2?: string | null }) {
   const router = useRouter();
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -42,6 +42,8 @@ export default function ProofResponse({ proofId, imageUrl }: { proofId: string; 
     <div className="border border-dashed border-ember bg-ember/5 rounded-lg p-4 mt-4">
       <h3 className="font-semibold text-walnut text-sm mb-2">Design proof — awaiting your review</h3>
       <img src={imageUrl} alt="Your design proof" className="rounded-md border border-walnut/10 mb-3 max-w-full" />
+      {imageUrl2 && <img src={imageUrl2} alt="Your second design proof" className="rounded-md border border-walnut/10 mb-3 max-w-full" />}
+      {imageUrl2 && <img src={imageUrl2} alt="Your second design proof" className="rounded-md border border-walnut/10 mb-3 max-w-full" />}
       {!showFeedback ? (
         <div className="flex gap-2">
           <button

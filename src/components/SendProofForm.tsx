@@ -7,6 +7,8 @@ import AdminButton from "@/components/AdminButton";
 export default function SendProofForm({ orderId }: { orderId: string }) {
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl2, setImageUrl2] = useState("");
+  const [showSecond, setShowSecond] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -22,6 +24,7 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
   }
 
   const [uploading, setUploading] = useState(false);
+  const [uploading2, setUploading2] = useState(false);
   const [uploadError, setUploadError] = useState("");
 
   // Shrinks the picture on the phone first (max 1600px), so even a
@@ -38,9 +41,11 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
     );
   }
 
-  async function handleFile(file: File | undefined) {
+  async function handleFile(file: File | undefined, slot: 1 | 2 = 1) {
     if (!file) return;
-    setUploading(true);
+    const setBusy = slot === 1 ? setUploading : setUploading2;
+    const setUrl = slot === 1 ? setImageUrl : setImageUrl2;
+    setBusy(true);
     setUploadError("");
     try {
       let blob: Blob = file;
@@ -49,12 +54,12 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
       fd.append("image", blob, "design.jpg");
       const res = await fetch(`/api/orders/${orderId}/proof-upload`, { method: "POST", body: fd });
       const body = await res.json().catch(() => ({}));
-      if (res.ok && body.url) setImageUrl(body.url);
+      if (res.ok && body.url) setUrl(body.url);
       else setUploadError(body.error || "Couldn't upload that image.");
     } catch {
       setUploadError("Couldn't upload that image.");
     }
-    setUploading(false);
+    setBusy(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -63,12 +68,14 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
     const res = await fetch(`/api/orders/${orderId}/proof`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageUrl, watermark, message })
+      body: JSON.stringify({ imageUrl, imageUrl2: showSecond ? imageUrl2 : "", watermark, message })
     });
     setLoading(false);
     if (res.ok) {
       setSent(true);
       setImageUrl("");
+      setImageUrl2("");
+      setShowSecond(false);
       setMessage("");
       router.refresh();
     }
@@ -107,10 +114,34 @@ export default function SendProofForm({ orderId }: { orderId: string }) {
           placeholder="https://..."
           className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
         />
-        <AdminButton type="submit" disabled={loading || uploading}>
+        <AdminButton type="submit" disabled={loading || uploading || uploading2}>
           {loading ? "Sending..." : "Send proof"}
         </AdminButton>
       </div>
+      {!showSecond ? (
+        <button type="button" onClick={() => setShowSecond(true)} className="text-xs font-semibold text-[#1E3A5F] underline mt-3">
+          + Add a second design (two different boards)
+        </button>
+      ) : (
+        <div className="mt-3 border-t border-[#1E3A5F]/10 pt-3">
+          <p className="text-xs font-semibold text-[#1E3A5F] mb-2">Second design</p>
+          <label className="inline-block mb-2 cursor-pointer bg-white border border-[#1E3A5F]/20 text-[#1E3A5F] rounded-md px-4 py-2 text-sm font-semibold">
+            {uploading2 ? "Uploading..." : imageUrl2 ? "Choose a different image" : "Choose second image"}
+            <input type="file" accept="image/*" className="hidden" disabled={uploading2} onChange={e => handleFile(e.target.files?.[0], 2)} />
+          </label>
+          {imageUrl2 && !uploading2 && <img src={imageUrl2} alt="Second design preview" className="block max-h-40 rounded-md border border-[#1E3A5F]/10 mb-2" />}
+          <div className="flex gap-2">
+            <input
+              required
+              value={imageUrl2}
+              onChange={e => setImageUrl2(e.target.value)}
+              placeholder="https://..."
+              className="flex-1 border border-[#1E3A5F]/15 rounded-md px-3 py-2 text-sm"
+            />
+            <button type="button" onClick={() => { setShowSecond(false); setImageUrl2(""); }} className="text-xs font-semibold text-ember">Remove</button>
+          </div>
+        </div>
+      )}
       <label className="flex items-center gap-3 mt-3 text-sm text-[#1E3A5F] cursor-pointer">
         <input type="checkbox" className="w-5 h-5" checked={watermark} onChange={e => changeWatermark(e.target.checked)} />
         <span>

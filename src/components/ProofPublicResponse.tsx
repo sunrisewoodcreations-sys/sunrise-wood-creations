@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-export default function ProofPublicResponse({ token, imageUrl }: { token: string; imageUrl: string }) {
+export default function ProofPublicResponse({ token, imageUrl, imageUrl2 }: { token: string; imageUrl: string; imageUrl2?: string | null }) {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
@@ -74,6 +74,8 @@ export default function ProofPublicResponse({ token, imageUrl }: { token: string
   return (
     <div>
       <img src={imageUrl} alt="Your design proof" className="rounded-md border border-walnut/10 mb-4 max-w-full" />
+      {imageUrl2 && <img src={imageUrl2} alt="Your second design proof" className="rounded-md border border-walnut/10 mb-4 max-w-full" />}
+      {imageUrl2 && <img src={imageUrl2} alt="Your second design proof" className="rounded-md border border-walnut/10 mb-4 max-w-full" />}
       {!showFeedback ? (
         <div className="flex gap-2">
           <button
