@@ -19,6 +19,29 @@ export default function AmountPaidForm({
   const router = useRouter();
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDate, setEditDate] = useState("");
+  const [savingDate, setSavingDate] = useState(false);
+
+  function startEdit(p: PaymentRow) {
+    // Show the Eastern calendar day this payment is currently recorded on.
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(p.paid_at));
+    setEditDate(parts);
+    setEditingId(p.id);
+  }
+
+  async function saveDate(id: string) {
+    setSavingDate(true);
+    setError("");
+    const res = await fetch(`/api/orders/${orderId}/payments`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paymentId: id, paidDate: editDate })
+    });
+    setSavingDate(false);
+    if (res.ok) { setEditingId(null); router.refresh(); }
+    else setError((await res.json().catch(() => ({}))).error || "Couldn't save that date.");
+  }
 
   const total = priceCents / 100;
   const paid = initialAmountPaidCents / 100;
@@ -57,7 +80,18 @@ export default function AmountPaidForm({
                 <span className="font-semibold text-[#1E3A5F]">${(p.amount_cents / 100).toFixed(2)}</span>
                 <span className="text-[#1E3A5F]/70"> · {LABELS[p.method || ""] || "Method not recorded"}</span>
                 {p.reference && <span className="text-[#1E3A5F]/50 text-xs"> · #{p.reference}</span>}
-                <div className="text-[#1E3A5F]/40 text-xs">{new Date(p.paid_at).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", year: "numeric" })}</div>
+                {editingId === p.id ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="border border-[#1E3A5F]/15 rounded-md px-2 py-1 text-sm" />
+                    <button type="button" onClick={() => saveDate(p.id)} disabled={savingDate || !editDate} className="bg-[#1E3A5F] text-white px-3 py-1 rounded-md text-xs font-semibold disabled:opacity-60">{savingDate ? "Saving..." : "Save"}</button>
+                    <button type="button" onClick={() => setEditingId(null)} className="text-xs text-[#1E3A5F]/60 underline">Cancel</button>
+                  </div>
+                ) : (
+                  <div className="text-[#1E3A5F]/40 text-xs">
+                    {new Date(p.paid_at).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", year: "numeric" })}
+                    <button type="button" onClick={() => startEdit(p)} className="ml-2 underline text-[#1E3A5F]/70">Edit date</button>
+                  </div>
+                )}
               </div>
               <button type="button" onClick={() => remove(p.id)} className="text-xs text-ember shrink-0">Remove</button>
             </li>
