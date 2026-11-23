@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { proofTitleFromItems } from "@/lib/bagSets";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { headers } from "next/headers";
 import { recordProofView } from "@/lib/proofViews";
@@ -24,10 +25,17 @@ export default async function PublicProofPage({ params }: { params: { token: str
 
   if (!proof) notFound();
 
-  // Note that the proof was opened, even for a second. Obvious bots (email
-  // scanners, link previewers) are skipped inside recordProofView.
+  // Note that the customer opened it, even for a second. Obvious bots (email
+  // scanners, link previewers) are skipped inside recordProofView, and so are
+  // you previewing while signed in as admin.
   try {
-    await recordProofView(supabase, proof as any, headers().get("user-agent"));
+    const { data: { user } } = await createClient().auth.getUser();
+    let viewerIsAdmin = false;
+    if (user) {
+      const { data: prof } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+      viewerIsAdmin = prof?.role === "admin";
+    }
+    if (!viewerIsAdmin) await recordProofView(supabase, proof as any, headers().get("user-agent"));
   } catch (err) {
     console.error("Couldn't record proof view:", err);
   }
