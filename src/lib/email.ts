@@ -1468,3 +1468,61 @@ export async function sendCampaignEmail(opts: {
   });
 }
 
+
+// Sent when items are added to an existing order: what was added, the new
+// total and balance, and the updated invoice attached.
+export async function sendOrderAddedItemsEmail(opts: {
+  toEmail: string;
+  customerName: string;
+  orderId: string;
+  orderTitle: string;
+  addedItems: { title: string; quantity: number; lineTotalCents: number }[];
+  priceCents: number;
+  amountPaidCents: number;
+  isDelivery: boolean;
+  invoice?: { number: number; year: number; pdfBuffer: Buffer };
+  forceDemo?: boolean;
+}) {
+  const money = (c: number) => `$${(Math.max(0, c) / 100).toFixed(2)}`;
+  const addedTotal = opts.addedItems.reduce((s, it) => s + it.lineTotalCents, 0);
+  const { phone: contactPhone, email: contactEmail } = await getContactInfo();
+  const orderNumberDisplay = await lookupOrderNumberDisplay(opts.orderId);
+
+  const rows = opts.addedItems.map(it => `
+    <tr>
+      <td style="padding: 6px 0; font-size: 14px; color: #2E2420;">${escapeHtml(it.title)}${it.quantity > 1 ? ` &times; ${it.quantity}` : ""}</td>
+      <td align="right" style="padding: 6px 0; font-size: 14px; color: #2E2420;">${money(it.lineTotalCents)}</td>
+    </tr>`).join("");
+
+  const html = shell({
+    preheader: `We added ${opts.addedItems.length === 1 ? "an item" : "items"} to your order. New total ${money(opts.priceCents)}`,
+    contactPhone,
+    contactEmail,
+    bodyHtml: `
+      <h1 style="margin: 0 0 6px; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #1E3A5F;">Your order was updated</h1>
+      <p style="margin: 0 0 20px; color: #74655B; font-size: 14px;">Hi ${escapeHtml(opts.customerName)},</p>
+      <p style="margin: 0 0 12px;">As we talked about, we added the following to your order${orderNumberDisplay ? ` (${escapeHtml(orderNumberDisplay)})` : ""}:</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 4px; border-top: 1px solid #e3d3bd; border-bottom: 1px solid #e3d3bd;">
+        ${rows}
+        ${opts.addedItems.length > 1 ? `<tr><td style="padding: 6px 0; font-size: 14px; font-weight: bold;">Added today</td><td align="right" style="padding: 6px 0; font-size: 14px; font-weight: bold;">${money(addedTotal)}</td></tr>` : ""}
+      </table>
+      ${depositBreakdownHtml(opts.priceCents, opts.amountPaidCents, opts.isDelivery)}
+      ${opts.invoice ? `<p style="margin: 16px 0 0;">Your updated invoice (#${opts.invoice.year}-${opts.invoice.number}) is attached. Prices include sales tax.</p>` : ""}
+    `,
+    buttonText: "View Your Order",
+    buttonUrl: orderViewUrl(SITE_URL, opts.orderId)
+  });
+
+  return sendViaResend({
+    emailType: "sendOrderAddedItemsEmail",
+    orderId: opts.orderId,
+    forceDemo: opts.forceDemo,
+    from: FROM,
+    to: opts.toEmail,
+    subject: `Your order was updated. New total ${money(opts.priceCents)}`,
+    html,
+    attachments: opts.invoice
+      ? [{ filename: invoiceFileName(opts.invoice.year, opts.invoice.number, opts.customerName), content: opts.invoice.pdfBuffer.toString("base64") }]
+      : undefined
+  });
+}

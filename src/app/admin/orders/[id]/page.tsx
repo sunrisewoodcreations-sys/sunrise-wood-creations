@@ -9,6 +9,8 @@ import StatusUpdater from "@/components/StatusUpdater";
 import SendProofForm from "@/components/SendProofForm";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import PrivateNoteForm from "@/components/PrivateNoteForm";
+import AddItemsToOrder from "@/components/AddItemsToOrder";
+import { getBagSets } from "@/lib/bagSetsServer";
 import AmountPaidForm from "@/components/AmountPaidForm";
 import EditOrderDateForm from "@/components/EditOrderDateForm";
 import EditDueDateForm from "@/components/EditDueDateForm";
@@ -49,6 +51,11 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
   if (currentProfile?.is_demo_account && !order.is_demo) notFound();
 
   const customer = (order as any).profiles;
+  const { data: addOnProducts } = await supabase
+    .from("products")
+    .select("id, product_type, name, size_details, price_cents")
+    .order("name");
+  const addOnBagSets = await getBagSets();
   const timelineEvents = await getOrderTimeline(order.id);
   const { count: activeAppointmentCount } = await supabase
     .from("pickup_appointments").select("id", { count: "exact", head: true })
@@ -207,6 +214,10 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         />
 
         <PrivateNoteForm orderId={order.id} initialNote={privateNoteRow?.note || ""} />
+
+        {!["picked_up", "completed"].includes(order.status) && (
+          <AddItemsToOrder orderId={order.id} currentTotalCents={order.price_cents || 0} products={(addOnProducts as any) || []} bagSets={addOnBagSets} />
+        )}
 
         <div className="flex gap-2 mb-4 mt-4">
           <SendStatusEmailButton orderId={order.id} />
