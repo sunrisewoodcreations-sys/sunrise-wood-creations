@@ -20,9 +20,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const { status } = await req.json();
   const admin = createAdminClient();
 
+  // Marking an order ready for pickup/delivery sets its estimated date to the
+  // day it actually became ready (Eastern time), the first time only.
+  const { data: before } = await admin.from("orders").select("status").eq("id", params.id).maybeSingle();
+  const readyToday = status === "ready_for_pickup" && before?.status !== "ready_for_pickup"
+    ? new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())
+    : null;
+
   const { data: order, error } = await admin
     .from("orders")
-    .update({ status })
+    .update({ status, ...(readyToday ? { due_date: readyToday } : {}) })
     .eq("id", params.id)
     .select("*, profiles:customer_id(email, full_name, has_real_email, notify_invoices, notify_order_updates)")
     .single();
