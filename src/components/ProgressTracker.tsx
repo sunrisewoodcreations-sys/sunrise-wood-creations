@@ -1,10 +1,8 @@
 import { stepsFor, ProductType } from "@/lib/statusSteps";
 
 function formatStamp(iso: string) {
-  const d = new Date(iso);
-  const date = d.toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" });
-  const time = d.toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" });
-  return `${date}, ${time} ET`;
+  // Date only, no time.
+  return new Date(iso).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" });
 }
 
 export default function ProgressTracker({

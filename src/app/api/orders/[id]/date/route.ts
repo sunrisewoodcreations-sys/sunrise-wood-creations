@@ -16,15 +16,22 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "Invalid date" }, { status: 400 });
   }
 
+  // A plain date (YYYY-MM-DD) is stored at midday UTC so it stays on the same
+  // calendar day in Eastern time (midnight UTC would show as the evening before).
+  const stamp = /^\d{4}-\d{2}-\d{2}$/.test(createdAt) ? `${createdAt}T16:00:00.000Z` : new Date(createdAt).toISOString();
+
   const admin = createAdminClient();
   const { error } = await admin
     .from("orders")
-    .update({ created_at: new Date(createdAt).toISOString() })
+    .update({ created_at: stamp })
     .eq("id", params.id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+
+  // Keep the "Order placed" step in the order history on the same date.
+  await admin.from("order_status_history").update({ created_at: stamp }).eq("order_id", params.id).eq("status", "order_placed");
 
   return NextResponse.json({ ok: true });
 }

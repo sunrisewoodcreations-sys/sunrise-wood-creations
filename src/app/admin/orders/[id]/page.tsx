@@ -9,6 +9,7 @@ import StatusUpdater from "@/components/StatusUpdater";
 import SendProofForm from "@/components/SendProofForm";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import PrivateNoteForm from "@/components/PrivateNoteForm";
+import { applyStepDates } from "@/lib/stepDates";
 import AddItemsToOrder from "@/components/AddItemsToOrder";
 import { getBagSets } from "@/lib/bagSetsServer";
 import AmountPaidForm from "@/components/AmountPaidForm";
@@ -237,7 +238,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         ) : null}
 
         <StatusUpdater orderId={order.id} productType={order.product_type as ProductType} currentStatus={order.status} fulfillmentMethod={order.fulfillment_method} />
-        <ProgressTracker fulfillmentMethod={order.fulfillment_method} productType={order.product_type as ProductType} currentStatus={order.status} statusTimestamps={statusTimestamps} />
+        <ProgressTracker fulfillmentMethod={order.fulfillment_method} productType={order.product_type as ProductType} currentStatus={order.status} statusTimestamps={applyStepDates(statusTimestamps, order, payments[0]?.paid_at)} />
 
         <div className="mt-4 pt-4 border-t border-[#1E3A5F]/10">
           <div className="text-xs font-semibold text-[#1E3A5F]/50 uppercase tracking-wide mb-2">Production Workflow</div>

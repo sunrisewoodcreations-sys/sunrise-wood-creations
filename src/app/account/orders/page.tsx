@@ -1,3 +1,5 @@
+import { applyStepDates } from "@/lib/stepDates";
+import { createAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 import { invoiceDownloadUrl } from "@/lib/invoiceNames";
 import { redirect } from "next/navigation";
@@ -45,6 +47,12 @@ export default async function AccountOrdersPage() {
     if (!statusTimestampsByOrder[h.order_id][h.status]) statusTimestampsByOrder[h.order_id][h.status] = h.created_at;
   });
 
+  const { data: payRows } = orderIds.length > 0
+    ? await createAdminClient().from("order_payments").select("order_id, paid_at").in("order_id", orderIds).order("paid_at", { ascending: true })
+    : { data: [] as any[] };
+  const firstPayByOrder: Record<string, string> = {};
+  (payRows || []).forEach((r: any) => { if (!firstPayByOrder[r.order_id]) firstPayByOrder[r.order_id] = r.paid_at; });
+
   return (
     <div className="min-h-screen bg-cream flex flex-col">
       <SiteHeader />
@@ -62,7 +70,7 @@ export default async function AccountOrdersPage() {
         <div className="space-y-4">
           {orders?.map(order => {
             const invoice = latestInvoiceByOrder[order.id];
-            const orderStatusTimestamps = statusTimestampsByOrder[order.id] || {};
+            const orderStatusTimestamps = applyStepDates(statusTimestampsByOrder[order.id] || {}, order, firstPayByOrder[order.id]);
             const isPickedUp = order.status === "picked_up";
             const showPickupDate = order.due_date && !["ready_for_pickup", "picked_up"].includes(order.status);
 
