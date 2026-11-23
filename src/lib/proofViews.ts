@@ -1,7 +1,8 @@
 // Tracking whether the customer has opened a design proof.
 // Email security scanners and link-preview bots often "open" links before
 // the person does, so obvious bots are ignored, and so is you previewing the
-// page while signed in as admin.
+// page while signed in as admin. Any other real browser opening the page
+// counts as viewed, even for a second.
 
 const BOT_RE = /bot|crawl|spider|preview|scan|fetch|monitor|slurp|facebookexternalhit|whatsapp|googleimageproxy|google-pixel|headless|curl|wget|python|node-fetch|go-http|java\//i;
 
