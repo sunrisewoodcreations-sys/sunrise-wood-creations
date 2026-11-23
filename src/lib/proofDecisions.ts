@@ -6,6 +6,8 @@ export type ProofRowForDecision = {
   design1_feedback?: string | null;
   design2_decision?: string | null;
   design2_feedback?: string | null;
+  first_viewed_at?: string | null;
+  view_count?: number | null;
 };
 
 // Works out what to store when the customer answers ONE design of a proof.
@@ -29,6 +31,14 @@ export function applyDesignDecision(
   const patch: Record<string, any> = design === 1
     ? { design1_decision: decision, design1_feedback: fb }
     : { design2_decision: decision, design2_feedback: fb };
+
+  // Answering a proof means it was opened, even if the page view itself wasn't recorded.
+  if (!proof.first_viewed_at) {
+    const now = new Date().toISOString();
+    patch.first_viewed_at = now;
+    patch.last_viewed_at = now;
+    patch.view_count = Math.max(1, proof.view_count || 0);
+  }
 
   const decisions = two ? [d1, d2] : [d1];
   if (decisions.some(d => !d)) return { patch, final: null, combinedFeedback: null };
