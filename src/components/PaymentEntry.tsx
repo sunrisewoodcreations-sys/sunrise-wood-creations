@@ -10,6 +10,10 @@ const METHODS = [
   { key: "zelle", label: "Zelle" }
 ];
 
+function todayEastern(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+}
+
 // Amount + how they paid (+ transaction number). Used for the deposit prompt
 // and for adding any later payment. Calls onSaved after the payment is saved.
 export default function PaymentEntry({
@@ -18,12 +22,13 @@ export default function PaymentEntry({
   orderId: string;
   defaultAmount?: string;
   buttonLabel: string;
-  onSaved: () => void | Promise<void>;
+  onSaved: (info: { paymentId?: string; paidDate: string; isToday: boolean }) => void | Promise<void>;
   onCancel?: () => void;
 }) {
   const [amount, setAmount] = useState(defaultAmount || "");
   const [method, setMethod] = useState("");
   const [reference, setReference] = useState("");
+  const [paidDate, setPaidDate] = useState(todayEastern());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -34,11 +39,12 @@ export default function PaymentEntry({
     const dollars = parseFloat(amount);
     if (!(dollars > 0)) { setError("Enter how much was paid."); return; }
     if (!method) { setError("Choose how they paid."); return; }
+    if (!paidDate) { setError("Choose the date it was received."); return; }
     setLoading(true);
     const res = await fetch(`/api/orders/${orderId}/payments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amountCents: Math.round(dollars * 100), method, reference })
+      body: JSON.stringify({ amountCents: Math.round(dollars * 100), method, reference, paidDate })
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -46,9 +52,10 @@ export default function PaymentEntry({
       setLoading(false);
       return;
     }
-    await onSaved();
+    const saved = await res.json().catch(() => ({}));
+    await onSaved({ paymentId: saved.paymentId, paidDate, isToday: paidDate === todayEastern() });
     setLoading(false);
-    setAmount(""); setMethod(""); setReference("");
+    setAmount(""); setMethod(""); setReference(""); setPaidDate(todayEastern());
   }
 
   const needsRef = method === "venmo" || method === "zelle";
@@ -70,6 +77,11 @@ export default function PaymentEntry({
             {METHODS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
           </select>
         </div>
+      </div>
+      <div>
+        <label className="block text-[#1E3A5F]/50 text-xs mb-1">Date received</label>
+        <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)} max={todayEastern()}
+          className="border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm bg-white" />
       </div>
       {method && method !== "cash" && (
         <div>

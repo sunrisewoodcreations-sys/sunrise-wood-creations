@@ -73,7 +73,19 @@ export default function StatusUpdater({ orderId, productType, currentStatus, ful
           <PaymentEntry
             orderId={orderId}
             buttonLabel="Save deposit"
-            onSaved={async () => { setAskDeposit(false); await applyStatus("deposit_received"); }}
+            onSaved={async info => {
+              setAskDeposit(false);
+              await applyStatus("deposit_received");
+              // The status step is stamped "now"; line it up with the date the deposit was received.
+              if (!info.isToday && info.paymentId) {
+                await fetch(`/api/orders/${orderId}/payments`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ paymentId: info.paymentId, paidDate: info.paidDate })
+                });
+                router.refresh();
+              }
+            }}
             onCancel={() => setAskDeposit(false)}
           />
         </div>

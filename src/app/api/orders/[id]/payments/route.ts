@@ -13,18 +13,25 @@ async function requireAdmin() {
 // Add a payment (amount + how it was paid) to an order.
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
-  const v = validatePaymentInput(await req.json().catch(() => ({})));
+  const raw = await req.json().catch(() => ({}));
+  const v = validatePaymentInput(raw);
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 });
+  // Optional date the money was actually received (YYYY-MM-DD). Today's date
+  // (or none) just uses the current time.
+  const todayEastern = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const d = typeof raw.paidDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.paidDate) && !isNaN(Date.parse(raw.paidDate)) ? raw.paidDate : null;
+  const paidAt = d && d !== todayEastern ? new Date(`${d}T16:00:00Z`).toISOString() : null;
   const admin = createAdminClient();
-  const { error } = await admin.from("order_payments").insert({
+  const { data: inserted, error } = await admin.from("order_payments").insert({
     order_id: params.id,
     amount_cents: v.value.amountCents,
     method: v.value.method,
-    reference: v.value.reference || null
-  });
+    reference: v.value.reference || null,
+    ...(paidAt ? { paid_at: paidAt } : {})
+  }).select("id").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   const total = await syncOrderPaid(admin, params.id);
-  return NextResponse.json({ ok: true, amountPaidCents: total });
+  return NextResponse.json({ ok: true, amountPaidCents: total, paymentId: inserted?.id });
 }
 
 // Remove a payment that was entered by mistake.
