@@ -1,3 +1,4 @@
+import { applyStepDates } from "@/lib/stepDates";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -35,6 +36,8 @@ export default async function PublicOrderPage({ params }: { params: { token: str
 
   const statusTimestamps: Record<string, string> = {};
   (history || []).forEach((h: any) => { if (!statusTimestamps[h.status]) statusTimestamps[h.status] = h.created_at; });
+  const { data: firstPay } = await admin.from("order_payments").select("paid_at").eq("order_id", order.id).order("paid_at", { ascending: true }).limit(1).maybeSingle();
+  const stepDates = applyStepDates(statusTimestamps, order, firstPay?.paid_at);
   const isPickedUp = order.status === "picked_up";
 
   return (
@@ -57,7 +60,7 @@ export default async function PublicOrderPage({ params }: { params: { token: str
               fulfillmentMethod={order.fulfillment_method}
               productType={order.product_type as ProductType}
               currentStatus={order.status}
-              statusTimestamps={statusTimestamps}
+              statusTimestamps={stepDates}
             />
           )}
           {order.size_details && <p className="text-sm text-walnut/60 mb-4">{order.size_details}</p>}
