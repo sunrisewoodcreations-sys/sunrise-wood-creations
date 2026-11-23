@@ -2,6 +2,7 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendFinancialReportEmail } from "@/lib/email";
 
+import { salesTaxOwedCents, revenueExcludingTaxCents } from "@/lib/tax";
 const SALES_TAX_RATE = 0.06;
 const NAVY = rgb(0.1176, 0.2275, 0.3725);
 const WHITE = rgb(1, 1, 1);
@@ -232,7 +233,7 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
   const { data: ordersInRange } = pickedUpOrderIds.length > 0
     ? await admin
         .from("orders")
-        .select("id, title, quantity, price_cents, product_id, material_cost_cents, products:product_id(name, cost_cents)")
+        .select("id, title, quantity, price_cents, tax_exempt_cents, product_id, material_cost_cents, products:product_id(name, cost_cents)")
         .in("id", pickedUpOrderIds)
     : { data: [] as any[] };
 
@@ -241,7 +242,7 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
   const { data: itemRows } = orderIds.length > 0
     ? await admin
         .from("order_items")
-        .select("order_id, title, quantity, unit_price_cents, product_id, material_cost_cents, products:product_id(name, cost_cents)")
+        .select("order_id, title, quantity, unit_price_cents, tax_exempt, product_id, material_cost_cents, products:product_id(name, cost_cents)")
         .in("order_id", orderIds)
     : { data: [] as any[] };
 
@@ -253,13 +254,14 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
   const totalMaterialsCostCents = (itemRows || []).reduce((s: number, it: any) => s + (it.material_cost_cents || 0), 0)
     + (ordersInRange || []).filter((o: any) => !orderIdsWithItems.has(o.id)).reduce((s: number, o: any) => s + (o.material_cost_cents || 0), 0);
 
-  const totals: Record<string, { qty: number; revenueCents: number; costCents: number }> = {};
+  const totals: Record<string, { qty: number; revenueCents: number; exemptCents: number; costCents: number }> = {};
 
   (itemRows || []).forEach((it: any) => {
     const key = it.products?.name || it.title || "Untitled";
-    if (!totals[key]) totals[key] = { qty: 0, revenueCents: 0, costCents: 0 };
+    if (!totals[key]) totals[key] = { qty: 0, revenueCents: 0, exemptCents: 0, costCents: 0 };
     totals[key].qty += it.quantity || 1;
     totals[key].revenueCents += (it.unit_price_cents || 0) * (it.quantity || 1);
+    if (it.tax_exempt) totals[key].exemptCents += (it.unit_price_cents || 0) * (it.quantity || 1);
 
     if (it.material_cost_cents != null) {
       totals[key].costCents += it.material_cost_cents;
@@ -271,9 +273,10 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
   (ordersInRange || []).forEach((o: any) => {
     if (orderIdsWithItems.has(o.id)) return;
     const key = o.products?.name || o.title || "Untitled";
-    if (!totals[key]) totals[key] = { qty: 0, revenueCents: 0, costCents: 0 };
+    if (!totals[key]) totals[key] = { qty: 0, revenueCents: 0, exemptCents: 0, costCents: 0 };
     totals[key].qty += o.quantity || 1;
     totals[key].revenueCents += o.price_cents || 0;
+    totals[key].exemptCents += o.tax_exempt_cents || 0;
 
     if (o.material_cost_cents != null) {
       totals[key].costCents += o.material_cost_cents;
@@ -287,16 +290,18 @@ export async function generateAndSendFinancialReport(frequency: Frequency, now: 
       name,
       qty: v.qty,
       revenue: v.revenueCents / 100,
+      exempt: v.exemptCents / 100,
       cost: v.costCents / 100,
-      profit: (v.revenueCents / (1 + SALES_TAX_RATE) - v.costCents) / 100
+      profit: (revenueExcludingTaxCents(v.revenueCents, v.exemptCents) - v.costCents) / 100
     }))
     .sort((a, b) => b.revenue - a.revenue);
 
   const totalRevenue = rows.reduce((s, r) => s + r.revenue, 0);
   const totalCost = rows.reduce((s, r) => s + r.cost, 0);
-  const totalProfit = totalRevenue / (1 + SALES_TAX_RATE) - totalCost; // excludes sales tax
+  const totalExempt = rows.reduce((s, r) => s + r.exempt, 0);
+  const totalProfit = revenueExcludingTaxCents(totalRevenue * 100, totalExempt * 100) / 100 - totalCost; // excludes sales tax
   const totalMaterialsCost = totalMaterialsCostCents / 100;
-  const salesTaxOwed = totalRevenue - totalRevenue / (1 + SALES_TAX_RATE);
+  const salesTaxOwed = salesTaxOwedCents(totalRevenue * 100, totalExempt * 100) / 100;
   const michiganPercent = Number(settings.michigan_income_tax_percent) || 4.25;
   const federalPercent = Number(settings.federal_income_tax_percent) || 15.3;
   const michiganIncomeTaxOwed = totalProfit > 0 ? totalProfit * (michiganPercent / 100) : 0;

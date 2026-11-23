@@ -6,7 +6,7 @@ import AdminButton from "@/components/AdminButton";
 import { BagSet, bagLineTitle } from "@/lib/bagSets";
 
 type SavedProduct = { id: string; product_type: string; name: string; size_details: string | null; price_cents: number };
-type Row = { productId: string | null; productType: string; title: string; sizeDetails: string; quantity: string; price: string };
+type Row = { productId: string | null; productType: string; title: string; sizeDetails: string; quantity: string; price: string; taxExempt?: boolean };
 
 const blank = (): Row => ({ productId: null, productType: "other", title: "", sizeDetails: "", quantity: "1", price: "" });
 const money = (c: number) => `$${(c / 100).toFixed(2)}`;
@@ -74,7 +74,7 @@ export default function AddItemsToOrder({
           sendEmail,
           items: filled.map(r => ({
             productId: r.productId, productType: r.productType, title: r.title, sizeDetails: r.sizeDetails,
-            quantity: r.quantity, priceCents: toCents(r.price)
+            quantity: r.quantity, priceCents: toCents(r.price), taxExempt: !!r.taxExempt
           }))
         })
       });
@@ -134,6 +134,10 @@ export default function AddItemsToOrder({
               <button type="button" onClick={() => setRows(prev => prev.filter((_, idx) => idx !== i))} className="text-xs font-semibold text-ember">Remove</button>
             )}
           </div>
+          <label className="flex items-center gap-2 text-xs text-[#1E3A5F] cursor-pointer">
+            <input type="checkbox" className="w-4 h-4" checked={!!r.taxExempt} onChange={e => update(i, { taxExempt: e.target.checked })} />
+            <span>No sales tax on this item</span>
+          </label>
         </div>
       ))}
 

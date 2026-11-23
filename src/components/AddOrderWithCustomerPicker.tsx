@@ -25,6 +25,7 @@ type LineItem = {
   quantity: string;
   selectedProductId: string | null;
   unitPriceCents: number | null;
+  taxExempt?: boolean;
 };
 
 function blankLineItem(): LineItem {
@@ -323,7 +324,8 @@ export default function AddOrderWithCustomerPicker({
         title: it.title,
         sizeDetails: it.sizeDetails,
         quantity: it.quantity,
-        priceCents: Math.round((Number(it.price) || 0) * 100)
+        priceCents: Math.round((Number(it.price) || 0) * 100),
+        taxExempt: !!it.taxExempt
       }));
 
       // Represented as its own negative-price line item — this is the
@@ -338,7 +340,8 @@ export default function AddOrderWithCustomerPicker({
           title: `Coupon: ${appliedCoupon.code}`,
           sizeDetails: "",
           quantity: "1",
-          priceCents: -appliedCoupon.discountCents
+          priceCents: -appliedCoupon.discountCents,
+          taxExempt: false
         });
       }
 
@@ -353,7 +356,8 @@ export default function AddOrderWithCustomerPicker({
           title: "Delivery fee",
           sizeDetails: where ? `To ${where}${delivery.miles != null ? ` (${delivery.miles} mi)` : ""}` : "",
           quantity: "1",
-          priceCents: Math.round(deliveryDollars * 100)
+          priceCents: Math.round(deliveryDollars * 100),
+          taxExempt: false
         });
       }
 
@@ -554,7 +558,11 @@ export default function AddOrderWithCustomerPicker({
                           className="w-full border border-[#1E3A5F]/15 rounded-md px-2 py-1.5 text-sm"
                         />
                       </div>
-                      <div className="col-span-3 flex justify-end">
+                      <div className="col-span-3 flex justify-between items-center gap-2">
+                        <label className="flex items-center gap-2 text-xs text-[#1E3A5F] cursor-pointer">
+                          <input type="checkbox" className="w-4 h-4" checked={!!item.taxExempt} onChange={e => updateItem(index, { taxExempt: e.target.checked })} />
+                          <span>No sales tax on this item</span>
+                        </label>
                         {items.length > 1 && (
                           <button
                             type="button"

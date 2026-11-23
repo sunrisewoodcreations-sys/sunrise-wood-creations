@@ -5,6 +5,16 @@
 // priced) instead of a second, different tax model.
 export const SALES_TAX_RATE = 0.06; // Michigan
 
+// Revenue can include lines marked "no sales tax" (exemptCents). Tax is only
+// backed out of the rest.
+export function salesTaxOwedCents(revenueCents: number, exemptCents = 0): number {
+  const taxable = Math.max(0, revenueCents - Math.max(0, exemptCents));
+  return taxable - taxable / (1 + SALES_TAX_RATE);
+}
+export function revenueExcludingTaxCents(revenueCents: number, exemptCents = 0): number {
+  return revenueCents - salesTaxOwedCents(revenueCents, exemptCents);
+}
+
 // Given a tax-inclusive total, returns the pre-tax subtotal and the
 // tax portion — same math already used in invoice.ts, just named and
 // shared so it's never re-derived differently in a second place.

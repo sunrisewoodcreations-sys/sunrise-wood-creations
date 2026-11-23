@@ -3,6 +3,7 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+import { salesTaxOwedCents, revenueExcludingTaxCents } from "@/lib/tax";
 const SALES_TAX_RATE = 0.06; // Michigan
 
 function easternMidnightUtc(year: number, month: number, day: number): Date {
@@ -123,7 +124,7 @@ export async function GET(req: NextRequest) {
   const { data: ordersInRange, error: ordersError } = pickedUpOrderIds.length > 0
     ? await admin
         .from("orders")
-        .select("id, title, product_type, quantity, price_cents, product_id, material_cost_cents, created_at, products:product_id(name, cost_cents)")
+        .select("id, title, product_type, quantity, price_cents, tax_exempt_cents, product_id, material_cost_cents, created_at, products:product_id(name, cost_cents)")
         .in("id", pickedUpOrderIds)
     : { data: [] as any[], error: null };
   if (ordersError) {
@@ -135,19 +136,20 @@ export async function GET(req: NextRequest) {
   const { data: itemRows } = orderIds.length > 0
     ? await admin
         .from("order_items")
-        .select("order_id, title, quantity, unit_price_cents, product_id, material_cost_cents, products:product_id(name, cost_cents)")
+        .select("order_id, title, quantity, unit_price_cents, tax_exempt, product_id, material_cost_cents, products:product_id(name, cost_cents)")
         .in("order_id", orderIds)
     : { data: [] as any[] };
 
   const orderIdsWithItems = new Set((itemRows || []).map((it: any) => it.order_id));
 
-  const itemTotals: Record<string, { qty: number; revenueCents: number; costCents: number }> = {};
+  const itemTotals: Record<string, { qty: number; revenueCents: number; exemptCents: number; costCents: number }> = {};
 
   (itemRows || []).forEach((it: any) => {
     const key = it.products?.name || it.title || "Untitled";
-    if (!itemTotals[key]) itemTotals[key] = { qty: 0, revenueCents: 0, costCents: 0 };
+    if (!itemTotals[key]) itemTotals[key] = { qty: 0, revenueCents: 0, exemptCents: 0, costCents: 0 };
     itemTotals[key].qty += it.quantity || 1;
     itemTotals[key].revenueCents += (it.unit_price_cents || 0) * (it.quantity || 1);
+    if (it.tax_exempt) itemTotals[key].exemptCents += (it.unit_price_cents || 0) * (it.quantity || 1);
 
     if (it.material_cost_cents != null) {
       itemTotals[key].costCents += it.material_cost_cents;
@@ -159,9 +161,10 @@ export async function GET(req: NextRequest) {
   (ordersInRange || []).forEach((o: any) => {
     if (orderIdsWithItems.has(o.id)) return;
     const key = o.products?.name || o.title || "Untitled";
-    if (!itemTotals[key]) itemTotals[key] = { qty: 0, revenueCents: 0, costCents: 0 };
+    if (!itemTotals[key]) itemTotals[key] = { qty: 0, revenueCents: 0, exemptCents: 0, costCents: 0 };
     itemTotals[key].qty += o.quantity || 1;
     itemTotals[key].revenueCents += o.price_cents || 0;
+    itemTotals[key].exemptCents += o.tax_exempt_cents || 0;
 
     if (o.material_cost_cents != null) {
       itemTotals[key].costCents += o.material_cost_cents;
@@ -175,17 +178,19 @@ export async function GET(req: NextRequest) {
       name,
       qty: v.qty,
       revenue: v.revenueCents / 100,
+      exempt: v.exemptCents / 100,
       cost: v.costCents / 100,
-      profit: (v.revenueCents / (1 + SALES_TAX_RATE) - v.costCents) / 100
+      profit: (revenueExcludingTaxCents(v.revenueCents, v.exemptCents) - v.costCents) / 100
     }))
     .sort((a, b) => b.revenue - a.revenue);
 
   const grandRevenue = rows.reduce((sum, r) => sum + r.revenue, 0);
   const grandCost = rows.reduce((sum, r) => sum + r.cost, 0);
-  const grandProfit = grandRevenue / (1 + SALES_TAX_RATE) - grandCost; // excludes sales tax
+  const grandExempt = rows.reduce((sum, r) => sum + r.exempt, 0);
+  const grandProfit = revenueExcludingTaxCents(grandRevenue * 100, grandExempt * 100) / 100 - grandCost; // excludes sales tax
   const grandQty = rows.reduce((sum, r) => sum + r.qty, 0);
 
-  const salesTaxOwed = grandRevenue - grandRevenue / (1 + SALES_TAX_RATE);
+  const salesTaxOwed = salesTaxOwedCents(grandRevenue * 100, grandExempt * 100) / 100;
   const michiganIncomeTaxOwed = grandProfit > 0 ? grandProfit * (michiganPercent / 100) : 0;
   const federalIncomeTaxOwed = grandProfit > 0 ? grandProfit * (federalPercent / 100) : 0;
 

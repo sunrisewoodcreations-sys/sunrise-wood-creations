@@ -6,7 +6,8 @@ export type AddOnItem = {
   title: string;
   sizeDetails: string | null;
   quantity: number;
-  lineTotalCents: number;   // tax-inclusive total for this line (unit price x quantity)
+  lineTotalCents: number;   // total for this line (unit price x quantity); tax-inclusive unless taxExempt
+  taxExempt: boolean;       // no sales tax in this line
 };
 
 export function normalizeAddOnItems(raw: any): { ok: true; items: AddOnItem[] } | { ok: false; error: string } {
@@ -27,7 +28,8 @@ export function normalizeAddOnItems(raw: any): { ok: true; items: AddOnItem[] } 
       title,
       sizeDetails: typeof r?.sizeDetails === "string" && r.sizeDetails.trim() ? r.sizeDetails.trim().slice(0, 300) : null,
       quantity,
-      lineTotalCents
+      lineTotalCents,
+      taxExempt: r?.taxExempt === true
     });
   }
   return { ok: true, items };

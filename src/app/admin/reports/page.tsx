@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
+import { salesTaxOwedCents, revenueExcludingTaxCents } from "@/lib/tax";
 const SALES_TAX_RATE = 0.06;
 
 function easternMidnightUtc(year: number, month: number, day: number): Date {
@@ -43,17 +44,17 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
   });
 
   if (orderIds.length === 0) {
-    return { revenue: 0, cost: 0, profit: 0, materialsCost: 0, picketsUsed: 0 };
+    return { revenue: 0, exempt: 0, cost: 0, profit: 0, materialsCost: 0, picketsUsed: 0 };
   }
 
   const { data: orders } = await supabase
     .from("orders")
-    .select("id, quantity, price_cents, material_cost_cents, pickets_used, products:product_id(cost_cents)")
+    .select("id, quantity, price_cents, tax_exempt_cents, material_cost_cents, pickets_used, products:product_id(cost_cents)")
     .in("id", orderIds);
 
   const { data: items } = await supabase
     .from("order_items")
-    .select("order_id, quantity, unit_price_cents, material_cost_cents, pickets_used, products:product_id(cost_cents)")
+    .select("order_id, quantity, unit_price_cents, tax_exempt, material_cost_cents, pickets_used, products:product_id(cost_cents)")
     .in("order_id", orderIds);
 
   const orderIdsWithItems = new Set((items || []).map((it: any) => it.order_id));
@@ -61,10 +62,12 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
   let picketsUsed = 0;
 
   let revenueCents = 0;
+  let exemptCents = 0;
   let costCents = 0;
 
   (items || []).forEach((it: any) => {
     revenueCents += (it.unit_price_cents || 0) * (it.quantity || 1);
+    if (it.tax_exempt) exemptCents += (it.unit_price_cents || 0) * (it.quantity || 1);
     picketsUsed += it.pickets_used || 0;
     if (it.material_cost_cents != null) {
       costCents += it.material_cost_cents;
@@ -77,6 +80,7 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
   (orders || []).forEach((o: any) => {
     if (orderIdsWithItems.has(o.id)) return;
     revenueCents += o.price_cents || 0;
+    exemptCents += o.tax_exempt_cents || 0;
     picketsUsed += o.pickets_used || 0;
     if (o.material_cost_cents != null) {
       costCents += o.material_cost_cents;
@@ -88,9 +92,10 @@ async function getPeriodTotals(supabase: ReturnType<typeof createClient>, start:
 
   return {
     revenue: revenueCents / 100,
+    exempt: exemptCents / 100,
     cost: costCents / 100,
     // Profit excludes the 6% sales tax (prices are tax-inclusive)
-    profit: (revenueCents / (1 + SALES_TAX_RATE) - costCents) / 100,
+    profit: (revenueExcludingTaxCents(revenueCents, exemptCents) - costCents) / 100,
     materialsCost: materialsCostCents / 100,
     picketsUsed
   };
@@ -125,8 +130,8 @@ export default async function ReportsPage() {
     getPeriodTotals(supabase, yearStart, now)
   ]);
 
-  function taxFigures(totals: { revenue: number; profit: number }) {
-    const salesTax = totals.revenue - totals.revenue / (1 + SALES_TAX_RATE);
+  function taxFigures(totals: { revenue: number; exempt: number; profit: number }) {
+    const salesTax = salesTaxOwedCents(totals.revenue * 100, totals.exempt * 100) / 100;
     const michiganTax = totals.profit > 0 ? totals.profit * (michiganPercent / 100) : 0;
     const federalTax = totals.profit > 0 ? totals.profit * (federalPercent / 100) : 0;
     const takeHome = totals.profit - michiganTax - federalTax;

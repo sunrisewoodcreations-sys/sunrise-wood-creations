@@ -25,6 +25,8 @@ export type IncomingOrderItem = {
   sizeDetails?: string;
   quantity?: number | string;
   priceCents?: number | string;
+  // A line with no sales tax in it (e.g. a separately charged design fee).
+  taxExempt?: boolean;
 };
 
 export async function createOrder(opts: {
@@ -51,8 +53,10 @@ export async function createOrder(opts: {
     title: it.title.trim(),
     sizeDetails: it.sizeDetails || null,
     quantity: Math.max(1, Math.round(Number(it.quantity)) || 1),
-    priceCents: Math.round(Number(it.priceCents)) || 0
+    priceCents: Math.round(Number(it.priceCents)) || 0,
+    taxExempt: !!it.taxExempt
   }));
+  const taxExemptCents = normalizedItems.filter(it => it.taxExempt).reduce((s, it) => s + it.priceCents, 0);
 
   const totalPriceCents = normalizedItems.reduce((sum, it) => sum + it.priceCents, 0);
   const totalQuantity = normalizedItems.reduce((sum, it) => sum + it.quantity, 0);
@@ -126,6 +130,7 @@ export async function createOrder(opts: {
       title: orderTitle,
       size_details: orderSizeDetails,
       price_cents: totalPriceCents,
+      tax_exempt_cents: taxExemptCents,
       quantity: totalQuantity,
       product_id: orderProductId,
       status: initialStatus,
@@ -148,7 +153,8 @@ export async function createOrder(opts: {
       title: it.title,
       size_details: it.sizeDetails,
       quantity: it.quantity,
-      unit_price_cents: it.quantity > 0 ? Math.round(it.priceCents / it.quantity) : it.priceCents
+      unit_price_cents: it.quantity > 0 ? Math.round(it.priceCents / it.quantity) : it.priceCents,
+      tax_exempt: it.taxExempt
     }))
   ).select();
 

@@ -71,6 +71,8 @@ type InvoiceLineItem = {
   description: string;
   quantity: number;
   lineTotalCents: number; // this item's share of the tax-inclusive total
+  // A line with no sales tax in it (e.g. a design fee): its price is shown as-is.
+  taxExempt?: boolean;
   // The real, exact per-unit tax-inclusive price, when it's already known
   // (from order_items.unit_price_cents) — lets the invoice compute the
   // displayed unit price directly instead of dividing lineTotalCents back
@@ -375,6 +377,7 @@ export async function buildInvoicePdf(opts: {
     // dividing a combined total back down — this is exact, no rounding
     // needed at all, for the common case of a real stored unit price.
     const unitInclusiveCents = item.unitPriceCentsInclusive ?? Math.round(item.lineTotalCents / qty);
+    if (item.taxExempt) return { unitPriceCents: unitInclusiveCents, lineAmountCents: unitInclusiveCents * qty };
     const unitPriceCents = Math.round(unitInclusiveCents / (1 + SALES_TAX_RATE));
     return { unitPriceCents, lineAmountCents: unitPriceCents * qty };
   }
@@ -650,7 +653,7 @@ export async function generateInvoicePdfForOrder(
 
   const { data: orderItems } = await admin
     .from("order_items")
-    .select("id, product_id, title, quantity, unit_price_cents")
+    .select("id, product_id, title, quantity, unit_price_cents, tax_exempt")
     .eq("order_id", order.id);
 
   const hasLineItems = orderItems && orderItems.length > 0;
@@ -704,7 +707,8 @@ export async function generateInvoicePdfForOrder(
 
   const lineItems: InvoiceLineItem[] = hasLineItems
     ? orderItems!.map((it: any) => ({
-        description: it.title,
+        description: it.tax_exempt ? `${it.title} (no sales tax)` : it.title,
+        taxExempt: !!it.tax_exempt,
         quantity: it.quantity || 1,
         lineTotalCents: (it.unit_price_cents || 0) * (it.quantity || 1),
         unitPriceCentsInclusive: it.unit_price_cents || 0

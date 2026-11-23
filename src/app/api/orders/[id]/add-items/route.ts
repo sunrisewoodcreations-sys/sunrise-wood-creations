@@ -44,7 +44,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       title: it.title,
       size_details: it.sizeDetails,
       quantity: it.quantity,
-      unit_price_cents: Math.round(it.lineTotalCents / it.quantity)
+      unit_price_cents: Math.round(it.lineTotalCents / it.quantity),
+      tax_exempt: it.taxExempt
     }))
   );
   if (itemsError) return NextResponse.json({ error: itemsError.message }, { status: 400 });
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .update({
       price_cents: (order.price_cents || 0) + addedTotal,
       quantity: (order.quantity || 0) + addedQty,
+      tax_exempt_cents: (order.tax_exempt_cents || 0) + items.filter(it => it.taxExempt).reduce((s, it) => s + it.lineTotalCents, 0),
       title: retitleOrder(order.title, productTitles),
       updated_at: new Date().toISOString()
     })

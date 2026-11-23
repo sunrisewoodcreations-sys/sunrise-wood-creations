@@ -17,6 +17,7 @@ import SendInvoiceButton from "@/components/SendInvoiceButton";
 import SendStatusEmailButton from "@/components/SendStatusEmailButton";
 import StatusUpdater from "@/components/StatusUpdater";
 
+import { salesTaxOwedCents } from "@/lib/tax";
 const SALES_TAX_RATE = 0.06; // Michigan
 
 function easternParts(dateInput: string | Date) {
@@ -211,6 +212,8 @@ export default async function AdminOrdersPage({
 
   let quarterSalesCents = 0;
   let yearSalesCents = 0;
+  let quarterExemptCents = 0;
+  let yearExemptCents = 0;
 
   orders.forEach((order: any) => {
     const pickedUpAt = pickedUpAtByOrder[order.id];
@@ -221,8 +224,10 @@ export default async function AdminOrdersPage({
 
     if (year === currentYear) {
       yearSalesCents += order.price_cents || 0;
+      yearExemptCents += order.tax_exempt_cents || 0;
       if (quarter === currentQuarter) {
         quarterSalesCents += order.price_cents || 0;
+        quarterExemptCents += order.tax_exempt_cents || 0;
       }
     }
   });
@@ -233,9 +238,9 @@ export default async function AdminOrdersPage({
   // Prices already include the 6% tax rather than adding it on top,
   // so back it out: gross ÷ 1.06 = the actual sale amount, and the
   // difference between gross and that is what's owed to the state.
-  const quarterSales = quarterGross / (1 + SALES_TAX_RATE);
-  const yearSales = yearGross / (1 + SALES_TAX_RATE);
-  const quarterTaxOwed = quarterGross - quarterSales;
+  const quarterTaxOwed = salesTaxOwedCents(quarterSalesCents, quarterExemptCents) / 100;
+  const quarterSales = quarterGross - quarterTaxOwed;
+  const yearSales = yearGross - salesTaxOwedCents(yearSalesCents, yearExemptCents) / 100;
 
   // --- New: pending-proof lookup, for "Waiting on customer" (same
   // definition already used on the Dashboard, kept consistent). ---
