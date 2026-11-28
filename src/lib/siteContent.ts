@@ -116,9 +116,9 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     "cornhole-boards": {
       enabled: true,
       name: "Cornhole boards",
-      tagline: "Regulation-size sets, custom-built and printed to order.",
-      description: "Every set is built from scratch and finished with your custom design.",
-      shortDesc: "Regulation-size sets, custom painted tops, your logo or design.",
+      tagline: "Backyard, tournament and all-weather sets, printed to order.",
+      description: "We sell backyard sets, tournament sets and all-weather sets. Every design is printed directly on the board, with no wraps or vinyl, so it won't peel or bubble.",
+      shortDesc: "Backyard sets, tournament sets and all-weather sets, printed with your logo or design.",
       imageUrl: null,
       images: [
         { src: null, alt: "Cornhole boards built by Sunrise Wood Creations" },

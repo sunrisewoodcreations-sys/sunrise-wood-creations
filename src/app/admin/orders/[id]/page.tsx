@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatInvoiceNumber } from "@/lib/invoice";
 import ProgressTracker from "@/components/ProgressTracker";
 import StatusUpdater from "@/components/StatusUpdater";
+import OutsourcedParts from "@/components/OutsourcedParts";
 import SendProofForm from "@/components/SendProofForm";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import PrivateNoteForm from "@/components/PrivateNoteForm";
@@ -264,6 +265,13 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
 
       {order.product_type === "cornhole" && (
         <div className="bg-white border border-[#1E3A5F]/10 rounded-xl p-7">
+          <OutsourcedParts
+            orderId={order.id}
+            tops={(order as any).tops_status || "not_ordered"}
+            frames={(order as any).frames_status || "not_ordered"}
+            topsAt={(order as any).tops_status_at}
+            framesAt={(order as any).frames_status_at}
+          />
           <SendProofForm orderId={order.id} />
 
           {proofs && proofs.length > 0 && (
