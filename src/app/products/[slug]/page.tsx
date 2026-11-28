@@ -37,9 +37,9 @@ const PRODUCT_LANDING_CONTENT: Record<ProductKey, {
   "cornhole-boards": {
     ctaNoun: "your boards",
     whatYouGet: [
-      { title: "Baltic birch plywood", description: "Both the playing tops and the frames — built for years of use, not a season." },
+      { title: "Three set types", description: "Backyard: 3/4\" Baltic birch tops with pine frames. Tournament: 3/4\" Baltic birch tops and 3/4\" Baltic birch frames. All-weather: 18mm PVC composite tops and frames." },
       { title: "Backyard, tournament & all-weather sets", description: "Pick the set that fits how you play: casual backyard games, tournament play, or all-weather use." },
-      { title: "UV-printed graphics", description: "Your design is printed directly on the board. No wraps, no vinyl, nothing to peel, bubble, or warp." },
+      { title: "UV-printed graphics", description: "Your design is printed directly on the board and sealed under a clear coat. No wraps, no vinyl, nothing to peel, bubble, or warp." },
       { title: "A design proof to approve", description: "You see exactly what you're getting before we print anything." }
     ],
     makeItYours: [
@@ -297,12 +297,20 @@ export default async function ProductPage({ params }: { params: { slug: string }
                   <dd className="text-walnut font-medium text-right">Backyard, tournament &amp; all-weather</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-walnut/70">Material</dt>
-                  <dd className="text-walnut font-medium text-right">Baltic birch plywood (tops &amp; frames)</dd>
+                  <dt className="text-walnut/70">Backyard set</dt>
+                  <dd className="text-walnut font-medium text-right">3/4&quot; Baltic birch top, pine frame</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-walnut/70">Tournament set</dt>
+                  <dd className="text-walnut font-medium text-right">3/4&quot; Baltic birch top and frame</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-walnut/70">All-weather set</dt>
+                  <dd className="text-walnut font-medium text-right">18mm PVC composite top and frame</dd>
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-walnut/70">Graphics</dt>
-                  <dd className="text-walnut font-medium text-right">Printed directly on the board (no wraps)</dd>
+                  <dd className="text-walnut font-medium text-right">Printed directly on the board, clear coated (no wraps)</dd>
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-walnut/70">Construction</dt>
