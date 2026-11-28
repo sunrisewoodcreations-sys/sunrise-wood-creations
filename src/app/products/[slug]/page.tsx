@@ -38,8 +38,8 @@ const PRODUCT_LANDING_CONTENT: Record<ProductKey, {
     ctaNoun: "your boards",
     whatYouGet: [
       { title: "Baltic birch plywood", description: "Both the playing tops and the frames — built for years of use, not a season." },
-      { title: "Regulation-size boards", description: "Built to standard tournament dimensions." },
-      { title: "UV-printed graphics", description: "Printed directly onto the surface — no vinyl wrap to peel, bubble, or warp." },
+      { title: "Backyard, tournament & all-weather sets", description: "Pick the set that fits how you play: casual backyard games, tournament play, or all-weather use." },
+      { title: "UV-printed graphics", description: "Your design is printed directly on the board. No wraps, no vinyl, nothing to peel, bubble, or warp." },
       { title: "A design proof to approve", description: "You see exactly what you're getting before we print anything." }
     ],
     makeItYours: [
@@ -134,7 +134,7 @@ async function getContent(): Promise<SiteContent> {
 // editable product description is used as-is when it already fits a
 // sensible snippet length; otherwise this short, factual summary is used.
 const SEO_DESCRIPTIONS: Record<ProductKey, string> = {
-  "cornhole-boards": "Custom cornhole boards built to order in Michigan. Regulation-size sets with painted tops, your logo or your own design. Request a quote today.",
+  "cornhole-boards": "Custom cornhole boards built to order in Michigan. Backyard, tournament and all-weather sets with your logo or design printed directly on the board. Request a quote today.",
   "wooden-signs": "Personalized wooden signs built to order in Michigan: family names, farmhouse decor, and business signage, each cut, sanded, and finished by hand.",
   "planter-boxes": "Cedar planter boxes built to order in Michigan for porches, patios, and gardens, finished for outdoor use and sized to fit your space.",
   "cutting-boards": "Handcrafted end-grain and edge-grain cutting boards built to order in Michigan, personalized with names, dates, or a short message. Request a quote."
@@ -293,8 +293,8 @@ export default async function ProductPage({ params }: { params: { slug: string }
               <h2 className="font-display text-lg text-walnut mb-3">Board Specifications</h2>
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-walnut/70">Size</dt>
-                  <dd className="text-walnut font-medium text-right">Regulation size</dd>
+                  <dt className="text-walnut/70">Sets</dt>
+                  <dd className="text-walnut font-medium text-right">Backyard, tournament &amp; all-weather</dd>
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-walnut/70">Material</dt>
@@ -302,7 +302,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-walnut/70">Graphics</dt>
-                  <dd className="text-walnut font-medium text-right">UV-printed (not vinyl)</dd>
+                  <dd className="text-walnut font-medium text-right">Printed directly on the board (no wraps)</dd>
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-walnut/70">Construction</dt>
